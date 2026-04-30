@@ -1,0 +1,22 @@
+{
+  "activeDiamond": null,
+  "activeOnyx": null,
+  "suiteColors": {
+    "0": "Base",
+    "1": "Red",
+    "2": "Orange",
+    "3": "Yellow",
+    "4": "Green",
+    "5": "Blue",
+    "6": "Purple",
+    "7": "Fuchsia"
+  },
+  "cyclePosition": {
+    "cycle": 0,
+    "rotation": 0,
+    "totalRotations": 3,
+    "gate": 0
+  },
+  "colorSelectionComplete": false,
+  "automata": null
+}
