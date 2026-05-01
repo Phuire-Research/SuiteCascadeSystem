@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratimux Muxonomy — The Circle's Face is a Manifold</title>
+  <meta name="description" content="An interactive geometric proof establishing Diameter, Demometer, and Muxameter — the measurement framework of the Suite Cascade System (ARIOS).">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0; background:#0d0d1a;">
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useRef } = React;
+
+
+const C = {
+  bg: "#0d0d1a", sf: "#16162a", sl: "#1e1e3a",
+  tx: "#e8e6e3", tm: "#9997a0",
+  ac: "#cc7722", di: "#ff6b4a", de: "#4ac1ff",
+  mx: "#4affcf", am: "#9966cc", rs: "#ff007f",
+  like: "#4affcf", unlike: "#ff007f",
+};
+
+const PI = Math.PI;
+const polyVerts = (M) => Array.from({ length: M }, (_, k) => {
+  const a = 2 * PI * k / M - PI / 2;
+  return [Math.cos(a), Math.sin(a)];
+});
+const chords = (() => {
+  const c = [2]; let s = Math.sqrt(2);
+  for (let i = 1; i <= 12; i++) { c.push(s); s = Math.sqrt(2 - Math.sqrt(4 - s * s)); }
+  return c;
+})();
+const piApprox = (n) => n === 0 ? 2 : Math.pow(2, n + 1) * chords[n] / 2;
+const arcLen = (n) => 2 * PI / Math.pow(2, n + 1);
+
+function Nav({ active, onNav }) {
+  const labels = ["Origin", "I. ½ Dyad", "II. Finite", "III. Validate", "IV. Order", "V. Minimal", "VI. Muxonomy", "VII. Taxonomy"];
+  return (
+    <div style={{ display: "flex", gap: 3, overflowX: "auto", padding: "0 0 10px", marginBottom: 14, borderBottom: `1px solid ${C.sl}` }}>
+      {labels.map((l, i) => (
+        <button key={i} onClick={() => onNav(i)} style={{
+          background: active === i ? C.ac : "transparent", color: active === i ? C.bg : C.tm,
+          border: `1px solid ${active === i ? C.ac : C.sl}`, borderRadius: 6,
+          padding: "4px 7px", fontSize: 8, fontWeight: 700, cursor: "pointer",
+          fontFamily: "'Orbitron', sans-serif", whiteSpace: "nowrap", flexShrink: 0,
+        }}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
+function Card({ color, children }) {
+  return <div style={{ background: `${color}10`, border: `1px solid ${color}33`, borderRadius: 12, padding: 14, marginBottom: 12 }}>{children}</div>;
+}
+
+function STitle({ num, title, sub }) {
+  return (
+    <div style={{ marginBottom: 14, textAlign: "center" }}>
+      {num && <div style={{ fontSize: 10, color: C.am, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "2px" }}>SECTION {num}</div>}
+      <div style={{ fontSize: 15, color: C.tx, fontFamily: "'Orbitron', sans-serif", fontWeight: 900, marginTop: 4 }}>{title}</div>
+      {sub && <div style={{ fontSize: 10, color: C.tm, marginTop: 4, lineHeight: 1.5 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function Slider({ value, min, max, onChange, label }) {
+  return (
+    <div style={{ textAlign: "center", margin: "10px 0" }}>
+      <div style={{ fontSize: 10, color: C.tm, marginBottom: 4 }}>{label}: <span style={{ color: C.ac, fontWeight: 700, fontSize: 14 }}>{value}</span></div>
+      <input type="range" min={min} max={max} value={value} onChange={e => onChange(+e.target.value)} style={{ width: "80%", accentColor: C.ac }} />
+    </div>
+  );
+}
+
+// ─── SECTION I: ½ DYAD — ORDERS OF DYADIC DIAMETERS ───
+function DyadicDiameterProof() {
+  const [n, setN] = useState(0);
+  const D = Math.pow(2, n);
+  const M = 2 * D;
+  const theta = 180 / D;
+  const cx = 120, cy = 120, r = 95;
+
+  return (
+    <div>
+      <STitle num="I" title="The ½ Diametric Dyad" sub="The Diameter produces the Demometers — the base definition of Through Measure" />
+      <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={`${C.tm}44`} strokeWidth={1.5} />
+        {/* Draw sectors */}
+        {Array.from({ length: M }, (_, i) => {
+          const a1 = 2 * PI * i / M - PI / 2;
+          const a2 = 2 * PI * (i + 1) / M - PI / 2;
+          const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+          const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+          const lg = (a2 - a1) > PI ? 1 : 0;
+          return <path key={`s${i}`} d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg} 1 ${x2},${y2} Z`}
+            fill={`${C.de}${n === 0 ? '18' : '10'}`} stroke={`${C.mx}44`} strokeWidth={0.5} />;
+        })}
+        {/* Draw diameters */}
+        {Array.from({ length: D }, (_, i) => {
+          const a = PI * i / D - PI / 2;
+          return <line key={`d${i}`} x1={cx + r * Math.cos(a)} y1={cy + r * Math.sin(a)}
+            x2={cx - r * Math.cos(a)} y2={cy - r * Math.sin(a)}
+            stroke={C.di} strokeWidth={n === 0 ? 3 : 1.5} opacity={0.7} />;
+        })}
+        <circle cx={cx} cy={cy} r={3} fill={C.ac} />
+        {n === 0 && <text x={cx} y={cy - 8} textAnchor="middle" fill={C.di} fontSize="11"
+          fontWeight="900" fontFamily="'Orbitron', sans-serif" opacity={0.6}>2r</text>}
+      </svg>
+
+      {/* Stepper */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 4, margin: "10px 0" }}>
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <button key={i} onClick={() => setN(i)} style={{
+            width: 34, height: 34, borderRadius: 8,
+            background: n === i ? C.mx : "transparent",
+            color: n === i ? C.bg : C.mx,
+            border: `1.5px solid ${n === i ? C.mx : `${C.mx}44`}`,
+            fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900, cursor: "pointer",
+          }}>{i}</button>
+        ))}
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+        <div style={{ background: `${C.di}11`, border: `1px solid ${C.di}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+          <div style={{ fontSize: 8, color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DIAMETERS</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{D}</div>
+          <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n}</sup></div>
+        </div>
+        <div style={{ background: `${C.de}11`, border: `1px solid ${C.de}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+          <div style={{ fontSize: 8, color: C.de, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DEMOMETERS</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{M}</div>
+          <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n + 1}</sup></div>
+        </div>
+        <div style={{ background: `${C.ac}11`, border: `1px solid ${C.ac}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+          <div style={{ fontSize: 8, color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>θ / SECTOR</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{theta}°</div>
+          <div style={{ fontSize: 8, color: C.tm }}>180°/2<sup>{n}</sup></div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div style={{ background: C.sf, borderRadius: 10, padding: 12, marginTop: 10, textAlign: "center",
+        fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: C.tm, lineHeight: 1.7 }}>
+        {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>½ Dyad — the base definition.</span><br />
+          <span style={{ color: C.di }}>1 Diameter</span> = ½ Dyad of Diameters.<br />
+          Each <span style={{ color: C.de }}>Demometer</span> = ½ the circle.<br />
+          The Through Measure IS the definition.</>}
+        {n === 1 && <><span style={{ color: C.mx }}>2 Diameters</span> perpendicular. <span style={{ color: C.de }}>4 equal quadrants</span>.<br />First doubling from the ½ Dyad base.</>}
+        {n === 2 && <><span style={{ color: C.mx }}>4 Diameters</span>. <span style={{ color: C.de }}>8 equal 45° sectors</span>.<br />Second order. Each tier doubles the previous.</>}
+        {n === 3 && <><span style={{ color: C.mx }}>8 Diameters</span>. <span style={{ color: C.de }}>16 equal 22.5° sectors</span>.<br />Third order. θ halves at each doubling.</>}
+        {n === 4 && <><span style={{ color: C.mx }}>16 Diameters</span>. <span style={{ color: C.de }}>32 equal sectors</span>.<br />Fourth order. 11.25° per sector.</>}
+        {n === 5 && <><span style={{ color: C.mx }}>32 Diameters</span>. <span style={{ color: C.de }}>64 equal sectors</span>.<br />Fifth order. 5.625° per sector.</>}
+        {n === 6 && <><span style={{ color: C.mx }}>64 Diameters</span>. <span style={{ color: C.de }}>128 equal sectors</span>.<br />Sixth order. Beyond Archimedes' 96-gon.</>}
+        {n === 7 && <><span style={{ color: C.mx }}>128 Diameters</span>. <span style={{ color: C.de }}>256 equal sectors</span>.<br />Seventh order. 1.40625° per sector. The polygon approaches the circle.</>}
+      </div>
+
+      {/* Invariants */}
+      <div style={{ background: `${C.am}08`, border: `1px solid ${C.am}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
+        <span style={{ color: C.am, fontWeight: 700, fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: "1px" }}>INVARIANT AT EVERY ORDER</span><br />
+        <span style={{ color: C.de }}>M</span> = <span style={{ color: C.di }}>D</span> × 2 ·{" "}
+        Dyads of <span style={{ color: C.de }}>M</span> = Dyads of <span style={{ color: C.di }}>D</span> × 2 ·{" "}
+        <span style={{ color: C.ac }}>θ</span> halves each order
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION II: SECTOR INSPECTOR ───
+function SectorInspector() {
+  const [n, setN] = useState(0);
+  const D = Math.pow(2, n), M = 2 * D;
+  const cx = 120, cy = 120, r = 95;
+  const a1 = -PI / 2, a2 = -PI / 2 + 2 * PI / M;
+  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+  return (
+    <div>
+      <STitle num="II" title="The Finite Case" sub="At every finite order, sectors are Demometers — not Muxameters" />
+      <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.sl} strokeWidth={1} />
+        {Array.from({ length: D }, (_, i) => {
+          const a = PI * i / D - PI / 2;
+          return <line key={i} x1={cx + r * Math.cos(a)} y1={cy + r * Math.sin(a)} x2={cx - r * Math.cos(a)} y2={cy - r * Math.sin(a)} stroke={`${C.di}44`} strokeWidth={0.8} />;
+        })}
+        <path d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${M <= 2 ? 1 : 0} 1 ${x2},${y2} Z`} fill={`${C.de}20`} />
+        <line x1={cx} y1={cy} x2={x1} y2={y1} stroke={C.like} strokeWidth={2.5} />
+        <line x1={cx} y1={cy} x2={x2} y2={y2} stroke={C.like} strokeWidth={2.5} />
+        <path d={`M${x1},${y1} A${r},${r} 0 ${M <= 2 ? 1 : 0} 1 ${x2},${y2}`} fill="none" stroke={C.unlike} strokeWidth={2.5} strokeDasharray="4 3" />
+        <circle cx={cx} cy={cy} r={2.5} fill={C.di} />
+      </svg>
+      {/* Stepper matching Section I orders */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 4, margin: "10px 0" }}>
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <button key={i} onClick={() => setN(i)} style={{
+            width: 34, height: 34, borderRadius: 8,
+            background: n === i ? C.de : "transparent",
+            color: n === i ? C.bg : C.de,
+            border: `1.5px solid ${n === i ? C.de : `${C.de}44`}`,
+            fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900, cursor: "pointer",
+          }}>{i}</button>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", fontSize: 11, lineHeight: 1.8 }}>
+        <span style={{ color: C.tm, fontSize: 9 }}>Order {n}</span> · <span style={{ color: C.di }}>{D} Diameter{D > 1 ? "s" : ""}</span> · <span style={{ color: C.de }}>{M} Sector{M > 1 ? "s" : ""}</span><br />
+        {n === 0
+          ? <><span style={{ color: C.like }}>1 like edge</span> (diameter) + <span style={{ color: C.unlike }}>1 unlike edge</span> (semicircular arc)</>
+          : <><span style={{ color: C.like }}>2 like edges</span> (radii) + <span style={{ color: C.unlike }}>1 unlike edge</span> (arc)</>}<br />
+        <span style={{ color: C.tm, fontStyle: "italic" }}>Sector = Demometer (not Muxameter)</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION III: THE VALIDATING APPROACH ───
+function ValidatingApproach() {
+  const [step, setStep] = useState(1);
+  const orders = [
+    { n: 0, M: 2, label: "1st Order", desc: "2 points. 1 through-line. No connecting sides. No internal face. Defines but cannot compute.", canMux: false },
+    { n: 1, M: 4, label: "2nd Order", desc: "4 points. 4 sides. s₄ = √2. The inscribed square. First internal Muxameters form.", canMux: true },
+    { n: 2, M: 8, label: "3rd Order", desc: "8 points. 8 sides. Muxameters of Muxameters — a Manifold. Recursion: s = √(2-√(4-s²)).", canMux: true },
+    { n: 3, M: 16, label: "4th Order", desc: "16 points. Each prior Muxameter bisected. The nesting deepens.", canMux: true },
+  ];
+  const o = orders[step];
+  const cx = 110, cy = 110, r = 80;
+
+  return (
+    <div>
+      <STitle num="III" title="The Validating Approach" sub="From the ½ Diametric Dyad — ground up from base, around Archimedes" />
+
+      {/* Stacked visual: Viète on top, DD beneath */}
+      <div style={{ background: C.sf, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
+        {/* VIÈTE LAYER */}
+        <div style={{ padding: "12px 14px", borderBottom: `2px solid ${C.sl}` }}>
+          <div style={{ fontSize: 9, color: C.co, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1px", marginBottom: 6, textAlign: "center" }}>
+            VIÈTE (1593) — PRIOR WORK
+          </div>
+          <div style={{ fontSize: 10, color: C.tm, textAlign: "center", lineHeight: 1.8 }}>
+            <span style={{ color: C.co }}>M</span> = polygon sides · Starting: <span style={{ color: C.co }}>M=4</span> (square, √2)<br />
+            2/π = ∏(<span style={{ color: C.co }}>a<sub>n</sub></span>/2) · Infinite product → reciprocal<br />
+            <span style={{ color: C.rs, fontSize: 9 }}>Lossy: computed via Archimedes' hexagonal method (6×2¹⁶) — formula disconnected from computation</span>
+          </div>
+        </div>
+        {/* CONNECTION */}
+        <div style={{ padding: "6px 0", textAlign: "center", background: `${C.di}08` }}>
+          <span style={{ fontSize: 10, color: C.di, fontWeight: 700 }}>M is the same M</span>
+        </div>
+        {/* DYADIC DIAMETER LAYER */}
+        <div style={{ padding: "12px 14px" }}>
+          <div style={{ fontSize: 9, color: C.mx, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1px", marginBottom: 6, textAlign: "center" }}>
+            DYADIC DIAMETER (2026) — VALIDATED FROM GROUND UP
+          </div>
+          <div style={{ fontSize: 10, color: C.tm, textAlign: "center", lineHeight: 1.8 }}>
+            <span style={{ color: C.mx }}>M</span> = 2D = 2<sup>n+1</sup> · Derived from doubling the Through Measure<br />
+            s<sub>new</sub> = √(2 - √(4 - s²)) · Pythagorean theorem × 2<br />
+            π = lim <span style={{ color: C.mx }}>M</span> × s<sub>M</sub> / 2 · The constant directly<br />
+            <span style={{ color: C.mx, fontSize: 9 }}>Ground up from the Diameter — around Archimedes, not through</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive: Muxameter formation by order */}
+      <svg viewBox="0 0 220 220" style={{ width: "100%", maxWidth: 240, display: "block", margin: "0 auto" }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={`${C.tm}33`} strokeWidth={1} />
+        {/* Draw polygon and internal triangles */}
+        {o.canMux && (() => {
+          const verts = Array.from({ length: o.M }, (_, k) => {
+            const a = 2 * PI * k / o.M - PI / 2;
+            return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+          });
+          const tris = [];
+          for (let i = 0; i < verts.length; i++) {
+            const j = (i + 1) % verts.length;
+            tris.push(<polygon key={`t${i}`} points={`${cx},${cy} ${verts[i][0]},${verts[i][1]} ${verts[j][0]},${verts[j][1]}`}
+              fill={`${C.mx}12`} stroke={`${C.mx}33`} strokeWidth={0.5} />);
+          }
+          const edges = verts.map((v, i) => {
+            const j = (i + 1) % verts.length;
+            return <line key={`e${i}`} x1={v[0]} y1={v[1]} x2={verts[j][0]} y2={verts[j][1]}
+              stroke={C.de} strokeWidth={2} />;
+          });
+          const dots = verts.map((v, i) =>
+            <circle key={`v${i}`} cx={v[0]} cy={v[1]} r={3} fill={C.de} />);
+          return <>{tris}{edges}{dots}</>;
+        })()}
+        {!o.canMux && (<>
+          <line x1={cx - r} y1={cy} x2={cx + r} y2={cy} stroke={C.di} strokeWidth={3} />
+          <circle cx={cx - r} cy={cy} r={4} fill={C.de} />
+          <circle cx={cx + r} cy={cy} r={4} fill={C.de} />
+          <text x={cx} y={cy - 12} textAnchor="middle" fill={C.rs} fontSize="8" fontFamily="'Orbitron', sans-serif" fontWeight="700">NO INTERNAL FACE</text>
+        </>)}
+        <circle cx={cx} cy={cy} r={2.5} fill={C.ac} />
+      </svg>
+
+      {/* Order stepper */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 6, margin: "10px 0" }}>
+        {orders.map((ord, i) => (
+          <button key={i} onClick={() => setStep(i)} style={{
+            padding: "5px 10px", borderRadius: 6, fontSize: 9, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'Orbitron', sans-serif",
+            background: step === i ? (ord.canMux ? C.mx : C.rs) : "transparent",
+            color: step === i ? C.bg : (ord.canMux ? C.mx : C.rs),
+            border: `1px solid ${step === i ? "transparent" : (ord.canMux ? `${C.mx}44` : `${C.rs}44`)}`,
+          }}>{ord.label}</button>
+        ))}
+      </div>
+
+      {/* Order description */}
+      <div style={{ textAlign: "center", fontSize: 11, lineHeight: 1.7, marginTop: 6 }}>
+        <span style={{ color: o.canMux ? C.mx : C.rs, fontWeight: 700 }}>M = {o.M}</span>
+        {o.canMux && <> · <span style={{ color: C.mx }}>{o.M / 2} Muxameters</span> (triangles from center)</>}<br />
+        <span style={{ color: C.tm, fontSize: 10 }}>{o.desc}</span>
+      </div>
+
+      {/* Key insight */}
+      <div style={{ background: `${C.ac}10`, border: `1px solid ${C.ac}33`, borderRadius: 10, padding: 12, marginTop: 12, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
+        <span style={{ color: C.ac, fontWeight: 700 }}>The prior work was lossy to the geometry.</span><br />
+        <span style={{ color: C.tm }}>
+          M derived from doubling the Through Measure produces the same recursion Viète published in 1593.
+          The geometric abstractions were validated from the ground up, inline with reality.
+          Viète's formula and computation were disconnected — the Dyadic Diameter framework unifies them.
+          Each order is a Muxameter of Muxameters — a Manifold — nesting toward the circle's face.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION IV: ORDER OF DIAMETER ───
+function OrderOfDiameter() {
+  const [shape, setShape] = useState("circle");
+  const shapes = {
+    circle: { l: "Circle", mc: "∞ → 1", mo: "ONE", mi: "All collapse to same", ma: "Any through center (2r)", c: C.de },
+    square: { l: "Square", mc: "1 (H=V)", mo: "TWO", mi: "Mirror fold (One Order)", ma: "Diagonal — vertex to vertex", c: C.ac },
+    rectangle: { l: "Rectangle", mc: "2 (H≠V)", mo: "THREE", mi: "Width + Height fold", ma: "Diagonal — corner to corner", c: C.di },
+  };
+  const s = shapes[shape];
+  const cx = 120, cy = 110;
+  return (
+    <div>
+      <STitle num="IV" title="Order of Diameter" sub="Shapes classified by how many distinct through-measures they contain" />
+      <svg viewBox="0 0 240 220" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
+        {shape === "circle" && <g>
+          <circle cx={cx} cy={cy} r={75} fill={`${s.c}11`} stroke={s.c} strokeWidth={2} />
+          <line x1={45} y1={cy} x2={195} y2={cy} stroke={C.di} strokeWidth={2.5} strokeDasharray="6 3" />
+          <circle cx={cx} cy={cy} r={3} fill={C.ac} />
+          <circle cx={45} cy={cy} r={4} fill={C.di} /><circle cx={195} cy={cy} r={4} fill={C.di} />
+          <text x={cx} y={cy - 10} textAnchor="middle" fill={C.di} fontSize="10" fontWeight="700" fontFamily="'IBM Plex Mono', monospace">2r — ONE Order</text>
+        </g>}
+        {shape === "square" && <g>
+          <rect x={50} y={40} width={140} height={140} fill={`${s.c}11`} stroke={s.c} strokeWidth={2} />
+          <line x1={120} y1={40} x2={120} y2={180} stroke={C.mx} strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={50} y1={40} x2={190} y2={180} stroke={C.di} strokeWidth={2.5} strokeDasharray="6 3" />
+          <circle cx={50} cy={40} r={4} fill={C.di} /><circle cx={190} cy={180} r={4} fill={C.di} />
+          <text x={108} y={32} textAnchor="middle" fill={C.mx} fontSize="10" fontWeight="700" fontFamily="'IBM Plex Mono', monospace">Micro</text>
+          <text x={140} y={125} fill={C.di} fontSize="10" fontWeight="700" fontFamily="'IBM Plex Mono', monospace" transform="rotate(45,140,125)">Macro</text>
+        </g>}
+        {shape === "rectangle" && <g>
+          <rect x={30} y={55} width={180} height={110} fill={`${s.c}11`} stroke={s.c} strokeWidth={2} />
+          <line x1={30} y1={110} x2={210} y2={110} stroke={C.mx} strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={120} y1={55} x2={120} y2={165} stroke={`${C.mx}88`} strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={30} y1={55} x2={210} y2={165} stroke={C.di} strokeWidth={2.5} strokeDasharray="6 3" />
+          <circle cx={30} cy={55} r={4} fill={C.di} /><circle cx={210} cy={165} r={4} fill={C.di} />
+          <text x={75} y={118} textAnchor="middle" fill={C.mx} fontSize="8" fontWeight="700">Width</text>
+          <text x={128} y={48} textAnchor="middle" fill={`${C.mx}88`} fontSize="8" fontWeight="700">Height</text>
+          <text x={140} y={125} fill={C.di} fontSize="9" fontWeight="700" fontFamily="'IBM Plex Mono', monospace" transform="rotate(30,140,125)">Diagonal</text>
+        </g>}
+      </svg>
+      {/* Shape toggle */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 6, margin: "10px 0" }}>
+        {Object.entries(shapes).map(([k, v]) => (
+          <button key={k} onClick={() => setShape(k)} style={{
+            background: shape === k ? v.c : "transparent", color: shape === k ? C.bg : C.tm,
+            border: `1px solid ${shape === k ? v.c : `${C.tm}44`}`, borderRadius: 6,
+            padding: "6px 12px", fontWeight: 700, cursor: "pointer",
+            fontFamily: "'Orbitron', sans-serif", fontSize: 10,
+          }}>{v.l}</button>
+        ))}
+      </div>
+      {/* Micro / Macro cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+        <div style={{ background: `${C.mx}11`, border: `1px solid ${C.mx}33`, borderRadius: 8, padding: 10 }}>
+          <div style={{ fontSize: 8, color: C.mx, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, marginBottom: 4 }}>MICRO</div>
+          <div style={{ fontSize: 11, color: C.tx, lineHeight: 1.6 }}>
+            Count: <span style={{ fontWeight: 700 }}>{s.mc}</span><br />{s.mi}
+          </div>
+        </div>
+        <div style={{ background: `${C.di}11`, border: `1px solid ${C.di}33`, borderRadius: 8, padding: 10 }}>
+          <div style={{ fontSize: 8, color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, marginBottom: 4 }}>MACRO</div>
+          <div style={{ fontSize: 11, color: C.tx, lineHeight: 1.6 }}>
+            Order: <span style={{ fontWeight: 700 }}>{s.mo}</span><br />{s.ma}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION V: MINIMAL MUXAMETER ───
+function MinimalMuxameter() {
+  const [hv, setHv] = useState(null);
+  const ax = 120, ay = 25, bx = 45, by = 165, cu = 195, cy2 = 165;
+  return (
+    <div>
+      <STitle num="V" title="The Minimal Muxameter" sub="The triangle — minimum composition for an integrated face" />
+      <svg viewBox="0 0 240 200" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
+        <polygon points={`${ax},${ay} ${bx},${by} ${cu},${cy2}`} fill={`${C.mx}10`} stroke={`${C.mx}44`} strokeWidth={1} />
+        <text x={120} y={115} textAnchor="middle" fill={C.mx} fontSize="10" fontWeight="900" fontFamily="'Orbitron', sans-serif" opacity={0.5}>FACE</text>
+        {[[ax, ay, bx, by, "AB"], [bx, by, cu, cy2, "BC"], [cu, cy2, ax, ay, "CA"]].map(([x1, y1, x2, y2, l], i) => (
+          <g key={i}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={hv === `e${i}` ? C.di : `${C.di}88`}
+              strokeWidth={hv === `e${i}` ? 3 : 2}
+              onMouseEnter={() => setHv(`e${i}`)} onMouseLeave={() => setHv(null)} style={{ cursor: "pointer" }} />
+            <text x={(x1 + x2) / 2 + (i === 0 ? -12 : i === 1 ? 0 : 12)} y={(y1 + y2) / 2 + (i === 1 ? 14 : -6)}
+              fill={C.di} fontSize="8" fontWeight="700" textAnchor="middle">Ø {l}</text>
+          </g>
+        ))}
+        {[[ax, ay, "A", 0, -10], [bx, by, "B", -14, 12], [cu, cy2, "C", 14, 12]].map(([x, y, l, dx, dy], i) => (
+          <g key={i}>
+            <circle cx={x} cy={y} r={hv === `v${i}` ? 9 : 6} fill={hv === `v${i}` ? C.de : `${C.de}cc`}
+              stroke={C.bg} strokeWidth={2}
+              onMouseEnter={() => setHv(`v${i}`)} onMouseLeave={() => setHv(null)} style={{ cursor: "pointer" }} />
+            <text x={x + dx} y={y + dy} fill={C.de} fontSize="10" fontWeight="900" fontFamily="'Orbitron', sans-serif" textAnchor="middle">{l}</text>
+          </g>
+        ))}
+      </svg>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+        {[
+          { l: "DEMOMETERS", v: "3", sub: "vertices", c: C.de },
+          { l: "DIAMETERS", v: "3", sub: "edges", c: C.di },
+          { l: "MUXAMETER", v: "1", sub: "face", c: C.mx },
+        ].map((m, i) => (
+          <div key={i} style={{ background: `${m.c}11`, border: `1px solid ${m.c}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+            <div style={{ fontSize: 8, color: m.c, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>{m.l}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{m.v}</div>
+            <div style={{ fontSize: 9, color: C.tm }}>{m.sub}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: 10, fontSize: 10, color: C.tm, lineHeight: 1.7 }}>
+        <span style={{ color: C.mx, fontWeight: 700 }}>3 + 3 = 1</span><br />
+        3 unlike measures connected by 3 through-measures produce 1 integrated face.<br />
+        This is the minimum. Below 3, no face forms.
+      </div>
+      <div style={{ background: `${C.mx}08`, border: `1px solid ${C.mx}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.7 }}>
+        <span style={{ color: C.mx, fontWeight: 700 }}>Muxameter of Muxameters = Manifold</span><br />
+        <span style={{ color: C.tm }}>
+          One Muxameter is a face. Multiple Muxameters sharing edges compose a Manifold.<br />
+          The circle is the limit Manifold — unlimited faces nested through unlimited shared Diameters.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION VI: TAXONOMY VS MUXONOMY ───
+function TreeVsGraph() {
+  const [mode, setMode] = useState("graph");
+  const [rotated, setRotated] = useState(false);
+  const isTree = mode === "tree";
+
+  const nodeLabel = rotated ? "Diameter" : "Demometer";
+  const nodeColor = rotated ? C.di : C.de;
+  const edgeLabel = rotated ? "Demometer" : "Diameter";
+  const edgeColor = rotated ? C.de : C.di;
+
+  return (
+    <div>
+      <STitle num="VII" title="Taxonomy vs Muxonomy" sub="Taxonomy cannot connect unlike Demometers — no Diameters form, no Muxameters exist" />
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 10 }}>
+        {[["tree", "Taxonomy", "#ff4a6b"], ["graph", "Muxonomy", C.mx]].map(([k, l, clr]) => (
+          <button key={k} onClick={() => setMode(k)} style={{ background: mode === k ? clr : "transparent", color: mode === k ? C.bg : C.tm, border: `1px solid ${mode === k ? clr : C.sl}`, borderRadius: 6, padding: "6px 14px", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Orbitron', sans-serif" }}>{l}</button>
+        ))}
+      </div>
+      <svg viewBox="0 0 280 170" style={{ width: "100%", maxWidth: 300, display: "block", margin: "0 auto" }}>
+        {isTree ? (<>
+          {/* Tree: unlike Demometers in separate branches — no connection */}
+          <line x1={140} y1={25} x2={70} y2={70} stroke="#ff4a6b" strokeWidth={2} />
+          <line x1={140} y1={25} x2={210} y2={70} stroke="#ff4a6b" strokeWidth={2} />
+          <line x1={70} y1={70} x2={40} y2={120} stroke="#ff4a6b" strokeWidth={1.5} />
+          <line x1={210} y1={70} x2={240} y2={120} stroke="#ff4a6b" strokeWidth={1.5} />
+          <line x1={210} y1={70} x2={175} y2={120} stroke="#ff4a6b" strokeWidth={1.5} />
+          {/* Dashed: cannot connect unlike */}
+          <line x1={40} y1={120} x2={175} y2={120} stroke="#ff4a6b33" strokeWidth={1} strokeDasharray="3 4" />
+          <line x1={40} y1={120} x2={240} y2={120} stroke="#ff4a6b33" strokeWidth={1} strokeDasharray="3 4" />
+          <text x={140} y={112} textAnchor="middle" fill="#ff4a6b55" fontSize="7">✗ cannot connect unlike</text>
+          {/* Nodes */}
+          <circle cx={140} cy={25} r={14} fill={C.sf} stroke="#ff4a6b" strokeWidth={2} />
+          <text x={140} y={29} textAnchor="middle" fill="#ff4a6b" fontSize="6" fontWeight="700">Category</text>
+          <circle cx={70} cy={70} r={14} fill={C.sf} stroke="#ff4a6b" strokeWidth={1.5} />
+          <text x={70} y={74} textAnchor="middle" fill="#ff4a6b" fontSize="6">Nature</text>
+          <circle cx={210} cy={70} r={14} fill={C.sf} stroke="#ff4a6b" strokeWidth={1.5} />
+          <text x={210} y={74} textAnchor="middle" fill="#ff4a6b" fontSize="6">Culture</text>
+          <circle cx={40} cy={120} r={16} fill={`${"#4caf50"}22`} stroke={"#4caf50"} strokeWidth={1.5} />
+          <text x={40} y={124} textAnchor="middle" fill={C.tx} fontSize="6" fontWeight="700">Botany</text>
+          <circle cx={175} cy={120} r={16} fill={`${"#9c27b0"}22`} stroke={"#9c27b0"} strokeWidth={1.5} />
+          <text x={175} y={124} textAnchor="middle" fill={C.tx} fontSize="6" fontWeight="700">Music</text>
+          <circle cx={240} cy={120} r={16} fill={`${"#2196f3"}22`} stroke={"#2196f3"} strokeWidth={1.5} />
+          <text x={240} y={124} textAnchor="middle" fill={C.tx} fontSize="6" fontWeight="700">Archit.</text>
+          <text x={140} y={155} textAnchor="middle" fill="#ff4a6b" fontSize="8" fontWeight="700" fontFamily="'Orbitron', sans-serif">NO DIAMETERS · NO MUXAMETERS</text>
+        </>) : (<>
+          {/* Graph: unlike Demometers connected by Diameters, Muxameter face */}
+          <polygon points="60,40 220,40 140,140" fill={`${C.mx}12`} stroke={`${C.mx}44`} strokeWidth={1} />
+          <line x1={60} y1={40} x2={220} y2={40} stroke={C.di} strokeWidth={2} />
+          <line x1={220} y1={40} x2={140} y2={140} stroke={C.di} strokeWidth={2} />
+          <line x1={140} y1={140} x2={60} y2={40} stroke={C.di} strokeWidth={2} />
+          {/* Diameter labels */}
+          <text x={140} y={33} textAnchor="middle" fill={C.di} fontSize="7" fontWeight="700">Cycles</text>
+          <text x={83} y={97} textAnchor="middle" fill={C.di} fontSize="7" fontWeight="700" transform="rotate(-55,83,97)">Growth</text>
+          <text x={195} y={97} textAnchor="middle" fill={C.di} fontSize="7" fontWeight="700" transform="rotate(55,195,97)">Pattern</text>
+          {/* Muxameter label */}
+          <text x={140} y={80} textAnchor="middle" fill={C.mx} fontSize="9" fontWeight="900" fontFamily="'Orbitron', sans-serif">Muxameter</text>
+          {/* Nodes */}
+          <circle cx={60} cy={40} r={18} fill={`${"#4caf50"}22`} stroke={"#4caf50"} strokeWidth={2} />
+          <text x={60} y={44} textAnchor="middle" fill={C.tx} fontSize="7" fontWeight="700">Botany</text>
+          <circle cx={220} cy={40} r={18} fill={`${"#9c27b0"}22`} stroke={"#9c27b0"} strokeWidth={2} />
+          <text x={220} y={44} textAnchor="middle" fill={C.tx} fontSize="7" fontWeight="700">Music</text>
+          <circle cx={140} cy={140} r={18} fill={`${"#2196f3"}22`} stroke={"#2196f3"} strokeWidth={2} />
+          <text x={140} y={144} textAnchor="middle" fill={C.tx} fontSize="7" fontWeight="700">Archit.</text>
+          <text x={140} y={165} textAnchor="middle" fill={C.mx} fontSize="8" fontWeight="700" fontFamily="'Orbitron', sans-serif">DIAMETERS CONNECT · MUXAMETERS FORM</text>
+        </>)}
+      </svg>
+      {/* Structural failure chain */}
+      <div style={{ background: C.sf, borderRadius: 10, overflow: "hidden", marginTop: 10 }}>
+        {[
+          { step: "Cannot connect unlike Demometers", tree: true, graph: false },
+          { step: "→ No Diameters form", tree: true, graph: false },
+          { step: "→ No Muxameters form", tree: true, graph: false },
+          { step: "→ No faces exist", tree: true, graph: false },
+          { step: "→ No manifold", tree: true, graph: false },
+        ].map((row, i) => (
+          <div key={i} style={{
+            display: "grid", gridTemplateColumns: "1fr 36px",
+            borderBottom: i < 4 ? `1px solid ${C.sl}` : "none",
+            background: isTree ? `#ff4a6b${String(4 + i * 2).padStart(2, '0')}` : `${C.mx}${String(4 + i * 2).padStart(2, '0')}`,
+          }}>
+            <div style={{ padding: "7px 10px", fontSize: 11, color: C.tx, paddingLeft: i > 0 ? `${10 + i * 8}px` : 10 }}>{row.step}</div>
+            <div style={{ padding: "7px 4px", textAlign: "center", fontSize: 14,
+              color: isTree ? "#ff4a6b" : C.mx,
+              borderLeft: `1px solid ${C.sl}` }}>{isTree ? "✗" : "✓"}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Muxonomic Rotational Principle */}
+      <div style={{ marginTop: 20, background: `${C.am}08`, border: `1px solid ${C.am}33`, borderRadius: 12, padding: 14 }}>
+        <div style={{ textAlign: "center", marginBottom: 10 }}>
+          <div style={{ fontSize: 9, color: C.am, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1.5px", marginBottom: 6 }}>
+            MUXONOMIC ROTATIONAL PRINCIPLE
+          </div>
+          <button onClick={() => setRotated(!rotated)} style={{
+            background: rotated ? C.am : "transparent", color: rotated ? C.bg : C.am,
+            border: `1px solid ${C.am}`, borderRadius: 6, padding: "5px 14px",
+            fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Orbitron', sans-serif",
+          }}>{rotated ? "◇ Rotated View" : "○ Standard View"}</button>
+        </div>
+
+        <svg viewBox="0 0 240 150" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
+          {/* Face — always Muxameter */}
+          <polygon points="120,20 50,120 190,120" fill={`${C.mx}15`} stroke={`${C.mx}55`} strokeWidth={1.5} />
+          {/* Edges */}
+          <line x1={120} y1={20} x2={50} y2={120} stroke={edgeColor} strokeWidth={2.5} />
+          <line x1={50} y1={120} x2={190} y2={120} stroke={edgeColor} strokeWidth={2.5} />
+          <line x1={190} y1={120} x2={120} y2={20} stroke={edgeColor} strokeWidth={2.5} />
+          {/* Edge labels */}
+          <text x={78} y={63} textAnchor="middle" fill={edgeColor} fontSize="7" fontWeight="700"
+            fontFamily="'IBM Plex Mono', monospace" transform="rotate(-55,78,63)">{edgeLabel}</text>
+          <text x={120} y={132} textAnchor="middle" fill={edgeColor} fontSize="7" fontWeight="700"
+            fontFamily="'IBM Plex Mono', monospace">{edgeLabel}</text>
+          <text x={162} y={63} textAnchor="middle" fill={edgeColor} fontSize="7" fontWeight="700"
+            fontFamily="'IBM Plex Mono', monospace" transform="rotate(55,162,63)">{edgeLabel}</text>
+          {/* Nodes */}
+          <circle cx={120} cy={20} r={14} fill={C.sf} stroke={nodeColor} strokeWidth={2.5} />
+          <text x={120} y={24} textAnchor="middle" fill={nodeColor} fontSize="6" fontWeight="700"
+            fontFamily="'Orbitron', sans-serif">{nodeLabel}</text>
+          <circle cx={50} cy={120} r={14} fill={C.sf} stroke={nodeColor} strokeWidth={2.5} />
+          <text x={50} y={124} textAnchor="middle" fill={nodeColor} fontSize="6" fontWeight="700"
+            fontFamily="'Orbitron', sans-serif">{nodeLabel}</text>
+          <circle cx={190} cy={120} r={14} fill={C.sf} stroke={nodeColor} strokeWidth={2.5} />
+          <text x={190} y={124} textAnchor="middle" fill={nodeColor} fontSize="6" fontWeight="700"
+            fontFamily="'Orbitron', sans-serif">{nodeLabel}</text>
+          {/* Face label — always Muxameter */}
+          <text x={120} y={90} textAnchor="middle" fill={C.mx} fontSize="9" fontWeight="900"
+            fontFamily="'Orbitron', sans-serif">Muxameter</text>
+        </svg>
+
+        <div style={{ textAlign: "center", fontSize: 11, lineHeight: 1.8, marginTop: 8 }}>
+          {!rotated ? (<>
+            <span style={{ color: nodeColor }}>● Nodes</span> = Demometers ·{" "}
+            <span style={{ color: edgeColor }}>— Edges</span> = Diameters ·{" "}
+            <span style={{ color: C.mx }}>△ Face</span> = Muxameter
+          </>) : (<>
+            <span style={{ color: nodeColor }}>● Nodes</span> = Diameters ·{" "}
+            <span style={{ color: edgeColor }}>— Edges</span> = Demometers ·{" "}
+            <span style={{ color: C.mx }}>△ Face</span> = Muxameter
+          </>)}
+          <br />
+          <span style={{ color: C.tm, fontSize: 10 }}>
+            {rotated
+              ? "The roles rotate. The face remains invariant."
+              : "Standard reading: distinct categories connected by through-measures."}
+          </span>
+        </div>
+      </div>
+
+      {/* Muxameter anor note */}
+      <div style={{ marginTop: 14, background: `${C.mx}08`, border: `1px solid ${C.mx}33`, borderRadius: 12, padding: 14 }}>
+        <div style={{ textAlign: "center", fontSize: 11, color: C.tx, lineHeight: 1.8 }}>
+          <span style={{ color: C.mx, fontWeight: 700, fontFamily: "'Orbitron', sans-serif", fontSize: 10 }}>
+            The Muxameter can be Diameter anor Demometer.
+          </span><br /><br />
+          <span style={{ color: C.tm, fontSize: 10 }}>
+            At one level of composition, the integrated face is the whole — the Muxameter.<br />
+            From a higher composition, that same face becomes a <span style={{ color: C.de }}>Demometer</span> — a distinct category within a larger graph.<br />
+            From another vantage, it becomes a <span style={{ color: C.di }}>Diameter</span> — a through-measure connecting unlike Demometers across it.<br /><br />
+            The roles are not fixed. The face is invariant.<br />
+            Taxonomy assigns permanent categories. Muxonomy composes through rotation.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION VI: CONCEPTUAL SPACE ───
+function ConceptualSpace() {
+  const [hv, setHv] = useState(null);
+  const [showMux, setSM] = useState(false);
+  const concepts = [
+    { x: 80, y: 65, l: "Botany", qs: ["Growth", "Cycles", "Systems"], c: "#4caf50" },
+    { x: 250, y: 50, l: "Economics", qs: ["Growth", "Cycles", "Systems"], c: "#ff9800" },
+    { x: 50, y: 180, l: "Music", qs: ["Harmony", "Cycles", "Pattern"], c: "#9c27b0" },
+    { x: 270, y: 175, l: "Architecture", qs: ["Structure", "Systems", "Pattern"], c: "#2196f3" },
+    { x: 165, y: 125, l: "Biology", qs: ["Growth", "Cycles", "Structure"], c: "#e91e63" },
+  ];
+  const dias = [];
+  for (let i = 0; i < concepts.length; i++)
+    for (let j = i + 1; j < concepts.length; j++) {
+      const sh = concepts[i].qs.filter(q => concepts[j].qs.includes(q));
+      if (sh.length > 0) dias.push({ from: i, to: j, shared: sh });
+    }
+  const muxs = [];
+  for (let i = 0; i < concepts.length; i++)
+    for (let j = i + 1; j < concepts.length; j++)
+      for (let k = j + 1; k < concepts.length; k++) {
+        if (dias.find(d => (d.from === i && d.to === j) || (d.from === j && d.to === i)) &&
+          dias.find(d => (d.from === j && d.to === k) || (d.from === k && d.to === j)) &&
+          dias.find(d => (d.from === i && d.to === k) || (d.from === k && d.to === i)))
+          muxs.push({ v: [i, j, k] });
+      }
+  const actMux = hv !== null ? muxs.filter(m => m.v.includes(hv)) : (showMux ? muxs : []);
+
+  return (
+    <div>
+      <STitle num="VI" title="Muxonomy" sub="The complete topology — Demometers composed through Diameters into a Manifold" />
+      <svg viewBox="0 0 330 230" style={{ width: "100%", maxWidth: 340, display: "block", margin: "0 auto" }}>
+        {actMux.map((m, i) => {
+          const [a, b, c] = m.v.map(v => concepts[v]);
+          return <polygon key={i} points={`${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}`} fill={`${C.mx}12`} stroke={`${C.mx}44`} strokeWidth="1" />;
+        })}
+        {dias.map((d, i) => {
+          const f = concepts[d.from], t = concepts[d.to];
+          const h = hv === d.from || hv === d.to;
+          const mx = (f.x + t.x) / 2, my = (f.y + t.y) / 2;
+          return (<g key={i}>
+            <line x1={f.x} y1={f.y} x2={t.x} y2={t.y} stroke={h ? C.di : `${C.di}33`} strokeWidth={h ? 2 : 1} />
+            {h && <text x={mx} y={my - 6} textAnchor="middle" fill={C.di} fontSize="7" fontWeight="700" fontFamily="'IBM Plex Mono', monospace">{d.shared.join(", ")}</text>}
+          </g>);
+        })}
+        {concepts.map((c, i) => (
+          <g key={i} onMouseEnter={() => setHv(i)} onMouseLeave={() => setHv(null)} style={{ cursor: "pointer" }}>
+            <circle cx={c.x} cy={c.y} r={hv === i ? 24 : 20} fill={`${c.c}22`} stroke={c.c} strokeWidth={hv === i ? 2.5 : 1.5} />
+            <text x={c.x} y={c.y - 1} textAnchor="middle" fill={C.tx} fontSize="8" fontWeight="900" fontFamily="'Orbitron', sans-serif">{c.l}</text>
+            <text x={c.x} y={c.y + 9} textAnchor="middle" fill={C.tm} fontSize="5.5" fontFamily="'IBM Plex Mono', monospace">{c.qs.join("·")}</text>
+          </g>
+        ))}
+      </svg>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 10 }}>
+        {[
+          { l: "DEMOMETERS", v: concepts.length, c: C.de },
+          { l: "DIAMETERS", v: dias.length, c: C.di },
+          { l: "MUXAMETERS", v: muxs.length, c: C.mx, tap: true },
+        ].map((m, i) => (
+          <div key={i} style={{ background: `${m.c}11`, border: `1px solid ${m.c}33`, borderRadius: 8, padding: 8, textAlign: "center", cursor: m.tap ? "pointer" : "default" }}
+            onClick={m.tap ? () => setSM(!showMux) : undefined}>
+            <div style={{ fontSize: 8, color: m.c, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>{m.l}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{m.v}</div>
+            {m.tap && <div style={{ fontSize: 8, color: m.c }}>{showMux ? "hide" : "show"} faces</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", fontSize: 10, color: C.tm, marginTop: 10, lineHeight: 1.6 }}>
+        Hover a concept to see its Diameters. Tap MUXAMETERS to show integrated faces.
+      </div>
+      <div style={{ background: `${C.mx}08`, border: `1px solid ${C.mx}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.7 }}>
+        <span style={{ color: C.mx, fontWeight: 700 }}>The total Conceptual Space is a Manifold.</span><br />
+        <span style={{ color: C.tm }}>
+          Multiple Muxameters sharing Diameters compose one integrated structure.<br />
+          5 Demometers · {(() => { const qs = [["Growth","Cycles","Systems"],["Growth","Cycles","Systems"],["Harmony","Cycles","Pattern"],["Structure","Systems","Pattern"],["Growth","Cycles","Structure"]]; let d=0; for(let i=0;i<5;i++) for(let j=i+1;j<5;j++) if(qs[i].some(q=>qs[j].includes(q))) d++; return d; })()} Diameters · Muxameters of Muxameters = Manifold
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN ───
+function CircleMuxameter() {
+  const [section, setSection] = useState(0);
+  const refs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+  const scrollTo = (i) => { setSection(i); refs[i]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
+
+  return (
+    <div style={{ background: C.bg, color: C.tx, minHeight: "100vh", fontFamily: "'IBM Plex Mono', monospace", padding: "20px 16px" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: C.bg, paddingTop: 8 }}><Nav active={section} onNav={scrollTo} /></div>
+
+      {/* Hero */}
+      <div ref={refs[0]} onClick={() => setSection(0)} style={{ marginBottom: 28, textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "3px", marginBottom: 8 }}>STRATIMUX MUXONOMY</div>
+        <h1 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 21, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>The Circle's Face<br />is a Manifold</h1>
+        <p style={{ fontSize: 11, color: C.tm, marginTop: 8, lineHeight: 1.5 }}>A proof from the geometry of Through Measure</p>
+        <p style={{ fontSize: 9, color: C.am, marginTop: 4 }}>
+          Formalized via the <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" target="_blank" rel="noopener noreferrer"
+            style={{ color: C.am, textDecoration: "underline" }}>Suite Cascade System (SCS)</a>
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
+          {[{ t: "Demometer", d: "Different Measure", c: C.de }, { t: "Diameter", d: "Through Measure", c: C.di }, { t: "Muxameter", d: "Integrated Measure", c: C.mx }].map((card, i) => (
+            <div key={i} style={{ background: `${card.c}10`, border: `1px solid ${card.c}33`, borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: card.c, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>{card.t}</div>
+              <div style={{ fontSize: 9, color: C.tm, marginTop: 3 }}>{card.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sections I–VII */}
+      {[DyadicDiameterProof, SectorInspector, ValidatingApproach, OrderOfDiameter, MinimalMuxameter, ConceptualSpace, TreeVsGraph].map((Comp, i) => (
+        <div key={i} ref={refs[i + 1]} onClick={() => setSection(i + 1)} style={{ marginBottom: 28, background: C.sf, borderRadius: 14, padding: 16 }}><Comp /></div>
+      ))}
+
+      {/* Cross-domain recognition */}
+      <div style={{ background: `${C.di}08`, border: `1px solid ${C.di}33`, borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ textAlign: "center", fontSize: 11, lineHeight: 1.8 }}>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", border: `2px solid ${C.mx}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 10, color: C.mx }}>○</span>
+            </div>
+            <div style={{ width: 40, height: 2, background: C.di }} />
+            <div style={{ width: 36, height: 36, border: `2px solid ${C.mx}`, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 10, color: C.mx }}>◇</span>
+            </div>
+          </div>
+          <span style={{ color: C.di, fontWeight: 700 }}>The Diameter between domains</span><br />
+          <span style={{ color: C.tm }}>
+            The circle: unlimited Demometers + unlimited Diameters → 1 Muxameter<br />
+            The concepts: 5 Demometers + {(() => { const concepts = [{ qs: ["Growth", "Cycles", "Systems"] }, { qs: ["Growth", "Cycles", "Systems"] }, { qs: ["Harmony", "Cycles", "Pattern"] }, { qs: ["Structure", "Systems", "Pattern"] }, { qs: ["Growth", "Cycles", "Structure"] }]; let d = 0; for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) if (concepts[i].qs.some(q => concepts[j].qs.includes(q))) d++; return d; })()} Diameters → Muxameters<br /><br />
+            Same structure. Different domain.<br />
+          </span>
+          <span style={{ color: C.di }}>That recognition IS a Diameter —<br />similarity drawn between unlike.</span>
+        </div>
+      </div>
+
+      {/* Closing */}
+      <div style={{ background: `${C.ac}10`, border: `1px solid ${C.ac}33`, borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: C.tx, lineHeight: 1.8, textAlign: "center" }}>
+          <span style={{ color: C.ac, fontWeight: 700 }}>The face of a circle is a Manifold.</span><br /><br />
+          <span style={{ color: C.mx, fontWeight: 700 }}>Muxameter of Muxameters = Manifold</span><br /><br />
+          <span style={{ color: C.tm }}>In exact geometric terms:</span><br />
+          <span style={{ color: C.mx }}>Each Face</span> = Muxameter<br />
+          <span style={{ color: C.di }}>Each Line</span> = Diameter<br />
+          <span style={{ color: C.de }}>Each Point</span> = Demometer<br /><br />
+          <span style={{ color: C.tm }}>The circle does not HAVE a diameter.<br />The circle IS diameter relationships —<br />unlimited through-measures integrating unlimited different-measures<br />into one Manifold. Its measure is π.<br /><br />The same structure composes in conceptual space.<br />The recognition between domains is itself a Through Measure.</span>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: 20, fontSize: 9, color: `${C.tm}88`, lineHeight: 1.8 }}>
+        Prior Work: François Viète (1593) · Measurement Framework: Micah Theodore Keller (2026)<br />
+        Formalized via the <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" target="_blank" rel="noopener noreferrer"
+          style={{ color: `${C.am}88` }}>Suite Cascade System (SCS)</a><br />
+        Stratimux Muxonomy · PhuirE Research Organization · GPLv3
+      </div>
+      <style>{`* { box-sizing: border-box; margin: 0; } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: ${C.bg}; } ::-webkit-scrollbar-thumb { background: ${C.sl}; border-radius: 3px; }`}</style>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CircleMuxameter />);
+  </script>
+</body>
+</html>
