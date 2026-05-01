@@ -732,12 +732,42 @@ function CircleMuxameter() {
             style={{ color: C.am, textDecoration: "underline" }}>Suite Cascade System (SCS)</a>
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
-          {[{ t: "Demometer", d: "Different Measure", c: C.de }, { t: "Diameter", d: "Through Measure", c: C.di }, { t: "Muxameter", d: "Integrated Measure", c: C.mx }].map((card, i) => (
-            <div key={i} style={{ background: `${card.c}10`, border: `1px solid ${card.c}33`, borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
+          {[
+            { t: "Demometer", d: "Different Measure", c: C.de,
+              ety: "De-Mo (\"Different from Me\") + Greek μέτρον (métron, \"measure\") — the bounded measure of difference from a reference point." },
+            { t: "Diameter", d: "Through Measure", c: C.di,
+              ety: "Greek διάμετρος (diá, \"through\" + métron, \"measure\"). Reinforced by German Durchmesser = durch (\"through\") + messen (\"measure\") — independent Germanic compound confirming the through-measure structure." },
+            { t: "Muxameter", d: "Integrated Measure", c: C.mx,
+              ety: "Mux (from multiplex, Latin multi- + -plex, \"many-fold\") + Greek μέτρον (métron, \"measure\") — each Demometer measured through its full relay across all Diameters." },
+          ].map((card, i) => (
+            <div key={i} style={{ background: `${card.c}10`, border: `1px solid ${card.c}33`, borderRadius: 10, padding: "10px 8px", textAlign: "center" }}>
               <div style={{ fontSize: 9, color: card.c, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>{card.t}</div>
-              <div style={{ fontSize: 9, color: C.tm, marginTop: 3 }}>{card.d}</div>
+              <div style={{ fontSize: 9, color: C.tm, marginTop: 3, fontWeight: 600 }}>{card.d}</div>
+              <div style={{ fontSize: 7.5, color: `${C.tm}99`, marginTop: 6, lineHeight: 1.5, fontStyle: "italic", textAlign: "left", padding: "0 2px" }}>{card.ety}</div>
             </div>
           ))}
+        </div>
+
+        {/* Cross-Linguistic Convergence */}
+        <div style={{ marginTop: 14, background: `${C.di}08`, border: `1px solid ${C.di}22`, borderRadius: 10, padding: "10px 12px" }}>
+          <div style={{ fontSize: 8, color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1px", marginBottom: 6, textAlign: "center" }}>CROSS-LINGUISTIC CONVERGENCE</div>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 8, color: C.tm }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${C.di}22` }}>
+                <th style={{ textAlign: "left", padding: "3px 4px", color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 600 }}>Concept</th>
+                <th style={{ textAlign: "left", padding: "3px 4px" }}>Greek</th>
+                <th style={{ textAlign: "left", padding: "3px 4px" }}>German</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style={{ padding: "3px 4px", color: C.ac }}>Through</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>διά (diá)</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>durch</td></tr>
+              <tr><td style={{ padding: "3px 4px", color: C.ac }}>Measure</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>μέτρον (métron)</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>messen</td></tr>
+              <tr style={{ borderTop: `1px solid ${C.di}15` }}><td style={{ padding: "3px 4px", color: C.di, fontWeight: 600 }}>Through-Measure</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>διάμετρος</td><td style={{ padding: "3px 4px", fontStyle: "italic" }}>Durchmesser</td></tr>
+            </tbody>
+          </table>
+          <div style={{ fontSize: 7, color: `${C.tm}77`, marginTop: 6, textAlign: "center", lineHeight: 1.4 }}>
+            Two unrelated Indo-European branches independently producing the same compositional structure — the concept is geometric before linguistic.
+          </div>
         </div>
       </div>
 
@@ -781,8 +811,47 @@ function CircleMuxameter() {
         </div>
       </div>
 
+      {/* Etymology Summary Table */}
+      <div style={{ background: `${C.sf}`, border: `1px solid ${C.sl}`, borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ fontSize: 8, color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "2px", marginBottom: 10, textAlign: "center" }}>ETYMOLOGY — THE MEASUREMENT FRAMEWORK</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 9, color: C.tm }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.sl}` }}>
+              <th style={{ textAlign: "left", padding: "6px 8px", color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 600, fontSize: 8 }}>Term</th>
+              <th style={{ textAlign: "left", padding: "6px 8px", fontSize: 8 }}>Definition</th>
+              <th style={{ textAlign: "left", padding: "6px 8px", fontSize: 8 }}>Etymology Core</th>
+              <th style={{ textAlign: "left", padding: "6px 8px", fontSize: 8 }}>Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: `1px solid ${C.sl}44` }}>
+              <td style={{ padding: "6px 8px", color: C.de, fontFamily: "'Orbitron', sans-serif", fontWeight: 600 }}>Demometer</td>
+              <td style={{ padding: "6px 8px" }}>Different Measure</td>
+              <td style={{ padding: "6px 8px", fontStyle: "italic" }}>De-Mo + μέτρον</td>
+              <td style={{ padding: "6px 8px", color: C.de }}>1 — bounded difference-set</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.sl}44` }}>
+              <td style={{ padding: "6px 8px", color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 600 }}>Diameter</td>
+              <td style={{ padding: "6px 8px" }}>Through Measure</td>
+              <td style={{ padding: "6px 8px", fontStyle: "italic" }}>διά + μέτρον / durch + messen</td>
+              <td style={{ padding: "6px 8px", color: C.di }}>2 — passage between unlike</td>
+            </tr>
+            <tr>
+              <td style={{ padding: "6px 8px", color: C.mx, fontFamily: "'Orbitron', sans-serif", fontWeight: 600 }}>Muxameter</td>
+              <td style={{ padding: "6px 8px" }}>Integrated Measure</td>
+              <td style={{ padding: "6px 8px", fontStyle: "italic" }}>multi-plex + μέτρον</td>
+              <td style={{ padding: "6px 8px", color: C.mx }}>3 — integrated manifold relay</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ fontSize: 7.5, color: `${C.tm}66`, marginTop: 8, textAlign: "center", lineHeight: 1.4 }}>
+          <span style={{ color: C.di }}>Diametric ≠ Opposite</span> — Late Latin <em>diametrālis</em> originally meant "belonging to the diameter," not "opposed." The opposition reading is later semantic drift. True reading: passage through, not separation from.
+        </div>
+      </div>
+
       <div style={{ textAlign: "center", marginTop: 20, fontSize: 9, color: `${C.tm}88`, lineHeight: 1.8 }}>
         Prior Work: François Viète (1593) · Measurement Framework: Micah Theodore Keller (2026)<br />
+        Etymology Sources: Liddell &amp; Scott (Oxford, 1940) · DWDS · Etymonline · Wiktionary<br />
         Formalized via the <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" target="_blank" rel="noopener noreferrer"
           style={{ color: `${C.am}88` }}>Suite Cascade System (SCS)</a><br />
         Stratimux Muxonomy · PhuirE Research Organization · GPLv3

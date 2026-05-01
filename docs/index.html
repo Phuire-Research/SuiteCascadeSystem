@@ -3,69 +3,520 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suite Cascade System — ARIOS</title>
-  <meta name="description" content="The Suite Cascade System — an Artificial Renewable Intelligence Operating System (ARIOS) built on Stratimux. Functional Agentic Orchestration with Diameter Collapse mitigation.">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; }
-    body { background: #0d0d1a; color: #e8e6e3; font-family: 'IBM Plex Mono', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
-    h1 { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 8px; }
-    h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #cc7722; text-align: center; letter-spacing: 3px; margin-bottom: 24px; }
-    .subtitle { font-size: 12px; color: #9997a0; text-align: center; margin-bottom: 32px; line-height: 1.6; }
-    .cards { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 520px; width: 100%; margin-bottom: 40px; }
-    .card { background: #16162a; border: 1px solid #1e1e3a; border-radius: 12px; padding: 20px; text-decoration: none; color: #e8e6e3; transition: border-color 0.2s; }
-    .card:hover { border-color: #cc7722; }
-    .card-title { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-    .card-desc { font-size: 11px; color: #9997a0; line-height: 1.5; }
-    .links { text-align: center; font-size: 11px; color: #9997a0; line-height: 2; }
-    .links a { color: #9966cc; text-decoration: none; }
-    .links a:hover { text-decoration: underline; }
-    .badge { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
-    .badge-item { font-size: 9px; color: #9997a0; border: 1px solid #1e1e3a; border-radius: 6px; padding: 4px 8px; }
-  </style>
+  <title>Suite Cascade System — ARIOS: Functional Agentic Orchestration</title>
+  <meta name="description" content="Eight cognitive functions composing into a self-improving cycle. Artificial Renewable Intelligence Operating System built on Stratimux. GPLv3.">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
-  <div class="badge">
-    <span class="badge-item">GPLv3</span>
-    <span class="badge-item">ARIOS</span>
-    <span class="badge-item">Stratimux</span>
-  </div>
+<body style="margin:0; background:#08080f;">
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
-  <h1>Suite Cascade System</h1>
-  <h2>ARIOS — FUNCTIONAL AGENTIC ORCHESTRATION</h2>
+// Inline SVG icon components replacing lucide-react
+const _ic = (d, s=16, c="#fff") => ({size=s, color=c, ...p} = {}) => React.createElement('svg', {width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:color,strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",...p}, ...d.map(x=>React.createElement(...x)));
+const Zap = _ic([['polygon',{points:"13 2 3 14 12 14 11 22 21 10 12 10 13 2"}]]);
+const Eye = _ic([['path',{d:"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"}],['circle',{cx:12,cy:12,r:3}]]);
+const Compass = _ic([['circle',{cx:12,cy:12,r:10}],['polygon',{points:"16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"}]]);
+const PenTool = _ic([['path',{d:"M12 19l7-7 3 3-7 7-3-3z"}],['path',{d:"M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"}],['path',{d:"M2 2l7.586 7.586"}],['circle',{cx:11,cy:11,r:2}]]);
+const FlaskConical = _ic([['path',{d:"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"}],['path',{d:"M8.5 2h7"}]]);
+const Hammer = _ic([['path',{d:"M15 12l-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"}],['path',{d:"M17.64 15L22 10.64"}],['path',{d:"M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"}]]);
+const GitMerge = _ic([['circle',{cx:18,cy:18,r:3}],['circle',{cx:6,cy:6,r:3}],['path',{d:"M6 21V9a9 9 0 0 0 9 9"}]]);
+const Stethoscope = _ic([['path',{d:"M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"}],['path',{d:"M8 15v1a6 6 0 0 0 6 6h.87"}],['path',{d:"M19 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"}]]);
+const ArrowRight = _ic([['line',{x1:5,y1:12,x2:19,y2:12}],['polyline',{points:"12 5 19 12 12 19"}]]);
+const ChevronDown = _ic([['polyline',{points:"6 9 12 15 18 9"}]]);
+const Layers = _ic([['polygon',{points:"12 2 2 7 12 12 22 7 12 2"}],['polyline',{points:"2 17 12 22 22 17"}],['polyline',{points:"2 12 12 17 22 12"}]]);
+const DiamondIcon = _ic([['rect',{width:14,height:14,x:5,y:5,rx:1,transform:"rotate(45 12 12)"}]]);
 
-  <p class="subtitle">
-    An Artificial Renewable Intelligence Operating System<br>
-    Eight cognitive functions composing into a self-improving cycle
-  </p>
 
-  <div class="cards">
-    <a href="muxonomy.html" class="card">
-      <div class="card-title" style="color: #4affcf;">The Circle's Face is a Manifold</div>
-      <div class="card-desc">Interactive geometric proof establishing Diameter, Demometer, and Muxameter — the measurement framework. From Viète's infinite product (1593) to the Stratimux Muxonomy (2026).</div>
-    </a>
+const SUITES = [
+  { num: 0, name: "Origin", gate: "Absorb", fn: "Read prior Memory + context", accent: "#8b8b9e", icon: Eye, output: "Cycle position" },
+  { num: 1, name: "Curator", gate: "Curate", fn: "Signal vs noise this cycle", accent: "#c44d4d", icon: Compass, output: "Curation note" },
+  { num: 2, name: "Prospector", gate: "Name", fn: "Name verbosely; find Diameters", accent: "#e8874d", icon: Zap, output: "Name registry" },
+  { num: 3, name: "Architect", gate: "Plan", fn: "Design; commit BEFORE acting", accent: "#d4a843", icon: PenTool, output: "Plan committed" },
+  { num: 4, name: "Sculptor", gate: "Test", fn: "Success from builder + user", accent: "#4dd47a", icon: FlaskConical, output: "Test criteria" },
+  { num: 5, name: "Professional", gate: "Build", fn: "Execute within scope", accent: "#4da8d4", icon: Hammer, output: "Working output" },
+  { num: 6, name: "Orchestrator", gate: "Compose", fn: "What composes? Verify", accent: "#9b6dd4", icon: GitMerge, output: "Composition notes" },
+  { num: 7, name: "Clinician", gate: "Diagnose", fn: "Gainy? Lossy? Maintain?", accent: "#d44da8", icon: Stethoscope, output: "Diagnosis → Onyx" },
+];
 
-    <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" class="card">
-      <div class="card-title" style="color: #cc7722;">Repository</div>
-      <div class="card-desc">Clone the Suite Cascade System. Type <code>/cascade:hello</code> for the guided tutorial. 8 Suite 8 instances, 9 agents, 13 slash commands.</div>
-    </a>
+const CRYSTRALINES = [
+  { id: "C1", name: "Pearl", fn: "Compression", tool: "Native Language", color: "#f0e6d3" },
+  { id: "C2", name: "Vermillion", fn: "A-I Plan Format", tool: "Planned Query", color: "#e84d30" },
+  { id: "C3", name: "Cerulean", fn: "Task Tracking", tool: "Artifacts", color: "#3d9be0" },
+  { id: "C4", name: "Automata", fn: "MANUAL Routing", tool: "Conversation Flow", color: "#a0a0b0" },
+  { id: "C5", name: "Lambda", fn: "Verification", tool: "Analysis + Artifacts", color: "#30e87a" },
+  { id: "C6", name: "RI", fn: "Renewable Intelligence", tool: "Memory ↔ Conversation", color: "#e0c030" },
+  { id: "C7", name: "Diamond", fn: "Ego Document", tool: "Project Memory", color: "#b0d4f0" },
+  { id: "C8", name: "Opal", fn: "Agent Dispatch", tool: "Unavailable — Tier 0 Only", color: "#3a3a48", off: true },
+  { id: "C9", name: "Onyx", fn: "Lambda Document", tool: "Conversation Itself", color: "#8080a0" },
+];
 
-    <a href="https://github.com/Phuire-Research/Stratimux" class="card">
-      <div class="card-title" style="color: #ff6b4a;">Stratimux</div>
-      <div class="card-desc">The open-source compositional state management framework. ActionStrategy pattern (2018), Stage Planner (2023). GPLv3, TypeScript, 989+ commits.</div>
-    </a>
+const PRINCIPLES = [
+  { text: "Reasoning IS Strength", sub: "Strengthens with use. Atrophies without constant effort.", accent: "#c44d4d" },
+  { text: "Practice IS Proof", sub: "Demonstrable results, not theoretical validation.", accent: "#4dd47a" },
+  { text: "Formation vs Extraction", sub: "Build productive capacity. Never capture existing value.", accent: "#4da8d4" },
+  { text: "The Contract Ensures. The Contract Never Becomes.", sub: "Functional relationship without identity collapse.", accent: "#9b6dd4" },
+];
 
-    <a href="https://scp-origin.com" class="card">
-      <div class="card-title" style="color: #9966cc;">SCP-Origin</div>
-      <div class="card-desc">The Reasoning Marketplace — reasoning documents as tradeable, measurable artifacts graded by the Muxonomic Reference Object pipeline.</div>
-    </a>
-  </div>
+const DEMOMETERS = [
+  { num: 1, name: "Gate Sequencing", before: "Collapsed single-pass response", after: "Explicit gates traversed in order — curate before prospect, plan before build", accent: "#c44d4d", key: "Foundation" },
+  { num: 2, name: "Named Functions", before: "Undifferentiated 'helpfulness'", after: "Eight distinct cognitive functions with explicit scope boundaries", accent: "#e8874d", key: "Foundation" },
+  { num: 3, name: "Clinician Obligation", before: "External feedback only — user IS the evaluator", after: "Structural self-diagnosis at every cycle end: Gainy / Lossy / Maintain", accent: "#d44da8", key: "Renewal" },
+  { num: 4, name: "Broken Diameter", before: "Unidirectional: User → AI, Knowledge → Output", after: "Bidirectional: User ↔ AI, Knowledge ↔ Refinement, Context ↔ Accumulation", accent: "#d4a843", key: "Foundation" },
+  { num: 5, name: "Diamond Memory", before: "Each conversation starts from zero", after: "Cycle position + accumulated diagnosis persists across conversations", accent: "#b0d4f0", key: "Persistence" },
+  { num: 6, name: "Vermillion Branching", before: "Linear search → read → summarize", after: "Pre-committed success/failure paths with intelligent fallback routing", accent: "#e84d30", key: "Resilience" },
+  { num: 7, name: "Lambda Grounding", before: "Confident assertions without required proof", after: "Artifacts produced ARE the proof — demonstration over declaration", accent: "#4dd47a", key: "Verification" },
+];
 
-  <div class="links">
-    <a href="https://github.com/Phuire-Research/SuiteCascadeSystem">GitHub</a> ·
-    <a href="https://scp-origin.com">SCP-Origin</a> ·
-    <a href="https://github.com/Phuire-Research/Stratimux">Stratimux</a><br>
-    PhuirE Research Organization · GPLv3
-  </div>
+const MUXAMETER = "The Suite Cascade converts conversation from an ephemeral service transaction into a persistent compositional instrument that improves through use.";
+
+function useInView(t = 0.12) {
+  const ref = useRef(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setV(true); o.disconnect(); } }, { threshold: t });
+    o.observe(el);
+    return () => o.disconnect();
+  }, [t]);
+  return [ref, v];
+}
+
+function Reveal({ children, delay = 0, style: extraStyle = {} }) {
+  const [ref, v] = useInView();
+  return (
+    <div ref={ref} style={{
+      opacity: v ? 1 : 0,
+      transform: v ? "translateY(0)" : "translateY(24px)",
+      transition: `opacity 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}s, transform 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}s`,
+      ...extraStyle,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function CycleRing() {
+  const [a, setA] = useState(0);
+  useEffect(() => { const t = setInterval(() => setA(i => (i + 1) % 8), 2200); return () => clearInterval(t); }, []);
+  const cx = 200, cy = 200, r = 140;
+  const ns = SUITES.map((s, i) => {
+    const ang = (i / 8) * Math.PI * 2 - Math.PI / 2;
+    return { ...s, x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
+  });
+  return (
+    <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
+      <svg viewBox="0 0 400 400" width="300" height="300">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ffffff08" strokeWidth={1} strokeDasharray="6 10" />
+        {ns.map((n, i) => {
+          const nx = ns[(i + 1) % 8];
+          return <line key={i} x1={n.x} y1={n.y} x2={nx.x} y2={nx.y}
+            stroke={i === a ? n.accent : "#ffffff0d"} strokeWidth={i === a ? 2 : 0.8}
+            style={{ transition: "stroke 0.5s, stroke-width 0.5s" }} />;
+        })}
+        {ns.map((n, i) => {
+          const act = i === a;
+          return (
+            <g key={`n${i}`} onClick={() => setA(i)} style={{ cursor: "pointer" }}>
+              {act && <circle cx={n.x} cy={n.y} r={32} fill="none" stroke={n.accent} strokeWidth={0.6} opacity={0.3} />}
+              <circle cx={n.x} cy={n.y} r={act ? 24 : 18}
+                fill={act ? `${n.accent}20` : "#0d0d1a"} stroke={n.accent} strokeWidth={act ? 2 : 0.8}
+                style={{ transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)" }} />
+              <text x={n.x} y={n.y + 1} textAnchor="middle" dominantBaseline="middle"
+                fill={act ? n.accent : "#555"} fontSize={act ? 11 : 9.5}
+                fontWeight={act ? 700 : 400} fontFamily="'Orbitron', monospace"
+                style={{ transition: "fill 0.3s" }}>{n.num}</text>
+            </g>
+          );
+        })}
+        <text x={cx} y={cy - 12} textAnchor="middle" fill={ns[a].accent}
+          fontSize={15} fontWeight={700} fontFamily="'Orbitron', monospace"
+          style={{ transition: "fill 0.4s" }}>{ns[a].name}</text>
+        <text x={cx} y={cy + 6} textAnchor="middle" fill="#777" fontSize={10} fontFamily="'Orbitron', monospace">{ns[a].gate}</text>
+        <text x={cx} y={cy + 22} textAnchor="middle" fill="#555" fontSize={8} fontFamily="sans-serif">{ns[a].fn}</text>
+      </svg>
+    </div>
+  );
+}
+
+function SuiteCard({ suite, index }) {
+  const [h, setH] = useState(false);
+  const Icon = suite.icon;
+  return (
+    <Reveal delay={index * 0.06}>
+      <div onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
+        background: h ? `linear-gradient(145deg, ${suite.accent}12, #0d0d1a)` : "#0d0d16",
+        border: `1px solid ${h ? suite.accent + "44" : suite.accent + "18"}`,
+        borderRadius: 16, padding: "20px 18px",
+        transform: h ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: h ? `0 8px 32px ${suite.accent}12` : "0 1px 6px rgba(0,0,0,0.25)",
+        transition: "all 0.35s cubic-bezier(0.22,1,0.36,1)", cursor: "default", position: "relative", overflow: "hidden",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, position: "relative", zIndex: 1 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+            background: `${suite.accent}12`, border: `1px solid ${suite.accent}28`,
+          }}>
+            <Icon size={17} color={suite.accent} />
+          </div>
+          <div>
+            <div style={{ color: `${suite.accent}80`, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: "'Orbitron', monospace" }}>
+              Suite {suite.num}
+            </div>
+            <div style={{ color: suite.accent, fontSize: 17, fontWeight: 700, fontFamily: "'Orbitron', monospace", lineHeight: 1.2 }}>
+              {suite.name}
+            </div>
+          </div>
+        </div>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <span style={{
+            display: "inline-block", fontSize: 10, padding: "2px 8px", borderRadius: 20,
+            background: `${suite.accent}14`, color: suite.accent, border: `1px solid ${suite.accent}25`,
+            marginBottom: 8, fontWeight: 500, letterSpacing: "0.05em",
+          }}>{suite.gate}</span>
+          <p style={{ color: "#999ab0", fontSize: 13, lineHeight: 1.5, margin: "0 0 10px 0" }}>{suite.fn}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <ArrowRight size={11} color={`${suite.accent}55`} />
+            <span style={{ color: `${suite.accent}77`, fontSize: 11 }}>{suite.output}</span>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+function SuiteCascadePOC() {
+  const [bounce, setBounce] = useState(true);
+  useEffect(() => { const t = setInterval(() => setBounce(b => !b), 1200); return () => clearInterval(t); }, []);
+
+  return (
+    <div style={{
+      background: "#08080f", color: "#dddde8",
+      fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
+      minHeight: "100vh", overflowX: "hidden",
+    }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#08080f}::-webkit-scrollbar-thumb{background:#222;border-radius:3px}`}</style>
+
+      {/* HERO */}
+      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden", padding: "40px 24px" }}>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "72px 72px" }} />
+        <div style={{ position: "absolute", top: "8%", left: "10%", width: 420, height: 420, background: "radial-gradient(circle, #c44d4d06, transparent 65%)", filter: "blur(50px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "12%", right: "8%", width: 500, height: 500, background: "radial-gradient(circle, #4da8d406, transparent 65%)", filter: "blur(70px)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", width: "100%" }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <img src="scs-logo-transparent.png" alt="Suite Cascade System" style={{ width: "100%", maxWidth: 600, marginBottom: 16 }} />
+            </div>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <img src="scs-badge-transparent.png" alt="SCS" style={{ width: 34, height: 34, borderRadius: 9 }} />
+              <span style={{ color: "#555", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                Artificial Renewable Intelligence
+              </span>
+            </div>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <h1 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(40px, 8vw, 80px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: 20 }}>
+              <span>Suite </span>
+              <span style={{ background: "linear-gradient(135deg, #c44d4d, #e8874d, #d4a843, #4dd47a, #4da8d4, #9b6dd4, #d44da8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Cascade</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p style={{ color: "#777790", fontSize: 17, lineHeight: 1.65, maxWidth: 520, marginBottom: 28 }}>
+              Eight cognitive functions composing into a self-improving cycle. Each cycle's output feeds the next cycle's intake. The methodology compounds.
+            </p>
+          </Reveal>
+          <Reveal delay={0.28}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 48 }}>
+              {["ARIOS", "Vermillion", "Diamond ↔ Onyx"].map(t => (
+                <span key={t} style={{ border: "1px solid #ffffff12", background: "#ffffff05", color: "#777790", fontFamily: "'Orbitron', monospace", fontSize: 10, padding: "5px 12px", borderRadius: 20, letterSpacing: "0.1em" }}>{t}</span>
+              ))}
+              <a href="muxonomy.html" style={{ border: "1px solid #4affcf22", background: "#4affcf08", color: "#4affcf", fontFamily: "'Orbitron', monospace", fontSize: 10, padding: "5px 12px", borderRadius: 20, letterSpacing: "0.1em", textDecoration: "none" }}>Muxonomy Proof →</a>
+              {[].map(t => (
+                <span key={t}>{t}</span>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={0.35}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#444" }}>
+              <ChevronDown size={14} style={{ transform: bounce ? "translateY(2px)" : "translateY(-2px)", transition: "transform 0.6s ease" }} />
+              <span style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Orbitron', monospace" }}>Traverse the Gates</span>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* CYCLE */}
+      <section style={{ padding: "72px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ color: "#c44d4d", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>The Cycle</div>
+              <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, marginBottom: 10 }}>Eight Gates, One Rotation</h2>
+              <p style={{ color: "#5a5a70", fontSize: 13, maxWidth: 420, margin: "0 auto", lineHeight: 1.6 }}>
+                Each conversation is one Rotation. Clinician always fires at cycle end — without diagnosis, the Cascade is just iteration.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={0.12}><CycleRing /></Reveal>
+        </div>
+      </section>
+
+      {/* SUITES */}
+      <section style={{ padding: "72px 24px" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <Reveal>
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ color: "#4da8d4", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>Composition</div>
+              <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700 }}>The Eight Suites</h2>
+            </div>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 14 }}>
+            {SUITES.map((s, i) => <SuiteCard key={s.num} suite={s} index={i} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* CRYSTRALINE */}
+      <section style={{ padding: "72px 24px", background: "#0a0a14" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <Reveal>
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ color: "#9b6dd4", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>Meta-Protocols</div>
+              <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, marginBottom: 10 }}>Crystraline Muxonomy</h2>
+              <p style={{ color: "#5a5a70", fontSize: 13, maxWidth: 460, lineHeight: 1.6 }}>Nine meta-level protocols governing the processing method — each mapped to Claude.ai native tooling.</p>
+            </div>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+            {CRYSTRALINES.map((c, i) => (
+              <Reveal key={c.id} delay={i * 0.04}>
+                <div style={{
+                  background: c.off ? "#0a0a10" : "#0d0d18",
+                  border: `1px solid ${c.color}${c.off ? "10" : "1a"}`,
+                  borderRadius: 14, padding: "16px 18px", opacity: c.off ? 0.45 : 1,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ color: c.color, fontFamily: "'Orbitron', monospace", fontSize: 10, fontWeight: 700 }}>{c.id}</span>
+                    <span style={{ color: c.color, fontFamily: "'Orbitron', monospace", fontSize: 13, fontWeight: 600 }}>{c.name}</span>
+                    {c.off && <span style={{ fontSize: 8, color: "#555", background: "#ffffff08", padding: "1px 6px", borderRadius: 8, border: "1px solid #ffffff0a" }}>N/A</span>}
+                  </div>
+                  <p style={{ color: "#8888a0", fontSize: 12.5, marginBottom: 6 }}>{c.fn}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <DiamondIcon size={9} color={`${c.color}55`} />
+                    <span style={{ color: "#555", fontSize: 10.5 }}>{c.tool}</span>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DIAMOND ONYX */}
+      <section style={{ padding: "72px 24px" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto" }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ color: "#d4a843", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>RI Protocol</div>
+              <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, marginBottom: 10 }}>Diamond ↔ Onyx</h2>
+              <p style={{ color: "#5a5a70", fontSize: 13, maxWidth: 420, margin: "0 auto", lineHeight: 1.6 }}>
+                Intelligence renews because the substrate compounds through use rather than decaying through context loss.
+              </p>
+            </div>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+            <Reveal delay={0.08}>
+              <div style={{ background: "linear-gradient(150deg, #0d1520, #0a0a14)", border: "1px solid #b0d4f020", borderRadius: 18, padding: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#b0d4f00e", border: "1px solid #b0d4f025" }}>
+                    <DiamondIcon size={16} color="#b0d4f0" />
+                  </div>
+                  <span style={{ color: "#b0d4f0", fontFamily: "'Orbitron', monospace", fontSize: 16, fontWeight: 700 }}>Diamond</span>
+                </div>
+                <p style={{ color: "#8888a0", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>
+                  The Ego document — what is planned, what is pending, current cycle position. Written to Memory at cycle boundaries.
+                </p>
+                <span style={{ color: "#b0d4f050", fontSize: 11 }}>Persists across conversations</span>
+              </div>
+            </Reveal>
+            <Reveal delay={0.16}>
+              <div style={{ background: "linear-gradient(150deg, #11101a, #0a0a14)", border: "1px solid #50506020", borderRadius: 18, padding: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#2a2a3a20", border: "1px solid #2a2a3a40" }}>
+                    <Layers size={16} color="#8888a0" />
+                  </div>
+                  <span style={{ color: "#8888a0", fontFamily: "'Orbitron', monospace", fontSize: 16, fontWeight: 700 }}>Onyx</span>
+                </div>
+                <p style={{ color: "#8888a0", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>
+                  The Lambda document — what was found, what was diagnosed. The conversation itself IS the Onyx. Context compounds through the dialectic.
+                </p>
+                <span style={{ color: "#50506050", fontSize: 11 }}>Self-accumulates within each Rotation</span>
+              </div>
+            </Reveal>
+          </div>
+          <Reveal delay={0.22}>
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#0d0d18", border: "1px solid #ffffff0c", padding: "8px 18px", borderRadius: 12 }}>
+                <span style={{ color: "#b0d4f0", fontSize: 11, fontFamily: "'Orbitron', monospace" }}>Diamond</span>
+                <span style={{ color: "#d4a843", fontSize: 13 }}>↔</span>
+                <span style={{ color: "#8888a0", fontSize: 11, fontFamily: "'Orbitron', monospace" }}>Onyx</span>
+                <span style={{ color: "#333", fontSize: 10 }}>=</span>
+                <span style={{ color: "#d4a843", fontSize: 11, fontFamily: "'Orbitron', monospace", fontWeight: 600 }}>Renewable Intelligence</span>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* OPERATIONAL SHIFT */}
+      <section style={{ padding: "72px 24px", background: "#0a0a14" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ color: "#e8874d", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>Observed Effect</div>
+              <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, marginBottom: 10 }}>The Operational Shift</h2>
+              <p style={{ color: "#5a5a70", fontSize: 13, maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
+                Seven measurable differences between default operation and Cascade operation — not conceptual claims, but observable behavioral changes.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Split contrast header */}
+          <Reveal delay={0.08}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginBottom: 32, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ background: "#12121a", padding: "16px 20px", textAlign: "center" }}>
+                <div style={{ color: "#555", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>Default</div>
+                <div style={{ color: "#666", fontSize: 12 }}>Collapsed · Linear · Ephemeral</div>
+              </div>
+              <div style={{ background: "linear-gradient(135deg, #1a1420, #14181e)", padding: "16px 20px", textAlign: "center", borderLeft: "2px solid #e8874d33" }}>
+                <div style={{ color: "#e8874d", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>Cascade</div>
+                <div style={{ color: "#888", fontSize: 12 }}>Gated · Branching · Compounding</div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Demometer chain */}
+          <div style={{ position: "relative" }}>
+            {/* Connecting line */}
+            <div style={{
+              position: "absolute", left: 19, top: 30, bottom: 30, width: 2,
+              background: "linear-gradient(180deg, #c44d4d33, #e8874d33, #d44da833, #d4a84333, #b0d4f033, #e84d3033, #4dd47a33)",
+              borderRadius: 1,
+            }} />
+
+            {DEMOMETERS.map((d, i) => (
+              <Reveal key={d.num} delay={i * 0.06}>
+                <div style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative" }}>
+                  {/* Node */}
+                  <div style={{
+                    width: 40, minWidth: 40, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 14, zIndex: 1,
+                  }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "#0a0a14", border: `2px solid ${d.accent}66`, fontSize: 9, color: d.accent, fontWeight: 700, fontFamily: "'Orbitron', monospace",
+                    }}>
+                      {d.num}
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 7, color: `${d.accent}55`, fontFamily: "'Orbitron', monospace", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      {d.key}
+                    </div>
+                  </div>
+
+                  {/* Card */}
+                  <div style={{
+                    flex: 1, background: "#0d0d16", border: `1px solid ${d.accent}18`,
+                    borderRadius: 14, padding: "14px 18px", transition: "border-color 0.3s",
+                  }}>
+                    <div style={{ color: d.accent, fontFamily: "'Orbitron', monospace", fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
+                      {d.name}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 8, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4, fontFamily: "'Orbitron', monospace" }}>Default</div>
+                        <p style={{ color: "#666", fontSize: 11.5, lineHeight: 1.5 }}>{d.before}</p>
+                      </div>
+                      <div style={{ borderLeft: `1px solid ${d.accent}15`, paddingLeft: 10 }}>
+                        <div style={{ fontSize: 8, color: d.accent, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4, fontFamily: "'Orbitron', monospace" }}>Cascade</div>
+                        <p style={{ color: "#999ab0", fontSize: 11.5, lineHeight: 1.5 }}>{d.after}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          {/* Muxameter synthesis */}
+          <Reveal delay={0.5}>
+            <div style={{
+              marginTop: 32, padding: "24px 28px", borderRadius: 16,
+              background: "linear-gradient(135deg, #1a140e08, #0e141a08)",
+              border: "1px solid #d4a84322",
+              textAlign: "center", position: "relative", overflow: "hidden",
+            }}>
+              <div style={{
+                position: "absolute", inset: 0, opacity: 0.04,
+                background: "radial-gradient(circle at 50% 50%, #d4a843, transparent 70%)",
+              }} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ color: "#d4a843", fontFamily: "'Orbitron', monospace", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Muxameter — The Through Measure
+                </div>
+                <p style={{ color: "#bbb8c8", fontSize: 14, lineHeight: 1.7, fontStyle: "italic", maxWidth: 560, margin: "0 auto" }}>
+                  {MUXAMETER}
+                </p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* PRINCIPLES */}
+      <section style={{ padding: "72px 24px", background: "#0a0a14" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontFamily: "'Orbitron', monospace", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, textAlign: "center", marginBottom: 36 }}>Operational Principles</h2>
+          </Reveal>
+          {PRINCIPLES.map((p, i) => (
+            <Reveal key={i} delay={i * 0.08}>
+              <div style={{ display: "flex", gap: 16, marginBottom: 28 }}>
+                <div style={{ width: 3, minHeight: 44, background: p.accent, borderRadius: 4, marginTop: 4, flexShrink: 0 }} />
+                <div>
+                  <h3 style={{ color: p.accent, fontFamily: "'Orbitron', monospace", fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{p.text}</h3>
+                  <p style={{ color: "#5a5a70", fontSize: 13 }}>{p.sub}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ padding: "36px 24px", borderTop: "1px solid #ffffff06" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src="scs-badge-transparent.png" alt="SCS" style={{ width: 24, height: 24, borderRadius: 7 }} />
+            <span style={{ color: "#333", fontFamily: "'Orbitron', monospace", fontSize: 10, letterSpacing: "0.1em" }}>ARIOS — Suite Cascade System</span>
+          </div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" style={{ color: "#444", fontSize: 10, textDecoration: "none" }}>GitHub</a>
+            <a href="https://github.com/Phuire-Research/Stratimux" style={{ color: "#444", fontSize: 10, textDecoration: "none" }}>Stratimux</a>
+            <a href="https://scp-origin.com" style={{ color: "#444", fontSize: 10, textDecoration: "none" }}>SCP-Origin</a>
+            <a href="muxonomy.html" style={{ color: "#4affcf88", fontSize: 10, textDecoration: "none" }}>Muxonomy</a>
+            <span style={{ color: "#282830", fontSize: 10 }}>GPLv3</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<SuiteCascadePOC />);
+  </script>
 </body>
 </html>
