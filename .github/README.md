@@ -11,7 +11,8 @@
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
 
 <p align="center">
-  <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demonstration</a> · 
+  <a href="https://poe.com/SCS-Researcher">Live Demo</a> · 
+  <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
   <a href="https://github.com/Phuire-Research/Stratimux">Stratimux</a> · 
   <a href="https://scp-origin.com">SCP-Origin</a> · 

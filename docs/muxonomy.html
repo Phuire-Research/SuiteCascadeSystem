@@ -718,8 +718,9 @@ function CircleMuxameter() {
   const scrollTo = (i) => { setSection(i); refs[i]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
 
   return (
-    <div style={{ background: C.bg, color: C.tx, minHeight: "100vh", fontFamily: "'IBM Plex Mono', monospace", padding: "20px 16px" }}>
+    <div style={{ background: C.bg, color: C.tx, minHeight: "100vh", fontFamily: "'IBM Plex Mono', monospace" }}>
       <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: C.bg, paddingTop: 8 }}><Nav active={section} onNav={scrollTo} /></div>
 
       {/* Hero */}
@@ -857,6 +858,7 @@ function CircleMuxameter() {
         Stratimux Muxonomy · PhuirE Research Organization · GPLv3
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: ${C.bg}; } ::-webkit-scrollbar-thumb { background: ${C.sl}; border-radius: 3px; }`}</style>
+      </div>{/* close maxWidth container */}
     </div>
   );
 }
