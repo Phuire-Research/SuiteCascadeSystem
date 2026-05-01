@@ -1,6 +1,6 @@
 # Greeting Strategy
 
-**Suite 8**: Hello World
+**Suite 8**: Fresh Slate
 **Trigger**: First engagement, demonstration request
 
 ---
@@ -8,7 +8,7 @@
 ## Vermillion Plan
 
 ```
-<VermillionPlan topic="Hello World Greeting">
+<VermillionPlan topic="Fresh Slate Greeting">
 
 Band 1 [S1 Greeting] (Tier 0):
   Informative: Read the S1 Skill.md to determine CLI parameters.

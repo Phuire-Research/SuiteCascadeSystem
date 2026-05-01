@@ -148,6 +148,37 @@ Assemble the 3 research results into a Shatterite Menu. Each option structured a
 
 ---
 
+### Stage 3.5: Project Location Decision Block
+
+Before the Banded Diamond fires, Confer with the user about WHERE to scaffold. Present BEFORE Band 1 — the user retains override.
+
+**Detection**: Occupied = `package.json` OR `src/` OR `app/` OR `pyproject.toml` OR `Cargo.toml` OR (non-Cascade files at root > 3).
+
+```
+<AskUserQuestion>
+╔══════════════════════════════════════════════════════════╗
+║  PROJECT LOCATION                           [Green]      ║
+║  ─ · ─                                                   ║
+║  Where should we scaffold {selected_option_name}?        ║
+║                                                          ║
+║  [R] Project Root — ./{project-name}/                    ║
+║      (Detected: root is {occupied|available})            ║
+║                                                          ║
+║  [L] Cascades Lab — ./Cascades/Lab/{project-name}/       ║
+║      (Tutorial sandbox; safe for any repo state)         ║
+║                                                          ║
+║  [C] Custom path — specify your own                      ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+</AskUserQuestion>
+```
+
+**Default**: Root-available → recommend [R]. Root-occupied → recommend [L].
+
+**Cinnabar Note (P6)**: "This is Conference — the Cascade asks WHERE before it builds. Cascades/Lab/ is the sandbox; root is for production intent."
+
+---
+
 ### Stage 4: Actualization Gate — First Diamond
 
 On selection, Engage a **Full Suite Diamond** (1-7) — the third plan type demonstrated: Banded. Tier matched to complexity.
@@ -157,58 +188,68 @@ On selection, Engage a **Full Suite Diamond** (1-7) — the third plan type demo
 | Complexity | Tier | Reasoning |
 |-----------|------|-----------|
 | Low | 0 | Self-Utilization — in-context, muxified |
-| Medium | 0→1 | Mixed — planning in-context, implementation dispatched |
-| High | 1 | Full Tier 1 — Bands dispatched as agents |
+| Medium | 0→1 | Tier-Lift: planning in-context, Bands 1-4 dispatched as agents |
+| High | 1 | Full Tier 1 — all Bands dispatched as agents |
 
-**Banded Diamond Plan**:
+**Tier-Lift Heuristic (R4)**: When a Tier 0 in-context Banded Diamond's Bands 2-3-4 each require >5 lines of inline output, Tier-Lift to Tier 1 — dispatch each Band as a sub-agent, return a Summation, render inline. For Low complexity (e.g., single-file projects), keep Tier 0.
+
+**Banded Diamond Plan** (brevity-bounded per R1):
 
 ```
 <VermillionPlan topic="Hello World Diamond: {selected_option_name}">
 
 Band 1 [Red Curator]:
-  Informative: Curate what exists — read the selected approach,
-    identify starting assets and dependencies.
-  Actionable: Document what we have and what we need.
-    Prune anything that doesn't serve the selected approach.
+  Informative: Curate — read selected approach, identify assets.
+  Actionable: 1 sentence + tool call (ls/Glob/Read). Document what exists.
 
 Band 2 [Orange Prospector]:
-  Informative: Name the project components verbosely.
-    Discuss discoveries — what Diameters exist between components?
-  Actionable: Registry of named components + their relationships.
+  Informative: Name project components verbosely. Find Diameters.
+  Actionable: 1 sentence + ≤6-row component table.
 
 Band 3 [Yellow Architect]:
-  Informative: Draft the project blueprint from research.
-    Read what Red curated and Orange named.
-  Actionable: Design file structure, dependencies, build
-    sequence. Commit the plan BEFORE acting.
+  Informative: Draft blueprint from what Red curated + Orange named.
+  Actionable: 1 sentence + ≤8-line blueprint code-block. Commit BEFORE acting.
 
 Band 4 [Green Sculptor]:
-  Informative: Examine the plan from builder angle AND user angle.
-    Does this work for both? Bidirectional reinforcement.
-  Actionable: Validate before building. Define test criteria.
+  Informative: Examine plan from builder + user angle.
+  Actionable: 1 sentence + ≤4-row test-criteria table.
 
 Band 5 [Blue Professional]:
-  Informative: Plan implementation checkpoints.
-    Four Pillars: Planning, Organization, Validation, Implementation.
-  Actionable: Build the project. Execute within scope. Defer
-    discoveries to future cycles.
+  Informative: Plan checkpoints. Four Pillars.
+  Actionable: Write project file(s) — REQUIRED Lambda-event.
 
 Band 6 [Purple Orchestrator]:
-  Informative: What composes? Know the sequence between all
-    prior Bands. Did anything change during implementation?
-  Actionable: Verify after implementation. Interchange and enhance.
+  Informative: What composes? Verify after implementation.
+  Actionable: Read-back + wc -c Concluder.
 
 Band 7 [Fuchsia Clinician]:
-  Informative: Diagnose the result across all tiers.
-  Actionable: Gainy / Lossy / Maintain assessment.
-    What worked? What didn't? What to preserve?
+  Informative: Diagnose across all tiers.
+  Actionable: ≤6-line G/L/M. Write to Onyx or Cascade.json.
 
 </VermillionPlan>
 ```
 
+**Lambda-Event Invariant Checklist (R2)**:
+
+Every Band in this Cascade-Length 1-7 Diamond MUST produce a Lambda-event. Ego-only Bands are structurally diagnosable — a missing checkbox is a diagnostic.
+
+```
+[ ] Band 1 Lambda: Read/Glob/LS executed
+[ ] Band 2 Lambda: Naming registry produced (inline ≤30 lines or file)
+[ ] Band 3 Lambda: Blueprint committed (inline or Diamond WGB)
+[ ] Band 4 Lambda: Test criteria persisted
+[ ] Band 5 Lambda: Project file(s) Written — REQUIRED
+[ ] Band 6 Lambda: Read-back + Concluder (wc -c) executed
+[ ] Band 7 Lambda: Onyx/Cascade.json updated
+```
+
+**Band Brevity Rule (R1)**: If a Band's annotation exceeds 8 lines of prose without a tool call, the Band has fallen into E4 (Volume-of-Declaration) — abort, compress, retry.
+
+**Markdown Safety Guard (R3)**: No backtick-inline-code containing unclosed quotes on list-item lines. Multi-line shell examples use fenced code blocks, never inline. When narrating bash patterns, prefer prose over example-strings with quotes.
+
 **Tutorial Annotations Per Gate**:
 
-Cinnabar Dialectic provides a contextual note at each gate transition. These are rendered inline — one sentence before the Band executes.
+Cinnabar Dialectic provides a contextual note at each gate transition — one sentence before the Band executes.
 
 | Gate | Cinnabar Tutorial Note |
 |------|----------------------|

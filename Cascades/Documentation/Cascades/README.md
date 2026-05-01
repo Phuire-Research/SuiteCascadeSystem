@@ -453,11 +453,11 @@ This repository includes Suite 8 instances at each configuration level:
 | **Cinnabar Dialectic** | Direct | Prompting Methodology | 6 analysis skills (CD-S1-S6) |
 | **Stratimuxian Scholar** | Direct + Skills | Stratimux Framework Reference | 13 framework skills (S1-S13) |
 | **Teal Claude** | Conductor | Band Assignment + Shatterite Menu | 6 conductor skills + menu system |
-| **Hello World** | Advanced | Demonstration | 1 executable greeting skill |
+| **Fresh Slate** | Advanced | Demonstration | 1 executable greeting skill |
 | **Stratimuxian Automata** | Direct | Autonomous /loop Engagement | 4 lifecycle skills (SA-S1-S4) |
 | **Cadmium Researcher** | Direct | Generalized Research | 5 operational signatures (S1-S5) |
 
-The Hello World Suite 8 (`../../8_SUITES/Hello World/`) demonstrates the Advanced configuration with a complete `script.ts` that can be executed via `npx tsx`. It is the minimal working example of the Executable Inform-to-Action Skill Bridge.
+The Fresh Slate Suite 8 (`../../8_SUITES/Fresh Slate/`) demonstrates the Advanced configuration with a complete `script.ts` that can be executed via `npx tsx`. It is the minimal working example of the Executable Inform-to-Action Skill Bridge.
 
 The Stratimuxian Automata Suite 8 (`../../8_SUITES/Stratimuxian Automata/`) binds the Suite Cascade to Claude Code's `/loop` mechanism. Use `/cascade:loop` to configure rotation count and engagement mode, then paste the generated prompt into `/loop` to begin autonomous cascade execution.
 
@@ -478,7 +478,7 @@ cd SuiteCascadeSystem
 claude
 ```
 
-On entry, the CLAUDE.md manifold loads automatically. Type `/cascade:hello` to begin the guided tutorial — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
+On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 13 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
 
 #### Option B: Add to an Existing Project
 
@@ -517,7 +517,7 @@ cp -r /path/to/SuiteCascadeSystem/Cascades ./Cascades
 claude
 ```
 
-Then type `/cascade` to open the Shatterite Menu, or `/cascade:hello` for the guided Hello World tutorial.
+Then type `/cascade` to open the Shatterite Main Menu. All 13 `/cascade:*` commands are available — type `/cascade:` and tab-complete to see them. Select **[H] Hello World** from the menu or type `/cascade:hello` directly for the guided tutorial.
 
 #### Troubleshooting: Harness Errors
 
@@ -559,6 +559,25 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 - **[ARIOS Position](./ARIOS-POSITION.md)** — architectural prior art, structural advantages, and the Formative Methodology distinction
 
 Every component is documented in plain language and can be examined independently. The system is designed to be understood by reading — the same structured reasoning principles that it applies to your work.
+
+---
+
+### Patch Notes — v1.0.0
+
+**Hello World Clinical Reinforcement** (from first-run testing):
+- Stage 3.5 **Project Location Decision Block** — confers WHERE to scaffold before any Lambda-event fires. Root (if available) or `Cascades/Lab/` (tutorial sandbox). User retains override.
+- **Band Brevity Rule (R1)** — per-Band max inline output enforced. >8 lines prose without tool call = E4 Volume-of-Declaration, abort and retry.
+- **Lambda-Event Invariant Checklist (R2)** — every Band in the Hello World Diamond must produce a verifiable Lambda-event. 7-checkbox list surfaced inline.
+- **Markdown Safety Guard (R3)** — no backtick-inline-code with unclosed quotes. Fenced blocks for shell examples.
+- **Tier-Lift Heuristic (R4)** — Medium/High complexity auto-dispatches Bands 1-4 as agents to prevent streaming stalls from volume accumulation.
+
+**Suite 8 Rename**: Hello World → **Fresh Slate** (Advanced config demo). The `/cascade:hello` tutorial menu command is unchanged — "Hello World" is the tutorial, "Fresh Slate" is the Suite 8.
+
+**Directory Structure**:
+- `Cascades/Working/` — empty, ready for first Diamond + Onyx
+- `Cascades/Lab/` — tutorial sandbox for project scaffolds
+
+**Live Demo**: [poe.com/SCS-Researcher](https://poe.com/SCS-Researcher) — the SCS methodology operating in real time through conversation.
 
 ---
 

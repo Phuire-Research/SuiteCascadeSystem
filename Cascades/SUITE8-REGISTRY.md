@@ -49,7 +49,7 @@ Band N+2 [R7 S8AT]: Diagnose → Onyx S8AT → Memory → Summation
 | **Stratimuxian Scholar** | Direct | Stratimux framework reference, code patterns, version disambiguation, quality creation |
 | **Pewter Tessera** | Direct | HiFi Design System — design tokens, SVG patterns, gradient panes, embossed borders, typography, button variants |
 | **Cinnabar Dialectic** | Direct | Prompting methodology analysis — Pearl grammar, directive mapping, cascade utilization audit, correction diagnostics |
-| **Hello World** | Advanced | Demonstration — minimal working example of Advanced config with executable `script.ts` via `npx tsx` |
+| **Fresh Slate** | Advanced | Demonstration — minimal working example of Advanced config with executable `script.ts` via `npx tsx` |
 | **Stratimuxian Automata** | Direct | Autonomous cascade engagement — /loop binding, gate advancement, delay selection, lifecycle management |
 | **Cadmium Researcher** | Direct | Generalized research — durable Vermillion executor with 5 operational signatures (Memory-First Absorb, Curry Forward, Citation Rigor, Banded↔Planned Casting, Muxonomic Reasoning) |
 

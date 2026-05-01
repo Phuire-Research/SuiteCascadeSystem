@@ -13,7 +13,7 @@ mkdirSync('output', { recursive: true })
 if (format === 'json') {
   const data = {
     greeting: `Hello, ${name}!`,
-    suite: 'Hello World',
+    suite: 'Fresh Slate',
     skill: 'S1-Greeting',
     timestamp,
     format: 'json'

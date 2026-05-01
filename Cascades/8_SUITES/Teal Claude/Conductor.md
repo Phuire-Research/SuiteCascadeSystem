@@ -132,7 +132,7 @@ When a Diamond cascade requires domain-specific capability, the Conductor invoke
 | Framework reference needed | Stratimuxian Scholar | Band 1 (curate) or Band 3 (architect) |
 | Code implementation | Teal Claude (base) | Band 5 (implement) — standard S1-S6 pipeline |
 | Autonomous loop management | Stratimuxian Automata | Band 5 (implement) — /loop lifecycle |
-| Executable skill demonstration | Hello World | Band 5 (implement) — Advanced config example |
+| Executable skill demonstration | Fresh Slate | Band 5 (implement) — Advanced config example |
 
 ### Reinforced vs Base Assignment Decision
 
@@ -159,7 +159,7 @@ The Conductor references `Cascades/SUITE8-REGISTRY.md` for the current registry.
 | **Stratimuxian Scholar** | Direct + Skills | Stratimux Framework Reference | Framework patterns, type system, quality creation |
 | **Pewter Tessera** | Direct | HiFi Design System | Design tokens, patterns, typography, borders |
 | **Cinnabar Dialectic** | Direct | Prompting Methodology | Cascade utilization audit, pattern analysis |
-| **Hello World** | Advanced | Demonstration | Advanced config example with executable script |
+| **Fresh Slate** | Advanced | Demonstration | Advanced config example with executable script |
 | **Stratimuxian Automata** | Direct | Autonomous /loop Engagement | /loop lifecycle, gate advancement, delay selection |
 
 ### Reinforced Suites (Project-Specialized Cognitive Functions)

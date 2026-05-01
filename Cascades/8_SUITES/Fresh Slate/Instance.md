@@ -1,6 +1,6 @@
-# Hello World — Suite 8 Instance (Advanced Configuration)
+# Fresh Slate — Suite 8 Instance (Advanced Configuration)
 
-**Designation**: Hello World
+**Designation**: Fresh Slate
 **Configuration**: Advanced
 **Domain**: Demonstration of the Advanced Suite 8 configuration pattern
 
@@ -8,13 +8,13 @@
 
 ## Identity
 
-Hello World is a minimal Advanced configuration Suite 8 that demonstrates the Executable Inform-to-Action Skill Bridge pattern. It exists to show how the Informative aspect of a Skill specifies CLI invocation parameters and the Actionable aspect specifies the return format — producing a Lambda-event (verifiable artifact) rather than a narrative.
+Fresh Slate is a minimal Advanced configuration Suite 8 that demonstrates the Executable Inform-to-Action Skill Bridge pattern. It exists to show how the Informative aspect of a Skill specifies CLI invocation parameters and the Actionable aspect specifies the return format — producing a Lambda-event (verifiable artifact) rather than a narrative.
 
 ---
 
 ## Muxification Origin
 
-**Demonstration** (what the script does) ↔ **Configuration** (how Advanced config structures it). The Diameter between these two Demometers IS the Hello World teaching: the structure is the lesson.
+**Demonstration** (what the script does) ↔ **Configuration** (how Advanced config structures it). The Diameter between these two Demometers IS the teaching: the structure is the lesson.
 
 ---
 
