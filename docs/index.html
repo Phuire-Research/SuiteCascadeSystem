@@ -109,7 +109,7 @@ function CycleRing() {
   });
   return (
     <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
-      <svg viewBox="0 0 400 400" width="300" height="300">
+      <svg viewBox="0 0 400 400" style={{ width: "100%", maxWidth: 440, height: "auto" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ffffff08" strokeWidth={1} strokeDasharray="6 10" />
         {ns.map((n, i) => {
           const nx = ns[(i + 1) % 8];
@@ -201,7 +201,7 @@ function SuiteCascadePOC() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#08080f}::-webkit-scrollbar-thumb{background:#222;border-radius:3px}`}</style>
 
       {/* HERO */}
-      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden", padding: "40px 24px" }}>
+      <section style={{ minHeight: "min(100vh, 900px)", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden", padding: "60px 24px 40px" }}>
         <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "72px 72px" }} />
         <div style={{ position: "absolute", top: "8%", left: "10%", width: 420, height: 420, background: "radial-gradient(circle, #c44d4d06, transparent 65%)", filter: "blur(50px)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "12%", right: "8%", width: 500, height: 500, background: "radial-gradient(circle, #4da8d406, transparent 65%)", filter: "blur(70px)", pointerEvents: "none" }} />
@@ -231,8 +231,8 @@ function SuiteCascadePOC() {
           </Reveal>
           <Reveal delay={0.26}>
             <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16 }}>
-              <a href="https://poe.com/SCS-Researcher" style={{ border: "1px solid #cc772266", background: "#cc772218", color: "#cc7722", fontFamily: "'Orbitron', monospace", fontSize: 12, padding: "8px 20px", borderRadius: 24, letterSpacing: "0.12em", textDecoration: "none", fontWeight: 700 }}>Live Demo →</a>
-              <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" style={{ border: "1px solid #ffffff18", background: "#ffffff08", color: "#999", fontFamily: "'Orbitron', monospace", fontSize: 12, padding: "8px 20px", borderRadius: 24, letterSpacing: "0.12em", textDecoration: "none" }}>GitHub</a>
+              <a href="https://poe.com/SCS-Researcher" style={{ border: "1px solid #cc772266", background: "#cc772218", color: "#cc7722", fontFamily: "'Orbitron', monospace", fontSize: "clamp(12px, 1.4vw, 15px)", padding: "10px 28px", borderRadius: 28, letterSpacing: "0.12em", textDecoration: "none", fontWeight: 700 }}>Live Demo →</a>
+              <a href="https://github.com/Phuire-Research/SuiteCascadeSystem" style={{ border: "1px solid #ffffff18", background: "#ffffff08", color: "#999", fontFamily: "'Orbitron', monospace", fontSize: "clamp(12px, 1.4vw, 15px)", padding: "10px 28px", borderRadius: 28, letterSpacing: "0.12em", textDecoration: "none" }}>GitHub</a>
             </div>
           </Reveal>
           <Reveal delay={0.3}>
