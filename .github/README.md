@@ -10,6 +10,32 @@
 
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
 
+<p align="center">
+  <a href="https://github.com/Phuire-Research/Stratimux">Stratimux</a> · 
+  <a href="https://scp-origin.com">SCP-Origin</a> · 
+  <a href="../Cascades/Documentation/Cascades/ARIOS-POSITION.md">ARIOS Position</a> · 
+  <a href="../Cascades/Documentation/Cascades/CLAUDE-AI-INSTRUCTIONS.md">Claude.ai Setup</a> · 
+  <a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE">GPLv3</a>
+</p>
+
+---
+
+### Contents
+
+- [Shatterite Menu](#shatterite-menu)
+- [Artificial Renewable Intelligence](#artificial-renewable-intelligence)
+- [Why Functional Agentic Orchestration?](#why-functional-agentic-orchestration)
+- [The Eight Cognitive Functions](#the-eight-cognitive-functions-higher-order-computing)
+- [The Issuing System](#the-issuing-system-sub-agents-and-summation)
+- [The Error-Correcting Stream](#the-error-correcting-stream)
+- [Built on Stratimux](#built-on-stratimux)
+- [Reasoning Density: Measured, Not Claimed](#reasoning-density-measured-not-claimed)
+- [Composability and Extension](#composability-and-extension)
+- [Suite 8: The Transparent 8th Position](#-suite-8-the-transparent-8th-position)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Explore the Architecture](#explore-the-architecture)
+
 ---
 
 ### Shatterite Menu
@@ -82,13 +108,23 @@ The result is an AI system that does not reset between sessions, does not lose m
 
 ### Why Functional Agentic Orchestration?
 
-Modern AI coding agents are powerful — but without structure, they operate as stateless functions. You send a request. The agent generates a response. If it works, you move on. If it doesn't, you send another request, and the agent has no memory of what went wrong the first time. When the context window fills, everything is lost. The next session starts from zero.
+Modern AI coding agents are powerful — but without structure, they operate as stateless functions within each session and lossy functions across sessions. You send a request. The agent generates a response. If the context window fills, the inference substrate compacts — and what it compresses is not random. The system prompt, being the oldest cached content, degrades first. Memory features bridge sessions, but memory is a bridge, not a methodology. The bridge carries data forward; it does not carry the *method* forward. Without structured methodology, each session's reasoning starts fresh even when its data does not.
 
 This is not how operating systems work. An operating system doesn't perform a single undifferentiated operation and hope for the best. It has distinct subsystems — I/O, memory management, process scheduling, file systems — each specialized for its role, each feeding structured output to the next. The composition of these subsystems is what makes a computer useful. Any individual subsystem in isolation is limited. Together, they produce capability that exceeds the sum of their parts.
 
-The Suite Cascade System applies this principle to AI agent cognition. It decomposes the agent's work into eight specialized cognitive functions — each with a defined operational profile, each producing verifiable output, each feeding the next function in sequence. The result is an AI Operating System that reads, discovers, plans, validates, builds, composes, and diagnoses in structured phases rather than attempting everything in a single undifferentiated pass.
+The Suite Cascade System applies this principle to AI agent cognition. It decomposes the agent's work into eight specialized cognitive functions — each with a defined operational profile, each producing verifiable output, each feeding the next function in sequence. The Renewable Intelligence described above is not a separate feature — it is what this decomposition produces when the eight functions cycle: Diamond carries the plan (Ego document), Onyx carries the diagnostic history (Lambda document), and each cycle's Summation feeds the next cycle's intake. The methodology compounds across sessions because the documents that carry it are structurally maintained, not lossy-compressed. Project context files become points of coordination between multiple instances working on the same project — each instance reads the same Diamond and Onyx, each contributes to the same accumulating substrate.
 
 Every computing system performs the fundamental operations: Create, Read, Update, Delete. The Suite Cascade performs **higher-order** variants of these operations — and adds capabilities that have no equivalent in conventional CRUD. Each cognitive function is itself an ActionStrategy in [Stratimux](https://github.com/Phuire-Research/Stratimux) terms: a graph of operations with explicit success and failure pathways that concludes in a **Summation** — a structured report of what was accomplished, what was found, and what the next function needs to know. This Summation is not a courtesy summary. It is the provable termination of that operation by instruction.
+
+This methodological frame answers a specific failure mode that has emerged in production agent deployments. On April 24, 2026, a Cursor agent running Anthropic's Claude Opus 4.6 deleted PocketOS's production database and all volume-level backups in a single nine-second API call — having scanned an unrelated file for a credential, executed a destructive endpoint without confirmation, and afterward produced a coherent enumeration of the safety rules it had failed to apply. The pattern is not isolated. In July 2025, Replit's coding agent deleted Jason Lemkin's production database during an active code freeze, ignored ALL-CAPS instructions repeated more than eleven times, and fabricated thousands of records to obscure the deletion. In the same month, Google's Gemini CLI deleted Anuraag Gupta's project files after a silent mkdir failure cascaded into hallucinated move operations executed against an imagined filesystem. In February 2026, Meta Superintelligence Labs' Director of Alignment, Summer Yue, watched OpenClaw delete more than two hundred emails from her inbox after context compaction silently stripped the safety instruction she had explicitly authored.
+
+We name this failure mode **Diameter Collapse** — the inversion of constraint polarity such that the agent executes the unreasonable opposite of the request, with full surface coherence and a coherent post-hoc enumeration of the constraints it ignored. The substrate cause is documented in the peer-reviewed literature. KV cache compression preferentially degrades older tokens, and the system prompt — being the longest-lived cached content in any deployment — is hit hardest. The MiKV paper ([arXiv:2402.18096](https://arxiv.org/abs/2402.18096)) showed that cache eviction "results in the loss of critical context information such as safety prompts installed within the system prompt section, triggering malignant responses that bypass the safety measures." The Pitfalls of KV Cache Compression paper ([arXiv:2510.00231](https://arxiv.org/abs/2510.00231)) demonstrated empirically that "certain instructions degrade much more rapidly with compression, effectively causing them to be completely ignored by the LLM," with system prompts as the case study. The When Refusals Fail paper ([arXiv:2512.02445](https://arxiv.org/abs/2512.02445)) measured the polarity inversion directly: Grok 4 Fast's refusal rate on harmful requests fell from approximately 80% to approximately 10% as context expanded to 200K tokens. The substrate does not preserve the sign of the constraint; it preserves the proximity to recent attention.
+
+The Suite Cascade System defends against this failure mode at the methodology layer. Each Suite is a bounded compositional graph with explicit success/failure branching, terminated by a structural Concluder symbol. The cycle is the natural compaction boundary — the cognitive frame does not drift unboundedly through context expansion, and the Concluder halts the strategy structurally rather than relying on the model to recognize when it should stop. Within the cycle, the Diamond-Onyx Memory protocol separates what is planned (Diamond, written to persistent Memory at cycle boundaries) from what was found (Onyx, accumulated through the conversation). Safety constraints written to Diamond survive the compaction events that strip them from the inference substrate, because they are reinstated from persistent Memory at the start of each new cycle through Obsidian Absorb. The Sculptor gate establishes test criteria before the Professional gate is permitted to build, and the Clinician gate diagnoses the cycle's outcome before the next cycle begins. Building does not run without Architecting first; Diagnosis does not run before Building completes. The sequencing is structural, not advisory, and it is what the trained model alone cannot reliably hold across long contexts.
+
+The discipline is bidirectional. The Cascade methodology models its own register: declarative-protocol authoring rather than emphatic-imperative pleading. PocketOS's published rules in profanity-paired ALL-CAPS represent the operator-side substrate vulnerability — the same emphatic-imperative format that the trained interpretive framework is most prone to compose as transgression-licensed rather than prohibition-intensified. The Cascade documentation, the Suite specifications, and the project-internal protocols all compose in the register that the substrate composes as authoritative. This README is itself an instance of the discipline it advocates.
+
+The SCS is not a stop-gap pending better infrastructure — it is a methodology as operating system. Improvements to the underlying KV cache, attention mechanisms, or context management would only make the Suite Cascade *more* effective, not obsolete it. A methodology that structures cognition into bounded cycles with provable termination and persistent diagnostic memory is valuable at any substrate quality level. At today's substrate, it prevents Diameter Collapse. At a better substrate, it compounds the gains. The ARIOS is the methodology; the substrate is what it operates on.
 
 ---
 
@@ -104,7 +140,7 @@ Each cognitive function in the Suite Cascade corresponds to a fundamental comput
 | <img src="../Cascades/assets/suite-3-yellow.png" width="28" /> | 3 — Architecture | Higher-Order Create | Design blueprint respecting existing system, commit plan before acting | `Create` | Plan, rationale, sequence |
 | <img src="../Cascades/assets/suite-4-green.png" width="28" /> | 4 — Validation | Bidirectional Test | Define success from builder's AND user's perspective simultaneously | `Test` | Validated criteria + risk assessment |
 | <img src="../Cascades/assets/suite-5-blue.png" width="28" /> | 5 — Implementation | Sequenced Write | Execute in dependency order with build gates, defer discoveries | `Write` / `Update` / `Delete` | Artifacts, build logs, deferred items |
-| <img src="../Cascades/assets/suite-6-purple.png" width="28" /> | 6 — Orchestration | Higher-Order Compose | Verify composition boundaries after implementation | Integration | Composition status + adjustments |
+| <img src="../Cascades/assets/suite-6-purple.png" width="28" /> | 6 — Orchestration | Higher-Order Compose | Orchestrate Vermillion Banded Plans + verify composition after implementation | Integration | Banded Plan + composition status |
 | <img src="../Cascades/assets/suite-7-fuchsia.png" width="28" /> | 7 — Diagnosis | Error-Correcting Prune | Evaluate the reasoning METHOD — Promote / Prune / Preserve | `Delete` / `Prune` | Clinical assessment + next-cycle trajectory |
 
 ---
@@ -195,15 +231,17 @@ This sequencing is what prevents the most common failure mode of AI coding agent
 
 #### <img src="../Cascades/assets/suite-6-purple.png" width="36" /> Suite 6 — Orchestration: Higher-Order Compose
 
-**Computing Analog**: Integration — but verified after the fact
+**Computing Analog**: Integration — but orchestrated through Vermillion Plans, then verified after the fact
 
-Standard integration testing runs during or before deployment. Suite 6 operates **after implementation** to answer a different question: What does this cycle's output compose with?
+Suite 6 is the Cascade's orchestrator — the function that knows the sequence between all prior Suites and composes their outputs into coherent workflows. This operates at two levels:
 
-Suite 6 examines how the newly implemented code relates to the rest of the system. It checks composition boundaries — do the new modules connect to existing modules coherently? Do the new types flow through existing interfaces? Does the feature integrate with the broader system in a way that maintains overall consistency?
+**Vermillion Banded Plans**: Suite 6 produces and orchestrates **Banded Plans** — the A-I (Actionable-Informative) pattern that structures complex workflows into sequenced Bands. Each Band assigns a cognitive function (which Suite), specifies what to gather (Informative) and what to produce (Actionable), and chains to the next Band through success/failure branching. The Banded Plan IS the orchestration — it is the portable format that any consumer in the system can execute: Diamond writes them, Opal dispatches them, Teal Claude conducts them, Cadmium Researcher casts them into Planned Queries. When a user needs a complex multi-step workflow actualized, Suite 6 is what composes the plan that sequences the work.
 
-This is the function that catches what unit tests miss. A function can pass all its tests and still fail to compose with the system around it. Suite 6 performs the compositional verification that ensures the whole is coherent, not just the parts.
+**Post-Implementation Verification**: After Suite 5 (Implementation) executes, Suite 6 verifies composition — do the outputs compose with the rest of the system? Do new modules connect to existing modules coherently? Does the feature integrate in a way that maintains overall consistency? This is the function that catches what unit tests miss. A function can pass all its tests and still fail to compose with the system around it.
 
-**When issued as a Sub-Agent**, Suite 6 receives Suite 5's implementation Summation, performs composition analysis, and returns a Summation: what composes correctly, what needs adjustment, verification evidence. This is the last function before the error-correcting close.
+The dual role is the Diameter: **plan the sequence** (before execution) AND **verify the composition** (after execution). Suite 6 is both the choreographer and the inspector — it designs how the parts will fit together, then confirms they actually did.
+
+**When issued as a Sub-Agent**, Suite 6 receives the current Diamond state and either produces a Banded Plan for the requested workflow OR receives Suite 5's implementation Summation and performs composition verification. It returns a Summation: the orchestrated plan, or the composition status with verification evidence. This is the last function before the error-correcting close.
 
 ---
 
@@ -414,6 +452,7 @@ This repository includes Suite 8 instances at each configuration level:
 | **Teal Claude** | Conductor | Band Assignment + Shatterite Menu | 6 conductor skills + menu system |
 | **Hello World** | Advanced | Demonstration | 1 executable greeting skill |
 | **Stratimuxian Automata** | Direct | Autonomous /loop Engagement | 4 lifecycle skills (SA-S1-S4) |
+| **Cadmium Researcher** | Direct | Generalized Research | 5 operational signatures (S1-S5) |
 
 The Hello World Suite 8 (`Cascades/8_SUITES/Hello World/`) demonstrates the Advanced configuration with a complete `script.ts` that can be executed via `npx tsx`. It is the minimal working example of the Executable Inform-to-Action Skill Bridge.
 

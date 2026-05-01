@@ -51,6 +51,7 @@ Band N+2 [R7 S8AT]: Diagnose → Onyx S8AT → Memory → Summation
 | **Cinnabar Dialectic** | Direct | Prompting methodology analysis — Pearl grammar, directive mapping, cascade utilization audit, correction diagnostics |
 | **Hello World** | Advanced | Demonstration — minimal working example of Advanced config with executable `script.ts` via `npx tsx` |
 | **Stratimuxian Automata** | Direct | Autonomous cascade engagement — /loop binding, gate advancement, delay selection, lifecycle management |
+| **Cadmium Researcher** | Direct | Generalized research — durable Vermillion executor with 5 operational signatures (Memory-First Absorb, Curry Forward, Citation Rigor, Banded↔Planned Casting, Muxonomic Reasoning) |
 
 **Extension**: Additional Suite 8s are created per-project as domains emerge. The 8th position is transparent — any number of Suite 8s can be registered and interchanged.
 
