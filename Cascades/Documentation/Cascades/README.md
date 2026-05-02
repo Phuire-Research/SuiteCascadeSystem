@@ -577,6 +577,10 @@ Every component is documented in plain language and can be examined independentl
 - `Cascades/Working/` — empty, ready for first Diamond + Onyx
 - `Cascades/Lab/` — tutorial sandbox for project scaffolds
 
+**Diamond WorkGameBoard via Planning Mode**: Hello World Stage 4 now engages Planning Mode (EnterPlanMode) to commit the Banded Plan to `Cascades/Working/DIAMOND-TIER-1.md` BEFORE Bands execute. Each Band appends to the Diamond — the WorkGameBoard accumulates through the cycle.
+
+**`/cascade:loop` Diamond Primer**: Any input provided with `/cascade:loop` becomes the Diamond Primer — the initial scope declaration. If no Diamond exists, the Automata creates one through Planning Mode. If a Diamond exists, the loop appends to it. Each wake-up reads the active Diamond and advances the next gate.
+
 **Live Demo**: [poe.com/SCS-Researcher](https://poe.com/SCS-Researcher) — the SCS methodology operating in real time through conversation.
 
 ---

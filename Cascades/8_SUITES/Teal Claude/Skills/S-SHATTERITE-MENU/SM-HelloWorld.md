@@ -183,6 +183,17 @@ Before the Banded Diamond fires, Confer with the user about WHERE to scaffold. P
 
 On selection, Engage a **Full Suite Diamond** (1-7) — the third plan type demonstrated: Banded. Tier matched to complexity.
 
+**CRITICAL — Diamond WorkGameBoard via Planning Mode**: Before any Band fires, the Banded Plan MUST be committed to a Diamond WorkGameBoard through Planning Mode. This is the Gate 3 (Architect) invariant — commit the plan BEFORE acting.
+
+**Diamond Engagement Flow**:
+1. **EnterPlanMode** — the Banded Plan below is written to `Cascades/Working/DIAMOND-TIER-1.md` as the WorkGameBoard (not a separate plan file — Manual Planning Mode writes to the Diamond)
+2. The Diamond contains: project name, selected approach, scaffold path, the Banded Plan, and the Lambda-Event Invariant Checklist
+3. Update `Cascades/Cascade.json` → set `activeDiamond` to `Cascades/Working/DIAMOND-TIER-1.md`, `cyclePosition.cycle: 1`, `cyclePosition.gate: 0`
+4. User approves → **ExitPlanMode** → Bands execute against the committed Diamond
+5. Each Band **appends to** the Diamond — the WorkGameBoard accumulates through the cycle
+
+**Cinnabar Note (P3)**: "This is Architecture — the Cascade commits the plan to disk through Planning Mode BEFORE acting. The Diamond WorkGameBoard is the through-protection: if the context compacts, the plan persists. Each Band appends to the Diamond — it grows through the cycle. This is Renewable Intelligence in action."
+
 **Tier Selection**:
 
 | Complexity | Tier | Reasoning |
@@ -193,7 +204,7 @@ On selection, Engage a **Full Suite Diamond** (1-7) — the third plan type demo
 
 **Tier-Lift Heuristic (R4)**: When a Tier 0 in-context Banded Diamond's Bands 2-3-4 each require >5 lines of inline output, Tier-Lift to Tier 1 — dispatch each Band as a sub-agent, return a Summation, render inline. For Low complexity (e.g., single-file projects), keep Tier 0.
 
-**Banded Diamond Plan** (brevity-bounded per R1):
+**Banded Diamond Plan** (brevity-bounded per R1 — this plan is written to the Diamond WorkGameBoard):
 
 ```
 <VermillionPlan topic="Hello World Diamond: {selected_option_name}">
