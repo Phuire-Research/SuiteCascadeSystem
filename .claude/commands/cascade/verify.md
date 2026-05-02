@@ -1,33 +1,93 @@
-Verify the Suite Cascade System installation — full structural integrity check.
+Verify the output of any build — Suite 4 Sculptor examines the Ego (input specification) against the Lambda (what was actually produced), then Suite 6 Orchestrator routes resolution.
 
-Run the following verification routine and present results:
+Read `Cascades/Cascade.json` for current state.
+Read the active Diamond (`activeDiamond`) for the input specification — what was aspiring to be done.
 
-1. **Root Structure** — list root contents (excluding DevCascades). Confirm only `.claude/`, `.github/`, `.gitignore`, `Cascades/`, `LICENSE`, `docs/` are present.
+---
 
-2. **System Files** — list all files in `.claude/` (CLAUDE.md, agents, commands). Count each category.
+## Verification Protocol
 
-3. **Cascades Directory** — list top-level Cascades/ contents. Confirm: `8_SUITES/`, `Cascade.json`, `Documentation/`, `Lab/`, `SUITE8-REGISTRY.md`, `Working/`, `assets/`.
+### Step 1: Identify the Ego (Input)
 
-4. **Suite 8 Inventory** — list all Suite 8 directories. Cross-reference against SUITE8-REGISTRY.md entries. Flag any Suite 8 directory not in the registry or registry entry without a directory.
+Read the active Diamond WorkGameBoard. Extract:
+- The Banded Plan that was committed
+- The sub-goals or task list
+- The expected outputs per Band (from the Lambda-Event Invariant Checklist if present)
 
-5. **Documentation Inventory** — list all files in `Cascades/Documentation/Cascades/`.
+If no active Diamond exists, ask the user: "What was the input specification? Describe what you asked to be built."
 
-6. **Asset Count** — count files in `Cascades/assets/`.
+### Step 2: Suite 4 Sculptor — Bidirectional Examination
 
-7. **GitHub Pages** — list files in `docs/`.
+Examine the output against the input from BOTH angles:
 
-8. **Counts Summary**:
-   - Commands (files in `.claude/commands/cascade/`)
-   - Agents (files in `.claude/agents/`)
-   - Suite 8s (directories in `Cascades/8_SUITES/`)
-   - Total files (excluding `.git/`, `DevCascades/`, `.DS_Store`)
+**Builder Angle**: For each expected output in the Diamond:
+- Does the file exist? (`test -f`)
+- Does it have content? (`wc -c`)
+- Does it contain the expected patterns? (`grep -c` key identifiers)
 
-9. **README Sync** — compare line counts of `.github/README.md` and `Cascades/Documentation/Cascades/README.md`. Flag if they differ.
+**User Angle**: For each expected output:
+- Does it serve the user's original intent?
+- Would the user recognize this as what they asked for?
+- Is it complete or partial?
 
-10. **Cascade.json State** — display current contents. Verify schema has: `activeDiamond`, `activeOnyx`, `suiteColors`, `cyclePosition` (with `totalRotations`), `colorSelectionComplete`, `automata`.
+### Step 3: Lambda Report
 
-11. **SM-Index Command Count** — count `/cascade:` entries in SM-Index.md. Should match command file count.
+Present results per-item:
 
-12. **Git Status** — show uncommitted changes if any.
+```
+╔══════════════════════════════════════════════════════════╗
+║  VERIFICATION REPORT                        [Green]      ║
+║  ─ · ─                                                   ║
+║  Diamond: {activeDiamond}                                ║
+║                                                          ║
+║  Lambda Results                                          ║
+║  ─ · ─                                                   ║
+{for each expected output:}
+║  [✓] {item} — PASS (file exists, {N} bytes, pattern match)║
+║  [✗] {item} — BLOCKED ({reason})                         ║
+║  [~] {item} — PARTIAL ({what exists}, {what's missing})  ║
+║                                                          ║
+║  Summary: {pass_count} Pass · {block_count} Blocked ·    ║
+║           {partial_count} Partial                        ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+```
 
-Present results in a structured table. Flag any mismatches as warnings.
+### Step 4: Suite 6 Orchestrator — Resolution Routing
+
+If any items are BLOCKED or PARTIAL, present a resolution menu:
+
+```
+<AskUserQuestion>
+╔══════════════════════════════════════════════════════════╗
+║  RESOLUTION                                 [Purple]     ║
+║  ─ · ─                                                   ║
+║  {block_count + partial_count} items need attention.     ║
+║                                                          ║
+║  [F] Fix All — re-engage Bands for blocked items [Blue]  ║
+║      Create a Banded Plan targeting only the gaps.       ║
+║                                                          ║
+║  [S] Select — choose which items to address   [Green]    ║
+║      Pick specific items to fix, defer the rest.         ║
+║                                                          ║
+║  [R] Re-run — re-execute the full Diamond     [Orange]   ║
+║      Start the cycle fresh from Gate 0.                  ║
+║                                                          ║
+║  [D] Defer — mark as PENDING for next cycle   [Yellow]   ║
+║      Items carry forward to the next Diamond.            ║
+║                                                          ║
+║  [A] Accept — mark as complete despite gaps   [Red]      ║
+║      User accepts the current state.                     ║
+║                                                          ║
+║  [M] Main Menu    [Q] Exit                               ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+</AskUserQuestion>
+```
+
+**Routing**:
+- [F] — Compose a targeted Banded Plan (Suite 6) addressing only the blocked/partial items. Engage via the active Diamond (append, not replace).
+- [S] — Present each blocked/partial item individually with [Y]es fix / [N]o defer.
+- [R] — Reset `cyclePosition.gate: 0` in Cascade.json. Re-engage from Obsidian Absorb.
+- [D] — Mark items as PENDING in the Diamond. They carry to the next cycle.
+- [A] — Write verification results to Onyx as a Clinical Note. Mark Diamond tasks complete despite gaps. User Lambda accepted.

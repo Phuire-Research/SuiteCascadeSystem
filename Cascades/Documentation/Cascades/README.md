@@ -480,7 +480,9 @@ cd SuiteCascadeSystem
 claude
 ```
 
-On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 13 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
+On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 14 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
+
+After completing Hello World, select **[A] Advanced** to enter the Multi-Diamond Aspiration Loop — build a game, an application, or your own **Personal Suite 8 Website**: a site where YOUR goals are Diamonds, YOUR progress is Onyx, and Claude Code is the harness through which you orchestrate it all. The Advanced mode runs successive Diamonds via `/loop` until your aspiration is achieved or the rotation ceiling is reached.
 
 #### Option B: Add to an Existing Project
 
@@ -555,6 +557,7 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 | `/cascade:create` | Actualize a new Suite 8 from initial input |
 | `/cascade:loop` | Stratimuxian Automata — autonomous /loop engagement |
 | `/cascade:update` | Update SCS from upstream — selective merge with checkpoint |
+| `/cascade:verify` | Verify build output — Suite 4 examination + Suite 6 resolution |
 
 ### Explore the Architecture
 
