@@ -23,3 +23,5 @@ Available commands:
 - `/cascade:maintain` — Maintain the Method
 - `/cascade:create` — Actualize a New Suite 8
 - `/cascade:loop` — Stratimuxian Automata (autonomous /loop)
+- `/cascade:update` — Update SCS from upstream
+- `/cascade:verify` — Verify SCS installation integrity

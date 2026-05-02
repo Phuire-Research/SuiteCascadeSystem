@@ -83,6 +83,8 @@
 ║      /cascade:create                                     ║
 ║  [L] Stratimuxian Automata           [Base]   — loop     ║
 ║      /cascade:loop                                       ║
+║  [U] Update SCS                      [Yellow] — update   ║
+║      /cascade:update                                     ║
 ║                                                          ║
 ║  · · ·                                                   ║
 ║                                                          ║
@@ -552,6 +554,7 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 | `/cascade:maintain` | Meta-cognitive system maintenance |
 | `/cascade:create` | Actualize a new Suite 8 from initial input |
 | `/cascade:loop` | Stratimuxian Automata — autonomous /loop engagement |
+| `/cascade:update` | Update SCS from upstream — selective merge with checkpoint |
 
 ### Explore the Architecture
 

@@ -302,6 +302,9 @@ After Fuchsia fires, present the completion menu with a summary of what was lear
 ║  · · ·                                                   ║
 ║                                                          ║
 ║  [C] Continue — Engage your next Diamond     [Blue]      ║
+║  [A] Advanced — Multi-Diamond Aspiration     [Orange]    ║
+║      Build games, applications, or your own              ║
+║      Personal Diamond Board via /loop                    ║
 ║  [R] Review — re-read the Fuchsia Diagnosis  [Fuchsia]   ║
 ║  [M] Main Menu                               [Base]      ║
 ║  [Q] Exit                                    [Base]      ║
@@ -342,6 +345,7 @@ Cinnabar is loaded as cognitive companion throughout, providing pattern recognit
 | Stage 3 | `Q` | Exit Shatterite |
 | Stage 4 | Gate-by-gate progression | Cinnabar annotations at each transition |
 | Stage 5 | `C` | Start next Diamond (user is now in normal flow) |
+| Stage 5 | `A` | Render SM-HelloWorld-Advanced.md — Multi-Diamond Aspiration Loop |
 | Stage 5 | `R` | Display Fuchsia Diagnosis from Onyx |
 | Stage 5 | `M` | Return to SM-Main.md |
 | Stage 5 | `Q` | Exit Shatterite |

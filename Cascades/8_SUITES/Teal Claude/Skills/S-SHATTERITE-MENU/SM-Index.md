@@ -15,6 +15,7 @@
 | **SM-3** | `SM-TealClaude.md` | Teal Claude Conductor | Band assignment, strategy execution, agent dispatch, conductor operations |
 | **SM-4** | `SM-ColorSelect.md` | Color Selection | First engagement (`colorSelectionComplete: false`), `personalize`, `colors` |
 | **SM-5** | `SM-HelloWorld.md` | Hello World | `hello world`, `tutorial`, `get started`, new user onboarding |
+| **SM-5A** | `SM-HelloWorld-Advanced.md` | Advanced Hello World | Multi-Diamond aspiration loop, `advanced`, Personal Suite 8 Website |
 
 ---
 
@@ -52,6 +53,8 @@ All menus accessible via `/cascade` namespace. Base command opens Main Menu; col
 | `/cascade:maintain` | Method Maintenance | `cascade/maintain.md` → contextual |
 | `/cascade:create` | Actualize Suite 8 | `cascade/create.md` → Suite8CreationStrategy |
 | `/cascade:loop` | Stratimuxian Automata | `cascade/loop.md` → Automata engagement menu |
+| `/cascade:update` | SCS Update | `cascade/update.md` → clone, diff, selective merge, restart |
+| `/cascade:verify` | SCS Verify | `cascade/verify.md` → structural integrity check |
 
 Command files live at `.claude/commands/`. Each reads `Cascades/Cascade.json` before rendering for contextual awareness of current Cascade position.
 

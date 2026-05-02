@@ -45,6 +45,8 @@
 ║      /cascade:correct                                    ║
 ║  [9] Maintain the Method             [Base]   — meta     ║
 ║      /cascade:maintain                                   ║
+║  [U] Update SCS                      [Yellow] — update   ║
+║      /cascade:update                                     ║
 ║                                                          ║
 ║  · · ·                                                   ║
 ║                                                          ║
