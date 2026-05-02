@@ -53,6 +53,8 @@
 ║  ─ · ─                                                   ║
 ║  [H] Hello World                     [Base]   — tutorial ║
 ║      /cascade:hello                                      ║
+║  [A] Advanced Hello World            [Orange] — aspire   ║
+║      /cascade:advanced                                   ║
 ║  [S] Enter Suite 8 Registry          [Orange] — discover ║
 ║      /cascade:suites                                     ║
 ║  [C] Suite Cascade Reference         [Yellow] — design   ║
@@ -85,6 +87,8 @@
 ║      /cascade:loop                                       ║
 ║  [U] Update SCS                      [Yellow] — update   ║
 ║      /cascade:update                                     ║
+║  [V] Verify SCS installation         [Green]  — verify   ║
+║      /cascade:verify                                     ║
 ║                                                          ║
 ║  · · ·                                                   ║
 ║                                                          ║
@@ -480,7 +484,7 @@ cd SuiteCascadeSystem
 claude
 ```
 
-On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 14 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
+On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 16 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
 
 After completing Hello World, select **[A] Advanced** to enter the Multi-Diamond Aspiration Loop — build a game, an application, or your own **Personal Suite 8 Website**: a site where YOUR goals are Diamonds, YOUR progress is Onyx, and Claude Code is the harness through which you orchestrate it all. The Advanced mode runs successive Diamonds via `/loop` until your aspiration is achieved or the rotation ceiling is reached.
 
@@ -521,7 +525,7 @@ cp -r /path/to/SuiteCascadeSystem/Cascades ./Cascades
 claude
 ```
 
-Then type `/cascade` to open the Shatterite Main Menu. All 13 `/cascade:*` commands are available — type `/cascade:` and tab-complete to see them. Select **[H] Hello World** from the menu or type `/cascade:hello` directly for the guided tutorial.
+Then type `/cascade` to open the Shatterite Main Menu. All 16 `/cascade:*` commands are available — type `/cascade:` and tab-complete to see them. Select **[H] Hello World** from the menu or type `/cascade:hello` directly for the guided tutorial.
 
 #### Troubleshooting: Harness Errors
 
@@ -546,6 +550,7 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 |---------|-------------|
 | `/cascade` | Open the Shatterite Main Menu |
 | `/cascade:hello` | Guided tutorial — your first Diamond |
+| `/cascade:advanced` | Advanced Hello World — Multi-Diamond Aspiration Loop (Game / Application / **Personal Suite 8 Website** / Custom) |
 | `/cascade:diamond` | Engage your active Diamond WorkGameBoard |
 | `/cascade:onyx` | Review your Onyx trajectory (diagnostic history) |
 | `/cascade:suites` | Browse the Suite 8 Registry |
@@ -558,6 +563,7 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 | `/cascade:loop` | Stratimuxian Automata — autonomous /loop engagement |
 | `/cascade:update` | Update SCS from upstream — selective merge with checkpoint |
 | `/cascade:verify` | Verify build output — Suite 4 examination + Suite 6 resolution |
+| `/cascade:changelog` | Rotating capped changelog — recent SCS changes + Maintenance Reminder |
 
 ### Explore the Architecture
 
@@ -568,24 +574,9 @@ Every component is documented in plain language and can be examined independentl
 
 ---
 
-### Patch Notes — v1.0.0
+### Recent Changes — 2026-05-01
 
-**Hello World Clinical Reinforcement** (from first-run testing):
-- Stage 3.5 **Project Location Decision Block** — confers WHERE to scaffold before any Lambda-event fires. Root (if available) or `Cascades/Lab/` (tutorial sandbox). User retains override.
-- **Band Brevity Rule (R1)** — per-Band max inline output enforced. >8 lines prose without tool call = E4 Volume-of-Declaration, abort and retry.
-- **Lambda-Event Invariant Checklist (R2)** — every Band in the Hello World Diamond must produce a verifiable Lambda-event. 7-checkbox list surfaced inline.
-- **Markdown Safety Guard (R3)** — no backtick-inline-code with unclosed quotes. Fenced blocks for shell examples.
-- **Tier-Lift Heuristic (R4)** — Medium/High complexity auto-dispatches Bands 1-4 as agents to prevent streaming stalls from volume accumulation.
-
-**Suite 8 Rename**: Hello World → **Fresh Slate** (Advanced config demo). The `/cascade:hello` tutorial menu command is unchanged — "Hello World" is the tutorial, "Fresh Slate" is the Suite 8.
-
-**Directory Structure**:
-- `Cascades/Working/` — empty, ready for first Diamond + Onyx
-- `Cascades/Lab/` — tutorial sandbox for project scaffolds
-
-**Diamond WorkGameBoard via Planning Mode**: Hello World Stage 4 now engages Planning Mode (EnterPlanMode) to commit the Banded Plan to `Cascades/Working/DIAMOND-TIER-1.md` BEFORE Bands execute. Each Band appends to the Diamond — the WorkGameBoard accumulates through the cycle.
-
-**`/cascade:loop` Diamond Primer**: Any input provided with `/cascade:loop` becomes the Diamond Primer — the initial scope declaration. If no Diamond exists, the Automata creates one through Planning Mode. If a Diamond exists, the loop appends to it. Each wake-up reads the active Diamond and advances the next gate.
+The rotating SCS changelog lives at [`Cascades/CHANGELOG.md`](../Cascades/CHANGELOG.md) — capped at 150 lines (~24% of `CLAUDE.md`), newest-first, with monthly archive rotation when over cap. Open it directly via `/cascade:changelog` for the most recent entries plus the Maintenance Reminder.
 
 **Live Demo**: [poe.com/SCS-Researcher](https://poe.com/SCS-Researcher) — the SCS methodology operating in real time through conversation.
 

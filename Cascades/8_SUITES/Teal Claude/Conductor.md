@@ -125,14 +125,33 @@ Agent tool:
 
 When a Diamond cascade requires domain-specific capability, the Conductor invokes Suite 8s as additional steps within or between Bands:
 
-| Trigger | Suite 8 | Invocation Point |
-|---------|---------|-----------------|
-| Design system needed | Pewter Tessera | Between Band 3 (design) and Band 5 (implement) |
-| Prompting methodology audit | Cinnabar Dialectic | Band 4 (examination) or Band 7 (diagnosis) |
-| Framework reference needed | Stratimuxian Scholar | Band 1 (curate) or Band 3 (architect) |
-| Code implementation | Teal Claude (base) | Band 5 (implement) — standard S1-S6 pipeline |
-| Autonomous loop management | Stratimuxian Automata | Band 5 (implement) — /loop lifecycle |
-| Executable skill demonstration | Fresh Slate | Band 5 (implement) — Advanced config example |
+| Trigger | Suite 8 | Invocation Point | Required? |
+|---------|---------|-----------------|-----------|
+| **Design Diamond detected** (UI · CSS · component · visual · HiFi · token · pattern · pane · typography · layout) | **Pewter Tessera** | **Bands 3, 4, 5 — load before Architect drafts** | **MANDATORY** — Conductor MUST load |
+| Prompting methodology audit | Cinnabar Dialectic | Band 4 (examination) or Band 7 (diagnosis) | Optional |
+| Framework reference needed | Stratimuxian Scholar | Band 1 (curate) or Band 3 (architect) | Optional |
+| Code implementation | Teal Claude (base) | Band 5 (implement) — standard S1-S6 pipeline | Default |
+| Autonomous loop management | Stratimuxian Automata | Band 5 (implement) — /loop lifecycle | Optional |
+| Executable skill demonstration | Fresh Slate | Band 5 (implement) — Advanced config example | Optional |
+
+#### Design Diamond Detection — Mandatory Pewter Tessera Load
+
+A Diamond qualifies as a **Design Diamond** when ANY of the following is present in the Diamond scope, user request, or Band Informative/Actionable text:
+
+| Signal Class | Detection Tokens |
+|---|---|
+| **Visual artifacts** | UI, component, view, page, layout, screen, panel, pane, badge, button, card, modal |
+| **CSS / styling** | CSS, style, stylesheet, design token, `--color-*`, `--pattern-*`, gradient, shadow, border, embossed |
+| **Pattern / aesthetic** | pattern, tile, motif, theme, aesthetic, visual, hi-fi, HiFi, pewter, tessera |
+| **Typography** | typography, font, heading, type system, text hierarchy, monospace |
+| **Color / token** | color, palette, suite color, token, variant, fade, shadow color, complement |
+| **Composition** | spacing, padding, margin, grid, flex, alignment, responsive |
+
+**Detection Rule**: ≥1 token from any class → **Design Diamond** → Pewter Tessera **MUST** be loaded at Band 3 (Architect drafts informed by D1-D8 token inventory), examined at Band 4 (Sculptor verifies suite coherence + accessibility), and implemented at Band 5 (Professional executes within design-system constraints).
+
+**Load Mechanism**: At Diamond plan time, Conductor reads `Cascades/8_SUITES/Pewter Tessera/Instance.md` + `Skill.md` and embeds the relevant Skill IDs (D1-D8) into the affected Band's Informative section. Bands 3, 4, 5 cite specific D-skills.
+
+**Anti-Pattern (E-Conductor-Design)**: Conductor plans a Design Diamond without loading Pewter Tessera → Band 3 drafts CSS without token inventory → Band 5 invents tokens that drift from system. Detection signal fires retroactively → re-engage from Band 3.
 
 ### Reinforced vs Base Assignment Decision
 
@@ -217,6 +236,49 @@ Band 7 [R7 Clinician]:
   Informative: Diagnose [build errors, type issues]
   Actionable: Refine [and return to foundation]
 ```
+
+### Design Diamond Variant (Pewter Tessera Mandatory Load)
+
+When Design Diamond Detection fires, the Conductor **MUST** generate the cascade in this form. Pewter Tessera is loaded at Band 3 and remains in scope through Band 5 — it is not optional.
+
+```
+Diamond [NUMBER]: [TITLE — design intent]
+
+Suite 8 Load: Pewter Tessera (Instance.md + Skill.md) — D1-D8 in scope
+
+Band 1 [R1 Curator]:
+  Informative: Inventory existing design tokens — `--color-*`, `--pattern-*`, pane classes
+  Actionable: Document token coverage + drift candidates
+
+Band 2 [R2 Prospector]:
+  Informative: Prospect design gaps — unnamed patterns, missing variants
+  Actionable: Name discovered patterns within Pewter vocabulary
+
+Band 3 [R3 Architect ⊗ Pewter Tessera D1-D8]:
+  Informative: Draft tokens / patterns / panes / typography per relevant D-skill
+  Actionable: Design with respect to existing Pewter token system — extend, do not replace
+  Suite 8: Pewter Tessera REQUIRED — Architect cites specific D-skills (D1 token, D2 pattern, D3 pane, D4 shadow, D5 border, D6 type, D7 button, D8 utility)
+
+Band 4 [R4 Sculptor ⊗ Pewter Tessera Quality Gate]:
+  Informative: Examine from all angles — suite coherence, dark-bg readability, mobile, cross-browser, 3D depth
+  Actionable: Bidirectional reinforce — design implementation feedback to tokens
+  Suite 8: Pewter Tessera Quality Gate — cross-skill Diameters checked (D1↔D3, D4↔D3, D5↔D3, etc.)
+
+Band 5 [R5 Professional ⊗ Pewter Tessera Implementation]:
+  Informative: Plan checkpoints — token first, pattern second, pane third, component last
+  Actionable: Implement CSS within design-system constraints; Output Firewall enforced (no framework vocabulary in CSS deliverable)
+  Suite 8: Pewter Tessera — Sequencing dependency order tokens → patterns → panes → components
+
+Band 6 [R6 Orchestrator]:
+  Informative: Verify cross-file design coherence
+  Actionable: Interchange — ensure all suites remain visually coherent
+
+Band 7 [R7 Clinician]:
+  Informative: Diagnose visual regressions, contrast failures, broken gradients
+  Actionable: Refine → G/L/M to Onyx (S8AT entry for Pewter Tessera)
+```
+
+**Self-Check** (Conductor before issuing the plan): Did Detection fire? Did Pewter Tessera Instance.md + Skill.md get cited at Bands 3-5? Are the specific D-skills enumerated? If any **NO** → re-plan. This is the Pewter Tessera Load Contract.
 
 ---
 

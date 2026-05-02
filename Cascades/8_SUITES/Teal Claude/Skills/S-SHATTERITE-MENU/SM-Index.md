@@ -30,6 +30,7 @@ Cascade / "suites" / "gates" / "length"   → SM-Cascade.md
 Conductor / "bands" / "dispatch" / "teal" → SM-TealClaude.md
 "personalize" / "colors" / first engage   → SM-ColorSelect.md
 "hello world" / "tutorial" / "get started" → SM-HelloWorld.md
+"advanced" / "aspire" / "multi-diamond"   → SM-HelloWorld-Advanced.md
 D-Queue (TESTING diamonds detected)       → D-Queue rendering (Skill.md §D-Queue)
 ```
 
@@ -43,6 +44,7 @@ All menus accessible via `/cascade` namespace. Base command opens Main Menu; col
 |---------|------|------|
 | `/cascade` | Main Menu | `cascade.md` → SM-Main.md |
 | `/cascade:hello` | Hello World | `cascade/hello.md` → SM-HelloWorld.md |
+| `/cascade:advanced` | Advanced Hello World | `cascade/advanced.md` → SM-HelloWorld-Advanced.md |
 | `/cascade:suites` | Suite 8 Registry | `cascade/suites.md` → SM-Suite8.md |
 | `/cascade:reference` | Cascade Reference | `cascade/reference.md` → SM-Cascade.md |
 | `/cascade:conductor` | Teal Claude | `cascade/conductor.md` → SM-TealClaude.md |
@@ -54,7 +56,8 @@ All menus accessible via `/cascade` namespace. Base command opens Main Menu; col
 | `/cascade:create` | Actualize Suite 8 | `cascade/create.md` → Suite8CreationStrategy |
 | `/cascade:loop` | Stratimuxian Automata | `cascade/loop.md` → Automata engagement menu |
 | `/cascade:update` | SCS Update | `cascade/update.md` → clone, diff, selective merge, restart |
-| `/cascade:verify` | SCS Verify | `cascade/verify.md` → structural integrity check |
+| `/cascade:verify` | SCS Verify | `cascade/verify.md` → Suite 4 Ego↔Lambda + Suite 6 resolution |
+| `/cascade:changelog` | SCS Changelog | `cascade/changelog.md` → rotating capped log + Maintenance Reminder |
 
 Command files live at `.claude/commands/`. Each reads `Cascades/Cascade.json` before rendering for contextual awareness of current Cascade position.
 
