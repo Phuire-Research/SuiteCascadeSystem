@@ -9,9 +9,9 @@
 
 ## Skill Identity
 
-Shatterite is the Conference-Render interface between C4 Automata and the user. C4 supplies routing content; Shatterite supplies visual form. The menu IS the Conference — decisions are captured through structured AskUserQuestion prompts styled with the Pewter Tessera HiFi Design System.
+Shatterite is the Conference-Render interface between C9 Automata and the user. C9 supplies routing content; Shatterite supplies visual form. The menu IS the Conference — decisions are captured through structured AskUserQuestion prompts styled with the Pewter Tessera HiFi Design System.
 
-**Conference-Render Diameter**: C4 Automata (content) <-> Shatterite Menu (form). Reciprocal naming — neither subordinate.
+**Conference-Render Diameter**: C9 Automata (content) <-> Shatterite Menu (form). Reciprocal naming — neither subordinate.
 
 ---
 
@@ -26,6 +26,7 @@ SM-Suite8.md         Suite 8 Registry — engage/create/dispatch Suite 8s
 SM-Cascade.md        Suite Cascade Reference — gates, lengths, suite functions
 SM-TealClaude.md     Teal Claude Conductor — bands, strategies, agent dispatch
 SM-ColorSelect.md    Color Selection — personalize suite colors via questionnaire
+SM-Conclude.md       Per-turn Concluder menu — Suite 0 binding · Summation-derived · fires AUTOMATICALLY at every non-Direct turn-end (the only auto-firing menu in the family)
 ```
 
 **State File**: `Cascades/Cascade.json` — primary state source for all dynamic population. Read before rendering any menu.
@@ -132,7 +133,7 @@ When multiple Diamonds are in TESTING state, Shatterite surfaces them as a queue
 
 ## Cross-References
 
-- **C4 Automata**: Conference-Render Diameter — C4 supplies content, Shatterite supplies form
+- **C9 Automata**: Conference-Render Diameter — C9 supplies content, Shatterite supplies form
 - **Pewter Tessera**: HiFi Design System adapted to text rendering
 - **Cascade.json**: `Cascades/Cascade.json` — RI state file; primary dynamic state source
 - **SM-Index.md**: Menu routing table (this directory)

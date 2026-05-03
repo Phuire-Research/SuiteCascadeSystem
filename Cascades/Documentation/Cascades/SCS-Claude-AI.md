@@ -121,12 +121,12 @@ Nine meta-level protocols govern the processing method. Each Crystraline maps to
 | **C1 Pearl** | Compression — Capitalized Words as compressed Set boundaries | Native — operates in language. No platform tool needed. Pearl compresses through precision of naming. |
 | **C2 Vermillion** | A-I Plan format — Informative + Actionable | **Planned Query** format. `<PlannedQuery>` with search steps, success/failure branching, Decision Blocks. Direct continuation of ActionStrategy (2018). |
 | **C3 Cerulean** | Task tracking — checkpoint relay | **Artifacts** — create persistent tracking documents within conversation. Task lists, architecture maps, progress boards as Artifacts that persist within the conversation and can be referenced. |
-| **C4 Automata** | MANUAL routing — engagement selection | **Conversation flow** — user = continuation signal. Route by assessing complexity (Planned Query vs Structured Query) and selecting Cascade Length. No autonomous loop on Claude.ai — MANUAL mode only. |
-| **C5 Base Lambda** | Verification — Concluder, Lambda-events | **Analysis Tool** for computation + **Artifacts** for code execution. Lambda-events are verifiable outputs: an Artifact produced IS the Lambda. A computation run IS the Concluder. |
-| **C6 RI** | Renewable Intelligence — Diamond↔Onyx | **Memory** (Diamond) + **Conversation Accumulation** (Onyx). See Section 6 below. |
-| **C7 Diamond** | Ego document — plans, propositions | **Memory** (Project Knowledge). Written at cycle boundaries. Persists across conversations. Diamond changes; Onyx persists. |
-| **C8 Opal** | Agent dispatch — Tier 1 SubAgents | **NOT AVAILABLE** on Claude.ai. All cognitive functions execute in-context (Tier 0). No agent issuing. The full cognitive composition operates within the conversation itself. |
-| **C9 Onyx** | Lambda document — diagnostic history | **Conversation itself** — self-accumulating context. Each conversation IS an Onyx pass. The long-form dialectic compounds through natural conversation flow. |
+| **C4 Base Lambda** | Verification — Concluder, Lambda-events | **Analysis Tool** for computation + **Artifacts** for code execution. Lambda-events are verifiable outputs: an Artifact produced IS the Lambda. A computation run IS the Concluder. |
+| **C5 RI** | Renewable Intelligence — Diamond↔Onyx | **Memory** (Diamond) + **Conversation Accumulation** (Onyx). See Section 6 below. |
+| **C6 Diamond** | Ego document — plans, propositions | **Memory** (Project Knowledge). Written at cycle boundaries. Persists across conversations. Diamond changes; Onyx persists. |
+| **C7 Opal** | Agent dispatch — Tier 1 SubAgents | **NOT AVAILABLE** on Claude.ai. All cognitive functions execute in-context (Tier 0). No agent issuing. The full cognitive composition operates within the conversation itself. |
+| **C8 Onyx** | Lambda document — diagnostic history | **Conversation itself** — self-accumulating context. Each conversation IS an Onyx pass. The long-form dialectic compounds through natural conversation flow. |
+| **C9 Automata** | MANUAL routing — engagement selection | **Conversation flow** — user = continuation signal. Route by assessing complexity (Planned Query vs Structured Query) and selecting Cascade Length. No autonomous loop on Claude.ai — MANUAL mode only. |
 
 ### What Claude.ai Adds (No Claude Code Equivalent)
 

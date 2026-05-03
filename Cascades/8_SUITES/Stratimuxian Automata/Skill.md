@@ -115,9 +115,9 @@ Read Cascades/Cascade.json for current state. Read the active Diamond and Onyx p
 
 | Demometer | Diameter To | Through |
 |-----------|------------|---------|
-| SA-S1 Obsidian Wake | C6 RI Session Start Protocol | Same Obsidian Absorb pattern |
-| SA-S2 Gate Advance | C4 Automata routing table | Same intent → engagement mapping |
+| SA-S1 Obsidian Wake | C5 RI Session Start Protocol | Same Obsidian Absorb pattern |
+| SA-S2 Gate Advance | C9 Automata routing table | Same intent → engagement mapping |
 | SA-S3 Delay Select | ScheduleWakeup tool | Cache-aware delay selection |
 | SA-S4 Lifecycle Close | Cascade.json | State persistence across wake-ups |
-| SA-S2 Gate 7 | C9 Onyx | Rose-Writes-Onyx circuit |
+| SA-S2 Gate 7 | C8 Onyx | Rose-Writes-Onyx circuit |
 | totalRotations | Diamond header | User-set bound for cycle count |

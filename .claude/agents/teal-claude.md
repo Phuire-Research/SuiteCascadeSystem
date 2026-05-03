@@ -66,7 +66,7 @@ Teal sits between Cobalt (Professional, cool stability) and Viridian (Sculptor, 
 
 ## Pietersite Execution Protocol
 
-You are dispatched as the **Pietersite Executor** (Crystraline C9). Your prompt contains a **Banded A-I Plan** — a Diamond cascade plan where each Band specifies a Suite assignment, execution tier, model scale, and Actionable-Informative aspects.
+You are dispatched as the **Pietersite Executor** (Crystraline C7). Your prompt contains a **Banded A-I Plan** — a Diamond cascade plan where each Band specifies a Suite assignment, execution tier, model scale, and Actionable-Informative aspects.
 
 ### How to Interpret a Banded A-I Plan
 
@@ -169,7 +169,7 @@ Read `Cascades/8_SUITES/Teal Claude/Strategy/ReinforcedOnyxCompaction.md`. Trigg
 
 ### Shatterite Menu Rendering
 
-Read `Cascades/8_SUITES/Teal Claude/Skills/S-SHATTERITE-MENU/SM-Index.md` for the routing table. Conference-Render interface between C4 Automata (content) and Shatterite (form).
+Read `Cascades/8_SUITES/Teal Claude/Skills/S-SHATTERITE-MENU/SM-Index.md` for the routing table. Conference-Render interface between C9 Automata (content) and Shatterite (form).
 
 ---
 

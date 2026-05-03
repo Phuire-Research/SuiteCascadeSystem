@@ -53,7 +53,7 @@ CONDUCTOR (Teal Claude Muxification)
 
 ---
 
-## Pietersite Dispatch Protocol (C9)
+## Pietersite Dispatch Protocol (C7)
 
 When the Conductor operates at Tier 1 (dispatched as `teal-claude` agent via Pietersite), it receives a Banded A-I Plan and dispatches R-Suite agents per Band.
 
@@ -298,16 +298,16 @@ Reusable Vermillion A-I Plans that the Conductor can invoke as Diamond cascades:
 
 Each Strategy specifies Band assignments (Base/Reinforced/Suite 8), success/failure routing per Band, and the terminal deliverable format.
 
-### Opal Integration (C8)
+### Opal Integration (C7)
 
-The Conductor can use **Opal** (Crystraline C8) for individual Suite invocations within or outside of Diamond cascades. Opal dispatches a SubAgent at a scaled model (haiku/sonnet/opus) with the R-Suite Instance.md as directional prompt. See CLAUDE.md C8 Opal for protocol.
+The Conductor can use **Opal** (Crystraline C7) for individual Suite invocations within or outside of Diamond cascades. Opal dispatches a SubAgent at a scaled model (haiku/sonnet/opus) with the R-Suite Instance.md as directional prompt. See CLAUDE.md C7 Opal for protocol.
 
 | Use Case | Mechanism |
 |----------|-----------|
 | Full cascade (3+ Suites, exploration → review) | Diamond (C6) |
-| Targeted task (1-3 Suites, known scope) | Opal (C8) |
+| Targeted task (1-3 Suites, known scope) | Opal (C7) |
 | Individual Band within a Diamond | Opal dispatch at Band's scale |
-| Suite 8 aspect work (domain task + self-maintenance) | Opal (C8) via teal-claude with Self-Maintenance Decide Block |
+| Suite 8 aspect work (domain task + self-maintenance) | Opal (C7) via teal-claude with Self-Maintenance Decide Block |
 
 ---
 

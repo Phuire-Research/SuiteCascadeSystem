@@ -344,5 +344,5 @@ Direct manual editing of the `.md` files is possible; the website will reflect a
 - **Stratimuxian Automata**: `/cascade:loop` binding — the loop mechanism
 - **Cascades/Working/DIAMOND-TIER-N.md**: Diamond succession creates new tiers
 - **Cascades/Working/ONYX-TIER-N.md**: Onyx accumulation across Diamonds
-- **C7 Diamond**: Planning Tool ⊗ Vermillion → WorkGameBoard (CLAUDE.md line 473)
-- **C5 Base Lambda**: Summation Agent write permissions — Detached Lambda-Event Dispatch
+- **C6 Diamond**: Planning Tool ⊗ Vermillion → WorkGameBoard (CLAUDE.md line 473)
+- **C4 Base Lambda**: Summation Agent write permissions — Detached Lambda-Event Dispatch
