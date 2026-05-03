@@ -296,7 +296,7 @@ On acceptance, update `Cascades/Cascade.json`:
 }
 ```
 
-Read-back required (C5 Concluder).
+Read-back required (C4 Concluder).
 
 ---
 

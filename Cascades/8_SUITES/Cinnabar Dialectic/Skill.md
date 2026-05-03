@@ -168,7 +168,7 @@ Produce a **Directive Mapping Table** covering:
 
 | Layer | Maps From | Maps To |
 |-------|-----------|---------|
-| Engagement | "Engage your Diamond" | C7 Diamond planning, specific Length |
+| Engagement | "Engage your Diamond" | C6 Diamond planning, specific Length |
 | Delegation | "Issue N Instances" | Opal Tier 1 × N, specific Suite 8 |
 | Steering | "We are Off Target" | Stop, re-read, restart |
 | Continuation | "Please Continue" | Resume from current gate |
@@ -277,8 +277,8 @@ For system improvement: audit utilization, diagnose corrections, produce recomme
 ## Cross-References
 
 - **Instance.md**: Pattern Registry (P1-P9) — canonical pattern definitions
-- **Automata (C4)**: Directive-to-Cascade mapping validates Automata routing table
+- **Automata (C9)**: Directive-to-Cascade mapping validates Automata routing table
 - **Pearl (C1)**: Pearl Compression Density (CD-S3) studies Pearl in natural language
 - **Shatterite Menu**: Utilization audit (CD-S2) reveals which menus users actually need
 - **Teal Claude Conductor**: Dispatch source for Cinnabar analysis runs
-- **Onyx (C9)**: Primary research material — Onyx compactions contain session Lambda
+- **Onyx (C8)**: Primary research material — Onyx compactions contain session Lambda

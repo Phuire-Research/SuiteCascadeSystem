@@ -53,8 +53,8 @@ The user iterates prompts through successive refinement — the same base prompt
 
 | Command | Meaning | Cascade Effect |
 |---------|---------|---------------|
-| "Engage your Diamond" | Begin Diamond planning | C7 → full Vermillion plan |
-| "Engage your Decision Block" | Pre-implementation assessment | C6 E2 → verify before acting |
+| "Engage your Diamond" | Begin Diamond planning | C6 → full Vermillion plan |
+| "Engage your Decision Block" | Pre-implementation assessment | C5 Tool Call Decision Block → verify before acting |
 | "Please Continue" / "Please Proceed" | Resume after interruption | Continue from current gate |
 | "On Point" | Acknowledge alignment | Proceed with confidence |
 | "Confer" | Request Conference | AskUserQuestion or analysis |
@@ -210,5 +210,5 @@ The system IS the product. Usage IS development.
 - **Teal Claude Conductor**: Dispatch source for Cinnabar analysis runs
 - **Shatterite Menu**: Cinnabar findings inform menu design (which menus users actually need)
 - **Pearl (C1)**: Cinnabar studies Pearl Compression in natural language (vs. document compression)
-- **Automata (C4)**: Cinnabar validates whether Automata routing matches actual user intent patterns
-- **Onyx (C9)**: Onyx compactions are primary research material — Lambda-documented session history
+- **Automata (C9)**: Cinnabar validates whether Automata routing matches actual user intent patterns
+- **Onyx (C8)**: Onyx compactions are primary research material — Lambda-documented session history

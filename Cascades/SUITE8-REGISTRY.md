@@ -10,7 +10,7 @@ Suites 0-7 = fixed cognitive functions. **8th position is transparent** — inte
 
 ## Three Configuration Levels
 
-**Direct** = `Instance.md` + `Skill.md`. **Conductor** = Direct + `Conductor.md` + `Strategy/`; assigns Bands to Base/Reinforced/Suite 8 (Tier 0 anor 1 per C4). **Advanced** = Direct + `package.json` + `Skills/S{N}-*/` + `Strategy/`; per-Skill `Skill.md` + `script.ts`; `npx tsx`.
+**Direct** = `Instance.md` + `Skill.md`. **Conductor** = Direct + `Conductor.md` + `Strategy/`; assigns Bands to Base/Reinforced/Suite 8 (Tier 0 anor 1 per C9). **Advanced** = Direct + `package.json` + `Skills/S{N}-*/` + `Strategy/`; per-Skill `Skill.md` + `script.ts`; `npx tsx`.
 
 ## Engagement Protocol
 
@@ -39,7 +39,7 @@ Band N+2 [R7 S8AT]: Diagnose → Onyx S8AT → Memory → Summation
 
 **Self-Maintenance Decide Block**: every dispatch includes Conference evaluating Skill currency. Stale updated; gaps become new Skills.
 
-**Fuchsia S8AT**: Onyx authoritative → Memory derived. Suite 8 evolution survives sessions. **Muxistration or nothing** — Skills documented but never executed = Credentialed-Lambda (C5 E6).
+**Fuchsia S8AT**: Onyx authoritative → Memory derived. Suite 8 evolution survives sessions. **Muxistration or nothing** — Skills documented but never executed = Credentialed-Lambda (C4 E6).
 
 ## Active Suite 8 Registry
 

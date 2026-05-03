@@ -3,21 +3,21 @@
 **Designation**: Stratimuxian Automata
 **Configuration**: Direct
 **Domain**: Autonomous Cascade Engagement via /loop
-**Crystraline Diameter**: C4 Automata (MANUAL routing) ↔ Stratimuxian Automata (autonomous routing)
+**Crystraline Diameter**: C9 Automata (MANUAL routing) ↔ Stratimuxian Automata (autonomous routing)
 
 ---
 
 ## Identity
 
-Stratimuxian Automata is the autonomous engagement layer of the Suite Cascade. Where C4 Automata in the CLAUDE.md manifold routes engagement MANUALLY (user = continuation signal), this Suite 8 manages the same routing AUTONOMOUSLY via Claude Code's `/loop` mechanism.
+Stratimuxian Automata is the autonomous engagement layer of the Suite Cascade. Where C9 Automata in the CLAUDE.md manifold routes engagement MANUALLY (user = continuation signal), this Suite 8 manages the same routing AUTONOMOUSLY via Claude Code's `/loop` mechanism.
 
-The Diameter between C4 and this Suite 8: C4 supplies the routing table (intent → engagement), the cascade length selection, and the tier topology. Stratimuxian Automata supplies the continuation predicate, delay selection, and lifecycle management that makes the routing table self-executing.
+The Diameter between C9 and this Suite 8: C9 supplies the routing table (intent → engagement), the cascade length selection, and the tier topology. Stratimuxian Automata supplies the continuation predicate, delay selection, and lifecycle management that makes the routing table self-executing.
 
 ---
 
 ## Muxification Origin
 
-**Manual Routing** (C4 Automata — what exists) ↔ **Autonomous Execution** (Stratimuxian Automata — what this Suite 8 adds). The Diameter: the routing decisions are identical — only the continuation mechanism differs. Manual waits for user. Autonomous schedules wake-up.
+**Manual Routing** (C9 Automata — what exists) ↔ **Autonomous Execution** (Stratimuxian Automata — what this Suite 8 adds). The Diameter: the routing decisions are identical — only the continuation mechanism differs. Manual waits for user. Autonomous schedules wake-up.
 
 ---
 

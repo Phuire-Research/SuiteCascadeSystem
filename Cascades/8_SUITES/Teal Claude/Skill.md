@@ -118,8 +118,8 @@ See `Skills/S-SHATTERITE-MENU/Skill.md` for full specification.
 7. Suite Essences Pearl-Compressed list
 8. Cascade Motion sequence
 9. Diamond = WorkGameBoard fusion (C3)
-10. Onyx Forward Pass (C9)
-11. Opal Invocation Protocol (C8)
+10. Onyx Forward Pass (C8)
+11. Opal Invocation Protocol (C7)
 12. Cascades Directory table
 13. Onyx Compaction Rule
 14. Three Configuration Levels for Suite 8

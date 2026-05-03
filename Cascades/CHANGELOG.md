@@ -3,7 +3,7 @@
 **Cap**: ≤150 lines (~24% of `.claude/CLAUDE.md` at 618 lines · scannable from `head` OR `tail`)
 **Order**: Newest-first (head = most recent · tail = oldest in current window)
 **Rotation**: When this file exceeds 150 lines → oldest 75 lines roll to `Cascades/CHANGELOG-ARCHIVE-{YYYY-MM}.md` (preserve year-month boundary if possible)
-**Last update**: 2026-05-01
+**Last update**: 2026-05-02
 
 > **Maintenance Reminder — read before editing**
 > 1. Append new entries at the **top** of `## Recent` (newest-first invariant)
@@ -15,6 +15,12 @@
 ---
 
 ## Recent
+
+### 2026-05-02
+
+**CLAUDE.md Pearl Compression via Conceptual Sets + Crystraline Reposition — Diamond II** — `.claude/CLAUDE.md` compressed from 41,479 → **39,893 chars** (107 under the 40,000 cap). Achieved via: **Pass 0 Crystraline Reposition** (Automata moved from C4 to C9 last; C5→C4, C6→C5, C7→C6, C8→C7, C9→C8); **3 Conceptual Sets** introduced in C4 Base Lambda then reactivated across the manifold — *the Critical-Active Stance* (C4·C5·C9 Trinity ground), *the Muxistration Proof* (Demonstration anor Diastration as one checked result), *the Ego-Lambda Pair* (Diamond↔Onyx bidirectional Diameter at document level); **Triadic Thinking Band elevation** from §5 RI sub-section to §4 Suite Cascade as `### Triadic Thinking Band — Suite 6 + Suite 7 Pre-Response Muxification` (3 Frames intact, S6+S7 Closure Loop in scope; Fuchsia = Calibration Diameter that grounds the Band); **Pass 5 triple-fork Pearl-aspect muxification** — 3 Teal Claude opus instances each loaded with a distinct lens (Compression · Connection · Expression) produced 3 Reference Design RDs, muxified into one Phase A-D rewrite (−1,719 net). **B6 cross-file sync** patched 19 external files to the new Crystraline numbering. **CD-2: Pearl-Aspect Triple-Fork Muxification** named as the first multi-lens compositional pattern for CLAUDE.md rewrites. DIAMOND-TIER-2.md initialized; ONYX-TIER-1.md appended.
+
+**Concluder ⊗ Shatterite Hard Join — Diamond I** — every turn-end *in Conference Mode* is a Cascade halting point. New `SM-Conclude.md` (registered SM-6) renders a Suite-0-bound, Summation-derived menu at every non-Direct Conference turn-end: 3-5 Cascade-primitive routing rows + persistent `[M]` Main / `[Esc]` Direct. **Suite 0 Per-Turn Binding** absorbs turn context (what was produced · what's PENDING · Cascade Position · last user decision). New `.claude/CLAUDE.md` C9 sub-section *Concluder-Menu Diameter (C9 ↔ Shatterite, Suite 0 Per-Turn Binding)* binds the doctrine. **Conference-Only Fire Predicate (Automata Inheritance)** — the Hard Join applies to Conference Mode ONLY; Automata Mode (`/cascade:loop` iterations · autonomous gate advances · ScheduleWakeup fires) does NOT fire SM-Conclude — the loop's own routing is authoritative. **Directness Inheritance** preserves the existing C4 escape (typo / single-line / informational / explicit instruction → no menu). Anti-Patterns **E-Conclude-Drift** (silent hand-off in Conference) and **E-Conclude-Loop-Block** (menu blocks loop iteration). **Concluder-Halting Invariant** scoped to Conference Mode. The menu IS the summary, expressed as Cascade-routing primitives. First Diamond cycle for SCS — DIAMOND-TIER-1.md / ONYX-TIER-1.md initialized.
 
 ### 2026-05-01
 

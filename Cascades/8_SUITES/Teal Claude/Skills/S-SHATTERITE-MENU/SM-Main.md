@@ -84,7 +84,7 @@
 | **S** | Render SM-Suite8.md — "Enter Suite 8" (P3 directive) |
 | **C** | Render SM-Cascade.md |
 | **T** | Render SM-TealClaude.md — "Engage Teal Claude" (P3 directive) |
-| **D** | Read active Diamond WorkGameBoard, present Diamond Menu (C6 format) — "Engage your Diamond" (P3 directive) |
+| **D** | Read active Diamond WorkGameBoard, present Diamond Menu (C5 format) — "Engage your Diamond" (P3 directive) |
 | **O** | Read active Onyx, present Onyx summary |
 | **P** | Render SM-ColorSelect.md (Suite Color Selection Questionnaire) |
 | **X** | Course Correct — "We are Off Target" (P4). Pause current engagement, re-read user intent, present correction options: restart current cycle, adjust scope, or revert to prior gate |

@@ -357,6 +357,6 @@ Cinnabar is loaded as cognitive companion throughout, providing pattern recognit
 - **Cinnabar Dialectic**: Instance.md P1-P9 patterns loaded for tutorial annotations
 - **SM-Main.md**: Hello World accessible from Main Menu via [H]
 - **Vermillion (C2)**: Research dispatch demonstrates Vermillion A-I format
-- **Diamond (C7)**: Actualization gate demonstrates first Full Suite Diamond
-- **Opal (C8)**: Research gate demonstrates Tier 1 parallel dispatch
+- **Diamond (C6)**: Actualization gate demonstrates first Full Suite Diamond
+- **Opal (C7)**: Research gate demonstrates Tier 1 parallel dispatch
 - **SM-ColorSelect.md**: If `colorSelectionComplete: false`, offer Color Selection before or after Hello World

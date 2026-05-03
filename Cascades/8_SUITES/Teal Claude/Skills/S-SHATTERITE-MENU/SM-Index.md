@@ -16,6 +16,7 @@
 | **SM-4** | `SM-ColorSelect.md` | Color Selection | First engagement (`colorSelectionComplete: false`), `personalize`, `colors` |
 | **SM-5** | `SM-HelloWorld.md` | Hello World | `hello world`, `tutorial`, `get started`, new user onboarding |
 | **SM-5A** | `SM-HelloWorld-Advanced.md` | Advanced Hello World | Multi-Diamond aspiration loop, `advanced`, Personal Suite 8 Website |
+| **SM-6** | `SM-Conclude.md` | Per-Turn Concluder Menu | Every turn-end above Directness Threshold · Suite 0 binding · Summation-derived · fires automatically |
 
 ---
 
@@ -31,6 +32,7 @@ Conductor / "bands" / "dispatch" / "teal" → SM-TealClaude.md
 "personalize" / "colors" / first engage   → SM-ColorSelect.md
 "hello world" / "tutorial" / "get started" → SM-HelloWorld.md
 "advanced" / "aspire" / "multi-diamond"   → SM-HelloWorld-Advanced.md
+(every non-Direct turn-end, automatic)    → SM-Conclude.md
 D-Queue (TESTING diamonds detected)       → D-Queue rendering (Skill.md §D-Queue)
 ```
 

@@ -1,6 +1,6 @@
 {
-  "activeDiamond": null,
-  "activeOnyx": null,
+  "activeDiamond": "Cascades/Working/DIAMOND-TIER-2.md",
+  "activeOnyx": "Cascades/Working/ONYX-TIER-1.md",
   "suiteColors": {
     "0": "Base",
     "1": "Red",
@@ -12,10 +12,10 @@
     "7": "Fuchsia"
   },
   "cyclePosition": {
-    "cycle": 0,
-    "rotation": 0,
-    "totalRotations": 3,
-    "gate": 0
+    "cycle": 2,
+    "rotation": 1,
+    "totalRotations": 1,
+    "gate": 7
   },
   "colorSelectionComplete": false,
   "automata": null

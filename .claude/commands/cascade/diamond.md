@@ -4,7 +4,7 @@ Read `Cascades/Cascade.json` for current state.
 
 If `activeDiamond` is set:
   - Read the active Diamond file
-  - Present the Diamond Menu (C6 format):
+  - Present the Diamond Menu (C5 format):
     ```
     Diamond Menu:
     - DIAMOND-TIER-N.md [ACTIVE] — Cycle X, Rotation Y of Z
