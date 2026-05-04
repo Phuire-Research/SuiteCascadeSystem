@@ -125,7 +125,12 @@ function DyadicDiameterProof() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginTop: 8 }}>
+        <div style={{ background: `${C.am}11`, border: `1px solid ${C.am}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+          <div style={{ fontSize: 8, color: C.am, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>PAIRS</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{n === 0 ? "½" : Math.pow(2, n - 1)}</div>
+          <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n - 1}</sup></div>
+        </div>
         <div style={{ background: `${C.di}11`, border: `1px solid ${C.di}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
           <div style={{ fontSize: 8, color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DIAMETERS</div>
           <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{D}</div>
@@ -138,7 +143,7 @@ function DyadicDiameterProof() {
         </div>
         <div style={{ background: `${C.ac}11`, border: `1px solid ${C.ac}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
           <div style={{ fontSize: 8, color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>θ / SECTOR</div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{theta}°</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{theta}°</div>
           <div style={{ fontSize: 8, color: C.tm }}>180°/2<sup>{n}</sup></div>
         </div>
       </div>
@@ -146,26 +151,27 @@ function DyadicDiameterProof() {
       {/* Description */}
       <div style={{ background: C.sf, borderRadius: 10, padding: 12, marginTop: 10, textAlign: "center",
         fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: C.tm, lineHeight: 1.7 }}>
-        {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>½ Dyad — the base definition.</span><br />
+        {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>Origin · 2<sup>−1</sup> Dyad — ½ a Pair.</span><br />
           <span style={{ color: C.di }}>1 Diameter</span> = ½ Dyad of Diameters.<br />
           Each <span style={{ color: C.de }}>Demometer</span> = ½ the circle.<br />
-          The Through Measure IS the definition.</>}
-        {n === 1 && <><span style={{ color: C.mx }}>2 Diameters</span> perpendicular. <span style={{ color: C.de }}>4 equal quadrants</span>.<br />First doubling from the ½ Dyad base.</>}
-        {n === 2 && <><span style={{ color: C.mx }}>4 Diameters</span>. <span style={{ color: C.de }}>8 equal 45° sectors</span>.<br />Second order. Each tier doubles the previous.</>}
-        {n === 3 && <><span style={{ color: C.mx }}>8 Diameters</span>. <span style={{ color: C.de }}>16 equal 22.5° sectors</span>.<br />Third order. θ halves at each doubling.</>}
-        {n === 4 && <><span style={{ color: C.mx }}>16 Diameters</span>. <span style={{ color: C.de }}>32 equal sectors</span>.<br />Fourth order. 11.25° per sector.</>}
-        {n === 5 && <><span style={{ color: C.mx }}>32 Diameters</span>. <span style={{ color: C.de }}>64 equal sectors</span>.<br />Fifth order. 5.625° per sector.</>}
-        {n === 6 && <><span style={{ color: C.mx }}>64 Diameters</span>. <span style={{ color: C.de }}>128 equal sectors</span>.<br />Sixth order. Beyond Archimedes' 96-gon.</>}
-        {n === 7 && <><span style={{ color: C.mx }}>128 Diameters</span>. <span style={{ color: C.de }}>256 equal sectors</span>.<br />Seventh order. 1.40625° per sector. The polygon approaches the circle.</>}
+          The Through Measure IS the definition — precedes the first complete Pair.</>}
+        {n === 1 && <><span style={{ color: C.am, fontWeight: 700 }}>1st Order · 2<sup>0</sup> = 1 Dyad.</span><br /><span style={{ color: C.mx }}>2 Diameters</span> perpendicular. <span style={{ color: C.de }}>4 equal quadrants</span>.<br />The first complete Pair.</>}
+        {n === 2 && <><span style={{ color: C.am, fontWeight: 700 }}>2nd Order · 2<sup>1</sup> = 2 Dyads.</span><br /><span style={{ color: C.mx }}>4 Diameters</span>. <span style={{ color: C.de }}>8 equal 45° sectors</span>.<br />Each order doubles the prior Pair count.</>}
+        {n === 3 && <><span style={{ color: C.am, fontWeight: 700 }}>3rd Order · 2<sup>2</sup> = 4 Dyads.</span><br /><span style={{ color: C.mx }}>8 Diameters</span>. <span style={{ color: C.de }}>16 equal 22.5° sectors</span>.<br />θ halves at each doubling.</>}
+        {n === 4 && <><span style={{ color: C.am, fontWeight: 700 }}>4th Order · 2<sup>3</sup> = 8 Dyads.</span><br /><span style={{ color: C.mx }}>16 Diameters</span>. <span style={{ color: C.de }}>32 equal sectors</span>.<br />11.25° per sector.</>}
+        {n === 5 && <><span style={{ color: C.am, fontWeight: 700 }}>5th Order · 2<sup>4</sup> = 16 Dyads.</span><br /><span style={{ color: C.mx }}>32 Diameters</span>. <span style={{ color: C.de }}>64 equal sectors</span>.<br />5.625° per sector.</>}
+        {n === 6 && <><span style={{ color: C.am, fontWeight: 700 }}>6th Order · 2<sup>5</sup> = 32 Dyads.</span><br /><span style={{ color: C.mx }}>64 Diameters</span>. <span style={{ color: C.de }}>128 equal sectors</span>.<br />Beyond Archimedes' 96-gon.</>}
+        {n === 7 && <><span style={{ color: C.am, fontWeight: 700 }}>7th Order · 2<sup>6</sup> = 64 Dyads.</span><br /><span style={{ color: C.mx }}>128 Diameters</span>. <span style={{ color: C.de }}>256 equal sectors</span>.<br />1.40625° per sector. The polygon approaches the circle.</>}
       </div>
 
       {/* Invariants */}
       <div style={{ background: `${C.am}08`, border: `1px solid ${C.am}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
         fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
-        <span style={{ color: C.am, fontWeight: 700, fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: "1px" }}>INVARIANT AT EVERY ORDER</span><br />
-        <span style={{ color: C.de }}>M</span> = <span style={{ color: C.di }}>D</span> × 2 ·{" "}
-        Dyads of <span style={{ color: C.de }}>M</span> = Dyads of <span style={{ color: C.di }}>D</span> × 2 ·{" "}
-        <span style={{ color: C.ac }}>θ</span> halves each order
+        <span style={{ color: C.am, fontWeight: 700, fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: "1px" }}>DYADIC EXPONENT LADDER · INVARIANT AT EVERY ORDER</span><br />
+        <span style={{ color: C.am }}>P</span> = 2<sup>n−1</sup> ·{" "}
+        <span style={{ color: C.di }}>D</span> = 2<span style={{ color: C.am }}>P</span> = 2<sup>n</sup> ·{" "}
+        <span style={{ color: C.de }}>M</span> = 2<span style={{ color: C.di }}>D</span> = 2<sup>n+1</sup> ·{" "}
+        <span style={{ color: C.ac }}>θ</span> = 180°/2<sup>n</sup>
       </div>
     </div>
   );
