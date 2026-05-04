@@ -574,7 +574,7 @@ Every component is documented in plain language and can be examined independentl
 
 ---
 
-### Recent Changes — 2026-05-02
+### Recent Changes — 2026-05-04
 
 The rotating SCS changelog lives at [`Cascades/CHANGELOG.md`](../Cascades/CHANGELOG.md) — capped at 150 lines (~24% of `CLAUDE.md`), newest-first, with monthly archive rotation when over cap. Open it directly via `/cascade:changelog` for the most recent entries plus the Maintenance Reminder.
 

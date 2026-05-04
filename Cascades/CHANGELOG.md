@@ -3,7 +3,7 @@
 **Cap**: ≤150 lines (~24% of `.claude/CLAUDE.md` at 618 lines · scannable from `head` OR `tail`)
 **Order**: Newest-first (head = most recent · tail = oldest in current window)
 **Rotation**: When this file exceeds 150 lines → oldest 75 lines roll to `Cascades/CHANGELOG-ARCHIVE-{YYYY-MM}.md` (preserve year-month boundary if possible)
-**Last update**: 2026-05-02
+**Last update**: 2026-05-04
 
 > **Maintenance Reminder — read before editing**
 > 1. Append new entries at the **top** of `## Recent` (newest-first invariant)
@@ -15,6 +15,10 @@
 ---
 
 ## Recent
+
+### 2026-05-04
+
+**Muxonomy Proof Dyadic Reframing — `docs/muxonomy.html` Section I** — *Supporting proof artifact only; no active change to the SuiteCascadeSystem itself (no Suite, agent, skill, command, or methodology surface modified).* Two cycles on `main` reframe `DyadicDiameterProof` so the dyadic exponent ladder becomes structurally legible. **Cycle 1** (`a936d5c`) surfaces the **Pair-Exponent Ladder**: stats grid 3→4 col with new **PAIRS = 2^(n−1)** column ("½" at n=0 with subscript `2^−1`); order descriptions lead with Pair-exponent (Origin · 2^−1 · ½ Pair → 1st · 2^0 · 1 Dyad → ... → 7th · 2^6 · 64 Dyads); invariant becomes explicit `P=2^(n−1) · D=2P=2^n · M=2D=2^(n+1) · θ=180°/2^n`. **Cycle 2** (`95bef8f`) introduces the parallel **Dyadic Demometer ladder** offset by one order — Demometer's Origin (Whole Face = 1) precedes Diameter's Origin; both ladders advance in lockstep once the first Diameter is drawn, with Demometer always one exponent ahead. New **Pewter Alignment Triad** panel (Pre-Origin · Origin · 1st · 2nd × Language · Mathematics · Geometry) holds all three faces in one embossed mosaic frame — suite-color tokens, gradient panes, offset shadows, active-position highlighting. Geometry and language preserved per user constraint; mathematical expression of the dyadic relationship corrected and extended. **Framing honesty**: Viète's chord-doubling recursion `s_{2n} = √(2 − √(4 − s_n²))` is unchanged; the contribution is *structural naming* — every step now has a coordinate on a labeled ladder.
 
 ### 2026-05-02
 
