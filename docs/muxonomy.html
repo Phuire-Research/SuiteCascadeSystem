@@ -86,7 +86,7 @@ function DyadicDiameterProof() {
 
   return (
     <div>
-      <STitle num="I" title="The ½ Diametric Dyad" sub="The Diameter produces the Demometers — the base definition of Through Measure" />
+      <STitle num="I" title="The ½ Diametric Dyad" sub="The Diameter produces the Demometers — two parallel dyadic ladders, offset by one order" />
       <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={`${C.tm}44`} strokeWidth={1.5} />
         {/* Draw sectors */}
@@ -136,10 +136,11 @@ function DyadicDiameterProof() {
           <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{D}</div>
           <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n}</sup></div>
         </div>
-        <div style={{ background: `${C.de}11`, border: `1px solid ${C.de}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
+        <div style={{ background: `${C.de}11`, border: `1px solid ${C.de}33`, borderRadius: 8, padding: 8, textAlign: "center", position: "relative" }}>
           <div style={{ fontSize: 8, color: C.de, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DEMOMETERS</div>
           <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{M}</div>
           <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n + 1}</sup></div>
+          {n === 0 && <div style={{ fontSize: 7, color: C.am, marginTop: 2, fontStyle: "italic" }}>← Pre-Origin: 1 Whole Face</div>}
         </div>
         <div style={{ background: `${C.ac}11`, border: `1px solid ${C.ac}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
           <div style={{ fontSize: 8, color: C.ac, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>θ / SECTOR</div>
@@ -154,7 +155,8 @@ function DyadicDiameterProof() {
         {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>Origin · 2<sup>−1</sup> Dyad — ½ a Pair.</span><br />
           <span style={{ color: C.di }}>1 Diameter</span> = ½ Dyad of Diameters.<br />
           Each <span style={{ color: C.de }}>Demometer</span> = ½ the circle.<br />
-          The Through Measure IS the definition — precedes the first complete Pair.</>}
+          The Through Measure IS the definition — precedes the first complete Pair.<br />
+          <span style={{ color: C.am, fontSize: 10 }}>The Demometer ladder began at Pre-Origin — <span style={{ color: C.de }}>1 Whole Face</span> — before this first Diameter was drawn.</span></>}
         {n === 1 && <><span style={{ color: C.am, fontWeight: 700 }}>1st Order · 2<sup>0</sup> = 1 Dyad.</span><br /><span style={{ color: C.mx }}>2 Diameters</span> perpendicular. <span style={{ color: C.de }}>4 equal quadrants</span>.<br />The first complete Pair.</>}
         {n === 2 && <><span style={{ color: C.am, fontWeight: 700 }}>2nd Order · 2<sup>1</sup> = 2 Dyads.</span><br /><span style={{ color: C.mx }}>4 Diameters</span>. <span style={{ color: C.de }}>8 equal 45° sectors</span>.<br />Each order doubles the prior Pair count.</>}
         {n === 3 && <><span style={{ color: C.am, fontWeight: 700 }}>3rd Order · 2<sup>2</sup> = 4 Dyads.</span><br /><span style={{ color: C.mx }}>8 Diameters</span>. <span style={{ color: C.de }}>16 equal 22.5° sectors</span>.<br />θ halves at each doubling.</>}
@@ -172,6 +174,67 @@ function DyadicDiameterProof() {
         <span style={{ color: C.di }}>D</span> = 2<span style={{ color: C.am }}>P</span> = 2<sup>n</sup> ·{" "}
         <span style={{ color: C.de }}>M</span> = 2<span style={{ color: C.di }}>D</span> = 2<sup>n+1</sup> ·{" "}
         <span style={{ color: C.ac }}>θ</span> = 180°/2<sup>n</sup>
+      </div>
+
+      {/* ── PEWTER ALIGNMENT TRIAD — Two Ladders, One Frame ── */}
+      <div style={{
+        marginTop: 12,
+        background: `linear-gradient(135deg, ${C.am}10, ${C.de}06)`,
+        border: `1px solid ${C.am}44`,
+        borderRadius: 12,
+        padding: "12px 10px",
+        boxShadow: `inset 0 1px 0 ${C.am}33, 0 1px 0 ${C.bg}, 0 2px 6px ${C.bg}`,
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 10 }}>
+          <div style={{ fontSize: 9, color: C.am, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1.5px" }}>DYADIC ALIGNMENT TRIAD</div>
+          <div style={{ fontSize: 9, color: C.tm, marginTop: 3 }}>Language · Mathematics · Geometry — held in one Pewter frame</div>
+        </div>
+        {(() => {
+          const positions = [
+            { idx: -1, label: "Pre-Origin", D: "—", M: "1", Dexp: "—", Mexp: "2⁻¹", lang: "Whole Face", geo: "○" },
+            { idx: 0,  label: "Origin",     D: "1", M: "2", Dexp: "2⁻¹", Mexp: "2⁰",  lang: "Halves",     geo: "─" },
+            { idx: 1,  label: "1st Order",  D: "2", M: "4", Dexp: "2⁰",  Mexp: "2¹",  lang: "Quadrants",  geo: "✚" },
+            { idx: 2,  label: "2nd Order",  D: "4", M: "8", Dexp: "2¹",  Mexp: "2²",  lang: "Sectors",    geo: "✱" },
+          ];
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 5 }}>
+              {positions.map((p, i) => {
+                const active = p.idx === n;
+                const tileBg = active ? `linear-gradient(160deg, ${C.am}30, ${C.di}18)` : `linear-gradient(160deg, ${C.am}08, ${C.bg})`;
+                const tileBorder = active ? `1.5px solid ${C.am}` : `1px solid ${C.am}33`;
+                return (
+                  <div key={i} style={{
+                    background: tileBg,
+                    border: tileBorder,
+                    borderRadius: 8,
+                    padding: "7px 4px",
+                    textAlign: "center",
+                    boxShadow: active
+                      ? `inset 0 1px 0 ${C.am}66, 0 0 8px ${C.am}44`
+                      : `inset 0 1px 0 ${C.am}22, 0 1px 0 ${C.bg}`,
+                    transition: "all 0.2s",
+                  }}>
+                    {/* POSITION */}
+                    <div style={{ fontSize: 7, color: active ? C.ac : C.tm, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.5px", marginBottom: 4 }}>{p.label}</div>
+                    {/* GEOMETRY tessera */}
+                    <div style={{ fontSize: 18, color: active ? C.de : `${C.de}88`, fontWeight: 900, lineHeight: 1, marginBottom: 4 }}>{p.geo}</div>
+                    {/* LANGUAGE tessera */}
+                    <div style={{ fontSize: 8, color: active ? C.de : C.tm, fontStyle: "italic", marginBottom: 5 }}>{p.lang}</div>
+                    {/* MATHEMATICS tessera — both ladders */}
+                    <div style={{ borderTop: `1px solid ${C.am}22`, paddingTop: 4, lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 8, color: C.di }}>D: {p.Dexp} ({p.D})</div>
+                      <div style={{ fontSize: 8, color: C.de }}>M: {p.Mexp} ({p.M})</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+        <div style={{ marginTop: 9, padding: "6px 8px", background: `${C.bg}aa`, borderRadius: 6, border: `1px solid ${C.am}22`, textAlign: "center", fontSize: 9, color: C.tm, lineHeight: 1.6 }}>
+          The Demometer ladder begins at <span style={{ color: C.am, fontWeight: 700 }}>Pre-Origin (2⁻¹ = 1 Whole Face)</span>, one step before the Diameter ladder.
+          When the first Diameter is drawn, both ladders advance in lockstep — the Demometer always one exponent ahead.
+        </div>
       </div>
     </div>
   );
