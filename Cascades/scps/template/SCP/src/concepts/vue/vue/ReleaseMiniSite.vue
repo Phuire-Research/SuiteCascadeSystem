@@ -84,6 +84,15 @@ const RELEASE_SITE: ReleaseCategory[] = [
           'The session-spawn trigger is now cleared <span class="hifi-hl-red">the instant it fires</span> rather than after the request settles — the narrow window where page navigation could re-fire the spawn is gone. One click, <span class="hifi-hl-green">one session</span>, every time.',
         ],
       },
+      {
+        title: 'The version label — always in view',
+        color: 'purple',
+        summary: 'The installed SCS-Bridge version sits beside your app’s name on every page — and tells you the moment npm carries something newer.',
+        detail: [
+          'Your app’s own server checks the npm registry at boot and every six hours; the label beside the app name renders the <span class="hifi-hl-purple">installed version in purple</span>, turns <span class="hifi-hl-red">red when npm carries a newer publish</span> (time to update), and <span class="hifi-hl-fuchsia">fuchsia when your install is ahead</span>. Hovering it shows both versions and the verdict, with the one-line update command when one is due.',
+          'It is fully offline-honest: no network anor no npm on the machine simply leaves the <span class="hifi-hl-purple">purple label</span> standing — never an error, never a blocked boot. The Bridge page carries the fuller pane with the same truth.',
+        ],
+      },
     ],
   },
   {
