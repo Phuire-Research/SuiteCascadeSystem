@@ -24,6 +24,7 @@ import { dirname, join, resolve } from 'node:path';
 import type { ShaderRenderMode } from '../../shared/shaderRenderMode';
 import type { RenderModeCatalogEntry } from '../../shared/renderModeCatalog.model';
 import { RENDER_MODE_CATALOG } from '../../shared/renderModeCatalog.model';
+import { getNpmVersionCheck } from './npmVersionCheck';
 import type { ModelCatalogEntry } from '../../shared/modelCatalog.model';
 import { AVAILABLE_MODELS, DEFAULT_MODEL } from '../../shared/modelCatalog.model';
 
@@ -91,6 +92,12 @@ export type BridgeMetadata = {
   // general agent or Suite 8 alike. Absent ⇒ DEFAULT_MODEL (Opus 4.8). The Settings UI edits both
   // this and the catalog post-Epoch.
   defaultModel?: string;
+  // D-UP7 · THE UPDATE INDICATOR · the npm registry check (npmVersionCheck.ts — the bridge
+  // owns the check; SCPs render from this relay). npmLatestVersion null = no successful
+  // check yet this run; updateAvailable compares it numerically vs bridgeVersion.
+  npmLatestVersion?: string | null;
+  updateAvailable?: boolean;
+  versionCheckedAt?: number;
   // Model Control · the PUBLISHED model catalog (the shared model · modelCatalog.model.ts) —
   // written on every bridge.json write (mirrors availableRenderModes · no drift between surfaces).
   availableModels?: ModelCatalogEntry[];
@@ -274,6 +281,9 @@ async function writeBridgeMetadataUnsafe(
     // discoverable/editable in bridge.json; the catalog publishes alongside (the shared model).
     defaultModel: state.defaultModel ?? DEFAULT_MODEL,
     availableModels: AVAILABLE_MODELS,
+    // D-UP7 · THE COMPOSER LEG — the npm version-check cache rides EVERY bridge.json
+    // write so the indicator survives all rewrite sites (boot · pong · TUI refresh).
+    ...getNpmVersionCheck(),
     // W6a · THE LIFECYCLE PROJECTION (SCM W6) · the scpName → FSM-state-string map (the TUI M17
     // caller projects lifecycleByScp; the boot-time writer passes {}). Default {} when absent so the
     // field is always present + discoverable. The per-SCP fan-out below carries it FREE (it spreads

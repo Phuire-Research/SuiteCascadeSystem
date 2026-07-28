@@ -679,6 +679,14 @@ export type BridgeJsonShape = {
   // falling back to the template catalog mirror (scsModelCatalog.model.ts) before the bridge relays.
   defaultModel?: string;
   availableModels?: ScsModelCatalogEntry[];
+  // D-UP7 · THE UPDATE INDICATOR mirror — the bridge's npm registry check (published on every
+  // bridge.json write + an immediate RMW on check completion; carried FREE by the field-agnostic
+  // scsBridgeJsonWatcher relay). npmLatestVersion null = no successful check yet this bridge run;
+  // updateAvailable = the latest npm publish is numerically newer than bridgeVersion. The
+  // installation sub-page renders installed-vs-latest; the landing chip routes there.
+  npmLatestVersion?: string | null;
+  updateAvailable?: boolean;
+  versionCheckedAt?: number;
   // W6a · THE LIFECYCLE PROJECTION mirror (SCM W6 · Spawn Window Focus + Simulated Loading Bar).
   // scpName → FSM-state-string ('pending' | 'idle' | 'booting' | 'live'). Written by the bridge from
   // the SAME lifecycleByScp FSM the TUI badges ride; carried FREE by the field-agnostic

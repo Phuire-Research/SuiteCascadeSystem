@@ -292,6 +292,18 @@ onUnmounted(() => {
         @sub-page-selected="selectSubPage"
       />
 
+      <!-- D-UP7 · THE UPDATE INDICATOR chip — visible on every sub-page ONLY when the bridge's
+           npm registry check reports a newer published version. Routes to the Bridge surface
+           (the installation sub-page) where installed-vs-latest renders in full. -->
+      <button
+        v-if="bridgeJson?.updateAvailable"
+        class="scs-bridge-update-chip hifi-mono"
+        title="A newer SCS-Bridge is published on npm — open the Bridge page for details."
+        @click="selectSubPage('installation')"
+      >
+        UPDATE AVAILABLE · v{{ bridgeJson?.npmLatestVersion }}
+      </button>
+
       <!-- SESSION MANAGEMENT IS THE MAIN PAGE (Lambda-of-2 user finding): the active sub-page
            content renders DIRECTLY under the nav — previously the unconditional Suite-8 toolbar
            panel sat between them, pushing Session Management below the fold (the PlayTest opened
@@ -319,6 +331,7 @@ onUnmounted(() => {
       />
       <ScsBridgeInstallationSubPage
         v-else-if="activeSubPage === 'installation'"
+        :bridge-json="bridgeJson"
       />
       <!-- SESSION MANAGEMENT IS THE MAIN PAGE — the final v-else: whenever no other sub-page
            is explicitly selected (including any boot-value drift), Session Management renders.
@@ -364,6 +377,25 @@ onUnmounted(() => {
 .subtitle {
   color: var(--color-white-muted, #a0a0a8);
   font-size: 0.875rem;
+}
+
+/* D-UP7 · THE UPDATE INDICATOR chip — appears under the nav only when the bridge's npm
+   check reports a newer publish; routes to the Bridge (installation) surface. */
+.scs-bridge-update-chip {
+  align-self: flex-start;
+  margin: 0.5rem 0 0;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  border: 1px dotted rgba(74, 222, 128, 0.8);
+  background: rgba(74, 222, 128, 0.08);
+  color: rgba(74, 222, 128, 0.95);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.scs-bridge-update-chip:hover {
+  background: rgba(74, 222, 128, 0.16);
 }
 
 .landing-content {
