@@ -271,6 +271,7 @@ onUnmounted(() => {
           <span class="release-stamp hifi-stamp hifi-stamp-purple">version = Cascade Cycle</span>
         </h2>
         <p class="section-lede">
+          <span class="hifi-hl-green">Stamped 2026-07-28 — the first public release.</span>
           The bridge's <span class="hifi-hl-purple">version number IS its Cascade Cycle</span> — each cycle of the method advances it.
           This release crossed the bar for <span class="hifi-hl-base">the first public product</span>. This is the full tour — pick a
           feature on the left to read it.
