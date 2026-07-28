@@ -369,14 +369,14 @@ describe('SCS_FRESH_CASCADE_JSON — Diamond B-19 (CD-58 BECIS)', () => {
     const { SCS_FRESH_CASCADE_JSON } = await import('./installConstants');
     const parsed = JSON.parse(SCS_FRESH_CASCADE_JSON);
     expect(parsed.suiteColors).toEqual({
-      '0': 'Base',
-      '1': 'Red',
-      '2': 'Orange',
-      '3': 'Yellow',
-      '4': 'Green',
-      '5': 'Blue',
-      '6': 'Purple',
-      '7': 'Fuchsia',
+      '0': 'Obsidian',
+      '1': 'Maroon',
+      '2': 'Rust',
+      '3': 'Ochre',
+      '4': 'Viridian',
+      '5': 'Cobalt',
+      '6': 'Amethyst',
+      '7': 'Rose',
     });
   });
 

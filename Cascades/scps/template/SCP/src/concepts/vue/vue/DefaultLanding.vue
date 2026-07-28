@@ -124,7 +124,7 @@ onUnmounted(() => {
           <span class="hifi-hl-yellow">Suite Cascade Protocol</span>, and a means of
           <span class="hifi-hl-red">Securing, Containing, and Protecting</span> a given domain —
           by representing it as <span class="hifi-hl-fuchsia">a Service that Contains a
-          Problem</span>. What makes an SCP is the anomalous frontier that
+          Problem</span>. What makes an <ScpMark /> is the anomalous frontier that
           <span class="hifi-hl-green">recursively improving software</span> represents.
         </p>
         <p class="hero-welcome hifi-heading">Welcome to the Unlimited Frontier.</p>
@@ -143,36 +143,36 @@ onUnmounted(() => {
            walkthrough retired — the viewer IS in their first session at first public viewing;
            source: the C800 inducted founder copy · DIAMOND-RELEASE-CLOSURE §R4 RESHAPED) ===================== -->
       <section class="home-section hifi-pane-green">
-        <p class="section-eyebrow hifi-mono">01 · THE NAMED SCP</p>
+        <p class="section-eyebrow hifi-mono">01 · THE NAMED <ScpMark /></p>
         <h2 class="section-title named-scp-title hifi-heading">Introducing the Named <ScpMark /></h2>
         <span class="named-scp-badge hifi-mono">PHUIRE RESEARCH · FIRST PUBLIC VIEWING</span>
-        <p class="section-lede">You are used to numbered, classified SCPs in traditional canon. Here, from PhuirE Research, we present the first Named SCP.</p>
+        <p class="section-lede">You are used to numbered, classified <ScpMark />s in traditional canon. Here, from PhuirE Research, we present the first Named <ScpMark />.</p>
         <!-- C805 · THE HIGHLIGHT REWORK — the prose rides the Pewter Tessera subtext ground (light
              text on the dark gem-lit Onyx, never on the suite color) with the functional color law
              highlighting the key phrases inline (the /your-moat idiom). -->
         <div class="named-scp-ground hifi-subtext-ground">
           <div class="named-scp-body">
-            <p>The fundamental difference is that <span class="hifi-hl-base">Named SCPs are real</span> — based on the closest aspect of our reality that could otherwise fall into that unreal category. Artificial Intelligence can be <span class="hifi-hl-purple">anything we compose it to be</span>. You just experienced AI working in tandem with software to actualize the installation and <span class="hifi-hl-green">recursive improvement of software that improves while you use it</span>. And that AI improves with the strength of your Named SCP’s configuration, alongside each advancing version of AI that comes to the table.</p>
-            <p>The Named SCP is purpose-created to ride the wave of Artificial Intelligence, so that developers and more have a means to keep up in a rapidly changing economy. We now have a new concept of work: <span class="hifi-hl-purple">Autonomous Work</span>. Many utilize looped conventions to actualize entire software suites at once — the birth of Personalized Software at long last. But with it comes a question: how do you keep up in a marketplace where everyone can have their own personalized software, <span class="hifi-hl-red">gated behind untold amounts of compute</span>? Enter the trusty Open Source means. At the click of a <span class="hifi-hl-blue">Bridge Turn Over</span>, you can rapidly configure your live SCP into actualizing any page. Further still, Suite 8s — <span class="hifi-hl-purple">the Suite Cascade System’s premiere agent architecture</span> — represent entire pages as a means of interacting with an AI. The AI is, effectively, the page or the computer program, held within carefully threaded bounds. It may be accessed at the cost of a <span class="hifi-hl-fuchsia">subscription</span>, while the software itself is free. The intention behind this software is to compete in a <span class="hifi-hl-yellow">positive-sums marketplace</span> built on the heavyweight that carries the world’s economy: <span class="hifi-hl-base">Open Source, on a net-metered tap</span>.</p>
-            <p>The issue with Free is that it is uncapitalistic in reality — but only because it blocks the ability to perform <span class="hifi-hl-yellow">price discovery</span>. <span class="hifi-hl-base">The SCP architecture is free.</span> The reality of a marketplace based on that architecture is the positive-sums exchange of the cost of actualizing the software, by energy and depreciation cost. <span class="hifi-hl-yellow">A Penny Market.</span></p>
-            <p>Right now is <span class="hifi-hl-green">the Training Season</span>. A Suite 8 page can be hand-crafted, or built out through <span class="hifi-hl-purple">the Cascade Loop means</span> to suit whatever purpose you require. A website bound to a server is effectively any computer program, and this system can expand to further means of computation — the goal for the SCP is the ability to <span class="hifi-hl-blue">relay inputs into off-screen rendered programs</span>. The SCP you are interacting with is different from a website: it has <span class="hifi-hl-fuchsia">post-processing applied to it</span>. That comes at a cost, so we built out the basis components — <span class="hifi-hl-green">the SCS-Bridge component library</span> — to ease the difficulty of building your own custom solutions.</p>
-            <p>Keep in mind: this is <span class="hifi-hl-green">recursively improving software</span>, riding a <span class="hifi-hl-purple">compounding network effect</span>, with a marketplace of <span class="hifi-hl-yellow">penny transactions</span> as its accelerant. That seems small — and the system can be further refined on absolute utilization — but keep in frame what a million utilizations of a design presented to the marketplace means: <span class="hifi-hl-yellow">ten thousand dollars</span>. Not the largest amount. When that is five million, you are looking at <span class="hifi-hl-yellow">fifty thousand</span> — for the majority, enough to dig out of a debt hole. That is the purpose of the marketplace: to supply a means of keeping in touch, and enough pennies to contribute more time to exploring what is possible with self-evolving software based on your work. You can have this be automatic — but here we advise <span class="hifi-hl-base">the purposeful augmentation as your Diamond</span>. How can you improve your work? What SCPs from your work can you share that would assist others in improving theirs?</p>
+            <p>The fundamental difference is that <span class="hifi-hl-base">Named <ScpMark />s are real</span> — based on the closest aspect of our reality that could otherwise fall into that unreal category. Artificial Intelligence can be <span class="hifi-hl-purple">anything we compose it to be</span>. You just experienced AI working in tandem with software to actualize the installation and <span class="hifi-hl-green">recursive improvement of software that improves while you use it</span>. And that AI improves with the strength of your Named <ScpMark />’s configuration, alongside each advancing version of AI that comes to the table.</p>
+            <p>The Named <ScpMark /> is purpose-created to ride the wave of Artificial Intelligence, so that developers and more have a means to keep up in a rapidly changing economy. We now have a new concept of work: <span class="hifi-hl-purple">Autonomous Work</span>. Many utilize looped conventions to actualize entire software suites at once — the birth of Personalized Software at long last. But with it comes a question: how do you keep up in a marketplace where everyone can have their own personalized software, <span class="hifi-hl-red">gated behind untold amounts of compute</span>? Enter the trusty Open Source means. At the click of a <span class="hifi-hl-blue">Bridge Turn Over</span>, you can rapidly configure your live <ScpMark /> into actualizing any page. Further still, Suite 8s — <span class="hifi-hl-purple">the Suite Cascade System’s premiere agent architecture</span> — represent entire pages as a means of interacting with an AI. The AI is, effectively, the page or the computer program, held within carefully threaded bounds. It may be accessed at the cost of a <span class="hifi-hl-fuchsia">subscription</span>, while the software itself is free. The intention behind this software is to compete in a <span class="hifi-hl-yellow">positive-sums marketplace</span> built on the heavyweight that carries the world’s economy: <span class="hifi-hl-base">Open Source, on a net-metered tap</span>.</p>
+            <p>The issue with Free is that it is uncapitalistic in reality — but only because it blocks the ability to perform <span class="hifi-hl-yellow">price discovery</span>. <span class="hifi-hl-base">The <ScpMark /> architecture is free.</span> The reality of a marketplace based on that architecture is the positive-sums exchange of the cost of actualizing the software, by energy and depreciation cost. <span class="hifi-hl-yellow">A Penny Market.</span></p>
+            <p>Right now is <span class="hifi-hl-green">the Training Season</span>. A Suite 8 page can be hand-crafted, or built out through <span class="hifi-hl-purple">the Cascade Loop means</span> to suit whatever purpose you require. A website bound to a server is effectively any computer program, and this system can expand to further means of computation — the goal for the <ScpMark /> is the ability to <span class="hifi-hl-blue">relay inputs into off-screen rendered programs</span>. The <ScpMark /> you are interacting with is different from a website: it has <span class="hifi-hl-fuchsia">post-processing applied to it</span>. That comes at a cost, so we built out the basis components — <span class="hifi-hl-green">the SCS-Bridge component library</span> — to ease the difficulty of building your own custom solutions.</p>
+            <p>Keep in mind: this is <span class="hifi-hl-green">recursively improving software</span>, riding a <span class="hifi-hl-purple">compounding network effect</span>, with a marketplace of <span class="hifi-hl-yellow">penny transactions</span> as its accelerant. That seems small — and the system can be further refined on absolute utilization — but keep in frame what a million utilizations of a design presented to the marketplace means: <span class="hifi-hl-yellow">ten thousand dollars</span>. Not the largest amount. When that is five million, you are looking at <span class="hifi-hl-yellow">fifty thousand</span> — for the majority, enough to dig out of a debt hole. That is the purpose of the marketplace: to supply a means of keeping in touch, and enough pennies to contribute more time to exploring what is possible with self-evolving software based on your work. You can have this be automatic — but here we advise <span class="hifi-hl-base">the purposeful augmentation as your Diamond</span>. How can you improve your work? What <ScpMark />s from your work can you share that would assist others in improving theirs?</p>
           </div>
         </div>
         <!-- C805 · THE ACRONYM PANEL — the toolbar + body + ◆ list anatomy (the ORIGIN panel idiom). -->
         <div class="named-scp-acronym-panel">
           <div class="hifi-panel-toolbar">
-            <span class="nsap-title hifi-heading">SCP stands for a number of acronyms</span>
+            <span class="nsap-title hifi-heading"><ScpMark /> stands for a number of acronyms</span>
           </div>
           <div class="hifi-panel-body">
             <ul class="hifi-list">
               <li style="--mark: var(--color-red)"><span class="hifi-hl-red">Secure, Contain, Protect</span> — the aesthetic inspiration.</li>
-              <li style="--mark: var(--color-blue)"><span class="hifi-hl-blue"><strong>Stratimux Concept Program</strong></span> — the reading we pin here: the SCP you are inside is <span class="hifi-hl-base">the UI representation of the StratiDECK system from Stratimux</span>.</li>
+              <li style="--mark: var(--color-blue)"><span class="hifi-hl-blue"><strong>Stratimux Concept Program</strong></span> — the reading we pin here: the <ScpMark /> you are inside is <span class="hifi-hl-base">the UI representation of the StratiDECK system from Stratimux</span>.</li>
               <li style="--mark: var(--color-purple)"><span class="hifi-hl-purple">Stratimux Computer Program</span>.</li>
               <li style="--mark: var(--color-yellow)"><span class="hifi-hl-yellow">Suite Cascade Protocol</span>.</li>
               <li style="--mark: var(--color-fuchsia)"><span class="hifi-hl-fuchsia">Services Contain Problems</span> — two readings: this service solves this problem, and this service has a problem.</li>
             </ul>
-            <p class="nsap-close">The point is to make your personal SCP in the same sense of what the idea represents in regards to the unreal: an SCP in this new marketplace <span class="hifi-hl-base">must solve a problem</span>. The marketplace is directly inspired by <span class="hifi-hl-purple">game modifications</span>: the composability, the ease of transferring any existing agent into a Suite 8 or creating one on the fly. This is capital — and here is the beginning of proving the value of <span class="hifi-hl-yellow">solving problems and calling it a business</span>.</p>
+            <p class="nsap-close">The point is to make your personal <ScpMark /> in the same sense of what the idea represents in regards to the unreal: an <ScpMark /> in this new marketplace <span class="hifi-hl-base">must solve a problem</span>. The marketplace is directly inspired by <span class="hifi-hl-purple">game modifications</span>: the composability, the ease of transferring any existing agent into a Suite 8 or creating one on the fly. This is capital — and here is the beginning of proving the value of <span class="hifi-hl-yellow">solving problems and calling it a business</span>.</p>
           </div>
         </div>
       </section>
@@ -180,18 +180,18 @@ onUnmounted(() => {
       <!-- ===================== MENTAL MODEL · the one map ===================== -->
       <section class="home-section hifi-pane-blue">
         <p class="section-eyebrow hifi-mono">02 · THE MENTAL MODEL</p>
-        <h2 class="section-title hifi-heading">Bridge ↔ SCPs ↔ Sessions ↔ Suite 8s</h2>
+        <h2 class="section-title hifi-heading">Bridge ↔ <ScpMark />s ↔ Sessions ↔ Suite 8s</h2>
         <p class="section-lede">
           One window, one bar, a small set of pages. Hold this shape and everything else follows.
         </p>
         <div class="model-map">
           <div class="model-node hifi-pane-base">
             <span class="model-name hifi-heading">The Bridge</span>
-            <span class="model-desc">Where you stand. The <code>scs</code> command — <span class="hifi-hl-blue">your operational center</span>. It installs SCPs and lists them, online and offline.</span>
+            <span class="model-desc">Where you stand. The <code>scs</code> command — <span class="hifi-hl-blue">your operational center</span>. It installs <ScpMark />s and lists them, online and offline.</span>
           </div>
           <span class="model-link hifi-mono">installs + manages</span>
           <div class="model-node hifi-pane-base">
-            <span class="model-name hifi-heading">An SCP</span>
+            <span class="model-name hifi-heading">An <ScpMark /></span>
             <span class="model-desc">One installed app — this window. <span class="hifi-hl-base">Fronted by your identity</span>, not a public endpoint.</span>
           </div>
           <span class="model-link hifi-mono">runs</span>
@@ -245,16 +245,16 @@ onUnmounted(() => {
             <span class="howto-a">In the session's Anchor cell → <strong>Set as Anchor</strong> pins it as that Suite 8's page session (Set reassigns — <span class="hifi-hl-yellow">one anchor per Suite 8</span>). <strong>Release Anchor</strong> clears it.</span>
           </div>
           <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Install another SCP</span>
-            <span class="howto-a">Run <span class="hifi-mono">scs</span> from another project folder and take the install menu. Or, in the Session Manager's <strong>SCP Command</strong> helm, <strong>Multiply</strong> an SCP to run it as another worktree instance <span class="hifi-hl-blue">on its own port</span>.</span>
+            <span class="howto-q hifi-heading">Install another <ScpMark /></span>
+            <span class="howto-a">Run <span class="hifi-mono">scs</span> from another project folder and take the install menu. Or, in the Session Manager's <strong><ScpMark /> Command</strong> helm, <strong>Multiply</strong> an <ScpMark /> to run it as another worktree instance <span class="hifi-hl-blue">on its own port</span>.</span>
           </div>
           <div class="howto-card hifi-pane-base">
             <span class="howto-q hifi-heading">Turn over (adopt code changes)</span>
             <span class="howto-a">Set <span class="hifi-hl-green"><strong>Shield A</strong></span> as your clean baseline, drift on <span class="hifi-hl-orange"><strong>Sword B</strong></span>, then Turn Over from the bottom dock. The server restarts under you — <span class="hifi-hl-base">your place survives</span>. A bad boot <span class="hifi-hl-red">reverts to Shield A within ~45s</span>.</span>
           </div>
           <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Update the SCP</span>
-            <span class="howto-a">When the template advances, run an SCP update: a retained clone diffs the new template against your history; the <strong>Gitm Resolver</strong> <span class="hifi-hl-green">keeps your additions</span> and merges the rest. Then Turn Over to boot the updated app.</span>
+            <span class="howto-q hifi-heading">Update the <ScpMark /></span>
+            <span class="howto-a">When the template advances, run an <ScpMark /> update: a retained clone diffs the new template against your history; the <strong>Gitm Resolver</strong> <span class="hifi-hl-green">keeps your additions</span> and merges the rest. Then Turn Over to boot the updated app.</span>
           </div>
           <div class="howto-card hifi-pane-base">
             <span class="howto-q hifi-heading">Personalize the look</span>
@@ -311,7 +311,7 @@ onUnmounted(() => {
           </div>
           <div class="trouble-row hifi-pane-base">
             <dt class="trouble-q hifi-heading">State is wedged and Turn Over won't clear it</dt>
-            <dd class="trouble-a">A soft turn-over preserves state, so <span class="hifi-hl-red">it won't fix a stuck one</span>. Use <span class="hifi-hl-red"><strong>Sparks</strong></span> (the Hard Turn Over) — it clears client state and <span class="hifi-hl-green">re-hydrates clean</span>; <span class="hifi-hl-base">your SCP identity survives</span>.</dd>
+            <dd class="trouble-a">A soft turn-over preserves state, so <span class="hifi-hl-red">it won't fix a stuck one</span>. Use <span class="hifi-hl-red"><strong>Sparks</strong></span> (the Hard Turn Over) — it clears client state and <span class="hifi-hl-green">re-hydrates clean</span>; <span class="hifi-hl-base">your <ScpMark /> identity survives</span>.</dd>
           </div>
         </dl>
       </section>
@@ -325,7 +325,7 @@ onUnmounted(() => {
     </main>
 
     <footer class="home-footer">
-      <p class="footer-line hifi-mono">Suite Cascade System · SCP Template · v{{ RELEASE_VERSION }}</p>
+      <p class="footer-line hifi-mono">Suite Cascade System · <ScpMark /> Template · v{{ RELEASE_VERSION }}</p>
       <p class="footer-sub hifi-label">The window rebuilds itself under you.</p>
     </footer>
   </div>
@@ -539,7 +539,7 @@ onUnmounted(() => {
   margin-right: 0.35rem;
 }
 
-/* ---- THE NAMED SCP (C805 · the Highlight Rework — the subtext ground + the panel anatomy) ---- */
+/* ---- THE NAMED <ScpMark /> (C805 · the Highlight Rework — the subtext ground + the panel anatomy) ---- */
 .named-scp-title {
   font-size: 1.9rem;
   line-height: 1.15;
