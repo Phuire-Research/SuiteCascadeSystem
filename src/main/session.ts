@@ -182,6 +182,11 @@ export class Session {
   // messageDispatch.ts. Lifecycle: false at construction · true on ReEngagement
   // (sticky for the lifetime of the Session instance · never resets).
   private wasResumed: boolean = false;
+  // D-UP · THE STAND BY OVERLAY pending flag — set by cli-handler open-session (registry
+  // standBy marker · manualMode primed spawn); the presenter did-finish-load paints from it;
+  // clearStandBy() drops it when the directive delivery lands (anor never — the renderer's
+  // own input/timeout clears are self-sufficient).
+  private standByPending: boolean = false;
   // WRA · Window-Resize Auto-Format · fire-once guard. The resume-resize render-reset runs
   // at most ONCE per Session lifecycle (resumed sessions only · gated on this.wasResumed).
   private wraDone: boolean = false;
@@ -727,6 +732,12 @@ export class Session {
         presenter.webContents.send('scs:renderMode', activeRenderMode);
         // C919 · hydrate the frame governor beside the mode (bridge.json.shaderFps · default 24).
         presenter.webContents.send('scs:shaderFps', activeShaderFps);
+        // D-UP · the primed-spawn Stand By overlay — painted the moment the presenter is
+        // ready so the user never watches a bare Claude Code boot waiting for the directive.
+        if (this.standByPending) {
+          presenter.webContents.send('scs:stand-by');
+          sdia('session.standby.shown', { id: this.id, surface: 'presenter' });
+        }
         // C473 · THE FULL-FRAME REPLAY (r4 Fix B): frames emitted BEFORE this load were
         // dropped (no listener yet · no replay) — force the offscreen source to repaint its
         // WHOLE surface into the now-ready channel.
@@ -796,6 +807,9 @@ export class Session {
         const msg = err instanceof Error ? err.message : String(err);
         sdia('renderer.port-send-FAIL', { id: this.id, error: msg });
       }
+      // D-UP4 · NO stand-by leg on this window — the offscreen xterm (anor shader-OFF
+      // terminal) surface must never carry overlay traffic; the presenter is the sole
+      // Stand By surface (the resolver's spawn pathing always runs shader-wrapped).
     });
     win.webContents.on('did-fail-load', (_e, code, desc) => {
       sdia('renderer.did-fail-load', { id: this.id, code, desc });
@@ -957,6 +971,33 @@ export class Session {
   // DM-D4 W1 (Ochre-E §B.5) · reader called by deriveIsReEngaged() in messageDispatch.ts.
   isReEngaged(): boolean {
     return this.wasResumed;
+  }
+
+  // D-UP · THE STAND BY OVERLAY (main side) — set by cli-handler open-session when the
+  // registry entry carries the standBy marker (a manualMode primed spawn: the Gitm Resolver
+  // class). The presenter's did-finish-load reads the flag and paints the overlay; delivery
+  // (cli-handler sendMessage → clearStandBy) drops it the moment the directive enters.
+  markStandBy(): void {
+    this.standByPending = true;
+  }
+
+  hasStandBy(): boolean {
+    return this.standByPending;
+  }
+
+  clearStandBy(): void {
+    if (!this.standByPending) return;
+    this.standByPending = false;
+    // D-UP4 · presenter-only — the offscreen terminal surface never carries overlay traffic.
+    const target = this.presenterWindow;
+    if (target && !target.isDestroyed()) {
+      try {
+        target.webContents.send('scs:stand-by-clear');
+      } catch {
+        /* cosmetic — never block the delivery */
+      }
+    }
+    sdia('session.standby.cleared', { id: this.id });
   }
 
   // DM-D4 P1 · Layer-1 Window↔Main MessagePort Ping-Back · Connection-Liveness

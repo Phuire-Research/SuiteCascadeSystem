@@ -37,16 +37,21 @@ export const scsBridgeSetPendingSpawnSuite8Name = createQualityCardWithPayload<
       action.payload.scpName ?? null,
       '· fresh=',
       action.payload.fresh ?? false,
+      '· manualMode=',
+      action.payload.manualMode ?? false,
     );
     // C373 · scpName rides alongside name + asWorker (TFCD clears all three together). The principle
     // reads it FRESH at fire-time and threads it into the MCP scs_spawn_suite8_session arguments.
     // C386 · fresh rides the same lane (TFCD clears all four together) so the InvokeSpawnSuite8
     // principle can thread fresh:true into the MCP args for the Forge's Per-Actualization Engage.
+    // D-UP · manualMode rides the same lane (TFCD clears all five together) — the Gitm Resolver's
+    // user-controlled spawn (no auto-permission marker + the Stand By overlay).
     return {
       pendingSpawnSuite8Name: action.payload.suite8Name,
       pendingSpawnSuite8AsWorker: action.payload.asWorker,
       pendingSpawnSuite8ScpName: action.payload.scpName,
       pendingSpawnSuite8Fresh: action.payload.fresh,
+      pendingSpawnSuite8ManualMode: action.payload.manualMode,
     };
   },
   methodCreator: defaultMethodCreator,

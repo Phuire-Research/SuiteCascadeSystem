@@ -508,6 +508,11 @@ function showShuttingDown(): void {
 }
 window.scs?.onShuttingDown?.(() => showShuttingDown());
 
+// D-UP4 · the Stand By overlay lives in the PRESENTER ONLY (the resolver's specific spawn
+// pathing always runs under the default shader-wrap — the presenter is its visible surface).
+// The shader-OFF terminal twin was RETIRED: the offscreen xterm surface carries NO overlay
+// code so the terminal draw is never interacted with.
+
 window.addEventListener('message', (event: MessageEvent) => {
   const data = event.data as { type?: string; sessionId?: string } | undefined;
   if (data?.type !== 'scs:port') return;

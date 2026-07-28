@@ -161,6 +161,61 @@ function showShuttingDown(): void {
 }
 window.scs?.onShuttingDown?.(() => showShuttingDown());
 
+// D-UP · THE STAND BY OVERLAY — main fires 'scs:stand-by' for primed manualMode spawns
+// ONLY (the Gitm Resolver's specific spawn pathing — no other spawning means reaches it):
+// Claude Code boots for seconds after the first PTY byte and the directive delivery is
+// still pending — this notice is the honest wait.
+//
+// D-UP4 (the spawn-failure hardening): the overlay is a FIXED, FULLY TRANSPARENT layer —
+// no background paint, pointer-events:none — it NEVER interacts with the terminal draw
+// beneath it. Cleared on: 'scs:stand-by-clear' (the delivery landing), the user's FIRST
+// KEY PRESS (keydown only — a mouse click never clears it), anor the safety timeout.
+const STAND_BY_SAFETY_MS = 25000;
+let standByEl: HTMLDivElement | null = null;
+let standByTimer = 0;
+function clearStandBy(): void {
+  if (standByTimer) { window.clearTimeout(standByTimer); standByTimer = 0; }
+  if (!standByEl) return;
+  standByEl.remove();
+  standByEl = null;
+  window.removeEventListener('keydown', clearStandBy, true);
+}
+function showStandBy(): void {
+  if (standByEl) return;
+  const el = document.createElement('div');
+  el.id = 'scs-stand-by-overlay';
+  el.setAttribute('aria-hidden', 'true');
+  el.style.cssText = [
+    'position:fixed', 'inset:0', 'display:flex', 'flex-direction:column', 'gap:0.5rem',
+    'z-index:10000', 'align-items:center', 'justify-content:center', 'pointer-events:none',
+    'background:transparent',
+  ].join(';');
+  const label = document.createElement('span');
+  label.style.cssText = [
+    "font-family:ui-monospace,'SF Mono','Menlo',monospace", 'font-size:15px', 'font-weight:700',
+    'letter-spacing:0.1em', 'text-transform:uppercase', 'color:rgba(200,216,232,0.95)',
+    'text-shadow:0 0 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.9), 0 0 14px rgba(120,150,190,0.6)',
+    'padding:0.2rem 1.2rem',
+  ].join(';');
+  label.textContent = 'Stand By';
+  const sub = document.createElement('span');
+  sub.style.cssText = [
+    "font-family:ui-monospace,'SF Mono','Menlo',monospace", 'font-size:12px',
+    'letter-spacing:0.06em', 'color:rgba(170,188,206,0.9)',
+    'text-shadow:0 0 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.9)',
+    'padding:0 1.2rem',
+  ].join(';');
+  sub.textContent = 'Claude Code is initializing — instructions will enter on their own';
+  el.appendChild(label);
+  el.appendChild(sub);
+  document.body.appendChild(el);
+  standByEl = el;
+  window.addEventListener('keydown', clearStandBy, true);
+  standByTimer = window.setTimeout(clearStandBy, STAND_BY_SAFETY_MS);
+}
+window.scs?.onStandBy?.(() => showStandBy());
+window.scs?.onStandByClear?.(() => clearStandBy());
+
 if (!canvas) {
   rlog('presenter.canvas-missing', {});
   throw new Error('#present canvas not found');

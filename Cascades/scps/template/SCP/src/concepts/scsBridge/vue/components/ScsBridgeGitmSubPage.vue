@@ -710,19 +710,53 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
   () => controller.value?.sessionsList.value ?? [],
 );
 
-// The Spawn Resolver button enables whenever a diff with ANY entries awaits resolution and
-// no resolution body exists yet. C285 (the 078 clean-update deadlock): the prior
-// conference-only gate locked out the ZERO-collision case — the most common one — where the
-// resolver's trivial auto-path pass is still REQUIRED to write the manifest APPLY consumes
-// (and to fire the Concluding Sequence). Conferences gate the QUESTIONS, not the spawn.
-const canSpawnResolver = computed<boolean>(() => {
+// D-UP2 · the shared diff-entry count (apply + preserve + conference) both resolver states key on.
+const diffEntryCount = computed<number>(() => {
   const d = props.updateDiff ?? null;
-  const entries = d
+  return d
     ? (d.summary?.apply ?? 0) + (d.summary?.preserve ?? 0) + (d.summary?.conference ?? 0)
     : 0;
+});
+
+// The Spawn Resolver's THREE states (D-UP2 · the optional-resolver refinement):
+//   REQUIRED (solid)  — a diff awaits resolution: no resolution body yet, anor one exists but
+//     carries pending conference decisions. C285 (the 078 clean-update deadlock): the prior
+//     conference-only gate locked out the ZERO-collision case — the most common one — where the
+//     resolver's trivial auto-path pass is still REQUIRED to write the manifest APPLY consumes
+//     (and to fire the Concluding Sequence). Conferences gate the QUESTIONS, not the spawn.
+//   OPTIONAL (dotted) — a COMPLETE resolution already landed (pending 0 · Apply is live). The
+//     resolver may be re-spawned to review anor redo the decisions before applying — the button
+//     stays alive with a dotted border marking optionality instead of the prior hard-disable.
+//   DIMMED            — no diff entries yet (run the update first) anor a spawn is in flight.
+// D-UP3 · THE RUN-GATE (the stale-artifact wound · S2 trace): the resolver states exist
+// only within a LIVE update cycle — the compare has run THIS round and the rail rests at
+// 'reviewing' anor 'resolving'. Diff/resolved artifacts hydrated from a PRIOR cycle land
+// with stage 'idle' and no longer enable the resolver — Run Update is the door every cycle.
+// (Bridge-side, the apply now clears its cycle's artifacts — this gate is the page's belt.)
+const updateCycleLive = computed<boolean>(() => {
+  const stage = props.gitmJson?.updateStatus?.stage ?? 'idle';
+  return stage === 'reviewing' || stage === 'resolving';
+});
+const resolverRequired = computed<boolean>(() => {
+  const resolved = props.updateResolved ?? null;
   return (
-    entries > 0 &&
-    (props.updateResolved ?? null) === null &&
+    updateCycleLive.value &&
+    diffEntryCount.value > 0 &&
+    (resolved === null || (resolved.pending ?? 0) > 0)
+  );
+});
+const resolverOptional = computed<boolean>(() => {
+  const resolved = props.updateResolved ?? null;
+  return (
+    updateCycleLive.value &&
+    diffEntryCount.value > 0 &&
+    resolved !== null &&
+    (resolved.pending ?? 0) === 0
+  );
+});
+const canSpawnResolver = computed<boolean>(() => {
+  return (
+    (resolverRequired.value || resolverOptional.value) &&
     !isSpawningSuite8.value &&
     resolverPhase.value === 'idle'
   );
@@ -732,7 +766,7 @@ const resolverStatusText = computed<string>(() => {
   switch (resolverPhase.value) {
     case 'spawning':   return 'Starting resolver session…';
     case 'waiting':    return 'Waiting for the resolver to come online…';
-    case 'delivering': return 'Waiting for Claude Code to initialize, then handing instructions…';
+    case 'delivering': return 'Claude Code is initializing (Stand By shown on the session) — handing instructions…';
     case 'done':       return 'Resolver session started.';
     case 'error':      return `Error: ${resolverError.value}`;
     default:           return '';
@@ -768,8 +802,10 @@ watch(
     // (welcome banner + tips). Delivering immediately splits the directive: early chars land
     // in the raw terminal, the rest buffer into the half-initialized input, and the submit
     // dies. The bridge-side readiness ping gates the CHANNEL; this backoff gates the APP.
-    // Fixed 9s per the pragmatic-delay doctrine — comfortably past CC's interactive prompt.
-    await new Promise<void>((r) => setTimeout(r, 9000));
+    // D-UP · shortened 9s → 6s: the session's own Stand By overlay (the manualMode spawn arms
+    // it; the delivery clears it) now carries the wait honestly, and 6s still clears CC's
+    // interactive prompt on current boots. The pragmatic-delay doctrine holds.
+    await new Promise<void>((r) => setTimeout(r, 6000));
 
     const scpName = props.gitmJson?.updateStatus.scpName ?? '';
     const diffJsonPath = `Cascades/Bridge/scp-update-diff.${scpName}.json`;
@@ -798,7 +834,10 @@ function spawnResolver(): void {
   sessionCountAtSpawn.value = sessionsList.value.length;
   resolverPhase.value = 'spawning';
 
-  ctrl.triggerSpawnSuite8Session('Gitm Resolver', scpName, true);
+  // D-UP · asWorker=true (fresh worker · anti-flood skipped so repeat updates always spawn) +
+  // manualMode=true (NO auto-permission — the update is user-controlled; Claude Code's approval
+  // gate stays intact) + the bridge arms the session's Stand By overlay until delivery lands.
+  ctrl.triggerSpawnSuite8Session('Gitm Resolver', scpName, true, false, true);
 
   // SIGR auto-clear — once the spawn ack lands (isSpawningSuite8 → false) advance to waiting.
   const sigRWatcher = watch(
@@ -1177,7 +1216,8 @@ function spawnResolver(): void {
             </ul>
           </div>
 
-          <!-- (d) BUTTONS — Run Update · Spawn Resolver · Apply (disabled stub). -->
+          <!-- (d) BUTTONS — Run Update · Spawn Resolver (dotted when optional · D-UP2) · Apply,
+               with the state legend riding the SAME container so every possible state is named. -->
           <div class="gitm-update-actions hifi-pane-green">
             <button
               class="hifi-btn hifi-btn-blue"
@@ -1189,7 +1229,15 @@ function spawnResolver(): void {
             </button>
             <button
               class="hifi-btn hifi-btn-blue"
+              :class="{ 'gitm-resolver-optional': resolverOptional && resolverPhase === 'idle' }"
               :disabled="!canSpawnResolver"
+              :title="
+                resolverOptional
+                  ? 'Optional — a complete resolution already exists and Apply is ready. Spawn again only to review anor redo the decisions.'
+                  : resolverRequired
+                    ? 'Required — the resolver session records the decisions Apply consumes.'
+                    : 'Run the update first — nothing to resolve yet.'
+              "
               @click="spawnResolver"
             >
               <span v-if="resolverPhase === 'idle'">Spawn Resolver</span>
@@ -1211,6 +1259,28 @@ function spawnResolver(): void {
             >
               {{ isApplying ? 'Applying…' : 'Apply' }}
             </button>
+            <!-- D-UP2 · THE STATE LEGEND — every possible state of the three buttons, named in
+                 place. The row matching the live next step carries the emphasis class. -->
+            <div class="gitm-update-legend">
+              <p :class="{ 'gitm-legend-active': diffEntryCount === 0 }">
+                <strong>Run Update</strong> — compares this app three ways: as it was installed,
+                as you have changed it, and the template as it is now. Always the entry point;
+                run it again any time to refresh the comparison.
+              </p>
+              <p :class="{ 'gitm-legend-active': resolverRequired || resolverOptional }">
+                <strong>Spawn Resolver</strong> — <em>solid</em>: required — this cycle's
+                comparison awaits resolution, and the resolver session records the decisions
+                Apply consumes. <em>dotted</em>: optional — a complete resolution already exists
+                for this cycle; spawn again only to review anor redo it. <em>dimmed</em>: no live
+                cycle — run the update first (each cycle opens with Run Update), anor a resolver
+                is already in flight.
+              </p>
+              <p :class="{ 'gitm-legend-active': canApply }">
+                <strong>Apply</strong> — dimmed until every decision is resolved; once complete,
+                it lands the update into this app and commits it. Your work is preserved and the
+                app's identity is kept by rule.
+              </p>
+            </div>
           </div>
           <p v-if="resolverStatusText !== ''" class="gitm-update-resolver-status">
             {{ resolverStatusText }}
@@ -2643,6 +2713,43 @@ function spawnResolver(): void {
 .gitm-update-actions .hifi-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* D-UP2 · THE OPTIONAL RESOLVER — a complete resolution exists (Apply is live); the resolver
+   stays spawnable for review anor redo. The dotted border IS the optionality mark. */
+.gitm-update-actions .gitm-resolver-optional {
+  border: 2px dotted rgba(147, 197, 253, 0.75);
+  opacity: 0.9;
+}
+
+/* D-UP2 · THE STATE LEGEND — rides the same container (full-width wrap row under the buttons);
+   the row matching the live next step carries the emphasis. */
+.gitm-update-legend {
+  flex-basis: 100%;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.gitm-update-legend p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-white-muted, #9ca3af);
+  opacity: 0.75;
+}
+.gitm-update-legend p strong {
+  color: var(--color-white, #e5e7eb);
+  letter-spacing: 0.03em;
+}
+.gitm-update-legend p em {
+  font-style: normal;
+  color: rgba(147, 197, 253, 0.9);
+}
+.gitm-update-legend .gitm-legend-active {
+  opacity: 1;
 }
 
 .gitm-update-resolver-status {

@@ -19,6 +19,15 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import ScpSecurityNotice from './ScpSecurityNotice.vue';
 import ScpManifestIntake from './ScpManifestIntake.vue';
 import ScpManifestAssemble from './ScpManifestAssemble.vue';
+import type { BridgeJsonShape } from '../../scsBridge.type';
+
+// D-UP7 · THE UPDATE INDICATOR — the landing threads bridgeJson so this Bridge surface
+// renders installed-vs-latest from the bridge's own npm registry check (no fetch of its
+// own; the bridge.json relay is the truth). Null until the first relay lands.
+const props = defineProps<{ bridgeJson?: BridgeJsonShape | null }>();
+const installedVersion = computed<string>(() => props.bridgeJson?.bridgeVersion ?? '—');
+const npmLatestVersion = computed<string | null>(() => props.bridgeJson?.npmLatestVersion ?? null);
+const updateAvailable = computed<boolean>(() => props.bridgeJson?.updateAvailable === true);
 
 type BoundScpEntry = { port: number; status: string; browserUrl: string };
 type InstalledScpEntry = { anchoredAt?: string };
@@ -122,6 +131,26 @@ async function handleRowAction(name: string, route: '/bridge-boot' | '/bridge-fo
       </p>
     </header>
 
+    <!-- D-UP7 · THE BRIDGE VERSION PANE — installed vs the latest npm publish (the bridge's
+         own registry check, relayed through bridge.json; this page fetches nothing itself). -->
+    <section class="scs-install-version hifi-pane-base" :class="{ 'scs-install-version-update': updateAvailable }">
+      <div class="scs-install-version-row">
+        <span class="scs-install-version-label hifi-mono">SCS-BRIDGE</span>
+        <span class="scs-install-version-value hifi-mono">installed v{{ installedVersion }}</span>
+        <span class="scs-install-version-sep">·</span>
+        <span class="scs-install-version-value hifi-mono">
+          npm latest {{ npmLatestVersion ? 'v' + npmLatestVersion : 'checking…' }}
+        </span>
+        <span v-if="updateAvailable" class="scs-install-version-pill hifi-mono">UPDATE AVAILABLE</span>
+        <span v-else-if="npmLatestVersion" class="scs-install-version-current hifi-mono">CURRENT</span>
+      </div>
+      <p v-if="updateAvailable" class="scs-install-version-how">
+        Update from the terminal, then relaunch the bridge:
+        <code>npm install -g scs-bridge</code> · your apps and their work are untouched — each
+        updates on its own through its GitM Update page when you choose.
+      </p>
+    </section>
+
     <!-- ZONE 1 · THE SECURITY NOTICE (gates every install button via @viewed) -->
     <ScpSecurityNotice @viewed="onNoticeViewed" />
 
@@ -186,6 +215,58 @@ async function handleRowAction(name: string, route: '/bridge-boot' | '/bridge-fo
   gap: 1.25rem;
   padding: 1.5rem;
   max-width: 860px;
+}
+/* D-UP7 · THE BRIDGE VERSION PANE — installed vs npm latest; the update state gains a
+   green accent border (the update circuit's register). */
+.scs-install-version {
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
+}
+.scs-install-version-update {
+  border: 1px solid rgba(74, 222, 128, 0.55);
+}
+.scs-install-version-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+.scs-install-version-label {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-white, #e5e7eb);
+}
+.scs-install-version-value {
+  color: var(--pewter-text-recede, rgba(255, 255, 255, 0.7));
+}
+.scs-install-version-sep {
+  color: rgba(255, 255, 255, 0.3);
+}
+.scs-install-version-pill {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px dotted rgba(74, 222, 128, 0.8);
+  color: rgba(74, 222, 128, 0.95);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.scs-install-version-current {
+  color: rgba(147, 197, 253, 0.8);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+.scs-install-version-how {
+  margin: 0.55rem 0 0;
+  font-size: 0.78rem;
+  color: var(--pewter-text-recede, rgba(255, 255, 255, 0.6));
+}
+.scs-install-version-how code {
+  color: rgba(74, 222, 128, 0.9);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
 }
 .scs-install-header .hifi-heading {
   margin: 0 0 0.35rem;

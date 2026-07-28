@@ -38,6 +38,7 @@
  */
 import { muxification } from 'stratimux';
 import { readFile } from 'node:fs/promises';
+import { startNpmVersionWatch } from './npmVersionCheck';
 import { resolve } from 'node:path';
 import { createServerConcept, serverName, type ServerDeck } from './concepts/server/server.concept';
 import { createSCPConcept, type SCPDeck } from './concepts/scp/scp.concept';
@@ -299,6 +300,11 @@ export function createScsBridgeMuxium(
                     scpStatuses: {},
                   };
                   await writeBridgeMetadata(state, perProjectPath);
+                  // D-UP7 · THE UPDATE INDICATOR — start the npm registry version watch
+                  // (deferred boot check + 6h cadence · non-blocking · failure-silent).
+                  // Results ride bridge.json via the composer leg on every rewrite AND an
+                  // immediate RMW on check completion → the SCP chokidar relay → the UI.
+                  startNpmVersionWatch(bridgeVersion, perProjectPath);
                   // RM-D2 · BDAP SSGH generation. Immediately after bridge.json is
                   // written (port known), generate the live Base SCS-Bridge system
                   // prompt sibling to bridge.json. This precedes any open-session

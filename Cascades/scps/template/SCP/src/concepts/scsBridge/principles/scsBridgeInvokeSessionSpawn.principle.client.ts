@@ -95,7 +95,17 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         }
 
         isSpawning.value = true;
-        console.log('[SCS-Bridge CMIA-Spawn] Gate FIRE · pendingScpName=', pendingScpName, '· (null=Template-SCP-default)');
+        // D-UP5 · TFCD-EARLY REFIT (the page-select spawn storm · IE field-caught): this lane
+        // kept the TFCD-LATE shape — the .finally() nextA clear lands QUEUED while any state
+        // beat (the spawned session's own sessionsList/bridgeJson relay · a page selection)
+        // re-evaluates the gate with the trigger STILL set and isSpawning already released →
+        // "new session after new session". The Suite 8 lane cured this exact race (its
+        // TFCD-EARLY comment names it); this is the same cure: clear the trigger the INSTANT
+        // the gate fires — the clear applies DURING the fetch while isSpawning blocks re-fires.
+        dispatch(e_.scsBridgeSetPendingSpawnScpName({ scpName: undefined }), {
+          throttle: 0
+        });
+        console.log('[SCS-Bridge CMIA-Spawn] Gate FIRE · pendingScpName=', pendingScpName, '· trigger cleared early (TFCD-EARLY) · (null=Template-SCP-default)');
 
         // HAZARD-V (R4 Angle 4) · 5000ms timeout fallback for orphan SIGR reset.
         const sigRTimeoutId = setTimeout(() => {
@@ -159,11 +169,10 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
           })
           .finally(() => {
             clearTimeout(sigRTimeoutId);
-            // TFCD Trigger-Field-Clear Discipline — clear to undefined (TTVS no-trigger sentinel).
-            // null would be a valid trigger; clearing to null = potential re-fire loop.
-            // Cite: D3D-HOTFIX-2-R7-FUCHSIA-CLINICAL.md §G TFCD.
-            console.log('[SCS-Bridge CMIA-Spawn] Trigger cleared · scpName→undefined · TFCD · scpName-was=', firedScpName);
-            nextA(e_.scsBridgeSetPendingSpawnScpName({ scpName: undefined }));
+            // D-UP5 · the TFCD-LATE nextA clear RETIRED — the trigger was already cleared
+            // at gate-fire (TFCD-EARLY above · the Suite 8 lane's proven shape). Clearing
+            // again here re-opened nothing but the log; the race lived in the queued gap.
+            console.log('[SCS-Bridge CMIA-Spawn] fetch settled · scpName-was=', firedScpName, '· trigger was cleared at fire (TFCD-EARLY)');
           });
       },
       {
@@ -199,6 +208,10 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // lane as asWorker/scpName) · threaded into the MCP arguments when true → the bridge quality,
         // on an OFFLINE anchor, creates a NEW session + re-claims the anchor instead of re-engaging it.
         const pendingFresh = k_.pendingSpawnSuite8Fresh.select();
+        // D-UP · THE MANUAL-MODE SEVER · read at fire-time (same lane) · threaded when true →
+        // the bridge quality skips the auto-permission marker (approval gate intact) + arms the
+        // Stand By overlay on the primed session (the Gitm Resolver's user-controlled update law).
+        const pendingManualMode = k_.pendingSpawnSuite8ManualMode.select();
 
         console.log(
           '[SCS-Bridge CMIA-Spawn-Suite8] Gate · pendingSpawnSuite8Name=',
@@ -230,7 +243,7 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // spawns AGAIN → infinite "new session after new session". Clearing here means the clear
         // is applied DURING the fetch (while isSpawningSuite8=true blocks re-fires), so by the
         // time .finally() releases the guard the trigger is already undefined.
-        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined }), {
+        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined }), {
           throttle: 0
         });
         console.log('[SCS-Bridge CMIA-Spawn-Suite8] Gate FIRE · pendingSuite8Name=', pendingSuite8Name, '· asWorker=', pendingAsWorker ?? false, '· trigger cleared early (TFCD-EARLY)');
@@ -265,6 +278,9 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
               // payload.fresh → on an OFFLINE anchor, create a NEW session + re-claim the anchor).
               // Omitted → the ordinary offline→re-engage behaviour.
               ...(pendingFresh ? { fresh: true } : {}),
+              // D-UP · thread manualMode ONLY when true (the bridge quality severs the
+              // auto-permission marker + arms the Stand By overlay). Omitted → worker auto-accept.
+              ...(pendingManualMode ? { manualMode: true } : {}),
             },
           },
         };

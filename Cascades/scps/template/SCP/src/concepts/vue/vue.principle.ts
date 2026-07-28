@@ -20,7 +20,7 @@
 
 import * as express from 'express';
 // C822 D2/D3 · the manifest routes' node imports + the SCP-side validator (the twin table).
-import { execSync } from 'node:child_process';
+import { execSync, exec } from 'node:child_process';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { validateScpManifest } from '../../model/scpManifest.model';
 import * as fs from 'fs';
@@ -2249,6 +2249,63 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     } catch {
       res.json({ scpName: null, extendedRoot: scpExtendedRoot });
     }
+  });
+
+  // ============================================
+  // D-UP8 · /scs-bridge-version — THE TASKBAR VERSION LABEL (SCP-server-owned check)
+  // ============================================
+  //
+  // Populated at SCP-SERVER BOOT (independent of the bridge vintage — visible even when
+  // nothing else changed): the server runs `npm view scs-bridge version` (the command),
+  // falling back to the npm registry endpoint when npm is absent from the PATH. The
+  // INSTALLED version reads from the SCP's own sovereign bridge.json (bridgeVersion — the
+  // MD-A discovery file). The TaskBar fetches this once on mount (the /scp-config idiom)
+  // and colors the label: purple = current/unknown · red = the npm publish is GREATER than
+  // the installed bridge · fuchsia = the npm publish is LESSER (this install is ahead).
+  // Failure-silent throughout: no npm, no network, no bridge.json → nulls, purple label.
+  const scsBridgeVersionCheck: {
+    installedVersion: string | null;
+    npmLatestVersion: string | null;
+    checkedAt: number;
+  } = { installedVersion: null, npmLatestVersion: null, checkedAt: 0 };
+  const readInstalledBridgeVersion = (): string | null => {
+    try {
+      const raw = fs.readFileSync(path.join(resolveScpLocalBridgeDir(), 'bridge.json'), 'utf-8');
+      const parsed = JSON.parse(raw) as { bridgeVersion?: unknown };
+      return typeof parsed?.bridgeVersion === 'string' ? parsed.bridgeVersion : null;
+    } catch {
+      return null;
+    }
+  };
+  const runScsBridgeVersionCheck = (): void => {
+    scsBridgeVersionCheck.installedVersion = readInstalledBridgeVersion();
+    exec('npm view scs-bridge version', { timeout: 10_000 }, (err, stdout) => {
+      const fromNpm = err ? '' : stdout.trim();
+      if (/^\d+\.\d+\.\d+/.test(fromNpm)) {
+        scsBridgeVersionCheck.npmLatestVersion = fromNpm;
+        scsBridgeVersionCheck.checkedAt = Date.now();
+        return;
+      }
+      // The registry fallback (npm absent anor the command failed) — same data source.
+      fetch('https://registry.npmjs.org/scs-bridge/latest', { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((body: { version?: unknown } | null) => {
+          if (body && typeof body.version === 'string') {
+            scsBridgeVersionCheck.npmLatestVersion = body.version.trim();
+            scsBridgeVersionCheck.checkedAt = Date.now();
+          }
+        })
+        .catch(() => { /* offline — the purple label stands honest */ });
+    });
+  };
+  // Boot populate (deferred so the server's own boot is never held) + a 6h re-check.
+  setTimeout(runScsBridgeVersionCheck, 3000);
+  setInterval(runScsBridgeVersionCheck, 6 * 60 * 60 * 1000).unref?.();
+  expressApp.get('/scs-bridge-version', (_req, res) => {
+    // The installed side re-reads on every request (the bridge may have relaunched newer
+    // since boot); the npm side serves the boot/interval cache.
+    scsBridgeVersionCheck.installedVersion = readInstalledBridgeVersion();
+    res.json(scsBridgeVersionCheck);
   });
 
   // ============================================

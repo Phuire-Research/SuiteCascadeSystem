@@ -44,7 +44,7 @@
  *   · MANIFOLD-TEST-R7-FUCHSIA.md §3 (the D-U5 apply · pending gate · totality).
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, basename, dirname, isAbsolute } from 'node:path';
 import {
@@ -552,6 +552,23 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         }
         committed = true;
       }
+
+      // D-UP3 · THE CYCLE-COMPLETE ARTIFACT CLEAR (the stale-availability wound): the diff +
+      // resolved artifacts are THIS cycle's working papers — leaving them on disk let C1
+      // hydration resurrect a finished cycle after restart and enable the resolver/apply off
+      // stale state before the next Run Update. Clear them at apply success (the boot-watch
+      // clear remains as the Turn-Over belt). Failure is logged, never fatal — the apply landed.
+      for (const artifactPath of [resolvedPath, diffPath]) {
+        try {
+          if (existsSync(artifactPath)) unlinkSync(artifactPath);
+        } catch (err: unknown) {
+          log('gitm.update.apply.artifact-clear-failed', {
+            artifactPath,
+            error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+          });
+        }
+      }
+      log('gitm.update.apply.artifacts-cleared', { scpName });
 
       bucket.push({ ok: true, applied, preserved, committed, mintedSword });
       // C289 AUTO-SEQUENCE (the bridge-owned Concluding Sequence): when the manifest watcher

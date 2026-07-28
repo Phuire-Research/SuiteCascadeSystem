@@ -47,7 +47,7 @@ async function resolvePlayTestTargetWindow(target: {
 }
 // STVI · pure {{VAR_NAME}} → value hydration for the anchor Onboard spawn-prompt.
 import { hydrateOnboardTemplate, composeAnchorOnboardPrompt, STVI_ABSENT_FALLBACK, type OnboardValues } from '../lib/bridge/onboardHydration.model';
-import { listSessions, updateSessionLaunchMeta } from '../lib/bridge/registry';
+import { listSessions, updateSessionLaunchMeta, setSessionStandBy } from '../lib/bridge/registry';
 import { normalizeModelId } from '../shared/modelCatalog.model';
 import { loadSessionMeta } from '../lib/bridge/manager';
 import { writeSpawnSettings } from '../lib/bridge/spawnSettings';
@@ -686,13 +686,35 @@ export function createCliHandler(ctx: CliHandlerContext) {
           textLength: text.length,
           originScpName: origin || null,
         }, 'fkis');
+        // D-UP · THE DELIVERY CLEAR — the directive entering IS the input the Stand By
+        // overlay waits on. Drop the overlay right before the keystrokes stream (the user
+        // sees the text enter, not an overlay over it) + retire the registry marker so a
+        // later re-engage never re-shows a stale overlay. Guarded on the session actually
+        // carrying the flag — ordinary sends cost nothing.
+        //
+        // D-UP3 · THE PRIMED-FOCUS HOLD (the FORF wound · S2 trace): executeFkis's
+        // focus-return leg (messageDispatch FORF) hands focus BACK to the origin SCP after
+        // typing unless inFocus rides the envelope — which un-focused the resolver the
+        // moment its directive finished placing. A PRIMED (standBy) session IS the user's
+        // destination: capture the marker before clearing and force inFocus so the resolver
+        // stays forward. Ordinary worker deliveries (Cadmium sweeps · no marker) keep the
+        // focus-return — a background sweep must never steal the foreground.
+        let primedFocusHold = false;
+        {
+          const standBySession = sessionRegistry.get(targetUlid);
+          if (standBySession?.hasStandBy()) {
+            primedFocusHold = true;
+            standBySession.clearStandBy();
+            void setSessionStandBy(targetUlid, false);
+          }
+        }
         // C770 · THE DROPPED-FLAG SEAT (the four-hop flight proved it): the socket carried
         // inFocus intact and THIS rebuild discarded it — the sole break in the whole chain.
         const result = await executeFkis({
           targetUlid,
           text,
           originScpName: origin,
-          inFocus: envelope.inFocus === true,
+          inFocus: envelope.inFocus === true || primedFocusHold,
         });
         sdia('fkis.cli.executeFkis-result', {
           targetUlid,
@@ -1140,6 +1162,11 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // honored; the settings `defaultMode` emit was retired). Anchors / plain SCP
           // sessions have isWorker undefined → no flag → approval gate intact.
           const isWorker = entry?.isWorker === true;
+          // D-UP · THE STAND-BY MARKER read (manualMode primed spawn · the Gitm Resolver
+          // class). Threaded onto the Session AFTER construction (markStandBy below) so the
+          // presenter's did-finish-load paints the Stand By overlay while the directive
+          // delivery is pending. Cleared by the sendMessage delivery leg.
+          const standBy = entry?.standBy === true;
           const mode: 'new' | 'resume' = claudeSessionId ? 'resume' : 'new';
 
           // ASDR · W2 spawn-prompt · ANCHOR-spawn detection + name-resolved Onboard read.
@@ -1319,6 +1346,11 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // here at the Electron-main resume path (NOT daemon manager.ts:173).
           if (mode === 'resume') {
             session.markResumed();
+          }
+          // D-UP · arm the Stand By overlay on primed spawns (before show so the presenter's
+          // did-finish-load — which fires after loadURL settles — reads the flag).
+          if (standBy) {
+            session.markStandBy();
           }
           session.show(true);
           return { ok: true, data: { id: sessionUlid, alreadyRunning: false, mode } };

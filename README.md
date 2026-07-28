@@ -149,11 +149,22 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.931.0
+## Release Notes — v0.933.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.933.0 — the update circuit, conducted**: the update surface reads as a sequence — a
+  state legend explains every button state in place, the resolver shows a dotted border when
+  it is optional (a complete resolution already exists) and appears only after this cycle's
+  comparison has run, and a finished update clears its own working artifacts. The resolver's
+  session opens with a transparent **Stand By** notice while Claude Code boots, receives its
+  instructions on its own, stays focused once they land, and runs with the approval gate
+  intact — the update is conducted by you. A rare loop where page navigation after a spawn
+  could keep spawning sessions is closed at its root. And the installed bridge version now
+  sits beside your app's name on every page — purple when current, red the moment npm
+  carries a newer publish, fuchsia when your install is ahead; hover it for both versions
+  and the verdict.
 - **0.931.0 — the complete system ships**: the update circuit's tooling, the cascade
   commands, the Suite 8 instances, the documentation, and the assets all ride the package.
 

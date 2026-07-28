@@ -283,6 +283,7 @@ const buildToolRoster = (): {
         asWorker: { type: 'boolean', description: 'true = NON-anchor research worker spawn (skip existingAnchor anti-flood guard + claimAnchorIfUnclaimed → always a fresh worker). Omit/false = anchor path (anti-flood + auto-anchor preserved).' },
         model: { type: 'string', description: 'MD-9 · optional per-instance model id (a full AVAILABLE_MODELS id · e.g. claude-opus-5). Recorded on the entry; resume injects it over the global default. Omit/invalid → the bridge global default.' },
         fresh: { type: 'boolean', description: 'C386 · Per-Actualization Forge. true = a NEW conduction that never resumes a prior one. When an OFFLINE anchor exists, fresh:true creates a NEW session + re-claims the anchor onto it (the dead prior keeps history, loses the claim) instead of re-engaging the dead anchor. ALIVE anchor branch unchanged (skip). Omit/false = the ordinary offline→re-engage behavior.' },
+        manualMode: { type: 'boolean', description: 'D-UP · only meaningful with asWorker:true. true = fresh-worker spawn WITHOUT the auto-permission marker — the session boots with Claude Code\'s approval gate INTACT (user-controlled · the Gitm Resolver update law) and the presenter paints the Stand By overlay until the directive delivery lands. Omit/false = the ordinary worker auto-accept.' },
         callerSessionUlid: { type: 'string', description: 'Caller agent session ULID' },
       },
       required: ['suite8Name'],
