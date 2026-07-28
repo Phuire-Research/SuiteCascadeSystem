@@ -807,16 +807,9 @@ export class Session {
         const msg = err instanceof Error ? err.message : String(err);
         sdia('renderer.port-send-FAIL', { id: this.id, error: msg });
       }
-      // D-UP · the Stand By overlay on the shader-OFF legacy path (the visible xterm window;
-      // under the default shader-wrap the presenter's own did-finish-load carries it instead).
-      if (this.standByPending && !this.presenterWindow) {
-        try {
-          win.webContents.send('scs:stand-by');
-          sdia('session.standby.shown', { id: this.id, surface: 'terminal' });
-        } catch {
-          /* cosmetic */
-        }
-      }
+      // D-UP4 · NO stand-by leg on this window — the offscreen xterm (anor shader-OFF
+      // terminal) surface must never carry overlay traffic; the presenter is the sole
+      // Stand By surface (the resolver's spawn pathing always runs shader-wrapped).
     });
     win.webContents.on('did-fail-load', (_e, code, desc) => {
       sdia('renderer.did-fail-load', { id: this.id, code, desc });
@@ -995,9 +988,9 @@ export class Session {
   clearStandBy(): void {
     if (!this.standByPending) return;
     this.standByPending = false;
-    const targets = [this.presenterWindow, this.window];
-    for (const target of targets) {
-      if (!target || target.isDestroyed()) continue;
+    // D-UP4 · presenter-only — the offscreen terminal surface never carries overlay traffic.
+    const target = this.presenterWindow;
+    if (target && !target.isDestroyed()) {
       try {
         target.webContents.send('scs:stand-by-clear');
       } catch {

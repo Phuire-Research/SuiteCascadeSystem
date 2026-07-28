@@ -295,8 +295,19 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           if (asWorker && !manualMode) {
             await setSessionWorker(sessionId);
           }
+          // D-UP4 · SPAWN-PATH HARDENING: the standBy marker is COSMETIC (it only drives the
+          // presenter overlay) — a registry hiccup here must NEVER block the spawn itself.
+          // The prior unguarded await sat directly on the spawn path; now a failure logs and
+          // the spawn proceeds without the overlay (degraded honestly, never dead).
           if (manualMode) {
-            await setSessionStandBy(sessionId, true);
+            try {
+              await setSessionStandBy(sessionId, true);
+            } catch (standByErr) {
+              log('scsbridge.spawn-suite8.standby-marker-failed', {
+                sessionId,
+                error: standByErr instanceof Error ? standByErr.message.slice(0, 200) : String(standByErr),
+              });
+            }
           }
           spawnElectronSessionForUlid(sessionId);               // cli-handler reads suite8Name
           log('scsbridge.spawn-suite8.launched', {
