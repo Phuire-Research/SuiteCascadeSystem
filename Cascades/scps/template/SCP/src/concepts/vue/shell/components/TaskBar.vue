@@ -54,6 +54,58 @@ onMounted(() => {
     if (cfg?.scpName) scpIdentityName.value = cfg.scpName;
   });
 });
+
+// D-UP8 · THE VERSION LABEL — the installed SCS-Bridge version beside the SCP name,
+// populated by THIS SCP's own server (/scs-bridge-version · checked at server boot via
+// `npm view scs-bridge version` with a registry fallback — independent of the bridge
+// vintage, visible even when nothing else changed). The btn-tip hover pane (the
+// SCS-Bridge inspiration) reveals the npm side and whether they differ. Color law:
+// purple = current anor unknown · RED = the npm publish is GREATER than the installed
+// bridge (update it) · FUCHSIA = the npm publish is LESSER (this install is ahead).
+const bridgeInstalledVersion = ref<string | null>(null);
+const bridgeNpmVersion = ref<string | null>(null);
+function versionNewer(a: string, b: string): boolean {
+  const av = a.split('.').map((s) => parseInt(s, 10) || 0);
+  const bv = b.split('.').map((s) => parseInt(s, 10) || 0);
+  for (let i = 0; i < Math.max(av.length, bv.length); i += 1) {
+    if ((av[i] ?? 0) > (bv[i] ?? 0)) return true;
+    if ((av[i] ?? 0) < (bv[i] ?? 0)) return false;
+  }
+  return false;
+}
+const versionState = computed<'unknown' | 'current' | 'remote-greater' | 'remote-lesser'>(() => {
+  const i = bridgeInstalledVersion.value;
+  const n = bridgeNpmVersion.value;
+  if (!i || !n) return 'unknown';
+  if (versionNewer(n, i)) return 'remote-greater';
+  if (versionNewer(i, n)) return 'remote-lesser';
+  return 'current';
+});
+const versionTipBody = computed<string>(() => {
+  const i = bridgeInstalledVersion.value ?? '—';
+  const n = bridgeNpmVersion.value;
+  if (!n) return `Installed v${i} · npm not yet checked`;
+  switch (versionState.value) {
+    case 'remote-greater':
+      return `Installed v${i} · npm v${n} — a newer SCS-Bridge is published: npm install -g scs-bridge, then relaunch.`;
+    case 'remote-lesser':
+      return `Installed v${i} · npm v${n} — this install is ahead of the npm publish.`;
+    default:
+      return `Installed v${i} · npm v${n} — current.`;
+  }
+});
+onMounted(() => {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 5000);
+  fetch('/scs-bridge-version', { signal: abort.signal })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((body: { installedVersion?: unknown; npmLatestVersion?: unknown } | null) => {
+      if (body && typeof body.installedVersion === 'string') bridgeInstalledVersion.value = body.installedVersion;
+      if (body && typeof body.npmLatestVersion === 'string') bridgeNpmVersion.value = body.npmLatestVersion;
+    })
+    .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
+    .finally(() => clearTimeout(timer));
+});
 const centerButtons = computed(() =>
   props.buttons.filter((btn) => btn.position === 'center'),
 );
@@ -118,6 +170,24 @@ function handleTurnOverTriggered(): void {
              dynamically provided (scp.config.json scpName via /scp-config). -->
         <span v-if="scpIdentityName" class="taskbar-scp-identity" :title="'SCP · ' + scpIdentityName">
           {{ scpIdentityName }}
+        </span>
+        <!-- D-UP8 · THE VERSION LABEL — beside the SCP name · HiFi purple base; RED when the
+             npm publish is greater (update) · FUCHSIA when lesser (ahead). The hover pane
+             (the btn-tip idiom) carries installed-vs-npm and the difference verdict. -->
+        <span v-if="bridgeInstalledVersion" class="taskbar-version-wrap">
+          <span
+            class="taskbar-bridge-version"
+            :class="{
+              'taskbar-bridge-version--red': versionState === 'remote-greater',
+              'taskbar-bridge-version--fuchsia': versionState === 'remote-lesser',
+            }"
+          >
+            v{{ bridgeInstalledVersion }}
+          </span>
+          <span class="taskbar-version-tip" role="tooltip">
+            <span class="taskbar-version-tip-title">SCS-Bridge</span>
+            <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
+          </span>
         </span>
         <template v-for="btn in leftButtons" :key="btn.id">
           <component
@@ -434,5 +504,73 @@ function handleTurnOverTriggered(): void {
   background: rgba(20, 10, 25, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* D-UP8 · THE VERSION LABEL — HiFi purple base beside the SCP name; the state variants
+   swap the neon (RED = npm greater · update / FUCHSIA = npm lesser · ahead). The hover
+   pane mirrors the btn-tip recipe exactly (the SCS-Bridge inspiration). */
+.taskbar-version-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.taskbar-bridge-version {
+  --ver-neon: var(--color-purple, #a78bfa);
+  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--ver-neon) 55%, transparent);
+  color: var(--ver-neon);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--ver-neon) 40%, transparent);
+  cursor: default;
+}
+.taskbar-bridge-version--red {
+  --ver-neon: var(--color-red, #f87171);
+}
+.taskbar-bridge-version--fuchsia {
+  --ver-neon: var(--color-fuchsia, #e879f9);
+}
+.taskbar-version-tip {
+  position: absolute;
+  bottom: calc(100% + 11px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 240px;
+  padding: 8px 11px;
+  white-space: normal;
+  text-align: left;
+  background: rgba(10, 12, 18, 0.97);
+  border: 1px solid color-mix(in srgb, var(--color-purple, #a78bfa) 50%, transparent);
+  border-radius: 5px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-purple, #a78bfa) 32%, transparent), 0 6px 16px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 220;
+}
+.taskbar-version-tip-title {
+  font-family: var(--font-heading, 'Orbitron', system-ui, sans-serif);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-purple, #a78bfa);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--color-purple, #a78bfa) 45%, transparent), 0.5px 0.5px 0 #fff;
+}
+.taskbar-version-tip-body {
+  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
+  font-size: 0.64rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: rgba(228, 232, 240, 0.82);
+}
+.taskbar-version-wrap:hover .taskbar-version-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 </style>
