@@ -1,0 +1,194 @@
+<p align="center">
+  <img src="Cascades/assets/scs-logo.png" alt="Suite Cascade System" width="960" />
+</p>
+
+<p align="center">
+  <img src="Cascades/assets/scs-badge.png" alt="SCS Badge" width="128" />
+</p>
+
+<h1 align="center">The Suite Cascade System</h1>
+
+<h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
+
+<p align="center">
+  <a href="https://poe.com/SCS-Researcher">Live Demo</a> · 
+  <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
+  <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
+  <a href="https://github.com/Phuire-Research/Stratimux">Stratimux</a> · 
+  <a href="https://scp-origin.com">SCP-Origin</a> · 
+  <a href="Cascades/Documentation/Cascades/ARIOS-POSITION.md">ARIOS Position</a> · 
+  <a href="Cascades/Documentation/Cascades/CLAUDE-AI-INSTRUCTIONS.md">Claude.ai Setup</a> · 
+  <a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE">GPLv3</a>
+</p>
+
+---
+
+## Your Frontier, Renewed.
+
+**SCS-Bridge** is a CLI that installs and conducts the **Suite Cascade System** — a renewable
+cognitive operating system for your projects — and lands you inside your first **SCP**.
+
+This release is the first public viewing of the SCP: **a self-contained ARIOS** — an
+Augmented Renewable Intelligence OS. It self-installs through Claude Code via the SCS-Bridge:
+eight complete cognitive cycles that take on any problem as a full development cycle, running
+behind your own identity, on your own machine.
+
+The SCS remains the operative aspect throughout — the original introduction is preserved in
+full as **[SCS.md](./SCS.md)**.
+
+## The SCP Paradigm
+
+Your SCP is a **Stratimux Concept Program**, a **Suite Cascade Protocol**, and a means of
+Containing and Protecting a given domain — by representing it as a **Service that Contains a
+Problem**. What makes an SCP is the anomalous frontier that recursively improving software
+represents.
+
+Concretely: the SCP is a local Vue + Stratimux window the bridge installed into your
+project — the UI representation of the StratiDECK system from Stratimux, a functional
+computer system rendered as a window you can build into anything. It's a Deck. A StratiDECK.
+Working surfaces — Suite 8s — emerge from your project's domains, each with its own page,
+its own working sessions, and its own memory. The running app even rebuilds itself under you
+without losing your place.
+
+## Requirements
+
+- **[Claude Code](https://claude.com/claude-code)** installed globally — the one true
+  requirement. The bridge conducts real Claude Code sessions; it does not replace them.
+- **Node.js + npm** — to install and run the bridge itself.
+
+**A heads-up on Electron**: the bridge's window layer runs on Electron, which installs as a
+dependency (a one-time download during `npm i`). Every window you see — the terminal
+sessions, the SCP itself — is a local Electron window on your machine. Nothing is served
+beyond localhost.
+
+## Installation
+
+```bash
+npm i -g scs-bridge
+cd your-project
+scs
+```
+
+The bridge self-installs the Suite Cascade System into the project, then lands you inside
+your first SCP: you name it, it installs from the bundled template, boots, and focuses in
+front of you. When a freshly minted page needs serving, you press **Turn Over A**: the
+bridge rebuilds and re-serves the app under you. That press is your first contact with the
+build-while-you-use loop — and from there, what at first Turns, Turns Faster, till it's just
+a Cycle.
+
+**Before you install anything:** you are installing software that will run on your
+machine. Review what you install — open-source software is provided as is, without warranty
+of any kind, and with limited liability. Commit-pinned installs (via an SCP Manifest)
+install the specific commit the manifest carries — the same commit the registry stood behind
+at verification. The same caution stands on SCP-Origin.
+
+## The MVP — three pillars
+
+### 1 · Session Management
+
+Every Claude Code conversation opens in its own window and resumes exactly where it left
+off. One roster holds them all — online and offline sections, filter pills by app and
+working surface — and every session can be renamed, archived (recoverable), or dissipated
+for good. Each Suite 8 page can hold one **anchored session**: the page and its agent stay
+bound, and the anchor is the page's permanent point of return. Sessions run in an isolated
+host process — a session-layer fault cannot take the client down; your windows stay, and
+the next spawn heals the host.
+
+### 2 · Pass-Through Terminal Usage
+
+The session window is a real terminal running a real Claude Code process — not a replay or
+a simulation. Type into it directly; the full terminal interface passes through, wrapped in
+the shader render you choose. Messaging from the app's pages honors the same discipline: an
+**In Focus** send brings the session forward with your message; a **Pass Through** send
+delivers it and leaves you where you are.
+
+### 3 · The Tactical Bridge — Turn Over, for Recursively Improving Applications
+
+Set **Shield A** as your clean baseline, drift on **Sword B**, and turn over from the
+bottom dock. The bridge rebuilds and re-serves the app under you — your place survives, and
+a bad boot reverts to the baseline within ~45 seconds. Confirming a turn-over with working
+changes carries them into B and serves B: you land looking at your own work. This is the
+loop the whole system is designed around — an application that improves while you use it,
+with a safe way back at every step.
+
+## What else ships
+
+- **The Update circuit** — when the template advances, a retained clone runs a three-way
+  comparison against your history and merges without losing your additions; your app's
+  identity is preserved by rule.
+- **Cascade Memory** — every page founds and maintains its own plan and trajectory
+  documents, updating live as its working session writes.
+- **The Shatterite Menu** — an agent-authored, staged menu on every Suite 8 page.
+- **The Release Door** — set a remote origin and push from the app's own git surface; the
+  push of a finished SCP is how it ships.
+- **The HiFi system** — render modes, suite colors, patterns, and a component library for
+  building your own pages, scoped to each app alone.
+
+The full categorized tour renders in-app: **Home → Release Notes**.
+
+## Updating — two paths
+
+The system updates along two dedicated paths, each owning its own layer:
+
+1. **The SCS itself** — the CLAUDE.md manifold, the `/cascade` commands, and the working
+   method update through the Cascade Menu: `/cascade:update` performs a selective merge from
+   upstream with a checkpoint first, so your own working memory and local additions survive
+   the refresh.
+2. **Your SCPs** — each installed app updates through its own dedicated circuit on the GitM
+   Update surface: a retained reference clone runs a three-way comparison (the app as
+   installed, the app as you've changed it, the template as it is now). Template-only
+   changes apply cleanly, your work is preserved untouched, identity fields are preserved by
+   rule, and genuine both-sides conflicts are staged for your decision.
+
+The two paths never cross: updating the method never touches your apps, and updating an app
+never touches the method.
+
+## Release Notes — v0.930.0
+
+The version number IS the Cascade Cycle: each cycle of the method that builds this software
+advances it. Highlights new in this release:
+
+- **Crash containment** — terminal sessions in their own host process; recovery is honest
+  even across stale locks and reused process ids.
+- **The Frame Governor** — the shader draws at 24 FPS by default, the cadence of animation
+  film, with a live Settings slider from 8 to 60.
+- **The Documentation Site** — Base, Local, and Cascade shelves, read fresh from disk.
+- **Per-app styling** — color and pattern choices never bleed between installs.
+- **The Release Door** — remote origin management and push, first-push upstream handled.
+- **Claude Opus 5 as the default model** — with the full current lineup selectable per
+  instance.
+- **Focus discipline** — windows come forward only when asked; navigation never steals
+  your attention.
+
+## One bridge at a time
+
+This release runs a single SCS-Bridge per machine. A second bridge in another project
+detects the running one, names its workspace, and stands down with plain instructions. A
+crashed bridge is detected stale and claimed over automatically.
+
+### Tutorial — locked, unlocking
+
+An interactive, step-conducted tutorial (the install experience turned teacher) ships in a
+future release. It mirrors a curated walkthrough series at
+**[youtube.com/@Phuire](https://www.youtube.com/@Phuire)** — the channel is the walkthrough's
+home and unlocks first.
+
+## Debug Logging
+
+```bash
+scs --debug            # pipe trace events to ./Cascades/Bridge/debug.log
+tail -f Cascades/Bridge/debug.log
+```
+
+## Development
+
+```bash
+npm install
+npm run build          # dist/cli.cjs
+npm run typecheck
+npm test
+```
+
+## License
+
+GPL-3.0 — see [LICENSE](./LICENSE)

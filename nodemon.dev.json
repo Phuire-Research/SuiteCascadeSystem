@@ -1,0 +1,15 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": [
+    "Cascades/**",
+    "node_modules/**",
+    "dist/**",
+    "**/*.test.ts",
+    "**/*.tsbuildinfo",
+    "src/**/*.test.ts"
+  ],
+  "exec": "npx tsx scripts/writeBridgeRestartTrigger.ts",
+  "delay": 250,
+  "verbose": false
+}

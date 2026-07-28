@@ -1,0 +1,97 @@
+{
+  "name": "scs-bridge",
+  "version": "0.930.0",
+  "description": "SCS Bridge CLI \u2014 Suite Cascade System command-line interface",
+  "keywords": [
+    "Suite Cascade",
+    "Stratimux",
+    "CLI",
+    "scs-bridge"
+  ],
+  "author": "Micah T. Keller (public@phuire.org)",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Phuire-Research/SuiteCascadeSystem.git"
+  },
+  "main": "./dist/main/index.js",
+  "bin": {
+    "scs": "./bin/scs.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "assets",
+    "Cascades/8_SUITES/SCS Bridge",
+    "Cascades/scps/template/SCP",
+    "README.md",
+    "SCS.md",
+    "LICENSE",
+    "!Cascades/scps/template/SCP/Cascades/Extended",
+    "!Cascades/scps/template/SCP/Cascades/Working",
+    "!Cascades/scps/template/SCP/Cascades/Bridge",
+    "!Cascades/scps/template/SCP/Cascades/Cascade.json"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "dev:self": "npm run build:all && tsx src/cli.ts dev --self-dev --debug",
+    "build": "rimraf ./dist && tsup",
+    "build:renderer": "vite build --config vite.electron-renderer.config.ts",
+    "build:all": "npm run build && npm run build:renderer",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "prettier-format": "run-script-os",
+    "prettier-format:win32": "prettier --config .prettierrc \"./src/**/*.ts\" --write",
+    "prettier-format:darwin:linux": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "prettier-format:default": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "pretest": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watchAll",
+    "postinstall": "node bin/ensure-electron.js",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "release": "npm publish --access public"
+  },
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@xterm/addon-canvas": "^0.7.0",
+    "@xterm/addon-clipboard": "^0.1.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-unicode11": "^0.8.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0",
+    "chokidar": "^3.6.0",
+    "commander": "^12.0.0",
+    "cors": "^2.8.6",
+    "electron": "^42.3.0",
+    "express": "^5.2.1",
+    "fix-path": "^4.0.0",
+    "node-pty": "^1.0.0",
+    "stratimux": "^0.3.295",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^28.1.8",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jest": "^26.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^28.1.3",
+    "prettier": "^2.7.1",
+    "rimraf": "^6.0.1",
+    "run-script-os": "^1.1.6",
+    "ts-jest": "^28.0.7",
+    "tsup": "^8.4.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.2",
+    "vite": "^8.0.14"
+  }
+}

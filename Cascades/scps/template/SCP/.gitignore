@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.bridge-restart.json
+.bridge-detect.sentinel
+*.tsbuildinfo
+Cascades/Bridge/
+# C846 · THE PRIVACY PARTITION — born private: the personal substrate can never enter git
+# history, so the commit-locked share can never carry it (the clone travels tracked content
+# only). The shareable Suite 8 face lives in Cascades/8_SUITES/<name>/ (tracked). Runtime
+# self-heals absence: CWSD scaffolds Cascade.json at watcher-subscribe; Working/ and
+# Extended/ materialize on first use.
+Cascades/Extended/
+Cascades/Working/
+Cascades/Cascade.json

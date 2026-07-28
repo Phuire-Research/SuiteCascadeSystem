@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "preservedJsonFields": {
+    "SCP/package.json": ["name", "description"],
+    "SCP/scp.config.json": ["scpName"],
+    "SCP/package-lock.json": ["name", "packages..name"]
+  },
+  "neverDeletePaths": ["SCP/.gitignore", "SCP/scp.config.json"]
+}
