@@ -691,9 +691,19 @@ export function createCliHandler(ctx: CliHandlerContext) {
         // sees the text enter, not an overlay over it) + retire the registry marker so a
         // later re-engage never re-shows a stale overlay. Guarded on the session actually
         // carrying the flag — ordinary sends cost nothing.
+        //
+        // D-UP3 · THE PRIMED-FOCUS HOLD (the FORF wound · S2 trace): executeFkis's
+        // focus-return leg (messageDispatch FORF) hands focus BACK to the origin SCP after
+        // typing unless inFocus rides the envelope — which un-focused the resolver the
+        // moment its directive finished placing. A PRIMED (standBy) session IS the user's
+        // destination: capture the marker before clearing and force inFocus so the resolver
+        // stays forward. Ordinary worker deliveries (Cadmium sweeps · no marker) keep the
+        // focus-return — a background sweep must never steal the foreground.
+        let primedFocusHold = false;
         {
           const standBySession = sessionRegistry.get(targetUlid);
           if (standBySession?.hasStandBy()) {
+            primedFocusHold = true;
             standBySession.clearStandBy();
             void setSessionStandBy(targetUlid, false);
           }
@@ -704,7 +714,7 @@ export function createCliHandler(ctx: CliHandlerContext) {
           targetUlid,
           text,
           originScpName: origin,
-          inFocus: envelope.inFocus === true,
+          inFocus: envelope.inFocus === true || primedFocusHold,
         });
         sdia('fkis.cli.executeFkis-result', {
           targetUlid,

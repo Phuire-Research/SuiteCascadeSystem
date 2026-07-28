@@ -728,9 +728,19 @@ const diffEntryCount = computed<number>(() => {
 //     resolver may be re-spawned to review anor redo the decisions before applying — the button
 //     stays alive with a dotted border marking optionality instead of the prior hard-disable.
 //   DIMMED            — no diff entries yet (run the update first) anor a spawn is in flight.
+// D-UP3 · THE RUN-GATE (the stale-artifact wound · S2 trace): the resolver states exist
+// only within a LIVE update cycle — the compare has run THIS round and the rail rests at
+// 'reviewing' anor 'resolving'. Diff/resolved artifacts hydrated from a PRIOR cycle land
+// with stage 'idle' and no longer enable the resolver — Run Update is the door every cycle.
+// (Bridge-side, the apply now clears its cycle's artifacts — this gate is the page's belt.)
+const updateCycleLive = computed<boolean>(() => {
+  const stage = props.gitmJson?.updateStatus?.stage ?? 'idle';
+  return stage === 'reviewing' || stage === 'resolving';
+});
 const resolverRequired = computed<boolean>(() => {
   const resolved = props.updateResolved ?? null;
   return (
+    updateCycleLive.value &&
     diffEntryCount.value > 0 &&
     (resolved === null || (resolved.pending ?? 0) > 0)
   );
@@ -738,6 +748,7 @@ const resolverRequired = computed<boolean>(() => {
 const resolverOptional = computed<boolean>(() => {
   const resolved = props.updateResolved ?? null;
   return (
+    updateCycleLive.value &&
     diffEntryCount.value > 0 &&
     resolved !== null &&
     (resolved.pending ?? 0) === 0
@@ -1257,10 +1268,11 @@ function spawnResolver(): void {
                 run it again any time to refresh the comparison.
               </p>
               <p :class="{ 'gitm-legend-active': resolverRequired || resolverOptional }">
-                <strong>Spawn Resolver</strong> — <em>solid</em>: required — a comparison awaits
-                resolution, and the resolver session records the decisions Apply consumes.
-                <em>dotted</em>: optional — a complete resolution already exists; spawn again only
-                to review anor redo it. <em>dimmed</em>: nothing to resolve yet, anor a resolver
+                <strong>Spawn Resolver</strong> — <em>solid</em>: required — this cycle's
+                comparison awaits resolution, and the resolver session records the decisions
+                Apply consumes. <em>dotted</em>: optional — a complete resolution already exists
+                for this cycle; spawn again only to review anor redo it. <em>dimmed</em>: no live
+                cycle — run the update first (each cycle opens with Run Update), anor a resolver
                 is already in flight.
               </p>
               <p :class="{ 'gitm-legend-active': canApply }">
