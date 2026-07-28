@@ -25,3 +25,12 @@ coverage/
 .vscode/
 .idea/
 *.swp
+
+# The private + dev-state exclusions (the 0.931.0 ship-set completion)
+.claude/settings.local.json
+.claude/CLAUDE.md.bak*
+Cascades/Archive/
+Cascades/Cascade.json
+Cascades/hifiConfig.json
+Cascades/scps/IsomorphicExpanse/
+Cascades/scps/Foundry/
