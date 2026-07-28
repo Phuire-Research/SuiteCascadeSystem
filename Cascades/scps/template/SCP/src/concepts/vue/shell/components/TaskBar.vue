@@ -64,6 +64,8 @@ onMounted(() => {
 // bridge (update it) · FUCHSIA = the npm publish is LESSER (this install is ahead).
 const bridgeInstalledVersion = ref<string | null>(null);
 const bridgeNpmVersion = ref<string | null>(null);
+// D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
+const versionTipVisible = ref(false);
 function versionNewer(a: string, b: string): boolean {
   const av = a.split('.').map((s) => parseInt(s, 10) || 0);
   const bv = b.split('.').map((s) => parseInt(s, 10) || 0);
@@ -181,13 +183,25 @@ function handleTurnOverTriggered(): void {
               'taskbar-bridge-version--red': versionState === 'remote-greater',
               'taskbar-bridge-version--fuchsia': versionState === 'remote-lesser',
             }"
+            @mouseenter="versionTipVisible = true"
+            @mouseleave="versionTipVisible = false"
           >
             v{{ bridgeInstalledVersion }}
           </span>
-          <span class="taskbar-version-tip" role="tooltip">
-            <span class="taskbar-version-tip-title">SCS-Bridge</span>
-            <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
-          </span>
+          <!-- D-UP8c · BODY-MOUNTED (the bridgeStandbyOverlay law): the taskbar's inner row
+               clips vertically (the BO-5 overflow cure) — no in-bar tip can rise above it.
+               The Tactical Bridge's own strip escapes by living on document.body with fixed
+               positioning; the Teleport is the same means. -->
+          <Teleport to="body">
+            <span
+              class="taskbar-version-tip"
+              :class="{ 'taskbar-version-tip--visible': versionTipVisible }"
+              role="tooltip"
+            >
+              <span class="taskbar-version-tip-title">SCS-Bridge</span>
+              <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
+            </span>
+          </Teleport>
         </span>
         <template v-for="btn in leftButtons" :key="btn.id">
           <component
@@ -534,12 +548,12 @@ function handleTurnOverTriggered(): void {
   --ver-neon: var(--color-fuchsia, #e879f9);
 }
 .taskbar-version-tip {
-  position: absolute;
-  bottom: calc(100% + 11px);
-  /* D-UP8b · LEFT-ANCHORED (the cut-off cure): the label sits at the frame's far left —
-     a centered 240px pane ran half off-screen. Anchoring to the wrap's left edge grows
-     the pane rightward, always in frame. */
-  left: 0;
+  /* D-UP8c · BODY-MOUNTED + FIXED (the bridgeStandbyOverlay law · the working Tactical
+     Bridge means): the pane lives on document.body, positioned above the bar at the
+     label's corner — no taskbar ancestor exists to clip it. 79px = the 68px bar + 11px. */
+  position: fixed;
+  bottom: 79px;
+  left: 12px;
   transform: translateY(4px);
   display: flex;
   flex-direction: column;
@@ -572,8 +586,8 @@ function handleTurnOverTriggered(): void {
   letter-spacing: 0.02em;
   color: rgba(228, 232, 240, 0.82);
 }
-.taskbar-version-wrap:hover .taskbar-version-tip {
+.taskbar-version-tip--visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 </style>
