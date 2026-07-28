@@ -21,6 +21,12 @@
   <a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE">GPLv3</a>
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/v/scs-bridge?label=scs-bridge&color=5286a6" alt="npm version" /></a>
+  &nbsp;<img src="https://img.shields.io/badge/version-%3D%20Cascade%20Cycle-8a6ba6" alt="version = Cascade Cycle" />
+  &nbsp;<a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-c25b52" alt="GPL-3.0" /></a>
+</p>
+
 ---
 
 ## Your Frontier, Renewed.
@@ -143,10 +149,15 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.930.0
+## Release Notes — v0.931.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
-advances it. Highlights new in this release:
+advances it. The npm badge above always carries the published version.
+
+- **0.931.0 — the complete system ships**: the update circuit's tooling, the cascade
+  commands, the Suite 8 instances, the documentation, and the assets all ride the package.
+
+Highlights from 0.930.0:
 
 - **Crash containment** — terminal sessions in their own host process; recovery is honest
   even across stale locks and reused process ids.
