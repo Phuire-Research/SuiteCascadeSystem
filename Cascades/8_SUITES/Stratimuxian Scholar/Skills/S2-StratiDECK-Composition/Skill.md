@@ -189,3 +189,154 @@ The system resolves concept access through controlled path traversal:
 4. **Concept Individuation**: Muxified concepts can individuate as Base concepts
 5. **Functional Coherence**: Maintains functional programming principles
 6. **Type System Harmony**: Full integration with TypeScript for safety
+
+---
+
+## External Consumer Deck Access (Card 18 TUI/CLI Pattern)
+
+**Origin**: Codified by Cycles 128-129 of the SuiteCascadeSystem project (B.7 Regression #1). When code OUTSIDE the Muxium (TUI rendering layer, CLI command handler, external integration shim) needs to access muxified concept state, the canonical pattern is the `planAny` + `as unknown as` structural cast. This pattern is necessary because the consumer is NOT in a typed plan stage — it has only a generic plan handle.
+
+### The External Consumer Pattern
+
+```typescript
+// File: src/lib/tui/animatedTui.ts (consumer outside the bridge Concept)
+import type { Muxium } from 'stratimux';
+
+// The Muxium handle is opaque at this layer
+const muxium: Muxium<unknown> = getMuxium();
+
+muxium.plan('TUI menu derive', ({ stage, conclude }) => [
+  stage(({ planAny }) => {
+    // planAny is the untyped accessor — structural cast required
+    const lifecycleByScp = (planAny as unknown as {
+      d: {
+        scp: {
+          d: {
+            scpLifecycle: {
+              k: {
+                lifecycleByScp: { select(): Map<string, unknown> };
+              };
+            };
+          };
+        };
+      };
+    }).d.scp.d.scpLifecycle.k.lifecycleByScp.select();
+
+    // Use lifecycleByScp for menu derive logic
+    // ...
+  }),
+  conclude(),
+]);
+```
+
+### Why `planAny` Exists
+
+External consumers (TUI renderers, CLI commands, integration shims) live OUTSIDE the typed Muxium scope. They cannot import the full Deck type — that would create a circular dependency (the TUI imports the Concept; the Concept's tests import the TUI). `planAny` is the framework's typed escape hatch: a generic plan handle that the consumer narrows via structural cast at the access site.
+
+### The M67 Risk — Cast-Escape Runs Risk of tsc Bypass
+
+**The double-cast `as unknown as { ... }` voids TypeScript structural checking.** The cast tells the compiler "trust this shape" — the compiler obliges and EXITS 0, regardless of whether the runtime object actually has the declared structure.
+
+**The failure mode** (B.7 Regression #1, `src/lib/tui/animatedTui.ts:347-409` of the SuiteCascadeSystem):
+
+```typescript
+// CRM renamed scsBridgeCore → scp at the Concept layer
+// The cast in animatedTui.ts still declared the OLD shape
+const access = (planAny as unknown as {
+  d: { scsBridgeCore: { /* ... */ } };  // Old key — runtime no longer has this
+}).d.scsBridgeCore.d.scpLifecycle.k.lifecycleByScp.select();
+
+// tsc EXIT 0 — the cast told tsc the structure existed
+// Runtime: TypeError: Cannot read properties of undefined (reading 'd')
+//   At runtime, the muxium had d.scp, not d.scsBridgeCore
+```
+
+The cast bypassed the type system's protection. The Concept-side rename succeeded; the consumer-side cast was stale. The result was a runtime crash invisible to `tsc`.
+
+### M65 + M67 — The Card 18 Verification Discipline
+
+For any CRM or deck-key rename, TWO verification steps are required:
+
+#### M65 — MigrationGrepScope
+
+**Grep at `src/` scope** (NOT the Concept directory) for the old key:
+
+```bash
+# CORRECT — src/-scoped grep catches sibling consumers (TUI, CLI, tests)
+grep -rn "scsBridgeCore" src/
+# Expected: 0 hits after rename
+
+# WRONG — directory-scoped grep misses sibling consumers
+grep -rn "scsBridgeCore" src/lib/bridge/
+# This would have missed src/lib/tui/animatedTui.ts in B.7 Regression #1
+```
+
+#### M67 — Cast-Escape Audit
+
+**Audit every `as unknown as` site** that approximates deck structure:
+
+```bash
+# Locate all deck-structural casts
+grep -rn "as unknown as" src/ | grep -E "deck|concept|\.d\.|\.k\."
+
+# For each hit, manually verify the cast structure matches the CURRENT deck shape
+# Cast sites carrying stale structure are silent bombs — they pass tsc, fail at runtime
+```
+
+### Cast-Site Documentation Discipline
+
+Every `as unknown as` cast that approximates deck structure SHOULD carry a comment naming:
+1. The canonical Deck type it approximates
+2. The Concept directory it lives outside of
+3. The rationale for the cast (typically: circular dependency avoidance)
+
+```typescript
+// Card 18 External Consumer Cast (M67)
+// Canonical type: ScpDeck (from src/lib/bridge/concepts/scp/scp.type.ts)
+// Cast lives in: src/lib/tui/animatedTui.ts (outside scp Concept directory)
+// Rationale: TUI cannot import ScpDeck without creating a circular dependency
+//   tui imports bridge → bridge tests import tui via mock
+// Re-verify this cast after any CRM affecting the scp deck shape
+const access = (planAny as unknown as {
+  d: { scp: { d: { scpLifecycle: { k: { lifecycleByScp: any } } } } };
+}).d.scp.d.scpLifecycle.k.lifecycleByScp.select();
+```
+
+### Runtime Smoke Requirement (M66 Cross-Reference)
+
+Any plan stage using `as unknown as` for deck declarations CANNOT be verified by tsc alone. M66 mandates a runtime smoke: actually execute the plan stage, observe the runtime behavior, confirm the cast resolves. See S3 §M66 DiastrationIncludesRuntimeSmoke for the runtime smoke discipline.
+
+### Verification Concluder (Composed M65 + M67)
+
+```bash
+# M65 — verify no stale key references
+grep -rn "{oldKey}" src/
+# Expected: 0 hits
+
+# M67 — audit cast sites
+grep -rn "as unknown as" src/ | grep -E "deck|concept|\.d\.|\.k\."
+# Expected: each hit re-verified against current deck shape
+
+# Build gate
+npm run build && tsc --noEmit
+# Expected: EXIT 0 (but NOTE: tsc alone does NOT certify M67)
+
+# Runtime smoke — actually traverse the plan stage
+# (Cycle-specific — see S3 M66)
+```
+
+---
+
+## External Consumer Cross-References (B.7 Lineage)
+
+The B.7 cycle's Card 18 External Consumer pattern produced these doctrinal additions:
+- **M65 MigrationGrepScope** — this section §M65
+- **M67 CastEscapeRunsRiskOfTscBypass** — this section §M67
+- **Card 18 cast-site documentation** — this section §Cast-Site Documentation Discipline
+- **M66 runtime smoke** — see S3 §Migration-Class Verification Discipline
+
+See **S8 §Card 18 Full-Surface Grep Discipline** for the Container Concept-side discipline. See **S14 §7.4 Card 18 Verification Protocol** for the from-scratch authoring procedure.
+
+### Muxonomy-Aware Concept DECK Narrowing (S15 Pointer)
+
+When a Concept participates in the Muxonomy pattern (Diameter junctions across the WebSocket boundary), its DECK types (`NotificationClientDeck` · `NotificationHuirthDeck`) are intentionally NARROW — they expose only the subset of qualities and state accessible from the opposite deployment target. This prevents type-system leakage of Huirth-only qualities into Client dispatch contexts. The `WithDiametricState<S>` intersection (`S & DiametricState`) is a Tier 2 composition requirement: the Client Induction's state parameter must carry `actionQue` at runtime via muxified `webSocketClient`, even though the Concept's own state does not. See **S15 §5 Diameter Qualities (DQWDS + CISV)** for the DECK narrowing pattern and the CRITICAL Induction-suffix invariant.

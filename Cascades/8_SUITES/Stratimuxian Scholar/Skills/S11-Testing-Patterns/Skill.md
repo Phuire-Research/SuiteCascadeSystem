@@ -453,3 +453,133 @@ stage(({ d, stagePlanner }) => {
 - [ ] **Test both individual concepts and muxified compositions**
 - [ ] **Validate state access through proper concept composition**
 - [ ] **Focus on concept functionality, not implementation details**
+
+---
+
+## Integration Smoke Pattern (M66 Complement)
+
+**Origin**: Codified by the B.7 Triple-Regression Arc (Cycles 125-135 of the SuiteCascadeSystem project). Each of the 3 regressions surfaced a runtime gap that unit tests could NOT cover. Unit tests verify Quality behavior in isolation; integration smoke tests verify that startup → state-propagation → render → navigation works end-to-end.
+
+### When Integration Smoke Is Required
+
+Integration smoke tests are required when:
+- A migration-class change renames deck keys (M65 / M67 surface)
+- A new admission ActionStrategy is added (PDRC surface — S7)
+- A new synthetic menu identifier is introduced (M71 CSRP surface — S10)
+- A canonical registry source is changed (M69 surface — S13)
+- An external consumer uses `as unknown as` casts (M66 + M67 — S2 + S3)
+
+### Integration Smoke Test Structure
+
+```typescript
+// File: src/lib/{conceptName}/test/{conceptName}.integration.test.ts
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { muxification } from 'stratimux';
+import { createContainerConcept } from '../container.concept';
+import { readScpRegistry } from '../registry.io';
+import { setupTestFixture, teardownTestFixture } from './fixtures';
+
+describe('Container Concept — Integration Smoke', () => {
+  let muxium: ReturnType<typeof muxification>;
+  let fixtureBasePath: string;
+
+  beforeEach(async () => {
+    // Set up a realistic on-disk fixture (canonical registry file + sibling Concepts)
+    fixtureBasePath = await setupTestFixture({
+      registryEntries: [{ name: 'Test001', version: '1.0.0' }],
+    });
+    muxium = muxification('Test Container', {
+      container: createContainerConcept({ basePath: fixtureBasePath }),
+    });
+  });
+
+  afterEach(async () => {
+    await muxium.close();
+    await teardownTestFixture(fixtureBasePath);
+  });
+
+  it('startup rescan sources from canonical registry (M69)', (done) => {
+    // Phase 1: startup rescan executes
+    muxium.plan('integration smoke — startup', ({ stage, conclude }) => [
+      stage(({ d, stagePlanner }) => {
+        // Phase 1a: canonical registry should contain Test001
+        const entries = readScpRegistry(fixtureBasePath);
+        expect(entries).toHaveLength(1);
+        expect(entries[0].name).toBe('Test001');
+
+        // Phase 1b: dispatch startup rescan
+        stagePlanner.conclude();
+      }),
+      conclude(),
+    ]);
+
+    // Phase 2: admission ActionStrategy fired (PDRC)
+    setTimeout(() => {
+      muxium.plan('integration smoke — admission verify', ({ stage, conclude }) => [
+        stage(({ d, stagePlanner }) => {
+          const lifecycleByScp = d.container.d.scpLifecycle.k.lifecycleByScp.select();
+          expect(lifecycleByScp.size).toBe(1);
+          expect(lifecycleByScp.has('Test001')).toBe(true);
+          stagePlanner.conclude();
+        }),
+        conclude(),
+      ]);
+
+      setTimeout(() => done(), 100);
+    }, 150);
+  });
+
+  it('menu derive reaches consumer with canonical state (Cinnabar L4)', (done) => {
+    // Verify that the TUI consumer's `as unknown as` cast resolves to current shape (M67)
+    // AND that the rendered state matches the canonical registry (M69)
+    // AND that navigation slots include the new synthetic identifier (M71)
+    // This is the composite end-to-end M66 + M67 + M69 + M71 verification
+    // (project-specific test body)
+    done();
+  });
+});
+```
+
+### Integration Smoke vs Unit Test — The Diameter
+
+| Property | Unit Test | Integration Smoke |
+|----------|-----------|-------------------|
+| Scope | Single Quality | Concept cluster across muxified composition |
+| State setup | Inline in test | On-disk fixture (mimics production) |
+| Stage timing | 1-2 stages | 5+ stages with realistic timing |
+| Verification | Single state field | Full state propagation chain |
+| What it catches | Reducer logic errors | Migration-class gaps (M65-M72) |
+| What it misses | Composition errors, runtime cast failures | Quality-internal logic bugs |
+
+Both are necessary. Unit tests cover the small surfaces; integration smoke covers the seams. The B.7 regressions surfaced because no integration smoke tests existed for the affected seams.
+
+### M66 Runtime Smoke vs Integration Test — The Diameter
+
+**M66 Runtime Smoke** (S3 §M66) is a manual procedure: run the application, observe runtime behavior, confirm against expected. It is a Lambda-event but ephemeral.
+
+**Integration Smoke Test** is the codified, repeatable equivalent: a test file that programmatically performs the M66 verification. The integration test is the DURABLE form of M66.
+
+For migration-class changes, BOTH should be exercised:
+1. Run M66 runtime smoke manually to confirm the migration works in production-like conditions
+2. Author the corresponding integration test to lock in the verification as a regression gate
+
+### Integration Smoke Authoring Checklist
+
+When authoring an integration smoke test for a migration-class change:
+- [ ] On-disk fixture that mimics production state (canonical registry file, sibling directories)
+- [ ] Startup phase verifies canonical registry read (M69)
+- [ ] Admission phase verifies ActionStrategy fired (PDRC — S7)
+- [ ] Render phase verifies external consumer cast resolves (M67 — S2)
+- [ ] Navigation phase verifies CSRP completeness (M71 — S10)
+- [ ] Multi-stage timing accommodates reactive stream processing
+- [ ] Fixture teardown in `afterEach` to prevent test pollution
+
+---
+
+## Testing Cross-References (B.7 Lineage)
+
+The B.7 cycle's testing-discipline doctrinal additions:
+- **Integration Smoke Pattern** — this section §Integration Smoke Pattern
+- **M66 Runtime Smoke / Integration Test Diameter** — this section §M66 Runtime Smoke vs Integration Test
+
+See **S3 §Migration-Class Verification Discipline (M66 + M68)** for the plan-stage-side verification. See **S14 §7.7 4-Layer Cinnabar Dialectic Pre-Commit Gate** for the composed pre-commit verification protocol that integration smoke tests support.

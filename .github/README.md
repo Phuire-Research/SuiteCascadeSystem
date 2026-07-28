@@ -6,6 +6,12 @@
   <img src="../Cascades/assets/scs-badge.png" alt="SCS Badge" width="128" />
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/badge/npm-v0.37.0-blue" alt="npm v0.37.0" /></a>
+  <a href="../Cascades/CHANGELOG.md"><img src="https://img.shields.io/badge/status-push--ready-brightgreen" alt="push-ready" /></a>
+  <img src="https://img.shields.io/badge/Suite_8_SCS_Bridge-v8.2-purple" alt="SCS Bridge v8.2" />
+</p>
+
 <h1 align="center">The Suite Cascade System</h1>
 
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
@@ -462,6 +468,7 @@ This repository includes Suite 8 instances at each configuration level:
 | **Fresh Slate** | Advanced | Demonstration | 1 executable greeting skill |
 | **Stratimuxian Automata** | Direct | Autonomous /loop Engagement | 4 lifecycle skills (SA-S1-S4) |
 | **Cadmium Researcher** | Direct | Generalized Research | 5 operational signatures (S1-S5) |
+| **SCS Bridge** | Conductor | Bridge Install/Uninstall + Round-Trip | 125 skills (SB-S1..SB-S125) |
 
 The Fresh Slate Suite 8 (`Cascades/8_SUITES/Fresh Slate/`) demonstrates the Advanced configuration with a complete `script.ts` that can be executed via `npx tsx`. It is the minimal working example of the Executable Inform-to-Action Skill Bridge.
 
@@ -473,59 +480,157 @@ The Stratimuxian Automata Suite 8 (`Cascades/8_SUITES/Stratimuxian Automata/`) b
 
 **Prerequisites**: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (CLI, Desktop, or IDE extension)
 
-#### Option A: Fresh Directory (Recommended for first engagement)
+The Suite Cascade ships as `scs-bridge` — a single npm package that provides the `scs` binary. The bridge handles installation into your project; no manual file copying is required.
+
+#### Install
+
+**Local clone (pre-publish — current path)**:
 
 ```bash
-# Clone the Suite Cascade System
 git clone https://github.com/Phuire-Research/SuiteCascadeSystem.git
 cd SuiteCascadeSystem
-
-# Launch Claude Code
-claude
+npm install -g .
 ```
 
-On entry, the CLAUDE.md manifold loads automatically. Type `/cascade` to open the Shatterite Main Menu — from there, select **[H] Hello World** for the guided tutorial, or navigate to any engagement. All 16 `/cascade:*` commands are available by typing `/cascade:` and tab-completing. `/cascade:hello` launches the tutorial directly — it walks you through your first Diamond, demonstrating Vermillion plans, Actionable Informatives, and Banded dispatches.
-
-After completing Hello World, select **[A] Advanced** to enter the Multi-Diamond Aspiration Loop — build a game, an application, or your own **Personal Suite 8 Website**: a site where YOUR goals are Diamonds, YOUR progress is Onyx, and Claude Code is the harness through which you orchestrate it all. The Advanced mode runs successive Diamonds via `/loop` until your aspiration is achieved or the rotation ceiling is reached.
-
-#### Option B: Add to an Existing Project
-
-If you have an existing `.claude/` directory, **back it up first**:
+**Post-publish (when `scs-bridge` is on the npm registry)**:
 
 ```bash
-# Back up your existing .claude directory
-cp -r .claude .claude-backup
-
-# Clone the Suite Cascade System alongside your project
-git clone https://github.com/Phuire-Research/SuiteCascadeSystem.git
-
-# Copy the system files into your project
-cp -r SuiteCascadeSystem/.claude/commands/ .claude/commands/
-cp -r SuiteCascadeSystem/.claude/agents/ .claude/agents/
-cp SuiteCascadeSystem/.claude/CLAUDE.md .claude/CLAUDE.md
-
-# Copy the Cascades project folder
-cp -r SuiteCascadeSystem/Cascades ./Cascades
+npm install -g scs-bridge
 ```
 
-The `/cascade` slash commands are additive — they compose with any existing commands in your `.claude/commands/` directory without collision. The `Cascades/` directory contains Suite 8 instances, assets, and the RI state file that all commands depend on.
+> As of v0.37.0 — npm publish is pending; install from local clone. Post-publish, the same `scs` binary becomes available globally via `npm install -g scs-bridge`.
 
-#### Option C: Sandbox Exploration
+#### Verify
 
 ```bash
-# Create a fresh directory to explore without affecting any existing project
-mkdir cascade-sandbox && cd cascade-sandbox
-git init
-
-# Copy the Suite Cascade System contents
-cp -r /path/to/SuiteCascadeSystem/.claude .claude
-cp -r /path/to/SuiteCascadeSystem/Cascades ./Cascades
-
-# Launch Claude Code and open the menu
-claude
+scs --version
+# → 0.37.0
 ```
 
-Then type `/cascade` to open the Shatterite Main Menu. All 16 `/cascade:*` commands are available — type `/cascade:` and tab-complete to see them. Select **[H] Hello World** from the menu or type `/cascade:hello` directly for the guided tutorial.
+#### Launch
+
+```bash
+cd your-project
+scs
+```
+
+The bridge installs into your project's `Cascades/` directory and `.claude/` directory through a guided pipeline. Existing files are backed up before any changes (`PreInstallSnapshot/` written into the Iced Record). All SCS-owned files are added under the `scs-*` prefix discipline so they compose with — and never collide with — your existing agents and commands.
+
+#### Quick Start
+
+The first time you run `scs` in a fresh project, the bridge guides you through a one-shot install:
+
+1. **Trust-Confer modal** — A Pewter HiFi confirmation pane opens describing what will be installed and where. Default-N safety: nothing is written until you confirm.
+2. **Pewter HiFi welcome** — Once confirmed, the bridge presents the SCS welcome surface: muted-light Pewter palette, single-pane focus, no peripheral noise.
+3. **Strategy S7 muxification** — The bridge composes its install Strategy with your project context, joining the SCS prompt template against your `cwd` so the install is project-aware.
+4. **Strategy S8 Stratidian Welcome arc** — A short Stratidian onboarding trace runs: Suite Cascade introduction, Diamond/Onyx orientation, and the Shatterite Menu entry point.
+5. **Pick your Suite 8 designation** — From the Shatterite menu, select the Suite 8 name that fits your project (the registry includes Pewter Tessera, Cinnabar Dialectic, Stratimuxian Scholar, Teal Claude, Fresh Slate, Stratimuxian Automata, Cadmium Researcher, and SCS Bridge itself).
+6. **`/cascade` engages** — From any Claude Code prompt thereafter, `/cascade` opens the Shatterite Main Menu; `/cascade:hello` starts the guided Hello World tutorial; `/cascade:diamond` opens your active Diamond WorkGameBoard.
+
+No manual `.claude/` copying. No file shuffling. The bridge handles the install end-to-end and writes a Reversibility Manifest (`Cascades/Iced/MuxificationManifest.json`) so the install can be cleanly reversed or re-run later.
+
+#### Update via Re-run
+
+Re-running the install command in a project that already has an Iced Record (`Cascades/Iced/`) is the graceful update mechanism. There is no separate `scs update` command for this purpose.
+
+```bash
+cd your-project
+npm install -g .              # (or: npm install -g scs-bridge post-publish)
+```
+
+When the bridge detects an existing `Cascades/Iced/MuxificationManifest.json`, it switches to the **In-Place Update** path:
+
+- Prior install state is read from the manifest (schema v1, v2, or v3 — all three are read-compatible).
+- The remuxify path runs: SCS-owned files are refreshed; `scs-*` prefixed agents and commands are re-emitted; `.claude/CLAUDE.md` is re-muxified against the newest template while preserving any project-local additions.
+- **Your `Cascades/Iced/UserSCSConfig/` persists.** Your Suite 8 customizations, color preferences, and any project-tracked configuration survive the update.
+- **User-data directories persist.** `Cascades/8_SUITES/`, `Cascades/Working/`, `Cascades/Documentation/`, and `Cascades/Lab/` are never touched by the In-Place Update path.
+
+> Distinct from `/cascade:update`: that slash command performs **selective upstream merge** (cherry-picking new SCS framework files from the upstream repo into an installed project). It is a different operation than re-running the binary install.
+
+#### Uninstall
+
+Two surfaces, one engine:
+
+```bash
+# CLI
+scs uninstall
+```
+
+Or from the bridge menu while SCS is installed: press **`u`** to open the Pewter HiFi confirmation modal. The modal defaults to **No** (destructive-default-asymmetry safety).
+
+**What's removed** (SCS-owned files only — `scs-*` prefix discipline):
+
+- `Cascades/Bridge/` — the bridge runtime directory
+- `.claude/agents/scs-*.md` — all SCS-prefixed agents (`scs-r0-base`, `scs-r1-curator`, etc.)
+- `.claude/commands/scs-*.md` — all SCS-prefixed `/cascade:*` commands
+- `Cascades/CHANGELOG.md` — SCS-tracked changelog
+- `Cascades/SUITE8-REGISTRY.md` — SCS-tracked Suite 8 registry
+- `Cascades/Cascade.json` — RI state file
+- `.claude/CLAUDE.md` — restored from the `PreInstallSnapshot/` (your pre-install file is returned exactly as it was)
+
+**What's preserved** (your work — never touched on uninstall):
+
+- `Cascades/8_SUITES/` — Suite 8 instances you authored or customized
+- `Cascades/Working/` — your Diamonds and Onyx trajectory
+- `Cascades/Documentation/` — your project documentation
+- `Cascades/Lab/` — your experimental work
+- `Cascades/Iced/` — the Iced Record itself (enables reinstall — see Round-Trip below)
+- Any non-`scs-*` agents and commands you've added to `.claude/`
+
+The `[y/N]` confirmation defaults to **No**. Uninstall does not proceed without explicit user confirmation.
+
+#### Round-Trip: Install · Use · Uninstall · Reinstall
+
+The full install lifecycle is reversible by design:
+
+1. **Install** — `scs` in a fresh project; bridge installs into `Cascades/` and `.claude/`.
+2. **Use** — Work with SCS over time; Suite 8s, Diamonds, and Onyx accumulate in your user-data directories.
+3. **Uninstall** — `scs uninstall` (or `u` from the bridge menu) removes SCS-owned files; preserves user-data + the Iced Record.
+4. **Reinstall** — Run `scs` (or `npm install -g .` again) in the same project; the bridge detects the Iced Record (`Cascades/Iced/MuxificationManifest.json`), reads the prior manifest, restores `UserSCSConfig/`, and returns the project to working state. Your accumulated work is still there.
+
+The Iced Record is the pivot. It survives uninstall by design and enables reinstall to pick up where you left off — backed by the Reversibility Manifest's schema-versioned compatibility (v1, v2, v3 manifests are all read-compatible going forward).
+
+**Four-path user-trust contract**: at any installed state you have four exits, each fully reversible from the prior state:
+
+| Path | Command | Outcome |
+|------|---------|---------|
+| **Continue** | (work normally) | Use SCS over time |
+| **Uninstall (Iced preserved)** | `scs uninstall` | SCS-owned removed · user-data + Iced retained · reinstallable |
+| **Manual purge (SCS retained)** | `rm -rf Cascades/` | SCS still installed globally; project becomes a fresh-install candidate |
+| **Full purge** | `scs uninstall && rm -rf Cascades/Iced/` | Iced Record erased · reinstall starts from a clean snapshot |
+
+Schema reverse-compatibility is structural: future install upgrades read prior manifests, even across major SCS versions.
+
+#### Architecture
+
+The `Cascades/` directory is the unit of SCS persistence in your project:
+
+```
+Cascades/
+├── 8_SUITES/              # Your Suite 8 instances (preserved on uninstall)
+├── Working/               # Active Diamonds + Onyx trajectory (preserved)
+├── Documentation/         # Your project documentation (preserved)
+├── Lab/                   # Experimental work (preserved)
+├── Iced/                  # The Iced Record (preserved — reinstall pivot)
+│   ├── MuxificationManifest.json   # Reversibility Manifest (schema v1/v2/v3)
+│   ├── PreInstallSnapshot/         # Pre-install file backups (CLAUDE.md, etc.)
+│   └── UserSCSConfig/              # Your SCS preferences (color choices, etc.)
+├── Bridge/                # SCS bridge runtime (REMOVED on uninstall)
+├── CHANGELOG.md           # SCS-tracked changes (REMOVED on uninstall)
+├── SUITE8-REGISTRY.md     # SCS-tracked registry (REMOVED on uninstall)
+└── Cascade.json           # RI state file (REMOVED on uninstall)
+```
+
+`.claude/` integration follows the same discipline:
+
+- `.claude/CLAUDE.md` — muxified at install time; restored from `PreInstallSnapshot/` on uninstall.
+- `.claude/agents/scs-*.md` — SCS-owned agents (removed on uninstall).
+- `.claude/commands/scs-*.md` — SCS-owned `/cascade:*` commands (removed on uninstall).
+- `.claude/agents/*` and `.claude/commands/*` (without `scs-*` prefix) — your files; never touched.
+
+This is the **`scs-*` prefix discipline**: every SCS-owned artifact in shared directories carries the prefix so install and uninstall can act surgically without ever touching user files. The discipline is structurally enforced — the install pipeline cannot emit files that violate it.
+
+The **Reversibility Manifest** at `Cascades/Iced/MuxificationManifest.json` is the structural spine of the round-trip. Schema versioning (v1/v2/v3) is backward-compatible: a newer SCS install reads any prior manifest, allowing the install to remuxify against your existing project state without requiring you to reinstall from scratch on every SCS upgrade.
 
 #### Troubleshooting: Harness Errors
 
@@ -548,9 +653,14 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 
 | Command | What it does |
 |---------|-------------|
+| `scs` | Launch the bridge — install in fresh project, or open the animated TUI in an installed project (re-run = In-Place Update) |
+| `scs uninstall` | Remove SCS-owned files; preserve user-data + Iced Record (default-N confirmation) |
+| `scs scp list` | List SCP Suite 8 instances (Suite Cascade Protocol · Personal/Organizational/Project modes · identity-as-perimeter) |
+| `scs scp init <designation>` | Materialize a new SCP S8 instance via clone-and-rename from the SCP Researcher Templates (`--mode <Personal\|Organizational\|Project>` · default Personal) |
+| `scs --version` | Print the bridge version |
 | `/cascade` | Open the Shatterite Main Menu |
 | `/cascade:hello` | Guided tutorial — your first Diamond |
-| `/cascade:advanced` | Advanced Hello World — Multi-Diamond Aspiration Loop (Game / Application / **Personal Suite 8 Website** / Custom) |
+| `/cascade:advanced` | Advanced Hello World — Multi-Diamond Aspiration Loop (Game / Application / **Personal SCP Suite 8** / Custom) |
 | `/cascade:diamond` | Engage your active Diamond WorkGameBoard |
 | `/cascade:onyx` | Review your Onyx trajectory (diagnostic history) |
 | `/cascade:suites` | Browse the Suite 8 Registry |
@@ -561,7 +671,7 @@ If you encounter persistent errors, use `/cascade:correct` to course correct the
 | `/cascade:maintain` | Meta-cognitive system maintenance |
 | `/cascade:create` | Actualize a new Suite 8 from initial input |
 | `/cascade:loop` | Stratimuxian Automata — autonomous /loop engagement |
-| `/cascade:update` | Update SCS from upstream — selective merge with checkpoint |
+| `/cascade:update` | Selective upstream merge of new SCS framework files — distinct from `scs` re-run (which performs the In-Place Update via the Iced manifest) |
 | `/cascade:verify` | Verify build output — Suite 4 examination + Suite 6 resolution |
 | `/cascade:changelog` | Rotating capped changelog — recent SCS changes + Maintenance Reminder |
 
@@ -574,9 +684,13 @@ Every component is documented in plain language and can be examined independentl
 
 ---
 
-### Recent Changes — 2026-05-04
+### Recent Changes — 2026-05-09 (Diamond B-FINAL · v0.37.0 · Suite 8 v8.2 · push-ready)
 
-The rotating SCS changelog lives at [`Cascades/CHANGELOG.md`](../Cascades/CHANGELOG.md) — capped at 150 lines (~24% of `CLAUDE.md`), newest-first, with monthly archive rotation when over cap. Open it directly via `/cascade:changelog` for the most recent entries plus the Maintenance Reminder.
+**Diamond B-FINAL — README + Documentation Polish closes the SCS-Bridge-Install branch arc.** The bridge ships with a one-shot install (`npm install -g .` pre-publish · `npm install -g scs-bridge` post-publish), `scs uninstall` first-class subcommand (CLI + `u` hotkey via Pewter HiFi modal), Re-run as the graceful update mechanism (CD-115 RMSDE), and full Round-Trip reversibility through the Iced Record (CD-114 IPRM). User-data directories are preserved on uninstall by design (CD-127 RDDU); `scs-*` prefix discipline (CD-93 ASNCPP) keeps install/uninstall surgical; MuxificationManifest schema v1/v2/v3 is reverse-compatible (CD-119 SVRC).
+
+725/725 tests passing · build green · CD-5 streak 47th consecutive · SCS Bridge Suite 8 v8.2.
+
+For full release history, open [`Cascades/CHANGELOG.md`](../Cascades/CHANGELOG.md) directly, or run `/cascade:changelog` from within the bridge for the rotating capped view (newest-first, 150-line cap, monthly archive rotation).
 
 **Live Demo**: [poe.com/SCS-Researcher](https://poe.com/SCS-Researcher) — the SCS methodology operating in real time through conversation.
 

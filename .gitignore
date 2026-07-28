@@ -1,2 +1,80 @@
 DevCascades/
 .DS_Store
+
+# Node
+node_modules/
+
+# Build output
+dist/
+
+# Pack artifacts
+*.tgz
+
+# Coverage
+coverage/
+
+# TypeScript incremental
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+
+# Bridge runtime state (project-local; never commit)
+Cascades/Bridge/
+
+# SCP registry · carries the runtime electron windowId (SWFB refocus binding) +
+# discovered sessions[] · untracked + scaffolded on dev:self startup
+# (scaffoldBridgeStateFiles · src/commands/dev.ts). Same class as Bridge/.
+Cascades/SCPs.json
+
+# Legacy bridge runtime state (pre-Diamond O; clean up if found)
+.scs-bridge/
+
+# Dev Cascade artifacts (private working dir; not scaffolded to user)
+# Diamond A | Cycle 22 — keep .gitkeep tracked as scaffold placeholder
+Cascades/Working/*
+!Cascades/Working/.gitkeep
+
+# Lab dev sandbox — keep .gitkeep tracked as scaffold placeholder
+Cascades/Lab/*
+!Cascades/Lab/.gitkeep
+
+# SCP installations — Macro 2 M2-P1 (Cycle 74)
+# Template tracked; user-installed SCPs private (named clones go here)
+Cascades/scps/*
+!Cascades/scps/template/
+!Cascades/scps/template/**
+!Cascades/scps/SCPs.json
+# Re-ignore build artifacts within template (whitelist above is too greedy)
+Cascades/scps/template/**/node_modules
+Cascades/scps/template/**/dist
+Cascades/scps/template/**/coverage
+Cascades/scps/template/**/*.tsbuildinfo
+# Diamond β RM-Asp-1: staging directory · used by install pipeline · never tracked
+Cascades/scps/.staging/
+
+# Template SCP local dev-state (hold-over from copy process · not authoritative)
+# Root Cascades/ takes precedence · template Cascades/ replicas are dev-only
+# Per Cycle 158 Confer Point 4 · user permits dual bridge roots · gitignore enforces hygiene
+Cascades/scps/template/**/Cascades/Bridge/
+Cascades/scps/template/**/Cascades/Working/
+Cascades/scps/template/**/Cascade.json
+Cascades/scps/template/**/SCPs.json
+
+# BRTF trigger file (cascading nodemon · written by SCS self-dev watcher)
+Cascades/scps/template/SCP/.bridge-restart.json
+
+# DPASL · per-Suite-8 Cascade Registry RI dirs — runtime-scaffolded (CWSD), not source
+Cascades/Extended/
+
+# Archived real ClaudeCode sessions (Dissolution+Archival Diamond) — runtime data
+# (session transcripts + machine-specific paths); same class as Bridge/ + Extended/.
+Cascades/Archive/
+
+# C938 · THE PRIVACY PARTITION (dev zones stay local · never committed)
+Cascades/Working/
+Cascades/Archive/*
+!Cascades/Archive/.gitkeep
+Cascades/Bridge/
+Cascades/Documentation/Cascades/ICED-SKILL-INDUCTION.md
+scripts/mirror-template-to-lab.sh

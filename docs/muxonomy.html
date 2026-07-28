@@ -22,6 +22,7 @@ const C = {
   ac: "#cc7722", di: "#ff6b4a", de: "#4ac1ff",
   mx: "#4affcf", am: "#9966cc", rs: "#ff007f",
   like: "#4affcf", unlike: "#ff007f",
+  within: "#4ac1ff", from: "#ff6b4a",
 };
 
 const PI = Math.PI;
@@ -38,7 +39,7 @@ const piApprox = (n) => n === 0 ? 2 : Math.pow(2, n + 1) * chords[n] / 2;
 const arcLen = (n) => 2 * PI / Math.pow(2, n + 1);
 
 function Nav({ active, onNav }) {
-  const labels = ["Origin", "I. ½ Dyad", "II. Finite", "III. Validate", "IV. Order", "V. Minimal", "VI. Muxonomy", "VII. Taxonomy"];
+  const labels = ["Origin", "I. Dyad", "II. Bidirectional", "III. Finite", "IV. Validate", "V. Order", "VI. Minimal", "VII. Muxonomy", "VIII. Taxonomy"];
   return (
     <div style={{ display: "flex", gap: 3, overflowX: "auto", padding: "0 0 10px", marginBottom: 14, borderBottom: `1px solid ${C.sl}` }}>
       {labels.map((l, i) => (
@@ -76,7 +77,7 @@ function Slider({ value, min, max, onChange, label }) {
   );
 }
 
-// ─── SECTION I: ½ DYAD — ORDERS OF DYADIC DIAMETERS ───
+// ─── SECTION I: THE DYAD — ORDERS OF DYADIC DIAMETERS ───
 function DyadicDiameterProof() {
   const [n, setN] = useState(0);
   const D = Math.pow(2, n);
@@ -86,9 +87,13 @@ function DyadicDiameterProof() {
 
   return (
     <div>
-      <STitle num="I" title="The ½ Diametric Dyad" sub="The Diameter produces the Demometers — two parallel dyadic ladders, offset by one order" />
+      <STitle num="I" title="The Diametric Dyad" sub="The Diameter produces the Demometers — two parallel dyadic ladders, offset by one order" />
       <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={`${C.tm}44`} strokeWidth={1.5} />
+        {/* n=0 · the dual reading held at once: the drawn singular Diameter
+            anor the undrawn Entire Manifold (the dashed ring) */}
+        {n === 0 && <circle cx={cx} cy={cy} r={r} fill={`${C.de}0a`}
+          stroke={`${C.di}66`} strokeWidth={1.5} strokeDasharray="4 4" />}
         {/* Draw sectors */}
         {Array.from({ length: M }, (_, i) => {
           const a1 = 2 * PI * i / M - PI / 2;
@@ -97,18 +102,18 @@ function DyadicDiameterProof() {
           const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
           const lg = (a2 - a1) > PI ? 1 : 0;
           return <path key={`s${i}`} d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg} 1 ${x2},${y2} Z`}
-            fill={`${C.de}${n === 0 ? '18' : '10'}`} stroke={`${C.mx}44`} strokeWidth={0.5} />;
+            fill={`${C.de}10`} stroke={`${C.mx}44`} strokeWidth={0.5} />;
         })}
         {/* Draw diameters */}
         {Array.from({ length: D }, (_, i) => {
           const a = PI * i / D - PI / 2;
           return <line key={`d${i}`} x1={cx + r * Math.cos(a)} y1={cy + r * Math.sin(a)}
             x2={cx - r * Math.cos(a)} y2={cy - r * Math.sin(a)}
-            stroke={C.di} strokeWidth={n === 0 ? 3 : 1.5} opacity={0.7} />;
+            stroke={C.di} strokeWidth={n === 0 ? 2.5 : 1.5} opacity={0.7} />;
         })}
         <circle cx={cx} cy={cy} r={3} fill={C.ac} />
-        {n === 0 && <text x={cx} y={cy - 8} textAnchor="middle" fill={C.di} fontSize="11"
-          fontWeight="900" fontFamily="'Orbitron', sans-serif" opacity={0.6}>2r</text>}
+        {n === 0 && <text x={cx} y={cy - r - 12} textAnchor="middle" fill={C.di} fontSize="9"
+          fontWeight="900" fontFamily="'Orbitron', sans-serif" opacity={0.7}>DRAWN ANOR THE ENTIRE MANIFOLD</text>}
       </svg>
 
       {/* Stepper */}
@@ -128,13 +133,16 @@ function DyadicDiameterProof() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginTop: 8 }}>
         <div style={{ background: `${C.am}11`, border: `1px solid ${C.am}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
           <div style={{ fontSize: 8, color: C.am, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>PAIRS</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{n === 0 ? "½" : Math.pow(2, n - 1)}</div>
-          <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n - 1}</sup></div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{n === 0 ? "0" : Math.pow(2, n - 1)}</div>
+          {n === 0
+            ? <div style={{ fontSize: 8, color: C.tm }}>origin of the count</div>
+            : <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n - 1}</sup></div>}
         </div>
         <div style={{ background: `${C.di}11`, border: `1px solid ${C.di}33`, borderRadius: 8, padding: 8, textAlign: "center" }}>
           <div style={{ fontSize: 8, color: C.di, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DIAMETERS</div>
           <div style={{ fontSize: 18, fontWeight: 900, color: C.tx, fontFamily: "'Orbitron', sans-serif" }}>{D}</div>
           <div style={{ fontSize: 8, color: C.tm }}>2<sup>{n}</sup></div>
+          {n === 0 && <div style={{ fontSize: 7, color: C.am, marginTop: 2, fontStyle: "italic" }}>drawn anor undrawn — the Entire Manifold</div>}
         </div>
         <div style={{ background: `${C.de}11`, border: `1px solid ${C.de}33`, borderRadius: 8, padding: 8, textAlign: "center", position: "relative" }}>
           <div style={{ fontSize: 8, color: C.de, fontFamily: "'Orbitron', sans-serif", fontWeight: 700 }}>DEMOMETERS</div>
@@ -152,11 +160,12 @@ function DyadicDiameterProof() {
       {/* Description */}
       <div style={{ background: C.sf, borderRadius: 10, padding: 12, marginTop: 10, textAlign: "center",
         fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: C.tm, lineHeight: 1.7 }}>
-        {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>Origin · 2<sup>−1</sup> Dyad — ½ a Pair.</span><br />
-          <span style={{ color: C.di }}>1 Diameter</span> = ½ Dyad of Diameters.<br />
-          Each <span style={{ color: C.de }}>Demometer</span> = ½ the circle.<br />
-          The Through Measure IS the definition — precedes the first complete Pair.<br />
-          <span style={{ color: C.am, fontSize: 10 }}>The Demometer ladder began at Pre-Origin — <span style={{ color: C.de }}>1 Whole Face</span> — before this first Diameter was drawn.</span></>}
+        {n === 0 && <><span style={{ color: C.ac, fontWeight: 700 }}>Origin · 2<sup>0</sup> = 1 — the multiplicative identity, held two ways.</span><br />
+          1/1 undrawn — <span style={{ color: C.di, fontWeight: 700 }}>the Entire Manifold</span> — anor <span style={{ color: C.di }}>1 Diameter</span> drawn: the singular through-measure, the unit itself.<br />
+          Pairs = 0 — N is the Origin of the COUNT: the Diameter at Origin is the beginning of the measure of Diameters. The First Pair arrives at 2<sup>1</sup> = 2. On the backside the fold starts early: Pre-Origin −1 = the Radius.<br />
+          A <span style={{ color: C.de }}>Demometer</span> must always have a Diameter; a Diameter may not be drawn — and is then the Entire Manifold.<br />
+          The drawn reading seeds Viète: the flattened 2-gon, perimeter 2D → π ≈ 2.<br />
+          <span style={{ color: C.am, fontSize: 10 }}>The measure of a Circle is by Diameters — the working measurement informing Different Measures within the Circle.</span></>}
         {n === 1 && <><span style={{ color: C.am, fontWeight: 700 }}>1st Order · 2<sup>0</sup> = 1 Dyad.</span><br /><span style={{ color: C.mx }}>2 Diameters</span> perpendicular. <span style={{ color: C.de }}>4 equal quadrants</span>.<br />The first complete Pair.</>}
         {n === 2 && <><span style={{ color: C.am, fontWeight: 700 }}>2nd Order · 2<sup>1</sup> = 2 Dyads.</span><br /><span style={{ color: C.mx }}>4 Diameters</span>. <span style={{ color: C.de }}>8 equal 45° sectors</span>.<br />Each order doubles the prior Pair count.</>}
         {n === 3 && <><span style={{ color: C.am, fontWeight: 700 }}>3rd Order · 2<sup>2</sup> = 4 Dyads.</span><br /><span style={{ color: C.mx }}>8 Diameters</span>. <span style={{ color: C.de }}>16 equal 22.5° sectors</span>.<br />θ halves at each doubling.</>}
@@ -170,8 +179,8 @@ function DyadicDiameterProof() {
       <div style={{ background: `${C.am}08`, border: `1px solid ${C.am}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
         fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
         <span style={{ color: C.am, fontWeight: 700, fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: "1px" }}>DYADIC EXPONENT LADDER · INVARIANT AT EVERY ORDER</span><br />
-        <span style={{ color: C.am }}>P</span> = 2<sup>n−1</sup> ·{" "}
-        <span style={{ color: C.di }}>D</span> = 2<span style={{ color: C.am }}>P</span> = 2<sup>n</sup> ·{" "}
+        <span style={{ color: C.am }}>P</span> = 2<sup>n−1</sup> from n = 1 (0 at Origin — the count begins) ·{" "}
+        <span style={{ color: C.di }}>D</span> = 2<sup>n</sup> ·{" "}
         <span style={{ color: C.de }}>M</span> = 2<span style={{ color: C.di }}>D</span> = 2<sup>n+1</sup> ·{" "}
         <span style={{ color: C.ac }}>θ</span> = 180°/2<sup>n</sup>
       </div>
@@ -190,11 +199,14 @@ function DyadicDiameterProof() {
           <div style={{ fontSize: 9, color: C.tm, marginTop: 3 }}>Language · Mathematics · Geometry — held in one Pewter frame</div>
         </div>
         {(() => {
+          {/* The uniform law: D = 2^n · M = 2^(n+1) at EVERY station — the fold
+              starts early (Pre-Origin −1 = the Radius); Origin 0 = the drawn
+              singular Diameter anor the undrawn Entire Manifold. */}
           const positions = [
-            { idx: -1, label: "Pre-Origin", D: "—", M: "1", Dexp: "—", Mexp: "2⁻¹", lang: "Whole Face", geo: "○" },
-            { idx: 0,  label: "Origin",     D: "1", M: "2", Dexp: "2⁻¹", Mexp: "2⁰",  lang: "Halves",     geo: "─" },
-            { idx: 1,  label: "1st Order",  D: "2", M: "4", Dexp: "2⁰",  Mexp: "2¹",  lang: "Quadrants",  geo: "✚" },
-            { idx: 2,  label: "2nd Order",  D: "4", M: "8", Dexp: "2¹",  Mexp: "2²",  lang: "Sectors",    geo: "✱" },
+            { idx: -1, label: "Pre-Origin", D: "½", M: "1", Dexp: "2⁻¹", Mexp: "2⁰", lang: "Whole Face", geo: "○" },
+            { idx: 0,  label: "Origin",     D: "1", M: "2", Dexp: "2⁰",  Mexp: "2¹",  lang: "Halves",     geo: "⊖" },
+            { idx: 1,  label: "1st Order",  D: "2", M: "4", Dexp: "2¹",  Mexp: "2²",  lang: "Quadrants",  geo: "✚" },
+            { idx: 2,  label: "2nd Order",  D: "4", M: "8", Dexp: "2²",  Mexp: "2³",  lang: "Sectors",    geo: "✱" },
           ];
           return (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 5 }}>
@@ -232,15 +244,631 @@ function DyadicDiameterProof() {
           );
         })()}
         <div style={{ marginTop: 9, padding: "6px 8px", background: `${C.bg}aa`, borderRadius: 6, border: `1px solid ${C.am}22`, textAlign: "center", fontSize: 9, color: C.tm, lineHeight: 1.6 }}>
-          The Demometer ladder begins at <span style={{ color: C.am, fontWeight: 700 }}>Pre-Origin (2⁻¹ = 1 Whole Face)</span>, one step before the Diameter ladder.
-          When the first Diameter is drawn, both ladders advance in lockstep — the Demometer always one exponent ahead.
+          Pre-Origin holds <span style={{ color: C.am, fontWeight: 700 }}>M = 2⁰ = 1 Whole Face</span> while the Diameter holds
+          <span style={{ color: C.am, fontWeight: 700 }}> D = 2⁻¹ — the Radius</span>: the fold starts early.
+          One uniform law — D = 2ⁿ, M = 2ⁿ⁺¹ — both ladders in lockstep, the Demometer always one exponent ahead.
         </div>
       </div>
     </div>
   );
 }
 
-// ─── SECTION II: SECTOR INSPECTOR ───
+// ─── SECTION II: THE BIDIRECTIONAL DYADIC ───
+// Builds on Section I (the Dyadic Diameter Proof). Extends Pre-Origin from position to direction:
+// N continues into −∞ just as it extends to +∞. Origin is a fulcrum, not a floor.
+
+function BDCircle({ cx, cy, r, diameters, highlight }) {
+  const sectors = diameters > 0 ? diameters * 2 : 1;
+  const sectorEls = [];
+  for (let i = 0; i < sectors; i++) {
+    const a1 = 2 * PI * i / sectors - PI / 2;
+    const a2 = 2 * PI * (i + 1) / sectors - PI / 2;
+    const x1 = cx + r * Math.cos(a1);
+    const y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2);
+    const y2 = cy + r * Math.sin(a2);
+    const lg = (a2 - a1) > PI ? 1 : 0;
+    const isHi = highlight !== null && i === highlight;
+    // The Demometer wears its OWN color: faces fill in de (counted Faces
+    // visible); selection highlights in de; mx stays reserved for Muxameters.
+    sectorEls.push(
+      <path key={`s${i}`}
+        d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg} 1 ${x2},${y2} Z`}
+        fill={isHi ? `${C.de}55` : `${C.de}18`}
+        stroke={isHi ? C.de : `${C.de}26`}
+        strokeWidth={isHi ? 1.5 : 0.5} />
+    );
+  }
+  const dEls = [];
+  for (let i = 0; i < diameters; i++) {
+    const a = PI * i / diameters - PI / 2;
+    dEls.push(
+      <line key={`d${i}`}
+        x1={cx + r * Math.cos(a)} y1={cy + r * Math.sin(a)}
+        x2={cx - r * Math.cos(a)} y2={cy - r * Math.sin(a)}
+        stroke={C.di} strokeWidth={1.5} opacity={0.75} />
+    );
+  }
+  return (
+    <g>
+      {sectorEls}
+      {dEls}
+      <circle cx={cx} cy={cy} r={2.5} fill={C.ac} />
+    </g>
+  );
+}
+
+function BDBadge({ x, y, text }) {
+  const w = text.length * 7 + 10;
+  return (
+    <g>
+      <rect x={x - w / 2} y={y - 9} width={w} height={16}
+        fill={C.bg} stroke={C.mx} strokeWidth={0.8} rx={3} />
+      <text x={x} y={y + 3} textAnchor="middle"
+        fill={C.mx} fontSize="10" fontWeight="900"
+        fontFamily="'Orbitron', sans-serif">{text}</text>
+    </g>
+  );
+}
+
+// MODE 2 — DYADIC DEMOMETER. captions default ON — the Muxameter's reuse
+// branch passes captions={false} so its own captions stand alone.
+function BDDemometerViz({ N, captions = true }) {
+  const absN = N < 0 ? -N : N;
+  const cx = 120, cy = 120, R = 80;
+  const orbi = "'Orbitron', sans-serif";
+
+  if (N >= 0) {
+    const dCount = N === 0 ? 1 : Math.pow(2, N);
+    const posM = Math.pow(2, N + 1);
+    return (
+      <g>
+        <BDCircle cx={cx} cy={cy} r={R} diameters={dCount} highlight={null} />
+        {captions && <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.de} fontSize="8" fontWeight="900" fontFamily={orbi}>{N === 0 ? "2 DEMOMETERS · M = 2^(0+1) · THE PAIR" : `${posM} DEMOMETERS · M = 2^(${N}+1)`}</text>}
+        {captions && <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.de}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>{N === 0 ? "CUT BY THE ONE DRAWN DIAMETER" : "THE CLASSIC SECTORS — TO THE ARC"}</text>}
+      </g>
+    );
+  }
+
+  // N = -1 → 1 Demometer: the Whole Face drawn in the Demometer color —
+  // a Demometer anor a Manifold — with the Radius (1/2 a Diameter, in the
+  // Diameter's color) shown WITHIN: the last means of similarity between
+  // the Measures at -1.
+  if (N === -1) {
+    const labelR = R * 0.55;
+    const midAng = PI;
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={R} fill={`${C.de}33`} stroke={C.de} strokeWidth={2} />
+        <line x1={cx} y1={cy} x2={cx - R} y2={cy} stroke={C.di} strokeWidth={2.5} />
+        <circle cx={cx} cy={cy} r={3} fill={C.ac} />
+        <BDBadge x={cx + labelR * Math.cos(midAng)} y={cy + labelR * Math.sin(midAng) - 16} text="1" />
+        {captions && <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.de} fontSize="9" fontWeight="900" fontFamily={orbi}>DEMOMETER 1 · THE WHOLE FACE</text>}
+        {captions && <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.de}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>THE RADIUS WITHIN — THE LAST SIMILARITY</text>}
+      </g>
+    );
+  }
+
+  // N <= -2 → one circle: 2^(|N|-1) potential Faces, ONE selected — in the
+  // negatives we are SELECTING specific Faces; no pairing needed. Selection
+  // stays on the LEFT (K/2): the stepping narrows in place, no side-jump.
+  const labelR = R * 0.55;
+  const midAng = PI;
+  const negK = Math.pow(2, absN - 1);
+  const negDiameters = Math.pow(2, absN - 2);
+
+  return (
+    <g>
+      <BDCircle cx={cx} cy={cy} r={R} diameters={negDiameters} highlight={negK / 2} />
+      <BDBadge x={cx + labelR * Math.cos(midAng)} y={cy + labelR * Math.sin(midAng)} text={`1/${negK}`} />
+      {captions && <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.de} fontSize="9" fontWeight="900" fontFamily={orbi}>{`DEMOMETER 1/${negK} · SELECTED FROM ${negK}`}</text>}
+      {captions && <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.de}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>SELECTION BORNE FROM ORIGIN</text>}
+    </g>
+  );
+}
+
+// MODE 1 — DYADIC MUXAMETER: mirrors the Demometer (M = 2^(N+1) at every
+// station); separates only at N >= 1, where the Dyadic (the 2nd Diameter)
+// introduces the connecting edge — each sector gains the chord that does NOT
+// extend to the arc: the triangles. At N <= 0 it is exactly the same as the
+// Demometer (the arc is still a line, and is valid; no 3rd vertex placeable).
+function BDMuxameterViz({ N }) {
+  const cx = 120, cy = 120, R = 80;
+  const orbi = "'Orbitron', sans-serif";
+
+  // N >= 1 → the Dyadic introduced: M triangles — sector + connecting edge
+  if (N >= 1) {
+    const M = Math.pow(2, N + 1);
+    const verts = [];
+    for (let k = 0; k < M; k++) {
+      const a = (2 * PI * k) / M - PI / 2;
+      verts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+    }
+    const tris = verts.map((v, k) => {
+      const w = verts[(k + 1) % M];
+      return `M ${cx},${cy} L ${v[0]},${v[1]} L ${w[0]},${w[1]} Z`;
+    });
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke={`${C.mx}33`} strokeWidth={1} />
+        {tris.map((d, i) => <path key={`t${i}`} d={d} fill={`${C.mx}22`} stroke={`${C.mx}55`} strokeWidth={0.8} />)}
+        <polygon points={verts.map(v => v.join(",")).join(" ")} fill="none" stroke={C.mx} strokeWidth={2} />
+        <circle cx={cx} cy={cy} r={3} fill={C.mx} />
+        <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.mx} fontSize="9" fontWeight="900" fontFamily={orbi}>{`${M} MUXAMETERS · M = 2^(${N}+1)`}</text>
+        <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.mx}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>SECTOR + CONNECTING EDGE — THE DYADIC</text>
+      </g>
+    );
+  }
+
+  // N = 0 → 2 Muxameters, the two halves; no 3rd vertex placeable.
+  // Vertical divider — the same drawn Diameter as the Demometer's Pair.
+  if (N === 0) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={R} fill={`${C.mx}22`} stroke={C.mx} strokeWidth={2} />
+        <line x1={cx} y1={cy - R} x2={cx} y2={cy + R} stroke={C.mx} strokeWidth={2} />
+        <circle cx={cx} cy={cy} r={3} fill={C.mx} />
+        <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.mx} fontSize="8" fontWeight="900" fontFamily={orbi}>2 MUXAMETERS · M = 2^(0+1) · THE TWO HALVES</text>
+        <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.am}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>NO 3RD VERTEX — THE ARC IS THE VALID LINE</text>
+      </g>
+    );
+  }
+
+  // N = -1, -2 → exactly the same as the Demometer (no internal triangle
+  // drawable: the whole Face has no legs; the half's edge would BE the
+  // Diameter itself)
+  if (N >= -2) {
+    const negBadge = N === -1 ? "1" : "1/2";
+    return (
+      <g>
+        <BDDemometerViz N={N} captions={false} />
+        <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.mx} fontSize="9" fontWeight="900" fontFamily={orbi}>{`MUXAMETER ${negBadge} · SAME AS THE DEMOMETER`}</text>
+        <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.mx}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>THE ARC IS THE VALID LINE</text>
+      </g>
+    );
+  }
+
+  // N <= -3 → the same means, but the selected Face as the Muxameter is
+  // the INTERNAL TRIANGLE to that Demometer. Face K/2 matches the
+  // Demometer's LEFT-side selection (no side-jump from -2).
+  const negK = Math.pow(2, -N - 1);
+  const negDiameters = Math.pow(2, -N - 2);
+  const ta1 = (2 * PI * (negK / 2)) / negK - PI / 2;
+  const ta2 = (2 * PI * (negK / 2 + 1)) / negK - PI / 2;
+  const tv1 = [cx + R * Math.cos(ta1), cy + R * Math.sin(ta1)];
+  const tv2 = [cx + R * Math.cos(ta2), cy + R * Math.sin(ta2)];
+  return (
+    <g>
+      <BDCircle cx={cx} cy={cy} r={R} diameters={negDiameters} highlight={null} />
+      <path d={`M ${cx},${cy} L ${tv1[0]},${tv1[1]} L ${tv2[0]},${tv2[1]} Z`} fill={`${C.mx}55`} stroke={C.mx} strokeWidth={1.5} />
+      <line x1={tv1[0]} y1={tv1[1]} x2={tv2[0]} y2={tv2[1]} stroke={C.mx} strokeWidth={2.5} />
+      <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.mx} fontSize="9" fontWeight="900" fontFamily={orbi}>{`MUXAMETER 1/${negK} · THE INTERNAL TRIANGLE`}</text>
+      <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.mx}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>THE TRIANGLE WITHIN THE SELECTED FACE</text>
+    </g>
+  );
+}
+
+// MODE 3 — DYADIC DIAMETER (single circle; Diameter folds into Radius at 0−N)
+function BDDiameterViz({ N }) {
+  const cx = 120, cy = 120, R = 80;
+  const orbi = "'Orbitron', sans-serif";
+
+  // Shared circle outline
+  const circleEl = <circle cx={cx} cy={cy} r={R} fill="none" stroke={`${C.di}33`} strokeWidth={1} />;
+  const kentron = <circle cx={cx} cy={cy} r={3} fill={C.di} />;
+
+  if (N === 0) {
+    // The dual reading held at once: 1 Diameter DRAWN (the singular
+    // through-measure, the Viète seed) anor UNDRAWN (the Entire Manifold, dashed)
+    return (
+      <g>
+        {circleEl}
+        <circle cx={cx} cy={cy} r={R} fill={`${C.di}0d`} stroke={`${C.di}66`} strokeWidth={1.5} strokeDasharray="4 4" />
+        <line x1={cx - R} y1={cy} x2={cx + R} y2={cy} stroke={C.di} strokeWidth={2.5} />
+        {kentron}
+        <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.di} fontSize="9" fontWeight="900" fontFamily={orbi}>1 DIAMETER · DRAWN ANOR UNDRAWN</text>
+        <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.di}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>THE ENTIRE MANIFOLD</text>
+      </g>
+    );
+  }
+
+  if (N > 0) {
+    // 2^N diameters radiating through Kentron (polygon-style, matches Section I)
+    const dCount = Math.pow(2, N);
+    const lines = [];
+    for (let i = 0; i < dCount; i++) {
+      const a = PI * i / dCount - PI / 2;
+      lines.push(
+        <line key={`d${i}`}
+          x1={cx + R * Math.cos(a)} y1={cy + R * Math.sin(a)}
+          x2={cx - R * Math.cos(a)} y2={cy - R * Math.sin(a)}
+          stroke={C.di} strokeWidth={1.5} opacity={0.85} />
+      );
+    }
+    return (
+      <g>
+        {circleEl}
+        {lines}
+        {kentron}
+        <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.di} fontSize="10" fontWeight="900" fontFamily={orbi}>{`${dCount} DIAMETERS · Dia = 2^${N}`}</text>
+      </g>
+    );
+  }
+
+  // N < 0: the uniform fold D = 2^N — the stepping starts EARLY at −1 (the Radius)
+  // Toward 9 o'clock for visual clarity (left direction)
+  // At N=-1: full radius (1/2 D); N=-2: 1/4 D; N=-3: 1/8 D
+  const absN = -N; // 1, 2, 3...
+  const fraction = 1 / Math.pow(2, absN); // -1 → 1/2, -2 → 1/4, -3 → 1/8
+  const lineLen = R * fraction * 2;  // at -1, lineLen = R; at -2, R/2; at -3, R/4
+  const x2 = cx - lineLen;
+  const label = absN === 1 ? "1/2 D = RADIUS · PRE-ORIGIN" : `1/${Math.pow(2, absN)} D · FOLDED INWARD`;
+  const sub = absN === 1 ? "KENTRON → PERIMETER · WITHIN 1 DEMO ANOR MUXA" : "THE FOLD TOWARD KENTRON";
+
+  return (
+    <g>
+      {circleEl}
+      {/* At -1 the single Demometer anor Muxameter (faint de Face) holds the
+          Radius within it: the last means of similarity between the Measures. */}
+      {absN === 1 && (
+        <circle cx={cx} cy={cy} r={R} fill={`${C.de}14`} stroke={`${C.de}44`} strokeWidth={1} />
+      )}
+      {/* Half-diameter from Kentron outward toward 9 o'clock */}
+      <line x1={cx} y1={cy} x2={x2} y2={cy} stroke={C.di} strokeWidth={3} />
+      {/* Subtle full-diameter reference (faint) at N=-1 only, to show the Radius IS half */}
+      {absN === 1 && (
+        <line x1={cx - R} y1={cy} x2={cx + R} y2={cy} stroke={`${C.di}22`} strokeWidth={1} strokeDasharray="3 3" />
+      )}
+      {kentron}
+      <circle cx={x2} cy={cy} r={2.5} fill={C.di} />
+      <text x={cx} y={cy - R - 8} textAnchor="middle" fill={C.di} fontSize="9" fontWeight="900" fontFamily={orbi}>{label}</text>
+      <text x={cx} y={cy + R + 18} textAnchor="middle" fill={`${C.di}cc`} fontSize="8" fontWeight="700" fontFamily={orbi}>{sub}</text>
+    </g>
+  );
+}
+
+// BDViz — mode-dispatched visualization wrapper
+function BDViz({ N, mode }) {
+  if (mode === "muxameter") return <BDMuxameterViz N={N} />;
+  if (mode === "diameter") return <BDDiameterViz N={N} />;
+  return <BDDemometerViz N={N} />;
+}
+
+function BidirectionalDyad() {
+  const [N, setN] = useState(0);
+  const [mode, setMode] = useState("muxameter");
+  const absN = N < 0 ? -N : N;
+
+  let muxLabel, diameterLabel, demometerLabel;
+  // Dia = 2^N (the count of drawn Diameters — named Dia to stand clear of d,
+  // the diameter length) · M = 2^(N+1) for BOTH the Demometer and the
+  // Muxameter — the Muxameter MIRRORS the Demometer at every station and
+  // separates only at N >= 1, where the Dyadic introduces the connecting edge.
+  if (N === 0) {
+    diameterLabel = "1"; demometerLabel = "2";
+  } else if (N > 0) {
+    diameterLabel = String(Math.pow(2, N));
+    demometerLabel = String(Math.pow(2, N + 1));
+  } else {
+    diameterLabel = `1/${Math.pow(2, absN)}`;
+    demometerLabel = N === -1 ? "1" : `1/${Math.pow(2, absN - 1)}`;
+  }
+  muxLabel = demometerLabel;
+
+  const isOrigin = N === 0;
+  const isWithin = N < 0;
+  const isFrom = N > 0;
+
+  // Per-mode descriptions — each mode surfaces a distinct proof for the same N range
+  const descByMode = {
+    muxameter: {
+      "-3": { t: "N = −3 · Muxameter 1/4 · The Internal Triangle",
+              b: "M = 1/4 — the same means as the Demometer: one circle, four potential Faces, one selected. But the selected Face AS the Muxameter is the internal triangle to that Demometer — legs plus the connecting edge, not extending to the arc." },
+      "-2": { t: "N = −2 · Muxameter 1/2 · Same as the Demometer",
+              b: "M = 1/2 — same as the Demometer: the half's connecting edge would BE the Diameter itself, so no internal triangle can form; the arc stands as its valid line." },
+      "-1": { t: "N = −1 · Muxameter 1 · The Whole Face",
+              b: "M = 2^0 = 1. Both the Demometer and the Muxameter here represent the Whole Face — with the Radius (1/2 a Diameter) shown within it: the last means of similarity between the Measures. The slightest difference — the endpoint of the legs holds an edge — but with no Diameter drawn there is nothing to place a 3rd vertex against: the arc is the valid line." },
+      "0":  { t: "N = 0 · Muxameter 2 · The Two Halves",
+              b: "M = 2^(0+1) = 2 — two Muxameters, the two halves of the circle, like the Demometer. The fundamental issue: what is the extra vertex? Without drawing the next Diameter there is no placement for the 3rd vertex on either side to form the triangle. No extra line can be drawn outside the arc — and the arc is still a line, and is valid. This relays to Viète directly: the product begins at the square (M = 4), where the connecting edge first stands apart from the arc." },
+      "1":  { t: "N = +1 · Muxameter 4 · The Triangles of the Dyadic",
+              b: "M = 2^(1+1) = 4. The 2nd Diameter — the Dyadic — is introduced, and the Muxameter separates from the Demometer: each sector gains its connecting edge, the chord that does not extend to the arc. Four triangles. The additional measure IS Viète's M — π = M·s_M/2." },
+      "2":  { t: "N = +2 · Muxameter 8 · The Triangles Compound",
+              b: "M = 8 triangles — sector plus connecting edge, the polygon closing around the Face. Face-read integrates; edge-read traces the perimeter — the edges grow more precise around the Face as M doubles." },
+      "3":  { t: "N = +3 · Muxameter 16 · Toward the Limit",
+              b: "M = 16. The integrated measure expands as the Face holds more triangles at once. To the limit, edge and legs fold toward one line — where they become indistinguishable is the Bounding Limit of Measurement (Section IV)." }
+    },
+    demometer: {
+      "-3": { t: "N = −3 · Demometer 1/4 · The Quarter Selected",
+              b: "One circle — no pairing needed. Two Diameters set 4 potential Demometers; the quarter sector is selected, the 3 other Faces unselected. In the negatives we are selecting specific Faces — the bearing counts up from Origin (2 Diameters) even as the selection deepens." },
+      "-2": { t: "N = −2 · Demometer 1/2 · Selection Begins",
+              b: "One circle. One Diameter. Two potential Demometers — 1/2 selected from the potential. The Demometer is reliant on a Diameter once selection begins — borne by 1 Diameter, the bearing offset from Origin." },
+      "-1": { t: "N = −1 · Demometer 1 · The Whole Face",
+              b: "1 Demometer — the Whole Face drawn: a Demometer anor a Manifold. In the Demometer's scope no Diameter need be drawn — the arc itself, the total circle's edge, is every point a Muxameter or the legs of a Demometer can trace. The Radius — 1/2 a Diameter — stays shown WITHIN the Face: the last means of similarity between the Measures at −1. Staggered by N+1, each measuring itself: the divergence that proves Diameter and Demometer are Different Measures." },
+      "0":  { t: "N = 0 · Demometer 2 · ORIGIN",
+              b: "The Pair as count — two Demometers cut by the one drawn Diameter (M = 2^(0+1) = 2). The Demometer is the classic sector, extending to the arc; the Muxameter mirrors its count — two halves — whose connecting edge awaits the Dyadic." },
+      "1":  { t: "N = +1 · Demometer 4 · Count Outward",
+              b: "One Pair of Diameters generates 4 Demometers. Demometers = 2 × Diameters — the ladders share." },
+      "2":  { t: "N = +2 · Demometer 8 · Count Outward",
+              b: "Two Pairs of Diameters generate 8 Demometers. The polygon begins to approach the circle." },
+      "3":  { t: "N = +3 · Demometer 16 · Count Outward",
+              b: "Four Pairs of Diameters generate 16 Demometers. Outward count compounds toward +∞." }
+    },
+    diameter: {
+      "-3": { t: "N = −3 · 1/8 Diameter · Folded Inward",
+              b: "2^−3 = 1/8 of a Diameter from Kentron outward. The fold compounds toward Kentron — the uniform law D = 2^N holds at every station." },
+      "-2": { t: "N = −2 · 1/4 Diameter · Folded Inward",
+              b: "2^−2 = 1/4 of a Diameter. Each step at 0 − N halves the reach toward Kentron — the Diameter folds back into the geometric ground from which it was drawn." },
+      "-1": { t: "N = −1 · 1/2 Diameter = RADIUS · The Pre-Origin",
+              b: "The fold starts early: 2^−1 = 1/2 — the Traditional Radius, Kentron to Perimeter, exactly half a Diameter — held WITHIN 1 Demometer anor Muxameter (M = 2^(−1)+1 = 1): the last means of similarity between the Measures. From 1/4 onward the circle as a measurement no longer applies to the fold. Pre-Origin is the first fold; the singular drawn Diameter lives at Origin." },
+      "0":  { t: "N = 0 · 1 Diameter · DRAWN ANOR UNDRAWN — THE ENTIRE MANIFOLD",
+              b: "2^0 = 1 — the multiplicative identity held two ways: 1/1 undrawn (the Entire Manifold) anor 1 Diameter drawn (the singular through-measure, the unit itself). The drawn reading seeds Viète — the flattened 2-gon, perimeter 2D, π ≈ 2. No Pair at 1: the First Pair arrives at 2^1 = 2. From here the Diameter doubles outward (+N) or folds toward Kentron (−N)." },
+      "1":  { t: "N = +1 · 2 Diameters · 1st Order from Origin",
+              b: "Two Diameters cross through Kentron. The Pair becomes Two Pairs of Demometers. M = 2D — ladders share." },
+      "2":  { t: "N = +2 · 4 Diameters · 2nd Order from Origin",
+              b: "Four Diameters radiate through Kentron. The polygon-style structure matches Section I behavior." },
+      "3":  { t: "N = +3 · 8 Diameters · 3rd Order from Origin",
+              b: "Eight Diameters compound outward. Polygon approaches circle — 2^N count toward +∞." }
+    }
+  };
+
+  const d = descByMode[mode][String(N)];
+  const titleColor = isOrigin ? C.am : (isWithin ? C.within : C.from);
+
+  const orbi = "'Orbitron', sans-serif";
+  const mono = "'IBM Plex Mono', monospace";
+
+  // Mode metadata — reinforces Tri-Ladder colors
+  const modes = [
+    { key: "muxameter", label: "Dyadic Muxameter", color: C.mx },
+    { key: "demometer", label: "Dyadic Demometer", color: C.de },
+    { key: "diameter",  label: "Dyadic Diameter",  color: C.di }
+  ];
+
+  return (
+    <div>
+      <STitle num="II" title="The Bidirectional Dyadic Diameter" sub="Builds on Section I (the Dyadic Diameter Proof). Extends the Pre-Origin tile from position to direction: N continues into −∞ just as it extends to +∞. Origin is not a floor — it is a fulcrum. Three measures coexist here — the same convention holds for each (at its own Origin, each is 1 of itself) — but the dynamic is viewed THROUGH the Dyadic Diameter: the N selection pertains to ITS count. Switch modes to see each surface its own proof." />
+
+      {/* Tri-Mode Sub-Menu — pill buttons matching Pewter Ladder aesthetic */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 12 }}>
+        {modes.map(m => {
+          const active = mode === m.key;
+          return (
+            <button key={m.key} onClick={() => setMode(m.key)} style={{
+              background: active
+                ? `linear-gradient(160deg, ${m.color}40, ${m.color}20)`
+                : `linear-gradient(160deg, ${m.color}0d, ${C.bg})`,
+              border: active ? `1.5px solid ${m.color}` : `1px solid ${m.color}44`,
+              borderRadius: 999,
+              padding: "8px 10px",
+              cursor: "pointer",
+              fontFamily: orbi,
+              fontSize: 10,
+              fontWeight: 900,
+              color: active ? m.color : `${m.color}cc`,
+              letterSpacing: "1px",
+              textAlign: "center"
+            }}>{m.label}</button>
+          );
+        })}
+      </div>
+
+      {/* Active mode label */}
+      <div style={{ textAlign: "center", fontSize: 9, fontFamily: orbi, fontWeight: 700, letterSpacing: "1.5px", color: C.tm, marginBottom: 6 }}>
+        ACTIVE PROOF · <span style={{ color: modes.find(m => m.key === mode).color }}>{modes.find(m => m.key === mode).label.toUpperCase()}</span>
+      </div>
+
+      <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 280, display: "block", margin: "0 auto" }}>
+        <BDViz N={N} mode={mode} />
+      </svg>
+
+      {/* Stepper with ∞ caps — N is the Dyadic Diameter's count */}
+      <div style={{ textAlign: "center", fontSize: 8, fontFamily: orbi, fontWeight: 700, letterSpacing: "1px", color: C.di, margin: "12px 0 2px" }}>
+        N — OF THE DYADIC DIAMETER
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4, margin: "0 0 6px", flexWrap: "wrap" }}>
+        <span style={{ color: C.within, fontSize: 13, fontFamily: orbi, fontWeight: 900, marginRight: 6 }}>−∞</span>
+        {[-3, -2, -1, 0, 1, 2, 3].map(i => {
+          const baseColor = i === 0 ? C.am : (i < 0 ? C.within : C.from);
+          const active = N === i;
+          return (
+            <button key={i} onClick={() => setN(i)} style={{
+              width: 36, height: 36, borderRadius: 8,
+              background: active ? baseColor : "transparent",
+              color: active ? C.bg : baseColor,
+              border: `1.5px solid ${active ? baseColor : `${baseColor}44`}`,
+              fontFamily: orbi, fontSize: 11, fontWeight: 900, cursor: "pointer"
+            }}>{i > 0 ? `+${i}` : String(i)}</button>
+          );
+        })}
+        <span style={{ color: C.from, fontSize: 13, fontFamily: orbi, fontWeight: 900, marginLeft: 6 }}>+∞</span>
+      </div>
+
+      {/* Direction tag */}
+      <div style={{ textAlign: "center", margin: "6px 0 12px", fontSize: 10, fontFamily: orbi, fontWeight: 700, letterSpacing: "1px" }}>
+        {isOrigin && <span style={{ color: C.am }}>◆ ORIGIN — THE WHOLE AS 2⁰ = 1</span>}
+        {isWithin && <span style={{ color: C.within }}>← WITHIN ORIGIN · INTERIOR HALVING</span>}
+        {isFrom && <span style={{ color: C.from }}>FROM ORIGIN · OUTWARD SCALING →</span>}
+      </div>
+
+      {/* Tri-Ladder — in the negative range the cross-Measure card dims to a
+          FLAG: its value shown, read from the other side, per each mode's
+          specifics (at -1 the flag is the last similarity). */}
+      {(() => {
+        // Cards stand FULLY visible through -1 — the last similarity; the
+        // flag fires from -2, where the graphic itself shows the lack of
+        // similarity.
+        const cardFlagged = (key) => N < -1 && (mode === "diameter" ? key !== "diameter" : key === "diameter");
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginTop: 6 }}>
+            <div style={{ background: `${C.di}11`, border: `1px solid ${C.di}33`, borderRadius: 8, padding: 8, textAlign: "center", opacity: cardFlagged("diameter") ? 0.45 : 1, transition: "opacity 0.2s" }}>
+              <div style={{ fontSize: 8, color: C.di, fontFamily: orbi, fontWeight: 700 }}>DIAMETER</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: C.tx, fontFamily: orbi }}>{diameterLabel}</div>
+              <div style={{ fontSize: 8, color: C.tm }}>{cardFlagged("diameter") ? "the fold — beyond the circle" : (N === -1 ? "Dia = 2^N · the last similarity" : (N === 0 ? "Dia = 2^N · drawn anor undrawn" : "Dia = 2^N"))}</div>
+            </div>
+            <div style={{ background: `${C.de}11`, border: `1px solid ${C.de}33`, borderRadius: 8, padding: 8, textAlign: "center", opacity: cardFlagged("demometer") ? 0.45 : 1, transition: "opacity 0.2s" }}>
+              <div style={{ fontSize: 8, color: C.de, fontFamily: orbi, fontWeight: 700 }}>DEMOMETER</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: C.tx, fontFamily: orbi }}>{demometerLabel}</div>
+              <div style={{ fontSize: 8, color: C.tm }}>{cardFlagged("demometer") ? "selecting the circle — apart from the fold" : (N === 0 ? "M = 2^(N+1) · the Pair" : (N === -1 ? "M = 2^(N+1) · the Face" : "M = 2^(N+1)"))}</div>
+            </div>
+            <div style={{ background: `${C.mx}11`, border: `1px solid ${C.mx}33`, borderRadius: 8, padding: 8, textAlign: "center", opacity: cardFlagged("muxameter") ? 0.45 : 1, transition: "opacity 0.2s" }}>
+              <div style={{ fontSize: 8, color: C.mx, fontFamily: orbi, fontWeight: 700 }}>MUXAMETER</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: C.tx, fontFamily: orbi }}>{muxLabel}</div>
+              <div style={{ fontSize: 8, color: C.tm }}>{cardFlagged("muxameter") ? "selecting the circle — apart from the fold" : (N >= 1 ? "M = 2^(N+1) · triangles" : (N === 0 ? "M = 2^(N+1) · two halves" : "M = 2^(N+1) · as Demometer"))}</div>
+            </div>
+          </div>
+        );
+      })()}
+      {N < 0 && (
+        <div style={{ textAlign: "center", fontSize: 8, color: C.tm, marginTop: 6, lineHeight: 1.5 }}>
+          The cards stand full through −1 — the last similarity. From −2 the dimmed card is the FLAG: the{" "}
+          <span style={{ color: C.di }}>Diameter</span> a Different Measure in the range, while the{" "}
+          <span style={{ color: C.de }}>Demometer</span> anor <span style={{ color: C.mx }}>Muxameter</span> share a part of their
+          Integrated Measure — the Muxameter is a REFINEMENT of the Demometer: an extra Diameter of measurement
+          at the endpoints of either Radius forms the outer edge, the complete Integrated Measure.
+        </div>
+      )}
+
+      {/* The Measure of Pairs — the exponent is the count; the base 2 determines the Pair */}
+      <div style={{ background: `${C.am}08`, border: `1px solid ${C.am}33`, borderRadius: 10, padding: 10, marginTop: 10, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
+        <span style={{ color: C.am, fontWeight: 700, fontFamily: orbi, fontSize: 9, letterSpacing: "1px" }}>THE MEASURE OF PAIRS</span><br />
+        <span style={{ color: C.tm }}>In</span> <span style={{ color: C.am, fontWeight: 700 }}>2ᴺ</span> <span style={{ color: C.tm }}>the EXPONENT is the count — N counts the Dyadic steps from Origin.</span><br />
+        <span style={{ color: C.tm }}>The BASE</span> <span style={{ color: C.am, fontWeight: 700 }}>2</span> <span style={{ color: C.tm }}>is the count that determines the PAIR — each step doubles; the Pair is the base's work.</span><br />
+        <span style={{ color: C.tm, fontSize: 9.5 }}>At 0 the exponent has counted nothing yet: each Measurement stands prior to its Pair as 1 of itself (2⁰ = 1). Viewed through the Dyadic Diameter's N, the ladders stagger — <span style={{ color: C.di }}>Dia = 2ᴺ</span> · <span style={{ color: C.mx }}>M = 2ᴺ⁺¹</span>.</span>
+      </div>
+
+      {/* Per-N description */}
+      <div style={{ background: C.sf, borderRadius: 10, padding: 12, marginTop: 10, textAlign: "center",
+        fontFamily: mono, fontSize: 11, color: C.tm, lineHeight: 1.75 }}>
+        <div style={{ color: titleColor, fontWeight: 700, marginBottom: 4 }}>{d.t}</div>
+        <div>{d.b}</div>
+      </div>
+
+      {/* WITHIN vs FROM */}
+      <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={{ background: `${C.within}0a`, border: `1px solid ${C.within}44`, borderRadius: 10, padding: 10 }}>
+          <div style={{ fontSize: 9, color: C.within, fontFamily: orbi, fontWeight: 700, letterSpacing: "1px", marginBottom: 6 }}>0 − N · WITHIN ORIGIN</div>
+          <div style={{ fontSize: 9.5, color: C.tm, lineHeight: 1.65 }}>
+            Measure of <span style={{ color: C.within, fontWeight: 700 }}>parts within Origin</span>.<br />
+            The Diameter halves toward Kentron.<br />
+            <span style={{ fontFamily: mono }}>1, ½, ¼, ⅛, …</span><br />
+            <span style={{ color: C.within }}>Selection from the Pair.</span>
+          </div>
+        </div>
+        <div style={{ background: `${C.from}0a`, border: `1px solid ${C.from}44`, borderRadius: 10, padding: 10 }}>
+          <div style={{ fontSize: 9, color: C.from, fontFamily: orbi, fontWeight: 700, letterSpacing: "1px", marginBottom: 6 }}>0 + N · FROM ORIGIN</div>
+          <div style={{ fontSize: 9.5, color: C.tm, lineHeight: 1.65 }}>
+            Measure of <span style={{ color: C.from, fontWeight: 700 }}>scale from Origin</span>.<br />
+            The Diameter doubles outward.<br />
+            <span style={{ fontFamily: mono }}>1, 2, 4, 8, …</span><br />
+            <span style={{ color: C.from }}>Count as emanation.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bidirectional Pewter Ladder with ∞ caps */}
+      <div style={{
+        marginTop: 12,
+        background: `linear-gradient(135deg, ${C.am}10, ${C.de}06)`,
+        border: `1px solid ${C.am}44`,
+        borderRadius: 12,
+        padding: "12px 10px"
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 10 }}>
+          <div style={{ fontSize: 9, color: C.am, fontFamily: orbi, fontWeight: 700, letterSpacing: "1.5px" }}>BIDIRECTIONAL EXPONENT LADDER</div>
+          <div style={{ fontSize: 9, color: C.tm, marginTop: 3 }}>Bounded window into infinity · Muxameter regular through Origin</div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ color: C.within, fontFamily: orbi, fontSize: 14, fontWeight: 900, padding: "0 2px" }}>∞</div>
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+            {[-3, -2, -1, 0, 1, 2, 3].map(i => {
+              const baseColor = i === 0 ? C.am : (i < 0 ? C.within : C.from);
+              const active = i === N;
+              const absI = i < 0 ? -i : i;
+              const lab = i === 0 ? "1" : (i > 0 ? String(Math.pow(2, i)) : `1/${Math.pow(2, absI)}`);
+              return (
+                <div key={i} onClick={() => setN(i)} style={{
+                  background: active ? `linear-gradient(160deg, ${baseColor}40, ${baseColor}20)` : `linear-gradient(160deg, ${baseColor}0d, ${C.bg})`,
+                  border: active ? `1.5px solid ${baseColor}` : `1px solid ${baseColor}33`,
+                  borderRadius: 8,
+                  padding: "6px 2px",
+                  textAlign: "center",
+                  cursor: "pointer"
+                }}>
+                  <div style={{ fontSize: 7, color: active ? baseColor : C.tm, fontFamily: orbi, fontWeight: 700, marginBottom: 2 }}>
+                    N = {i > 0 ? `+${i}` : i}
+                  </div>
+                  <div style={{ fontSize: 11, color: active ? C.tx : `${C.tx}99`, fontWeight: 900, fontFamily: orbi }}>{lab}</div>
+                  <div style={{ fontSize: 7, color: C.tm, marginTop: 2 }}>2^{i}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ color: C.from, fontFamily: orbi, fontSize: 14, fontWeight: 900, padding: "0 2px" }}>∞</div>
+        </div>
+
+        <div style={{ marginTop: 9, padding: "6px 8px", background: `${C.bg}aa`, borderRadius: 6, border: `1px solid ${C.am}22`, textAlign: "center", fontSize: 9, color: C.tm, lineHeight: 1.65 }}>
+          <span style={{ color: C.am, fontWeight: 700 }}>At N = 0, 2⁰ = 1.</span> Both ladders meet through the Pair as Whole.<br />
+          The exponent ladder is perfectly linear across the bidirectional range. Dia = 2ᴺ · M = 2ᴺ⁺¹ — below +1 the Muxameter matches the Demometer exactly; the connecting edge first stands apart from the arc at the square.
+        </div>
+      </div>
+
+      {/* Different Measure Proof */}
+      <div style={{ marginTop: 12, background: `${C.di}08`, border: `1px solid ${C.di}33`, borderRadius: 10, padding: 12 }}>
+        <div style={{ fontSize: 9, color: C.di, fontFamily: orbi, fontWeight: 700, letterSpacing: "1px", marginBottom: 8, textAlign: "center" }}>
+          THE DIFFERENT MEASURE PROOF
+        </div>
+        <div style={{ fontSize: 10, color: C.tx, lineHeight: 1.75, textAlign: "center" }}>
+          <span style={{ color: C.de }}>Dyadic Demometer</span> and <span style={{ color: C.di }}>Dyadic Diameter</span> diverge at <span style={{ color: C.within, fontWeight: 700 }}>0 − N</span> — staggered by N+1, each measuring ITSELF.<br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}><span style={{ color: C.within, fontWeight: 700 }}>−1 is the Point of Divergence</span>: mapping the same equation onto each, M = 2<sup>(−1)+1</sup> = 1 while Dia = 2<sup>−1</sup> = 1/2 — <span style={{ color: C.di }}>the Radius</span> held WITHIN a single <span style={{ color: C.de }}>Demometer</span> anor <span style={{ color: C.mx }}>Muxameter</span>. Held within, it still bears on the circle itself: the LAST means of similarity between the Measures.</span><br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}>From −2 the similarity is lost — 1/4 of a Diameter against 1/2 as M — and the circle as a measurement no longer applies to the fold: the Diameter can be halved without end, never measuring the circle. The Demometer anor Muxameter keep selecting internal sectors OF the circle. Unlike measures, measuring themselves — proving they are Different Measures.</span>
+          <br /><br />
+          They share a Diameter at <span style={{ color: C.from, fontWeight: 700 }}>0 + N (N ≥ 1)</span>:<br />
+          <span style={{ color: C.mx, fontFamily: mono }}>Demometers = 2 × Diameters</span><br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}>Sharing the Dyadic ladder by exponent + 1.</span>
+          <br /><br />
+          The <span style={{ color: C.mx, fontWeight: 700 }}>Muxameter</span> integrates both —<br />
+          finding proportion <span style={{ color: C.within }}>within</span> AND scale <span style={{ color: C.from }}>from</span>.
+          <br /><br />
+          A <span style={{ color: C.de }}>Demometer</span> must always have a <span style={{ color: C.di }}>Diameter</span>.<br />
+          A Diameter may not be drawn — and is then <span style={{ color: C.di, fontWeight: 700 }}>the Entire Manifold</span>.<br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}>The measure of a Circle is by Diameters — the working measurement informing Different Measures within the Circle.</span>
+          <br /><br />
+          A <span style={{ color: C.de }}>Demometer</span> is the classic sector; a <span style={{ color: C.mx }}>Muxameter</span> is that sector with the additional measure —<br />
+          the connecting edge of the polygon — but only outside the range of 0.<br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}>The additional measure is what relays to Viète's M. <span style={{ color: C.di }}>Dia = 2ᴺ</span> · <span style={{ color: C.mx }}>M = 2ᴺ⁺¹</span>. The Muxameter and Demometer share a part of their Integrated Measure — the Muxameter is a REFINEMENT of the Demometer: an extra Diameter of measurement applied at the endpoints of either Radius forms the outer edge — a complete Integrated Measure.</span>
+          <br /><br />
+          In the negative ranges the divergence completes: the <span style={{ color: C.di }}>Dyadic Diameter</span> measures the LENGTH of the Diameter —<br />
+          the fold, needing no bearing — while the <span style={{ color: C.de }}>Demometer</span> and the <span style={{ color: C.mx }}>Muxameter</span> still need the bearing:<br />
+          drawn Diameters set their potential Faces, and the offset is FROM ORIGIN.<br />
+          <span style={{ color: C.tm, fontSize: 9.5 }}>In the negatives the bearing Diameters stand at N−1 against the Demometer's N+1 — rather than the positive range's plain N: 1 Diameter bears the 2 potential Faces at −2; 2 bear the 4 at −3, counting up from Origin as the selection deepens. Current mathematics lacks the language for this relationship — it is named here because the Dyadic requires it.</span>
+        </div>
+      </div>
+
+      {/* Closing */}
+      <div style={{ marginTop: 12, background: `${C.mx}08`, border: `1px solid ${C.mx}33`, borderRadius: 12, padding: 14, textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: C.mx, fontFamily: orbi, fontWeight: 700, letterSpacing: "1.5px", marginBottom: 8 }}>
+          THE INTEGRATED MEASURE
+        </div>
+        <div style={{ fontSize: 11, color: C.tx, lineHeight: 1.85 }}>
+          <span style={{ color: C.tm }}>The Dyadic is a</span> <span style={{ color: C.am, fontWeight: 700 }}>Pair</span><span style={{ color: C.tm }}>. At</span> <span style={{ color: C.am, fontWeight: 700 }}>0</span> <span style={{ color: C.tm }}>you stand at the PRIOR count of a Pair for the measurement —</span><br />
+          <span style={{ color: C.tm }}>and each Measurement at 0, prior to its Pair, represents</span> <span style={{ color: C.from, fontWeight: 700 }}>1 of itself</span><span style={{ color: C.tm }}>:</span><br />
+          <span style={{ color: C.di }}>1 Diameter</span> · <span style={{ color: C.de }}>1 Demometer</span> · <span style={{ color: C.mx }}>1 Muxameter</span><span style={{ color: C.tm }}>, anor</span> <span style={{ color: C.am }}>1 Manifold</span>.<br />
+          <span style={{ color: C.tm, fontSize: 10 }}>The divergence between those origins is why the proof leans on the Dyadic Diameter for representation — the N selection pertains to ITS count.</span><br /><br />
+          <span style={{ color: C.mx }}>The Dyadic Muxameter is the Integrated Measure</span><br />
+          <span style={{ color: C.tm, fontSize: 10 }}>
+            of finding a Dyadic proportion within Origin<br />
+            and Dyadic scale from Origin —<br />
+            reaching toward infinity in either measure.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION III: SECTOR INSPECTOR ───
 function SectorInspector() {
   const [n, setN] = useState(0);
   const D = Math.pow(2, n), M = 2 * D;
@@ -250,7 +878,7 @@ function SectorInspector() {
   const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
   return (
     <div>
-      <STitle num="II" title="The Finite Case" sub="At every finite order, sectors are Demometers — not Muxameters" />
+      <STitle num="III" title="The Finite Case" sub="At every finite order, sectors are Demometers — not Muxameters" />
       <svg viewBox="0 0 240 240" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.sl} strokeWidth={1} />
         {Array.from({ length: D }, (_, i) => {
@@ -286,11 +914,11 @@ function SectorInspector() {
   );
 }
 
-// ─── SECTION III: THE VALIDATING APPROACH ───
+// ─── SECTION IV: THE VALIDATING APPROACH ───
 function ValidatingApproach() {
   const [step, setStep] = useState(1);
   const orders = [
-    { n: 0, M: 2, label: "1st Order", desc: "2 points. 1 through-line. No connecting sides. No internal face. Defines but cannot compute.", canMux: false },
+    { n: 0, M: 2, label: "1st Order", desc: "2 points. 1 through-line. No connecting sides. No internal face. Defines but cannot compute — the N = 0 seed: the drawn Diameter flattened, perimeter 2D, π ≈ 2.", canMux: false },
     { n: 1, M: 4, label: "2nd Order", desc: "4 points. 4 sides. s₄ = √2. The inscribed square. First internal Muxameters form.", canMux: true },
     { n: 2, M: 8, label: "3rd Order", desc: "8 points. 8 sides. Muxameters of Muxameters — a Manifold. Recursion: s = √(2-√(4-s²)).", canMux: true },
     { n: 3, M: 16, label: "4th Order", desc: "16 points. Each prior Muxameter bisected. The nesting deepens.", canMux: true },
@@ -300,7 +928,7 @@ function ValidatingApproach() {
 
   return (
     <div>
-      <STitle num="III" title="The Validating Approach" sub="From the ½ Diametric Dyad — ground up from base, around Archimedes" />
+      <STitle num="IV" title="The Validating Approach" sub="From the Diametric Dyad — ground up from base, around Archimedes" />
 
       {/* Stacked visual: Viète on top, DD beneath */}
       <div style={{ background: C.sf, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
@@ -382,7 +1010,7 @@ function ValidatingApproach() {
       {/* Order description */}
       <div style={{ textAlign: "center", fontSize: 11, lineHeight: 1.7, marginTop: 6 }}>
         <span style={{ color: o.canMux ? C.mx : C.rs, fontWeight: 700 }}>M = {o.M}</span>
-        {o.canMux && <> · <span style={{ color: C.mx }}>{o.M / 2} Muxameters</span> (triangles from center)</>}<br />
+        {o.canMux && <> · <span style={{ color: C.mx }}>{o.M} Muxameters</span> (M center-triangles anor M edges — one integrated Face; π = M·s/2)</>}<br />
         <span style={{ color: C.tm, fontSize: 10 }}>{o.desc}</span>
       </div>
 
@@ -397,11 +1025,32 @@ function ValidatingApproach() {
           Each order is a Muxameter of Muxameters — a Manifold — nesting toward the circle's face.
         </span>
       </div>
+
+      {/* The Bounding Limit of Measurement */}
+      <div style={{ background: `${C.rs}08`, border: `1px solid ${C.rs}33`, borderRadius: 10, padding: 12, marginTop: 12, textAlign: "center",
+        fontSize: 10, color: C.tx, lineHeight: 1.8 }}>
+        <div style={{ fontSize: 9, color: C.rs, fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "1px", marginBottom: 8 }}>THE BOUNDING LIMIT OF MEASUREMENT</div>
+        <span style={{ color: C.tm }}>
+          The circle never degenerates — for any finite M the center-triangle keeps a nonzero apex angle 2π/M and sagitta 1−cos(π/M).
+          Only at M = ∞ does the edge fold flat onto its arc and the same triangle trace back onto itself from the rotating position.
+          The limit is never the geometry's — it is the measurement substrate's.
+        </span><br /><br />
+        <span style={{ color: C.tx }}>Run the recursion s′ = √(2−√(4−s²)) and the substrate forgets the circle at a computable station.</span><br />
+        <span style={{ color: C.tm }}>
+          <span style={{ color: C.rs }}>float64</span>: best at N = 14 (π ≈ 3.14159265481, off 1.2×10⁻⁹); corrupt past 10⁻³ at N = 25; collapses at N = 29 — reporting π as 4, then 0.<br />
+          <span style={{ color: C.rs }}>float32</span>: best at N = 7 (~4 digits); dead by N = 14.
+        </span><br /><br />
+        <span style={{ color: C.tm }}>
+          The floor is the training wheels showing. Reformulate without cancellation — s′ = s/√(2+√(4−s²)) — and the same float64 substrate
+          holds machine precision through N = 25 (error 4×10⁻¹⁶) and never collapses.
+        </span><br />
+        <span style={{ color: C.ac, fontWeight: 700 }}>Same geometry, same substrate — different algorithm. The Bounding Limit is substrate × algorithm, never the circle's Face.</span>
+      </div>
     </div>
   );
 }
 
-// ─── SECTION IV: ORDER OF DIAMETER ───
+// ─── SECTION V: ORDER OF DIAMETER ───
 function OrderOfDiameter() {
   const [shape, setShape] = useState("circle");
   const shapes = {
@@ -413,7 +1062,7 @@ function OrderOfDiameter() {
   const cx = 120, cy = 110;
   return (
     <div>
-      <STitle num="IV" title="Order of Diameter" sub="Shapes classified by how many distinct through-measures they contain" />
+      <STitle num="V" title="Order of Diameter" sub="Shapes classified by how many distinct through-measures they contain" />
       <svg viewBox="0 0 240 220" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
         {shape === "circle" && <g>
           <circle cx={cx} cy={cy} r={75} fill={`${s.c}11`} stroke={s.c} strokeWidth={2} />
@@ -471,13 +1120,13 @@ function OrderOfDiameter() {
   );
 }
 
-// ─── SECTION V: MINIMAL MUXAMETER ───
+// ─── SECTION VI: MINIMAL MUXAMETER ───
 function MinimalMuxameter() {
   const [hv, setHv] = useState(null);
   const ax = 120, ay = 25, bx = 45, by = 165, cu = 195, cy2 = 165;
   return (
     <div>
-      <STitle num="V" title="The Minimal Muxameter" sub="The triangle — minimum composition for an integrated face" />
+      <STitle num="VI" title="The Minimal Muxameter" sub="The triangle — minimum composition for an integrated face" />
       <svg viewBox="0 0 240 200" style={{ width: "100%", maxWidth: 260, display: "block", margin: "0 auto" }}>
         <polygon points={`${ax},${ay} ${bx},${by} ${cu},${cy2}`} fill={`${C.mx}10`} stroke={`${C.mx}44`} strokeWidth={1} />
         <text x={120} y={115} textAnchor="middle" fill={C.mx} fontSize="10" fontWeight="900" fontFamily="'Orbitron', sans-serif" opacity={0.5}>FACE</text>
@@ -529,7 +1178,7 @@ function MinimalMuxameter() {
   );
 }
 
-// ─── SECTION VI: TAXONOMY VS MUXONOMY ───
+// ─── SECTION VIII: TAXONOMY VS MUXONOMY ───
 function TreeVsGraph() {
   const [mode, setMode] = useState("graph");
   const [rotated, setRotated] = useState(false);
@@ -542,7 +1191,7 @@ function TreeVsGraph() {
 
   return (
     <div>
-      <STitle num="VII" title="Taxonomy vs Muxonomy" sub="Taxonomy cannot connect unlike Demometers — no Diameters form, no Muxameters exist" />
+      <STitle num="VIII" title="Taxonomy vs Muxonomy" sub="Taxonomy cannot connect unlike Demometers — no Diameters form, no Muxameters exist" />
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 10 }}>
         {[["tree", "Taxonomy", "#ff4a6b"], ["graph", "Muxonomy", C.mx]].map(([k, l, clr]) => (
           <button key={k} onClick={() => setMode(k)} style={{ background: mode === k ? clr : "transparent", color: mode === k ? C.bg : C.tm, border: `1px solid ${mode === k ? clr : C.sl}`, borderRadius: 6, padding: "6px 14px", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Orbitron', sans-serif" }}>{l}</button>
@@ -698,7 +1347,7 @@ function TreeVsGraph() {
   );
 }
 
-// ─── SECTION VI: CONCEPTUAL SPACE ───
+// ─── SECTION VII: CONCEPTUAL SPACE ───
 function ConceptualSpace() {
   const [hv, setHv] = useState(null);
   const [showMux, setSM] = useState(false);
@@ -728,7 +1377,7 @@ function ConceptualSpace() {
 
   return (
     <div>
-      <STitle num="VI" title="Muxonomy" sub="The complete topology — Demometers composed through Diameters into a Manifold" />
+      <STitle num="VII" title="Muxonomy" sub="The complete topology — Demometers composed through Diameters into a Manifold" />
       <svg viewBox="0 0 330 230" style={{ width: "100%", maxWidth: 340, display: "block", margin: "0 auto" }}>
         {actMux.map((m, i) => {
           const [a, b, c] = m.v.map(v => concepts[v]);
@@ -783,7 +1432,7 @@ function ConceptualSpace() {
 // ─── MAIN ───
 function CircleMuxameter() {
   const [section, setSection] = useState(0);
-  const refs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+  const refs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
   const scrollTo = (i) => { setSection(i); refs[i]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
 
   return (
@@ -841,8 +1490,8 @@ function CircleMuxameter() {
         </div>
       </div>
 
-      {/* Sections I–VII */}
-      {[DyadicDiameterProof, SectorInspector, ValidatingApproach, OrderOfDiameter, MinimalMuxameter, ConceptualSpace, TreeVsGraph].map((Comp, i) => (
+      {/* Sections I–VIII */}
+      {[DyadicDiameterProof, BidirectionalDyad, SectorInspector, ValidatingApproach, OrderOfDiameter, MinimalMuxameter, ConceptualSpace, TreeVsGraph].map((Comp, i) => (
         <div key={i} ref={refs[i + 1]} onClick={() => setSection(i + 1)} style={{ marginBottom: 28, background: C.sf, borderRadius: 14, padding: 16 }}><Comp /></div>
       ))}
 

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(scs scp install *)",
+      "Bash(npm install)"
+    ]
+  }
+}

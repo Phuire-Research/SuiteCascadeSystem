@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+    <title>SCS Bridge</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #1a1a1a; overflow: hidden; }
+      /* PTM · Pewter-Terminal-Margin · 12px uniform inset · color matches terminal background
+         (invisible-by-design) · breathing room for the "Too Snug" feel without losing usable area.
+         Path B inset absolute · FitAddon getBoundingClientRect() returns 676×568 cleanly. */
+      #terminal { position: absolute; top: 12px; right: 12px; bottom: 12px; left: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <script type="module" src="./terminal.ts"></script>
+  </body>
+</html>

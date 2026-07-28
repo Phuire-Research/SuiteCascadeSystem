@@ -331,3 +331,11 @@ if (failureCondition === 'controllerExpired') {
 6. **Data Evolution**: Use `strategyData_muxifyData()` to enhance data through strategy steps
 7. **Universal Properties**: Follow naming conventions to enable data unification
 8. **Async Patterns**: Declare async functions outside method scope, use `.then()` for controller.fire
+
+---
+
+### ActionController Single-Use Scope — controller.fire() Before strategySuccess (S15 Pointer)
+
+When dispatching notifications or other side-effect actions from within an ActionStrategy Quality method, **NEVER** route through `controller.fire()` before `controller.fire(strategySuccess(...))`. The ActionController is single-use scope — calling `controller.fire()` CLOSES the connection. Any subsequent `strategySuccess` call fails silently, dropping the strategy continuation with no error. This is Viridian HAZARD H2 (CRITICAL) and the most dangerous footgun in cross-boundary dispatch.
+
+**The CORRECT pattern is always**: wrap side-effect dispatches in `muxiumTimeOut(concepts_, () => action, timeout)` via a bridge model helper (`notifyLocal` / `notifyClient` / `notifyAllClients`). The deferred callback executes OUTSIDE the current ActionController scope, leaving the controller open for `strategySuccess`. See **S15 §8 Bridge Model Helpers (TOBM)** for the helper group authoring pattern and the CORRECT vs BROKEN contrast. The Notification Concept's `notificationBridge.model.ts` is the authoritative demonstration; see **S16 §7 muxiumTimeOut Bridge Model Walkthrough** for the source-cited trace.

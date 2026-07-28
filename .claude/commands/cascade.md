@@ -22,6 +22,11 @@ Available commands:
 - `/cascade:correct` — Course Correct
 - `/cascade:maintain` — Maintain the Method
 - `/cascade:create` — Actualize a New Suite 8
-- `/cascade:loop` — Stratimuxian Automata (autonomous /loop)
+- `/cascade:full-suite` — The Full Suite (sequential curried cascade · sibling to Magic Shotgun)
+- `/cascade:loop` — Stratimuxian Automata (autonomous /loop ∘ full-suite)
 - `/cascade:update` — Update SCS from upstream
 - `/cascade:verify` — Verify SCS installation integrity
+
+## Neon PlayTester Priming (SCP testing)
+
+**If the SCP is being tested anor verified in this engagement** (PlayTest · SCP UI verification · session spawn/chat checks · the Bridge Turn-Over), **LOAD `Cascades/8_SUITES/Neon PlayTester/`** (`Instance.md` + `Skill.md`) before the testing step. The PlayTest Means are bridge `/mcp` tools — `scs_render_capture` (SEE · the streamed pre-shader frame → Read the PNG) + `scs_orchestrate_window` (ACT · atomic steps: click/key/js/wait/capture/probe/scroll · window-general incl. terminals). **Verdict only with the Muxistration Proof bundle** (`Cascades/Bridge/playtests/<runId>/` + file witnesses) — narrative-only is E4.

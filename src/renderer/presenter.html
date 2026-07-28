@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+    <title>SCS Bridge · Presenter</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
+      /* The shader-wrap canvas owns the whole window — the offscreen terminal is composited
+         into it as the GL source (uSource). No PTM inset here; the offscreen renderer owns
+         its own inset. */
+      #present { display: block; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <canvas id="present"></canvas>
+    <script type="module" src="./presenter.ts"></script>
+  </body>
+</html>

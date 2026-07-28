@@ -48,11 +48,11 @@ Advanced Hello World extends the Standard tutorial into a **Multi-Diamond Aspira
 ║      Web app, CLI tool, API service, or desktop app.     ║
 ║      The Cascade scaffolds and iterates.                 ║
 ║                                                          ║
-║  [3] Personal Suite 8 Website            [Orange]        ║
-║      A website that IS your Suite 8 — your goals are     ║
-║      Diamonds, your progress is Onyx, and the Suite 8    ║
-║      is the functionality you orchestrate through.       ║
-║      Claude Code is the harness. Planning IS organizing. ║
+║  [3] Personal SCP Suite 8                [Orange]        ║
+║      Your own SCP Suite 8 — cloned from the SCP runtime  ║
+║      template + SCP Researcher templates, renamed to     ║
+║      your chosen designation. Identity IS perimeter:     ║
+║      the Suite 8 designation IS the access boundary.     ║
 ║                                                          ║
 ║  [4] Describe your own aspiration        [Yellow]        ║
 ║      Any project, any domain. Describe what you want     ║
@@ -231,94 +231,87 @@ When sub-goals are complete OR the rotation ceiling minus one is reached, the Fi
 
 ---
 
-## Option 3: Personal Suite 8 Website — Detailed Spec
+## Option 3: Personal SCP Suite 8 — Detailed Spec
 
-When the user selects [3] "Personal Suite 8 Website":
+When the user selects [3] "Personal SCP Suite 8":
 
 ### The Concept
 
-The website IS the user's Suite 8. The Suite 8 IS the functionality of the website. The user orchestrates their goals through the Suite 8, and the website is the visible surface of that orchestration. Claude Code is the harness — the means by which the user talks to their Suite 8 to accomplish goals.
+The user materializes their own **Personal SCP Suite 8** — an instance of the SCP (Suite Cascade Protocol) Suite 8 type, in Personal mode. The deliverable is a clone-and-rename of two artifacts:
 
-**Planning IS Organizing.** The SCS as a planning method is the organizational structure for the user's aspirations. Diamonds are goals. Onyx is the record of found reality. The Suite 8 is the namespace from which everything is actualized.
+1. **The SCP runtime template** at `SCP/` (the Vue + Stratimux + WebSocket runtime · MCP-parallel protocol surface)
+2. **The SCP Researcher Suite 8 templates** at `Cascades/8_SUITES/SCP Researcher/Templates/` (the identity scaffolding)
 
-| SCS Concept | Personal Suite 8 Website |
+Both clone into a user-named instance. The SCP Suite 8 is the user's Personal protocol surface — Suite-8-fronted locally; the designation IS the access perimeter; there is no orthogonal endpoint to expose.
+
+**Identity IS Perimeter.** Where a conventional website-as-Suite-8 deploys an endpoint and defends it, a Personal SCP Suite 8 doesn't expose the surface to begin with. MCP-using clients (Claude Code, Claude Desktop, anything speaking MCP) reach tools *through* the Suite 8 designation — not through a public URL. Attack surface collapses to the Suite 8's identity boundary.
+
+| SCS Concept | Personal SCP Suite 8 |
 |---|---|
-| **Diamond** | A goal the user aspires to achieve — created through the Suite 8 |
-| **Onyx** | The record of outcomes — what was found while pursuing goals |
-| **Suite 8** | The functionality of the website — the user's domain namespace |
-| **Harness** | Claude Code — the orchestrating position through which the user interacts |
-| **Suite 2 Prospector** | Break into new possibilities from the data available on the site |
-| **Suite 4 Sculptor** | Validate goals from multiple angles |
-| **Suite 6 Orchestrator** | WebSearch-powered resource discovery via Vermillion |
-| **Menu System** | Shatterite-style — personalized per the user's Suite 8 with self-maintenance |
+| **Diamond** | A goal the user aspires to achieve — Diamonds operate against the Personal SCP S8's runtime |
+| **Onyx** | The record of outcomes — found reality across cycles touching this SCP S8 |
+| **Suite 8 Designation** | The user-chosen name (e.g., `MicahsPersonal`, `KellersTools`) · IS the access perimeter |
+| **Suite 8 Type** | SCP Suite 8 (Personal mode) — defined by SCP Researcher at `Cascades/8_SUITES/SCP Researcher/` |
+| **Runtime Surface** | The Stratimux `scp` concept · qualities exposed as MCP tools through `muxonomyRegistry.generated.ts` |
+| **Harness** | Claude Code (any MCP-speaking client) — interacts through the Suite 8 designation |
+| **Transport** | Personal default: WebSocket + Express HTTP on `localhost:7111` (configurable) |
 
-### Starting Menu for the Personal Suite 8
+### Materialization Pattern
 
-The website IS your Suite 8's VIEW. To add goals, record outcomes, or run Suite functions — use Claude Code (or your chosen harness). The menu below reflects the current state of your files. The website displays; the harness edits.
-
-The menu emphasizes Suites 2, 4, and 6 — the discovery/validation/orchestration triad:
+The instantiation follows **Pattern A · Instance Creation** from `Cascades/8_SUITES/SCP Researcher/Conductor.md`:
 
 ```
-╔══════════════════════════════════════════════════════════╗
-║  YOUR SUITE 8                                            ║
-║  ─ · ─                                                   ║
-║  View your goals and progress. To edit, use Claude Code. ║
-║                                                          ║
-║  [P] Prospect — Break into New Possibilities  [Orange]   ║
-║      What doesn't exist yet? What connections can you    ║
-║      find between your goals and available resources?    ║
-║                                                          ║
-║  [V] Validate — Examine from All Angles       [Green]    ║
-║      Is this the right goal? Does it hold from both      ║
-║      your perspective and reality's?                     ║
-║                                                          ║
-║  [R] Research — Find Tools and Approaches     [Purple]   ║
-║      WebSearch for resources, tools, and approaches      ║
-║      to accomplish your current Diamond.                 ║
-║                                                          ║
-║  · · ·                                                   ║
-║                                                          ║
-║  [D] Diamonds — View your goals                          ║
-║  [O] Onyx — View your progress log                       ║
-║  [+] Add a Diamond (via Claude Code)                     ║
-║  [9] Maintain — Update this menu (via Claude Code) [Base]║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
+<VermillionPlan topic="Personal SCP Suite 8 · Create · {user_designation}">
+
+Band 1 [R1 Red]: Validate inputs — designation availability · Personal mode confirmed · localhost:7111 unbound (or pick alternate)
+Band 2 [R2 Orange]: Pearl-name the designation — verify it conveys the personal scope (e.g., "MicahsPersonal", not just "SCP")
+Band 3 [R3 Yellow]: Plan the clone — copy vs reference for runtime; reference mode is the Personal default (saves disk; the runtime is generic)
+Band 5 [R5 Blue + SCP-S1 + SCP-S2 + SCP-S3 + SCP-S4]:
+  - SCP-S1 Designation Bind: clone Templates/{Instance,Skill}.md.template from Cascades/8_SUITES/SCP Researcher/Templates/ with slots filled
+    - {{DESIGNATION}} = user's choice
+    - {{MODE}} = Personal
+    - {{ROLE}} = "Personal SCP bridge for MCP-using clients"
+    - other slots from the Personal-mode defaults table in SCP Researcher Instance.md
+  - SCP-S2 Runtime Bind: declare Runtime: ../../scps/template/SCP/ (reference mode) in the new instance's Instance.md (alternatively, copy SCP/ into Cascades/8_SUITES/{{DESIGNATION}}/SCP/ if copy mode chosen)
+  - SCP-S3 Transport Deploy: WebSocket + Express HTTP on localhost:7111 (Personal mode default)
+  - SCP-S4 Skill Surface: declare the initial muxonomyRegistry tool set — the runtime's scp/ qualities are surfaced by default
+Band 6 [SCP-S5 Conference Decide]: Any Personal-mode skill overrides for this instance?
+Band 7 [R7 Fuchsia + SCP-S8]: Register {{DESIGNATION}} in Cascades/SUITE8-REGISTRY.md · update Onyx · checkpoint commit
+
+</VermillionPlan>
 ```
 
-Menu options [P], [V], [R] are Suite invocations — they run through your harness (Claude Code, or any SCS-compatible agentic context). The website menu is the POINTER; the harness is the executor. The website renders the results after the harness writes.
-
-### [9] Maintain — Self-Menu Maintenance Skill
-
-The [9] Maintain option is a **Reference Design Skill** copied into the generated Suite 8. It reads the current Onyx (accumulated outcomes), reads the current Diamonds (active goals), and **recreates the personalized menu** based on the Renewable Intelligence in total.
-
-**Invocation**: Run `/cascade:maintain` in Claude Code (or chosen harness) — NOT an in-browser action. The website renders the resulting menu; it does not generate it.
-
-**Maintenance Flow**:
-1. Read all Diamonds — surface active vs completed goals
-2. Read Onyx — what outcomes have accumulated, what was Gainy/Lossy/Maintain
-3. Based on RI direction: add new menu options for emerging patterns, prune options for completed/abandoned goals, reorder by relevance
-4. Rewrite the Suite 8's menu file to reflect the current state
-5. The website reloads to display the updated menu
-6. The menu IS the Suite 8's self-knowledge — maintaining it IS maintaining the Suite 8
-
-This is the Self-Maintenance Aspect Loop (from the Suite 8 system) applied to the user's personal domain. The menu evolves with use — through the harness, not through in-browser editing.
+**Concluders for the materialization**:
+- `Cascades/8_SUITES/{{DESIGNATION}}/Instance.md` exists with `Mode: Personal` and slots filled
+- `Cascades/8_SUITES/{{DESIGNATION}}/Skill.md` exists with Personal-mode skill register
+- Either `Cascades/8_SUITES/{{DESIGNATION}}/SCP/` exists (copy mode) or `Runtime: ../../scps/template/SCP/` declared (reference mode)
+- Registry row in `Cascades/SUITE8-REGISTRY.md`
+- Transport binds on `localhost:7111` (deploy gate — verified by user launching the runtime)
 
 ### Claude Code as Harness
 
-The tutorial guides the user to use Claude Code as the harness — the orchestrating position:
+After materialization, the user's daily interaction follows the same pattern as the website-era Personal Suite 8:
 
-1. The website stores data in local JSON/markdown files (Diamonds as `.md`, Onyx as `.md`, Suite 8 config as `.json`)
-2. Claude Code reads and writes to these files through the SCS methodology
-3. The user talks to Claude Code → Claude Code operates the Suite 8 → the website reflects the state
-4. `/cascade` commands work against the website's data — `/cascade:diamond` shows the user's goals, `/cascade:onyx` shows their progress
+1. The Personal SCP S8 runs as a local Stratimux muxium with WebSocket + Express HTTP transport
+2. Claude Code (or any MCP-using client) connects through the SCP S8 designation as the perimeter
+3. The user dispatches tools through their harness; the SCP S8 routes them through the runtime
+4. Each Diamond cycle operates against the SCP S8 — new qualities can be added to expand the tool surface; the runtime is the user's evolving capability
 
-Direct manual editing of the `.md` files is possible; the website will reflect any changes on reload. The SCS harness path via Claude Code is encouraged — it applies the full Suite Cascade methodology to each change, with Clinician diagnosis at cycle end.
+`/cascade` commands continue to work against the user's project files — `/cascade:diamond` shows active goals, `/cascade:onyx` shows progress. The SCP S8 layer adds *tool exposure* to MCP clients on top of the existing project workflow.
 
-**Experience Shaped by Familiarity**:
-- **Beginner**: Full guided scaffold — HTML/CSS/JS explained, each file created with narration. Includes a sub-goal: "Set up Claude Code harness against website data files." Emphasis on Suite 2 (Prospector) so the user can discover new possibilities.
-- **Intermediate**: Scaffold with decisions — user chooses framework/approach, Claude Code as harness assumed
-- **Advanced**: Minimal scaffold — the Cascade builds, user extends. Full SCS utilization.
+### Experience Shaped by Familiarity
+
+- **Beginner**: Full guided scaffold — the Diamond walks through SCP runtime composition (Vue + Stratimux + WebSocket explained), Personal-mode defaults narrated, transport binding demonstrated. Includes a sub-goal: "Connect Claude Code to your Personal SCP S8 via MCP." Emphasis on Suite 2 (Prospector) so the user can discover new qualities to add to the runtime.
+- **Intermediate**: Scaffold with decisions — user chooses transport (WebSocket-only / HTTP-only / both), tool surface (full SCP qualities / subset), runtime composition (reference / copy mode).
+- **Advanced**: Minimal scaffold — the Cascade clones and renames; user extends the runtime with project-specific qualities. Full SCS utilization including Diamond cycles that add SCP qualities or compose new concepts.
+
+### Why "Personal SCP Suite 8" Replaces "Personal Suite 8 Website"
+
+The website pathway treated the Suite 8 as a *visible surface* (the website renders state; the harness edits files). That pattern relied on a web frontend as the user-facing layer.
+
+The Personal SCP Suite 8 pathway treats the Suite 8 as a *protocol surface* (MCP clients reach tools through the Suite 8's designation; there is no separate website to maintain). The user-facing layer is whatever MCP client the user runs — Claude Code, Claude Desktop, third-party MCP-speaking tools. The Suite 8 IS the perimeter; the website-as-surface concern is absorbed into the MCP client layer.
+
+This is the **Identity-as-Perimeter doctrine** in action. The Personal Suite 8 Website pathway is documented historically in the Onyx record for users who want the website variant; the canonical Advanced pathway, as of Diamond SCP-4, lands a Personal SCP Suite 8.
 
 ---
 
@@ -328,7 +321,7 @@ Direct manual editing of the `.md` files is possible; the website will reflect a
 |-------|-----------|-------------|
 | A1 | `1` (Game) | Refine game type via P2 → Stage A2 |
 | A1 | `2` (Application) | Refine app type via P2 → Stage A2 |
-| A1 | `3` (Personal Suite 8 Website) | Load detailed spec above → Stage A2 |
+| A1 | `3` (Personal SCP Suite 8) | Load detailed spec above → Stage A2 |
 | A1 | `4` (Custom) | User describes aspiration → Stage A2 |
 | A2 | `3`, `5`, `8`, or custom | Write totalRotations → Stage A3 |
 | A3 | `B`, `I`, or `A` | Set experience level → Project Location Decision Block (SM-HelloWorld §3.5) → Stage A4 |

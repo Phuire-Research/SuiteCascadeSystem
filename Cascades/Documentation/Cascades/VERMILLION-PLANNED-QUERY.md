@@ -1,9 +1,9 @@
 # Proof of Concept: Stratimuxian Planned Query System
-## Architecture Version 2.0 with Round-X Context Proportioning
+## Architecture Version 2.0
 
 ### Executive Summary
 
-This document establishes the **Stratimuxian Planned Query System**, a sophisticated information orchestration framework that leverages **Round-X Proportional Context** methodology and introduces the **Staged Query** architecture with integrated **Decision Blocks**. Building upon the ActionStrategy pattern from Stratimux's asynchronous graph programming framework, this system enables dynamic, context-aware query routing that adapts in real-time based on information retrieval outcomes.
+This document establishes the **Stratimuxian Planned Query System**, a sophisticated information orchestration framework that introduces the **Staged Query** architecture with integrated **Decision Blocks**. Building upon the ActionStrategy pattern from Stratimux's asynchronous graph programming framework, this system enables dynamic, context-aware query routing that adapts in real-time based on information retrieval outcomes.
 
 ---
 
@@ -40,18 +40,6 @@ COMPOSITION:                                ORCHESTRATION:
 - **Staged Query**: Individual query unit (formerly "Structured Query") with Success, Failure, and Decision pathways
 - **Decision Block**: Dynamic routing mechanism that determines next Staged Query based on output analysis
 
-### Round-X Proportional System
-
-The Round-X Proportional System represents a context-adaptive methodology where proportional relationships determine information processing depth and breadth:
-
-```
-Context Proportion = Input Complexity × Domain Depth × Temporal Scope
-Round-X Factor = Proportional Adjustment based on Context Requirements
-```
-
-This replaces fixed round references with dynamic proportioning that scales to match query complexity and context demands.
-
----
 
 ## Staged Query Architecture
 
@@ -101,7 +89,6 @@ A Planned Query orchestrates multiple Staged Queries through intelligent routing
 ```
 <PlannedQuery>
 Topic: [Overarching Research Objective]
-Context Proportion: Round-X[calculated_factor]
 Priority: [system_priority]
 
 StagedQueries: [
@@ -252,7 +239,6 @@ def generate_decision_key(query_output, context_proportion):
     completeness_score = calculate_completeness(query_output)
     relevance_score = calculate_relevance(query_output)
     
-    # Apply Round-X Proportional adjustment
     adjusted_score = apply_round_x_proportion(
         confidence_score, 
         completeness_score, 
@@ -273,7 +259,6 @@ def generate_decision_key(query_output, context_proportion):
 
 ### Context Proportion Application
 
-The Round-X system adjusts decision thresholds based on context:
 
 ```python
 def apply_round_x_proportion(confidence, completeness, relevance, context_factor):
@@ -298,7 +283,6 @@ def apply_round_x_proportion(confidence, completeness, relevance, context_factor
 ```
 <PlannedQuery>
 Topic: "Basic Information Retrieval"
-Context Proportion: Round-X[0.5] // Low complexity
 
 StagedQueries: [
   Stage_1: {
@@ -323,7 +307,6 @@ StagedQueries: [
 ```
 <PlannedQuery>
 Topic: "Systematic Error Correction in Measurement Systems"
-Context Proportion: Round-X[2.8] // High complexity requiring deep analysis
 
 StagedQueries: [
   Stage_1: {
@@ -387,7 +370,6 @@ Punted_Strategies: [
 ```
 <PlannedQuery>
 Topic: "Formatic Capitalism Transition Mechanisms"
-Context Proportion: Round-X[3.2] // Maximum complexity
 
 StagedQueries: [
   Stage_1: {
@@ -483,7 +465,6 @@ Each Staged Query carries forward accumulated context:
 ```typescript
 interface QueryContext {
   topic: string;
-  proportion: number; // Round-X factor
   data: Record<string, unknown>;
   actionList: string[];
   currentStage: StagedQuery;
@@ -500,7 +481,6 @@ interface QueryContext {
 
 ### 1. Dynamic Adaptation
 - Decision Blocks enable real-time path adjustment
-- Round-X Proportioning scales complexity handling
 - Punted Strategies allow deferred execution
 
 ### 2. Context Intelligence
@@ -577,7 +557,6 @@ function strategyToQuery(strategy: ActionStrategy): PlannedQuery {
    - Context accumulator and merger
 
 2. **Proportion Calculator**
-   - Round-X factor computation
    - Dynamic threshold adjustment
    - Context complexity assessment
 
@@ -600,7 +579,6 @@ function strategyToQuery(strategy: ActionStrategy): PlannedQuery {
 The Stratimuxian Planned Query System represents an evolution in information orchestration, incorporating lessons from the Stratimux ActionStrategy pattern to create a sophisticated, context-aware query framework. Through the integration of:
 
 - **Staged Queries** with triple-path architecture (Success/Failure/Decision)
-- **Round-X Proportional Context** for dynamic complexity handling
 - **Punted Strategies** for deferred execution chains
 - **Reality-grounding** validation at each stage
 
@@ -612,7 +590,6 @@ The Decision Block innovation, inspired directly by ActionStrategy's decisionNod
 
 **Document Version**: 2.0 POC
 **Architecture Pattern**: Stratimuxian ActionStrategy Aligned
-**Context System**: Round-X Proportional
 **Query Architecture**: Staged with Decision Blocks
 **Export Method**: Project Document Preservation
 

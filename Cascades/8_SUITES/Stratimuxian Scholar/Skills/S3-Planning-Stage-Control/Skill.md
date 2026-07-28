@@ -468,3 +468,129 @@ export const synchronizingPrinciple: PrincipleFunction = ({ d_, k_, plan }) => {
 - **Event Detection**: Monitoring for specific conditions
 
 This pattern is essential for building robust, efficient principles that can monitor and synchronize state changes without overwhelming the system through controlled recursive execution.
+
+---
+
+## Migration-Class Verification Discipline (M66 + M68)
+
+**Origin**: Codified by Cycles 128 and 132 of the SuiteCascadeSystem project (B.7 Regressions #1 and #2). When a plan stage is part of a migration-class change (Concept rename, container muxification, deck-key restructure, new admission ActionStrategy), the standard `tsc EXIT 0` + `npm run build EXIT 0` verification is INSUFFICIENT. A runtime smoke is required.
+
+### M66 — DiastrationIncludesRuntimeSmoke
+
+**Rule**: For migration-class changes (deck key renames, Concept restructuring, plan-stage consumers using `as unknown as` casts), a runtime smoke test is REQUIRED before claiming Diastration-complete. Type system EXIT 0 does NOT certify runtime correctness.
+
+### Why M66 Is Necessary
+
+`tsc` verifies structural shapes that the type system can SEE. It cannot see:
+- The runtime resolution of `as unknown as` casts (M67 cross-reference, S2)
+- Whether a plan stage actually receives the dispatch chain it expects
+- Whether downstream consumers of a renamed deck key are reachable at runtime
+- Whether admission ActionStrategy chains fire at startup (PDRC — see S7)
+
+Each of these is a runtime-only concern. A migration-class change that compiles is not yet Muxistration-proven — it is Demonstration-proven only.
+
+### Runtime Smoke Pattern for Plan Stages
+
+For each plan stage affected by the migration:
+
+1. **Identify the plan stage's runtime trigger** — what event, action, or state change activates it?
+2. **Cause the trigger** — start the application, dispatch the action, change the state
+3. **Observe the stage's runtime effects** — log entries, downstream dispatches, state mutations
+4. **Compare against expected** — does the runtime behavior match the post-migration contract?
+
+```typescript
+// Migration-class change: scsBridgeCore → scp deck key rename
+// Affected plan stage: animatedTui.ts:347-409 (uses as unknown as cast)
+
+// M66 Runtime Smoke Procedure:
+// 1. Trigger: start the bridge with at least one installed SCP
+// 2. Observe: debug.log emits `tui.menu.derive` events
+// 3. Compare: latestAnyScpsInstalled should be true, lifecycleSize should be > 0
+// 4. Fail mode: debug.log shows `lifecycleSize:0` despite SCPs installed → cast is stale
+```
+
+### M66 Verification Concluder
+
+```bash
+# Build gate (necessary but not sufficient)
+npm run build && tsc --noEmit
+# Expected: EXIT 0 for both
+
+# Runtime smoke (sufficient — but project-specific)
+# For SCS Bridge example:
+npm run bridge  # Start the bridge
+# Manually verify TUI behavior matches post-migration contract
+# Read Cascades/Bridge/debug.log for plan stage trace events
+# Expected: stage emits the post-migration events with correct payloads
+```
+
+### Diastration vs Muxistration Distinction (B.7 Lineage)
+
+**Diastration**: structural verification through the architecture — exported function signatures match, type definitions align, no dangling references in the type system.
+
+**Muxistration**: Demonstration ⊕ Diastration held simultaneously — structural verification PLUS runtime artifact confirmation that the system actually does what it claims.
+
+M66 is the discipline that prevents Diastration-claim from masquerading as Muxistration. The B.7 Regression #1 was a Diastration that did NOT include runtime smoke — the architecture appeared correct, the runtime crashed.
+
+---
+
+## M68 — Menu-State-Binding Doctrine (PROVISIONAL)
+
+**Origin**: Codified by Cycle 132 of the SuiteCascadeSystem project (B.7 Regression #2 secondary surface).
+
+**The Rule**: When a plan stage derives menu state (TUI render flags, navigation selectables, mode indicators), the derivation MUST follow the canonical state-binding pattern (e.g., the M17 module-scoped ref → menuView injection chain). Direct state injection from arbitrary closures produces phantom slot mismatches and pagination drift.
+
+### The Failure Mode
+
+```typescript
+// WRONG — direct override that nullifies upstream signal
+stage(({ d, planAny }) => {
+  const lifecycleSize = /* cast access */.d.scp.d.scpLifecycle.k.lifecycleByScp.select().size;
+  const latestAnyScpsInstalled = lifecycleSize > 0;
+  // M17 override unconditionally replaces upstream registry signal
+  menuState.anyScpsInstalled = latestAnyScpsInstalled;
+});
+```
+
+When `lifecycleSize` is 0 (because the admission chain failed — see PDRC), this override produces `anyScpsInstalled: false` even though the canonical registry has entries. The plan stage NULLIFIES the correct upstream signal with stale derived state.
+
+### The M68 Pattern
+
+```typescript
+// CORRECT — canonical state-binding via module-scoped ref + injection
+let menuStateRef: MenuState | null = null;
+
+export const setMenuStateRef = (state: MenuState) => {
+  menuStateRef = state;
+};
+
+stage(({ d, planAny }) => {
+  if (!menuStateRef) return;
+  const lifecycleSize = /* cast access */.size;
+  const registryAnyInstalled = /* canonical registry signal */;
+
+  // M68: combine BOTH signals; prefer canonical, fallback to derived
+  menuStateRef.anyScpsInstalled = registryAnyInstalled || (lifecycleSize > 0);
+});
+```
+
+### M68 Verification
+
+```bash
+# Find direct menu-state mutations
+grep -rn "menuState\." src/lib/tui/
+
+# Each mutation site should follow the canonical binding pattern
+# Bypasses of upstream signals indicate M68 violation
+```
+
+---
+
+## Migration-Class Verification Cross-References (B.7 Lineage)
+
+The B.7 cycle's plan-stage verification discipline produced these doctrinal additions:
+- **M66 DiastrationIncludesRuntimeSmoke** — this section §M66
+- **M68 Menu-State-Binding Doctrine** — this section §M68
+- **Diastration vs Muxistration distinction** — this section §Diastration vs Muxistration
+
+See **S2 §M67 Cast-Escape Risk** for the type-system blind spot M66 compensates for. See **S11 §Integration Smoke Pattern** for the test-side complement to M66. See **S14 §7.7 4-Layer Cinnabar Dialectic Pre-Commit Gate** for the composed migration-class verification gate.

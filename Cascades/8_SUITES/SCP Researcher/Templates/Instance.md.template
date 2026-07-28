@@ -1,0 +1,107 @@
+# {{DESIGNATION}} — Suite 8 Instance ({{MODE}} SCP Suite 8)
+
+## Suite 8 Instance — {{DESIGNATION}}
+
+*Protocol Version: 1.0*
+*Origin: Cloned from `Cascades/8_SUITES/SCP Researcher/Templates/Instance.md.template` by Diamond {{ORIGIN_DIAMOND}}*
+*Date: {{ORIGIN_DATE}}*
+*Type: SCP Suite 8 (see `Cascades/8_SUITES/SCP Researcher/Instance.md` for type definition)*
+
+---
+
+## Identity Configuration
+
+**Instance Designation**: {{DESIGNATION}}
+**Suite**: {{DESIGNATION}} (SCP Suite 8 — {{MODE}} Mode)
+**Configuration Level**: Conductor (inherited from SCP type)
+**Mode**: {{MODE}}
+**Role**: {{ROLE}}
+**Contract**: Identity-As-Perimeter — this instance's designation IS its access boundary
+
+### Mode Declaration
+
+This instance is a **{{MODE}}** SCP Suite 8.
+
+{{MODE_DESCRIPTION}}
+
+### Membership
+
+{{MEMBERSHIP_LINE}}
+
+### Identity Layer
+
+{{IDENTITY_LAYER}}
+
+### Transport
+
+| Aspect | Value |
+|---|---|
+| **Mode** | {{TRANSPORT_MODE}} |
+| **Binding** | {{TRANSPORT_BINDING}} |
+| **Persistence Boundary** | {{PERSISTENCE_BOUNDARY}} |
+
+### Runtime
+
+| Aspect | Value |
+|---|---|
+| **Composition** | {{RUNTIME_COMPOSITION}} |
+| **Path** | {{RUNTIME_PATH}} |
+
+`{{RUNTIME_COMPOSITION}}` is one of `copy` (this instance owns its own runtime tree at `{{RUNTIME_PATH}}`) or `reference` (this instance references the shared template at `{{RUNTIME_PATH}}` and a copy is materialized at deploy time).
+
+---
+
+## Operating Principle (When Dispatched)
+
+When a maintenance Diamond targets this instance, the dispatch flow follows the SCP Conductor Pattern B (Instance Maintenance) — see `Cascades/8_SUITES/SCP Researcher/Conductor.md`.
+
+When an MCP client (or any consumer) requests a tool from this instance at runtime, the dispatch flows through the SCP runtime's `scp` concept — see `{{RUNTIME_PATH}}/src/concepts/scp/` for the qualities exposed and `{{RUNTIME_PATH}}/src/concepts/muxonomyRegistry.generated.ts` for the registered tool surface.
+
+---
+
+## Why "{{DESIGNATION}}"
+
+{{DESIGNATION_RATIONALE}}
+
+---
+
+## Trajectory
+
+| Date | Diamond | Skills Touched | Note |
+|---|---|---|---|
+| {{ORIGIN_DATE}} | {{ORIGIN_DIAMOND}} | SCP-S1, SCP-S2, SCP-S3, SCP-S4 | Instance created · {{MODE}} mode · clone-init complete |
+
+---
+
+## References
+
+- **Type spec**: `Cascades/8_SUITES/SCP Researcher/Instance.md`
+- **Skill register**: `Cascades/8_SUITES/SCP Researcher/Skill.md` (base) + `./Skill.md` (this instance's overrides)
+- **Conductor**: `Cascades/8_SUITES/SCP Researcher/Conductor.md`
+- **Runtime**: `{{RUNTIME_PATH}}`
+- **Registry entry**: `Cascades/SUITE8-REGISTRY.md` (search: `{{DESIGNATION}}`)
+
+---
+
+## Slot Reference (for Diamond authors)
+
+The slots filled when cloning this template:
+
+| Slot | Description | Example |
+|---|---|---|
+| `{{DESIGNATION}}` | The user-chosen Suite 8 name | `MicahsPersonal` |
+| `{{MODE}}` | One of `Personal` / `Organizational` / `Project` | `Personal` |
+| `{{ROLE}}` | One-line role description | `Personal SCP bridge for MCP-using clients` |
+| `{{ORIGIN_DIAMOND}}` | The Diamond that created this instance | `SCP-4` |
+| `{{ORIGIN_DATE}}` | Creation date in YYYY-MM-DD | `2026-05-12` |
+| `{{MODE_DESCRIPTION}}` | Mode-specific paragraph from `SCP/Instance.md` | (paragraph for Personal/Org/Project) |
+| `{{MEMBERSHIP_LINE}}` | Mode-default membership statement | "Single user (the project owner)." |
+| `{{IDENTITY_LAYER}}` | Mode-default identity layer | "Local user account · personal token." |
+| `{{TRANSPORT_MODE}}` | `WebSocket` / `Express HTTP` / `stdio` / `hybrid` | `WebSocket + Express HTTP` |
+| `{{TRANSPORT_BINDING}}` | Transport bind target | `localhost:7111` |
+| `{{PERSISTENCE_BOUNDARY}}` | Mode-default persistence statement | "User-private (no sharing across user accounts)." |
+| `{{RUNTIME_COMPOSITION}}` | `copy` or `reference` | `reference` |
+| `{{RUNTIME_PATH}}` | Path to the runtime tree | `../../scps/template/SCP/` (reference mode) or `./SCP/` (copy mode) |
+| `{{DESIGNATION_RATIONALE}}` | User-supplied or Diamond-derived rationale for the chosen designation | (paragraph) |
+
+After clone, the slot-reference section MAY be removed (it is documentation for the instantiation Diamond, not for the live instance).

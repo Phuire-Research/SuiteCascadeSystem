@@ -1,0 +1,27 @@
+# Build artifacts within template (preserve template SCP source for SCP installs)
+Cascades/scps/template/**/node_modules
+Cascades/scps/template/**/dist
+Cascades/scps/template/**/coverage
+Cascades/scps/template/**/*.tsbuildinfo
+
+# Bridge state (project-local · never published)
+Cascades/Bridge/
+Cascades/scps/template/**/Cascades/Bridge/
+
+# Working/Scratch directories
+Cascades/Working/
+Cascades/Lab/
+
+# Dev-only state
+Cascade.json
+.scs-dev/
+
+# Test artifacts
+__tests__/
+coverage/
+
+# IDE + OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

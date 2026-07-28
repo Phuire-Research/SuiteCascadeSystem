@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1",
+  "colors": {
+    "base": "#8f969e",
+    "red": "#c25b52",
+    "orange": "#c2814e",
+    "yellow": "#c4a44f",
+    "green": "#5fa085",
+    "blue": "#5286a6",
+    "purple": "#8a6ba6",
+    "fuchsia": "#b66290"
+  }
+}
