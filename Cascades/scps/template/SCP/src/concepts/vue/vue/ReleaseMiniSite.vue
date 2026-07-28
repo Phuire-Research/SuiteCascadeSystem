@@ -55,6 +55,38 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0933',
+    label: 'New in 0.933.0',
+    features: [
+      {
+        title: 'The Update circuit, conducted end to end',
+        color: 'green',
+        summary: 'The update surface now reads as a conducted sequence: Run Update opens the cycle, the resolver appears only when there is something to resolve, and every button state is explained in place.',
+        detail: [
+          'The three update actions carry a <span class="hifi-hl-green">state legend in their own panel</span> — every possible state of Run Update, Spawn Resolver, and Apply is named, and the row matching the live next step is emphasized. The resolver shows <span class="hifi-hl-blue">solid</span> when a comparison awaits resolution, a <span class="hifi-hl-purple">dotted border</span> when a complete resolution already exists (spawn again only to review anor redo), and stays dimmed until this cycle’s comparison has actually run.',
+          'A finished update now <span class="hifi-hl-yellow">closes its own cycle</span>: the working comparison artifacts are cleared at apply, so a prior update can never re-enable the resolver off stale state. Run Update is the door, every cycle.',
+        ],
+      },
+      {
+        title: 'Stand By — the primed session',
+        color: 'blue',
+        summary: 'A session spawned to receive instructions shows a transparent Stand By notice while Claude Code boots — and stays focused once the instructions land.',
+        detail: [
+          'The resolver’s session opens with a <span class="hifi-hl-blue">fully transparent Stand By overlay</span> — fixed text over the live terminal, never a curtain: the boot draws through it untouched. It clears the moment the instructions finish entering, on your <span class="hifi-hl-green">first key press</span>, anor on a short safety timeout. It belongs to this one spawn path alone — no other session ever shows it.',
+          'Two disciplines land with it: the primed session <span class="hifi-hl-purple">keeps focus</span> after its instructions are placed (it no longer snaps back to the app window), and it boots with Claude Code’s <span class="hifi-hl-yellow">approval mode intact</span> — the update is conducted by you, decision by decision.',
+        ],
+      },
+      {
+        title: 'Session spawn discipline',
+        color: 'red',
+        summary: 'A rare loop where navigating pages after a spawn could keep spawning sessions is closed at its root.',
+        detail: [
+          'The session-spawn trigger is now cleared <span class="hifi-hl-red">the instant it fires</span> rather than after the request settles — the narrow window where page navigation could re-fire the spawn is gone. One click, <span class="hifi-hl-green">one session</span>, every time.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0930',
     label: 'New in 0.930.0',
     features: [
