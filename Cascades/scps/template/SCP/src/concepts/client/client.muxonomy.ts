@@ -31,6 +31,15 @@ import {
 import createLocalStorageConcept from '../localStorage/localStorage.concept';
 import { createNotificationConcept } from '../notification/notification.concept';
 import { createScsBridgeClientConcept } from '../scsBridge/scsBridge.concept.client';
+// D-UP6 · THE STRANDED-FILTER CURE (the spawn-storm Rose diagnosis): these lists declared
+// their fields local-only, but the wire's filter set is aggregated HERE — extractFilterKeys
+// reads only MuxonomicConcepts, and scsBridge/gitm compose as BASE concepts, so the
+// declarations were wired to NOTHING. The client's pendingSpawnScpName ascended to the
+// server, the clear-to-undefined could not cross JSON, and every reconnect flush re-armed
+// the spawn trigger ("a session on every page selection"). Importing them into the base
+// filter set IS the enforcement the declarations always claimed.
+import { SCSBRIDGE_FILTER_KEYS } from '../scsBridge/scsBridge.state';
+import { GITM_FILTER_KEYS } from '../gitm/gitm.state';
 // GITM #639 · the gitm client BASE concept — gitmJson relay reception. BASE (two-surface
 // fact · GitmLanding + ScsBridgeLanding both require it) · migrated off scsBridge.
 import { createGitmClientConcept } from '../gitm/gitm.concept.client';
@@ -114,6 +123,11 @@ export const BASE_CLIENT_FILTER_KEYS: string[] = [
   'serverSemaphore',
   'clientStateId',
   'isConnected',
+  // D-UP6 · the BASE-concept filter declarations, finally wired to the transport (the
+  // spawn-storm cure): every pending* trigger + client-local UI field these lists name
+  // now truly stays client-side — nothing here ascends to the server state again.
+  ...SCSBRIDGE_FILTER_KEYS,
+  ...GITM_FILTER_KEYS,
 ];
 
 // ============================================
