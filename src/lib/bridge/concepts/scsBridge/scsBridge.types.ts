@@ -216,6 +216,14 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // the dead prior keeps its history, loses the claim). The ALIVE branch is unchanged (skip — the
   // client focuses instead). The ABSENT branch is unchanged. Omit/false = the C385 behavior exactly.
   fresh?: boolean;
+  // D-UP · THE MANUAL-MODE SEVER · asWorker fused two semantics: the fresh-worker spawn
+  // (skip anti-flood — repeat dispatches always register) AND the WAPM auto-permission
+  // marker (setSessionWorker → spawn-settings defaultMode='acceptEdits'). manualMode=true
+  // keeps the FIRST and severs the SECOND: the session boots with the approval gate INTACT
+  // (user-controlled — the Gitm Resolver's update law) and gains the registry standBy marker
+  // so the presenter paints the Stand By overlay while the directive delivery is pending.
+  // Only meaningful alongside asWorker=true; ignored on the anchor path.
+  manualMode?: boolean;
   callerSessionUlid?: string;
 };
 

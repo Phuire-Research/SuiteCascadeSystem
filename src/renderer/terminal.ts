@@ -508,6 +508,54 @@ function showShuttingDown(): void {
 }
 window.scs?.onShuttingDown?.(() => showShuttingDown());
 
+// D-UP · THE STAND BY OVERLAY (shader-OFF twin of the presenter overlay). Primed manualMode
+// spawns paint the wait notice until the directive delivery lands; cleared on the clear
+// channel, the user's first input, anor the safety timeout — never blocks input.
+const STAND_BY_SAFETY_MS = 25000;
+let standByEl: HTMLDivElement | null = null;
+let standByTimer = 0;
+function clearStandBy(): void {
+  if (standByTimer) { window.clearTimeout(standByTimer); standByTimer = 0; }
+  if (!standByEl) return;
+  standByEl.remove();
+  standByEl = null;
+  window.removeEventListener('keydown', clearStandBy, true);
+  window.removeEventListener('mousedown', clearStandBy, true);
+}
+function showStandBy(): void {
+  if (standByEl) return;
+  const el = document.createElement('div');
+  el.id = 'scs-stand-by-overlay';
+  el.setAttribute('aria-hidden', 'true');
+  el.style.cssText = [
+    'position:fixed', 'inset:0', 'display:flex', 'flex-direction:column', 'gap:0.5rem',
+    'z-index:10000', 'align-items:center', 'justify-content:center', 'pointer-events:none',
+    'background:rgba(6,8,10,0.72)',
+  ].join(';');
+  const label = document.createElement('span');
+  label.style.cssText = [
+    "font-family:ui-monospace,'SF Mono','Menlo',monospace", 'font-size:15px', 'font-weight:700',
+    'letter-spacing:0.1em', 'text-transform:uppercase', 'color:rgba(180,200,220,0.95)',
+    'text-shadow:0 0 10px rgba(120,150,190,0.5)', 'padding:0.2rem 1.2rem',
+  ].join(';');
+  label.textContent = 'Stand By';
+  const sub = document.createElement('span');
+  sub.style.cssText = [
+    "font-family:ui-monospace,'SF Mono','Menlo',monospace", 'font-size:12px',
+    'letter-spacing:0.06em', 'color:rgba(150,170,190,0.85)', 'padding:0 1.2rem',
+  ].join(';');
+  sub.textContent = 'Claude Code is initializing — instructions will enter on their own';
+  el.appendChild(label);
+  el.appendChild(sub);
+  document.body.appendChild(el);
+  standByEl = el;
+  window.addEventListener('keydown', clearStandBy, true);
+  window.addEventListener('mousedown', clearStandBy, true);
+  standByTimer = window.setTimeout(clearStandBy, STAND_BY_SAFETY_MS);
+}
+window.scs?.onStandBy?.(() => showStandBy());
+window.scs?.onStandByClear?.(() => clearStandBy());
+
 window.addEventListener('message', (event: MessageEvent) => {
   const data = event.data as { type?: string; sessionId?: string } | undefined;
   if (data?.type !== 'scs:port') return;

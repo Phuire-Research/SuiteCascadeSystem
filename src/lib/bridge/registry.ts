@@ -782,6 +782,36 @@ export async function setSessionWorker(ulid: string): Promise<void> {
 }
 
 /**
+ * D-UP · THE STAND-BY MARKER · setSessionStandBy — primed-session overlay marker.
+ *
+ * Stamps entry.standBy on `ulid`. The setSessionWorker rail exactly: persisted at
+ * spawn time (BEFORE spawnElectronSessionForUlid) so the detached open-session —
+ * which re-derives ALL spawn state from the registry by ULID — knows to paint the
+ * Stand By overlay on the presenter while the directive delivery is pending
+ * (manualMode spawns: Claude Code boots for seconds after the first PTY byte; the
+ * overlay is the honest wait). CLEARED (set false) by cli-handler's sendMessage
+ * leg when the FKIS delivery lands, so a later re-engage never re-shows a stale
+ * overlay. Idempotent on value-match; no-op on missing ulid; chainWrite mutex.
+ *
+ * Callers: scsBridgeSpawnSuite8Session quality (manualMode:true → set true) ·
+ * cli-handler sendMessage delivery (→ set false).
+ */
+export async function setSessionStandBy(ulid: string, standBy: boolean): Promise<void> {
+  return chainWrite('setSessionStandBy', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if ((entry.standBy === true) === standBy) {
+      log('registry.standby.noop', { ulid, standBy, reason: 'already-set' });
+      return;
+    }
+    entry.standBy = standBy;
+    await saveRegistry(registry);
+    log('registry.standby.set', { ulid, standBy });
+  });
+}
+
+/**
  * D3C · JTCH · Turn-Index-Counter-Registry (TICR) atomic merge.
  *
  * Updates the four finalTurn* / lastActivityAt fields on the session entry

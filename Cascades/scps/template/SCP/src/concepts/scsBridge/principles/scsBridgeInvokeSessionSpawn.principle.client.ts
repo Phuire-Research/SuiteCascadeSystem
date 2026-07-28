@@ -199,6 +199,10 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // lane as asWorker/scpName) · threaded into the MCP arguments when true → the bridge quality,
         // on an OFFLINE anchor, creates a NEW session + re-claims the anchor instead of re-engaging it.
         const pendingFresh = k_.pendingSpawnSuite8Fresh.select();
+        // D-UP · THE MANUAL-MODE SEVER · read at fire-time (same lane) · threaded when true →
+        // the bridge quality skips the auto-permission marker (approval gate intact) + arms the
+        // Stand By overlay on the primed session (the Gitm Resolver's user-controlled update law).
+        const pendingManualMode = k_.pendingSpawnSuite8ManualMode.select();
 
         console.log(
           '[SCS-Bridge CMIA-Spawn-Suite8] Gate · pendingSpawnSuite8Name=',
@@ -230,7 +234,7 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // spawns AGAIN → infinite "new session after new session". Clearing here means the clear
         // is applied DURING the fetch (while isSpawningSuite8=true blocks re-fires), so by the
         // time .finally() releases the guard the trigger is already undefined.
-        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined }), {
+        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined }), {
           throttle: 0
         });
         console.log('[SCS-Bridge CMIA-Spawn-Suite8] Gate FIRE · pendingSuite8Name=', pendingSuite8Name, '· asWorker=', pendingAsWorker ?? false, '· trigger cleared early (TFCD-EARLY)');
@@ -265,6 +269,9 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
               // payload.fresh → on an OFFLINE anchor, create a NEW session + re-claim the anchor).
               // Omitted → the ordinary offline→re-engage behaviour.
               ...(pendingFresh ? { fresh: true } : {}),
+              // D-UP · thread manualMode ONLY when true (the bridge quality severs the
+              // auto-permission marker + arms the Stand By overlay). Omitted → worker auto-accept.
+              ...(pendingManualMode ? { manualMode: true } : {}),
             },
           },
         };

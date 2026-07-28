@@ -38,7 +38,7 @@ import type {
 } from '../scsBridge.types';
 import { createSession, hasResumableIdentity } from '../../../manager';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
-import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionModel } from '../../../registry';
+import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel } from '../../../registry';
 // DF1 · THE S8 SESSION BINDING · the durable-mirror READ leg. THE DF1 BINDING LAW: S8.json =
 // the S8's durable session memory. The ABSENT-anchor spawn path consults readSuite8BoundSession
 // to RESUME a page's prior session (a fresh SCP install / wiped registry lost the operational
@@ -85,6 +85,11 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
       // resumes a prior one — the OFFLINE anchor branch below CREATES a new session + re-claims
       // the anchor onto it instead of re-engaging the dead anchor. Omit/false = the C385 behavior.
       const fresh = payload.fresh === true;
+      // D-UP · THE MANUAL-MODE SEVER · true = fresh-worker spawn WITHOUT the WAPM
+      // auto-permission marker (approval gate INTACT — the update stays user-controlled)
+      // + the registry standBy marker (the presenter's Stand By overlay while the
+      // directive delivery is pending). The Gitm Resolver's flag.
+      const manualMode = payload.manualMode === true;
 
       // NDEP · suite8Name is REQUIRED · reject empty/non-string (would otherwise
       // spawn a General Agent with no identity — the exact corruption SBST kills).
@@ -281,8 +286,17 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           // spawn-settings.json gains permissions.defaultMode='acceptEdits' (boots in Claude
           // Code auto-accept, retiring the Shift+Tab relay for the sweep). Anchors / plain SCP
           // sessions never reach this branch → isWorker stays unset → approval gate intact.
-          if (asWorker) {
+          //
+          // D-UP · THE MANUAL-MODE SEVER · manualMode:true keeps the worker spawn shape
+          // (anti-flood skipped above) but SEVERS the auto-permission marker — the session
+          // boots with Claude Code's approval gate INTACT (the update is user-controlled).
+          // It gains the standBy marker instead: the detached open-session reads it and
+          // paints the presenter's Stand By overlay until the directive delivery lands.
+          if (asWorker && !manualMode) {
             await setSessionWorker(sessionId);
+          }
+          if (manualMode) {
+            await setSessionStandBy(sessionId, true);
           }
           spawnElectronSessionForUlid(sessionId);               // cli-handler reads suite8Name
           log('scsbridge.spawn-suite8.launched', {
@@ -290,6 +304,7 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
             scpName: scpName ?? null,
             sessionId,
             asWorker,
+            manualMode,
             transport: 'electron',
           });
           console.log(

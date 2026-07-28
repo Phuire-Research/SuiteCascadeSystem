@@ -71,6 +71,16 @@ contextBridge.exposeInMainWorld('scs', {
   onShuttingDown(cb: () => void): void {
     ipcRenderer.on('scs:shutting-down', () => cb());
   },
+  // D-UP · THE STAND BY OVERLAY — main announces a primed manualMode spawn (registry standBy
+  // marker): the renderer paints a "Stand By" notice while Claude Code boots + the directive
+  // delivery is pending. Cleared by 'scs:stand-by-clear' (the FKIS delivery landing), by the
+  // user's first input, anor a safety timeout — the overlay never blocks input.
+  onStandBy(cb: () => void): void {
+    ipcRenderer.on('scs:stand-by', () => cb());
+  },
+  onStandByClear(cb: () => void): void {
+    ipcRenderer.on('scs:stand-by-clear', () => cb());
+  },
   // SWRM · the live render-mode swap (D3 · the Watcher-Cascade-Pipe terminus). main posts
   // 'scs:renderMode' when bridge.json.renderMode changes; the presenter swaps the uMode uniform.
   onRenderMode(cb: (mode: string) => void): void {

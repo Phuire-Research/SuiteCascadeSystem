@@ -162,6 +162,14 @@ export type RegistryEntry = {
   // plain SCP sessions, and the install path NEVER set this → approval gate intact.
   // Optional · additive · undefined = not a worker (the default, gate-preserving).
   isWorker?: boolean;
+  // D-UP · THE STAND-BY MARKER · true iff this session was spawned manualMode (a
+  // primed worker awaiting a directive delivery — the Gitm Resolver class). The
+  // detached open-session reads it by ULID and paints the presenter's Stand By
+  // overlay ("STAND BY · Claude Code is initializing") so the user is never left
+  // watching an idle boot. Cleared (false) by cli-handler's sendMessage leg the
+  // moment the FKIS delivery lands — a re-engage never re-shows a stale overlay.
+  // Optional · additive · undefined = no overlay (the default).
+  standBy?: boolean;
   // D3RM-E · WIPS · RegistryEntry parallel to SessionMeta.terminalWindowId.
   // macOS Terminal.app window-id captured at spawn time; targeted by the FOCUS
   // primitive (focusTerminalWindow) for per-session window-front activation.

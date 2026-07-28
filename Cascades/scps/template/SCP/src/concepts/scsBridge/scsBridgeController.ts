@@ -193,7 +193,9 @@ export type ScsBridgeController = {
   // C386 · fresh (default false) · true = the Forge's Per-Actualization Engage (a NEW conduction) →
   // threaded to the MCP fresh arg so the bridge creates a NEW session + re-claims the anchor rather
   // than re-engaging an OFFLINE one.
-  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean) => void;
+  // D-UP · manualMode (5th arg · default false) · true = fresh-worker spawn WITHOUT the
+  // auto-permission marker (approval gate intact + Stand By overlay) — the Gitm Resolver's flag.
+  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean) => void;
   // C373 · THE RENAME-PROOF ALIAS · same signature as triggerSpawnSuite8Session; ONE implementation,
   // two names. The `suite8:page` pipeline recursively find-replaces `Suite8`→`{Domain}` /
   // `suite8`→`{domainLower}` across EVERY .ts/.vue in the copied concept dir (suite8PageCreate.ts
@@ -203,7 +205,7 @@ export type ScsBridgeController = {
   // has no `Suite8`/`suite8` substring → SURVIVES the rename intact (the proven /s8/ URL-alias idiom).
   // Copied suite8-concept call sites MUST call THIS name; shared surfaces keep triggerSpawnSuite8Session.
   // C386 · fresh (4th arg) rides the same signature — the Forge's Engage passes fresh:true.
-  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean) => void;
+  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean) => void;
   // MD-9 · D-MC-3 · Per-Instance Model Control · set the model the NEXT spawn (general anor S8)
   // pins. Persistent selection the Session Management dropdown owns; both spawn principles read
   // pendingSpawnModel FRESH at fire-time. undefined = clear the pin (spawn → global default).
@@ -584,8 +586,10 @@ export function createScsBridgeController(): ScsBridgeController {
   // watches it and fires MCP scs_spawn_suite8_session (which sets entry.suite8Name
   // BEFORE spawn so cli-handler composes Base→Dock→Instance). The optional scpName
   // is reserved for a future SCP-bound spawn lane (C1 spawns Template SCP default).
-  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false): void => {
-    console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh);
+  // D-UP · manualMode (5th param) = fresh-worker spawn WITHOUT the auto-permission marker —
+  // approval gate intact + the Stand By overlay on the primed session (the Gitm Resolver's flag).
+  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false): void => {
+    console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode);
     // C375 · THE ENGAGE AWAIT HARDENING · the S4 prescription — one loud line naming the Muxium state
     // BEFORE the try, so the relay pins whether the Engage reached a LIVE controller or a detached one.
     console.log('[ScsBridgeController] triggerSpawnSuite8Session · currentMuxium=', currentMuxium ? 'LIVE' : 'NULL');
@@ -609,6 +613,8 @@ export function createScsBridgeController(): ScsBridgeController {
         // C386 · thread fresh ONLY when true (omit for the ordinary anchor path → the bridge default
         // offline→re-engage). The InvokeSpawnSuite8 principle reads pendingSpawnSuite8Fresh at fire-time.
         ...(fresh ? { fresh: true } : {}),
+        // D-UP · thread manualMode ONLY when true (the Gitm Resolver's user-controlled spawn).
+        ...(manualMode ? { manualMode: true } : {}),
       });
       mux.dispatch(action);
       console.log('[ScsBridgeController] triggerSpawnSuite8Session dispatched · trigger field set · asWorker=', asWorker, '· scpName=', scpName ?? null, '· fresh=', fresh);

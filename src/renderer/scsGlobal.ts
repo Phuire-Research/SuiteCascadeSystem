@@ -16,6 +16,10 @@ export interface ScsRendererApi {
   onRasterBleep?(cb: (ms: number) => void): void;
   // D-GTC S5 · the graceful-close notice → paint a "Shutting Down…" overlay.
   onShuttingDown?(cb: () => void): void;
+  // D-UP · the primed-spawn Stand By overlay (manualMode workers awaiting a directive
+  // delivery) + its clear channel (delivery landed anor user input anor timeout).
+  onStandBy?(cb: () => void): void;
+  onStandByClear?(cb: () => void): void;
   onPresenterInit?(cb: (sessionId: string) => void): void;
   sendKey?(sessionId: string, data: string): void;
   sendMouse?(sessionId: string, payload: import('../shared/inputForward').MouseForward): void;

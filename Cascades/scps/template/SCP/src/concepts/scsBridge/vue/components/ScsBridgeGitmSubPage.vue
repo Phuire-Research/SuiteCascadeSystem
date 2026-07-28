@@ -732,7 +732,7 @@ const resolverStatusText = computed<string>(() => {
   switch (resolverPhase.value) {
     case 'spawning':   return 'Starting resolver session…';
     case 'waiting':    return 'Waiting for the resolver to come online…';
-    case 'delivering': return 'Waiting for Claude Code to initialize, then handing instructions…';
+    case 'delivering': return 'Claude Code is initializing (Stand By shown on the session) — handing instructions…';
     case 'done':       return 'Resolver session started.';
     case 'error':      return `Error: ${resolverError.value}`;
     default:           return '';
@@ -768,8 +768,10 @@ watch(
     // (welcome banner + tips). Delivering immediately splits the directive: early chars land
     // in the raw terminal, the rest buffer into the half-initialized input, and the submit
     // dies. The bridge-side readiness ping gates the CHANNEL; this backoff gates the APP.
-    // Fixed 9s per the pragmatic-delay doctrine — comfortably past CC's interactive prompt.
-    await new Promise<void>((r) => setTimeout(r, 9000));
+    // D-UP · shortened 9s → 6s: the session's own Stand By overlay (the manualMode spawn arms
+    // it; the delivery clears it) now carries the wait honestly, and 6s still clears CC's
+    // interactive prompt on current boots. The pragmatic-delay doctrine holds.
+    await new Promise<void>((r) => setTimeout(r, 6000));
 
     const scpName = props.gitmJson?.updateStatus.scpName ?? '';
     const diffJsonPath = `Cascades/Bridge/scp-update-diff.${scpName}.json`;
@@ -798,7 +800,10 @@ function spawnResolver(): void {
   sessionCountAtSpawn.value = sessionsList.value.length;
   resolverPhase.value = 'spawning';
 
-  ctrl.triggerSpawnSuite8Session('Gitm Resolver', scpName, true);
+  // D-UP · asWorker=true (fresh worker · anti-flood skipped so repeat updates always spawn) +
+  // manualMode=true (NO auto-permission — the update is user-controlled; Claude Code's approval
+  // gate stays intact) + the bridge arms the session's Stand By overlay until delivery lands.
+  ctrl.triggerSpawnSuite8Session('Gitm Resolver', scpName, true, false, true);
 
   // SIGR auto-clear — once the spawn ack lands (isSpawningSuite8 → false) advance to waiting.
   const sigRWatcher = watch(

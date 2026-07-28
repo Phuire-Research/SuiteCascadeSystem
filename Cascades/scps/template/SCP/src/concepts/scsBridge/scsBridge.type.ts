@@ -164,6 +164,13 @@ export type ScsBridgeClientState = {
   // rather than re-engaging the dead one); undefined/false = the ordinary offline→re-engage behaviour.
   // Cleared alongside the name (TFCD).
   pendingSpawnSuite8Fresh: boolean | undefined;
+  // D-UP · THE MANUAL-MODE SEVER · companion to pendingSpawnSuite8Name read at fire time. true =
+  // a fresh-worker spawn WITHOUT the bridge's auto-permission marker (threaded into
+  // scs_spawn_suite8_session MCP args as manualMode:true → the session boots with Claude Code's
+  // approval gate INTACT + the Stand By overlay while its directive delivery is pending — the
+  // Gitm Resolver's user-controlled update law). undefined/false = the ordinary worker auto-accept.
+  // Cleared alongside the name (TFCD).
+  pendingSpawnSuite8ManualMode: boolean | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -334,6 +341,11 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // CREATES a new session + re-claims the anchor instead of re-engaging the dead one. Omitted/false
   // = the ordinary offline→re-engage anchor behaviour.
   fresh?: boolean;
+  // D-UP · THE MANUAL-MODE SEVER · optional companion. true = fresh-worker spawn WITHOUT the
+  // auto-permission marker (→ pendingSpawnSuite8ManualMode → the InvokeSpawnSuite8 principle →
+  // MCP manualMode arg) — approval gate INTACT + the Stand By overlay on the primed session.
+  // The Gitm Resolver's flag. Omitted/false = the ordinary worker auto-accept.
+  manualMode?: boolean;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue

@@ -104,6 +104,9 @@ export function createScsBridgeClientState(): ScsBridgeClientState {
     // the Forge's Per-Actualization Engage (threaded into scs_spawn_suite8_session MCP args → the
     // bridge creates a NEW session + re-claims the anchor on an OFFLINE anchor rather than resuming it).
     pendingSpawnSuite8Fresh: undefined,
+    // D-UP · THE MANUAL-MODE SEVER · undefined/false = ordinary worker auto-accept. true = the
+    // fresh-worker spawn WITHOUT the auto-permission marker (approval gate intact + Stand By overlay).
+    pendingSpawnSuite8ManualMode: undefined,
     // MD-9 · D-MC-3 · Per-Instance Model Control · seeded to the default model so the dropdown
     // opens on Opus 4.8 and every spawn threads a model unless the user chooses otherwise.
     pendingSpawnModel: SCS_DEFAULT_MODEL,
@@ -182,6 +185,8 @@ export const SCSBRIDGE_FILTER_KEYS: string[] = [
   'pendingSpawnSuite8ScpName',
   // C386 · fresh-flag companion (client-local; not bidirectionally synced)
   'pendingSpawnSuite8Fresh',
+  // D-UP · manual-mode companion (client-local; not bidirectionally synced)
+  'pendingSpawnSuite8ManualMode',
   // MD-9 · D-MC-3 · Per-Instance Model Control selection (client-local; not bidirectionally synced)
   'pendingSpawnModel',
   'pendingEngageSessionId',
