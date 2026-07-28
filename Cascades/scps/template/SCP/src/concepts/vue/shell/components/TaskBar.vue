@@ -536,8 +536,11 @@ function handleTurnOverTriggered(): void {
 .taskbar-version-tip {
   position: absolute;
   bottom: calc(100% + 11px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  /* D-UP8b · LEFT-ANCHORED (the cut-off cure): the label sits at the frame's far left —
+     a centered 240px pane ran half off-screen. Anchoring to the wrap's left edge grows
+     the pane rightward, always in frame. */
+  left: 0;
+  transform: translateY(4px);
   display: flex;
   flex-direction: column;
   gap: 3px;
