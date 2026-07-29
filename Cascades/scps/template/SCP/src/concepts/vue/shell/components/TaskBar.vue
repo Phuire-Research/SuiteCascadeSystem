@@ -68,6 +68,23 @@ const bridgeNpmVersion = ref<string | null>(null);
 // ('cli' → the CLI update · 'scp' → the Update circuit · 'both' · 'unknown' = a pre-counter
 // publish, both paths). Drives the tip's routing lines; the click lands the Update page.
 const bridgeUpdateClass = ref<'none' | 'cli' | 'scp' | 'both' | 'unknown'>('none');
+// THE FULL MUXAMETER LINE — the two Demometers' counters, installed → remote, rendered in
+// the pop over once available (installed rides bridge.json; remote rides the npm /latest
+// custom field — absent until a counter-carrying publish).
+type CounterPair = { cli: number; scp: number };
+const installedCounters = ref<CounterPair | null>(null);
+const remoteCounters = ref<CounterPair | null>(null);
+const muxameterLine = computed<string | null>(() => {
+  const i = installedCounters.value;
+  const r = remoteCounters.value;
+  if (!i && !r) return null;
+  const side = (label: string, iv: number | undefined, rv: number | undefined): string => {
+    if (iv === undefined && rv === undefined) return `${label} —`;
+    if (rv === undefined || iv === rv) return `${label} #${iv ?? rv}`;
+    return `${label} #${iv ?? '—'} → #${rv}`;
+  };
+  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}`;
+});
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
 
@@ -123,7 +140,13 @@ onMounted(() => {
   const timer = setTimeout(() => abort.abort(), 5000);
   fetch('/scs-bridge-version', { signal: abort.signal })
     .then((r) => (r.ok ? r.json() : null))
-    .then((body: { installedVersion?: unknown; npmLatestVersion?: unknown; updateClass?: unknown } | null) => {
+    .then((body: {
+      installedVersion?: unknown;
+      npmLatestVersion?: unknown;
+      updateClass?: unknown;
+      installedMuxameter?: unknown;
+      remoteMuxameter?: unknown;
+    } | null) => {
       if (body && typeof body.installedVersion === 'string') bridgeInstalledVersion.value = body.installedVersion;
       if (body && typeof body.npmLatestVersion === 'string') bridgeNpmVersion.value = body.npmLatestVersion;
       if (
@@ -132,6 +155,16 @@ onMounted(() => {
         ['none', 'cli', 'scp', 'both', 'unknown'].includes(body.updateClass)
       ) {
         bridgeUpdateClass.value = body.updateClass as 'none' | 'cli' | 'scp' | 'both' | 'unknown';
+      }
+      const pair = (m: unknown): CounterPair | null => {
+        const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+        return o && typeof o.cli === 'number' && typeof o.scp === 'number'
+          ? { cli: o.cli, scp: o.scp }
+          : null;
+      };
+      if (body) {
+        installedCounters.value = pair(body.installedMuxameter);
+        remoteCounters.value = pair(body.remoteMuxameter);
       }
     })
     .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
@@ -235,6 +268,9 @@ function handleTurnOverTriggered(): void {
             >
               <span class="taskbar-version-tip-title">SCS-Bridge</span>
               <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
+              <!-- THE FULL MUXAMETER LINE — the two counters, installed → remote, once
+                   the data serves (installed via bridge.json · remote via the npm publish). -->
+              <span v-if="muxameterLine" class="taskbar-version-tip-counters">{{ muxameterLine }}</span>
             </span>
           </Teleport>
         </span>
@@ -634,6 +670,15 @@ function handleTurnOverTriggered(): void {
   line-height: 1.45;
   letter-spacing: 0.02em;
   color: rgba(228, 232, 240, 0.82);
+}
+.taskbar-version-tip-counters {
+  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--color-purple, #a78bfa) 85%, #fff);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
+  margin-top: 2px;
 }
 .taskbar-version-tip--visible {
   opacity: 1;
