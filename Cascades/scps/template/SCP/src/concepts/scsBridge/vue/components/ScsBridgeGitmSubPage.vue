@@ -81,8 +81,19 @@ const commitMessage = ref<string>('');
 // ──────────────────────────────────────────────────────────────────────────
 // GITM Dev Epoch (MD-C) — 'graph' adds the SVG commit-DAG tab (off gitmJson.commitGraph).
 type GitmTab = 'workflow' | 'graph' | 'update';
-// THE VERSIONING MUXAMETER · the deep-link seed: the ?sub=update rail lands the Update tab.
-const activeGitmTab = ref<GitmTab>(props.initialTab ?? 'workflow');
+const activeGitmTab = ref<GitmTab>('workflow');
+// THE VERSIONING MUXAMETER · the deep-link seed — WATCHED, not setup-read: the child's setup
+// runs BEFORE the parent's onMounted sets initialTab (the ?sub=update reader), so a plain
+// `props.initialTab ?? 'workflow'` seed always missed. The immediate watch covers both
+// orders and applies the tab the moment the parent's URL read lands (the PlayTester field
+// catch: the click reached the GitM page but rested on 'workflow').
+watch(
+  () => props.initialTab,
+  (t) => {
+    if (t) activeGitmTab.value = t;
+  },
+  { immediate: true },
+);
 
 // THE MUXAMETER GATES — the classed verdict + the CLI self-update surface.
 const updateClass = computed<string>(() => props.versionCheck?.updateClass ?? 'none');
