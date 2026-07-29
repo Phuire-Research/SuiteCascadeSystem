@@ -11,6 +11,7 @@
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge">npm</a> · 
   <a href="https://poe.com/SCS-Researcher">Live Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
