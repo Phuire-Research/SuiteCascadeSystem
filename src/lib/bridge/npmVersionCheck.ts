@@ -194,6 +194,11 @@ export function startNpmVersionWatch(
   // refreshes the same field on success.
   cache.installedMuxameter = getBridgeMuxameter();
   const runOnce = async (): Promise<void> => {
+    // D-RD1 · the fresh re-read each tick: a no-restart install (the scp-classed path)
+    // replaces the on-disk package while this process runs — the cached counters would
+    // report the OLD install until restart. The fresh read keeps the sovereign copies
+    // honest within one watch tick.
+    cache.installedMuxameter = getBridgeMuxameter(undefined, true) ?? cache.installedMuxameter;
     const before = cache.versionCheckedAt;
     await checkNpmLatestVersion(currentVersion);
     if (cache.versionCheckedAt !== before) {

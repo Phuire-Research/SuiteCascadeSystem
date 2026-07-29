@@ -61,6 +61,7 @@ import { gitmExec } from '../model/gitmExec.model';
 import { resolveGitmTargetCwd } from '../model/gitmOpCwd.model';
 import { isWorkingBranchFor, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
 import { log } from '../../../debugLog';
+import { getBridgeMuxameter } from '../../../bridgeVersion';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
 import type { GitmScpUpdateApplyPayload, GitmScpUpdateApply } from './types';
 
@@ -523,10 +524,37 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
 
+      // D-RD1 · THE APPLIED-COUNTER STAMP (the Red Discipline): the landed payload IS the
+      // installed package's scp counter — stamp it into the SCP's own scp.config.json BEFORE
+      // the landing commit so the stamp rides it. The /scs-bridge-version verdict keys the
+      // red label on THIS applied counter (not the global install): red persists until the
+      // payload lands; purple returns here. Absent counter (pre-counter build) → skip.
+      let stampWrote = false;
+      const freshMuxameter = getBridgeMuxameter(undefined, true);
+      if (freshMuxameter) {
+        try {
+          const configAbs = resolveApplyPath(opCwd, 'SCP/scp.config.json').abs;
+          const rawConfig = existsSync(configAbs)
+            ? (JSON.parse(readFileSync(configAbs, 'utf8')) as Record<string, unknown>)
+            : {};
+          if (rawConfig.scsMuxameterScp !== freshMuxameter.scp) {
+            rawConfig.scsMuxameterScp = freshMuxameter.scp;
+            writeFileSync(configAbs, JSON.stringify(rawConfig, null, 2) + '\n', 'utf8');
+            stampWrote = true;
+            log('gitm.update.apply.muxameter-stamped', { scpName, appliedScp: freshMuxameter.scp });
+          }
+        } catch (err: unknown) {
+          log('gitm.update.apply.muxameter-stamp-failed', {
+            error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+          });
+        }
+      }
+
       // 4) LAND via the EXISTING GitM seam — stage the applied files, then commit on the SCP
-      //    RED repo. Nothing applied → nothing to land (success · no commit).
+      //    RED repo. Nothing applied → nothing to land (success · no commit). The stamp alone
+      //    also lands (an all-preserved apply is still a landed payload).
       let committed = false;
-      if (stagedPaths.length > 0) {
+      if (stagedPaths.length > 0 || stampWrote) {
         // C322 · STAGE-THE-OUTCOME, NOT THE MANIFEST: per-path `git add <p>` dies on pathspec
         // quirks the write loop legitimately produces (deletions of absent-but-tracked files —
         // the 087/088 fatal class). The tree IS the truth after the write loop; one sweep

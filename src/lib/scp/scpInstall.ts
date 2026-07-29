@@ -56,6 +56,7 @@ import {
 } from './scpPersistence';
 import { ensureNestedGitStructure } from '../bridge/gitmNestedMaintain';
 import { SCP_CONFIG_FILENAME } from '../bridge/scpConfig.model';
+import { getBridgeMuxameter } from '../bridge/bridgeVersion';
 // MB-W1 · THE URL PRIMITIVE · performClone owns the dual-path clone (file:// → fs cp,
 // remote → git clone --depth=1). Reused verbatim for sourceUrl foreign-source installs.
 import { performClone, performCloneAtCommit } from '../bridge/installSpawn';
@@ -1214,9 +1215,15 @@ function finalizeScpInstall(
   // resolution in the guard remains for env-carrying spawn routes).
   try {
     const scpConfigPath = path.join(installPath, SCP_CONFIG_FILENAME);
+    // D-RD1 · born current: a fresh install carries the installing package's scp counter as
+    // its applied counter — the Red Discipline verdict starts purple.
     writeFileSync(
       scpConfigPath,
-      JSON.stringify({ scpName: derivation.designation }, null, 2) + '\n',
+      JSON.stringify(
+        { scpName: derivation.designation, scsMuxameterScp: getBridgeMuxameter()?.scp ?? null },
+        null,
+        2,
+      ) + '\n',
       'utf8',
     );
   } catch {

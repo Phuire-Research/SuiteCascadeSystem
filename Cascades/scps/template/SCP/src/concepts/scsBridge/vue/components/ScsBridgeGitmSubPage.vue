@@ -61,6 +61,12 @@ interface Props {
     updateClass?: string;
     npmLatestVersion?: string | null;
     installedVersion?: string | null;
+    // D-RD1 · the Red Discipline fields: what THIS app has landed + whether a global
+    // sync is available (the install button's key — independent of the class).
+    appliedScpMuxameter?: number | null;
+    syncAvailable?: boolean;
+    installedMuxameter?: { cli: number; scp: number } | null;
+    remoteMuxameter?: { cli: number; scp: number } | null;
   } | null;
 }
 
@@ -106,6 +112,18 @@ const scpUpdateNeeded = computed<boolean>(
 // cli-only → the SAVED-RESOLVER note: no template changes ride this release — the Update
 // circuit (and its resolver) is not needed.
 const resolverSaved = computed<boolean>(() => updateClass.value === 'cli');
+// D-RD1 · the double-bind cure: the install button keys on SYNC-AVAILABLE (the remote
+// version is newer than the global install), never on the class — red can persist on the
+// scp leg while the button has already done its work anor still awaits its press.
+const syncAvailable = computed<boolean>(() => props.versionCheck?.syncAvailable === true);
+// The scp-leg split: does the GLOBAL install already carry the pending payload on disk?
+// (yes → Run Update below, no install needed · no → install first, then Run Update).
+const scpPayloadOnDisk = computed<boolean>(() => {
+  const im = props.versionCheck?.installedMuxameter;
+  const rm = props.versionCheck?.remoteMuxameter;
+  if (!im || !rm) return false;
+  return im.scp >= rm.scp;
+});
 const cliUpdateState = computed(() => props.gitmJson?.cliUpdate ?? null);
 const cliUpdateBusy = computed<boolean>(() => cliUpdateState.value?.status === 'installing');
 function runCliUpdate(): void {
@@ -249,6 +267,15 @@ function setRemoteOrigin(): void {
   remoteUrlDraft.value = '';
 }
 
+// D-RD2 · THE SCP MANAGEMENT DOOR — the dual-rail deep link (the goUpdatePage exemplar):
+// the release path continues in the SCS-Bridge island's SCP Management sub-page, where the
+// Configuration JSON is assembled + copied.
+function goScpManagement(): void {
+  const params = new URLSearchParams(window.location.search);
+  params.set('island', 'scsBridge');
+  params.set('sub', 'scp-management');
+  window.location.search = params.toString();
+}
 function pushToRemote(): void {
   if (isGitmActing.value) return;
   fireAction('gitm_push', {});
@@ -1084,7 +1111,7 @@ function spawnResolver(): void {
              bridge reads the new template payload from disk); both → install + relaunch +
              Run Update. Renders above every update state (idle · staging · apply success). -->
         <section
-          v-if="cliUpdateNeeded || scpUpdateNeeded || resolverSaved || cliUpdateState?.status === 'restart-required'"
+          v-if="cliUpdateNeeded || scpUpdateNeeded || resolverSaved || syncAvailable || cliUpdateState?.status === 'restart-required'"
           class="gitm-muxameter hifi-pane-purple"
         >
           <div class="gitm-muxameter-row">
@@ -1100,7 +1127,7 @@ function spawnResolver(): void {
               RESTART REQUIRED · v{{ cliUpdateState?.installedOnDisk }} installed — quit and relaunch <code>scs</code>
             </span>
             <button
-              v-else-if="cliUpdateNeeded || scpUpdateNeeded"
+              v-else-if="syncAvailable"
               class="hifi-btn hifi-btn-purple"
               :disabled="cliUpdateBusy || isGitmActing"
               @click="runCliUpdate"
@@ -1122,10 +1149,20 @@ function spawnResolver(): void {
             Both aspects updated: run the CLI update above (then relaunch), and carry your app
             current with Run Update below.
           </p>
-          <p v-else-if="updateClass === 'scp'" class="gitm-muxameter-saved">
+          <p v-else-if="updateClass === 'scp' && !scpPayloadOnDisk" class="gitm-muxameter-saved">
             This release updates your app's template only — press the update above to bring the
             new payload onto disk (<span class="hifi-hl-green">no relaunch needed</span> for
             this kind), then carry your app current with Run Update below.
+          </p>
+          <p v-else-if="updateClass === 'scp' && scpPayloadOnDisk" class="gitm-muxameter-saved">
+            The global install already carries this app's pending payload — the label stays
+            <span class="hifi-hl-red">red</span> until it lands here:
+            <span class="hifi-hl-green">Run Update below</span>, and purple returns.
+          </p>
+          <p v-else-if="updateClass === 'none' && syncAvailable" class="gitm-muxameter-saved">
+            A newer publish exists with <span class="hifi-hl-green">nothing of value for this
+            app anor the CLI</span> — the sync above is optional, offered only to keep the
+            versions aligned.
           </p>
         </section>
 
@@ -1398,6 +1435,55 @@ function spawnResolver(): void {
            Untracked / Commit / Warnings. Default-active so the page opens on the git workflow. -->
       <template v-if="activeGitmTab === 'workflow'">
 <!-- C844 S3 · the Developer widget MOVED under the Commit (above the Diff) -->
+
+      <!-- ═ D-RD2 · THE RELEASE PANE ═ — the streamlined SCP release surface, FIRST-CLASS just
+           above the Branches (the Developer chips' Remote group remains the dev-tool twin).
+           Origin read-back + set/modify + Push (first-push -u handled bridge-side) + the door
+           to SCP Management, where the Configuration JSON (the paste-install manifest) is
+           assembled + copied for listing on SCP-Origin. Release = set origin → Push → copy. -->
+      <section id="gitm-section-release" class="gitm-release hifi-pane-fuchsia">
+        <h3 class="hifi-heading">Release</h3>
+        <p class="gitm-release-lede">
+          Ship this app: set its remote origin, push, then copy its
+          <span class="hifi-hl-fuchsia">Configuration JSON</span> from SCP Management — the
+          manifest others paste to install it.
+        </p>
+        <div class="gitm-release-origin-row">
+          <span class="gitm-release-label hifi-mono">ORIGIN</span>
+          <span class="gitm-remote-origin hifi-mono">{{ gitmJson.remoteOrigin || '· no origin ·' }}</span>
+          <span v-if="gitmJson.remoteOrigin" class="gitm-release-sync hifi-mono">
+            ↑{{ gitmJson.ahead }} ↓{{ gitmJson.behind }}
+          </span>
+        </div>
+        <div class="gitm-release-actions">
+          <input
+            v-model="remoteUrlDraft"
+            class="gitm-input gitm-release-input"
+            :class="{ 'gitm-input-invalid': remoteUrlDraft.trim() !== '' && !remoteUrlLooksValid }"
+            type="text"
+            placeholder="https://… anor git@… — the remote this app ships to"
+            spellcheck="false"
+            @keyup.enter="setRemoteOrigin"
+          />
+          <button
+            class="hifi-btn hifi-btn-fuchsia"
+            :disabled="isGitmActing || remoteUrlDraft.trim() === '' || !remoteUrlLooksValid"
+            @click="setRemoteOrigin"
+          >
+            {{ gitmJson.remoteOrigin ? 'Modify Origin' : 'Set Origin' }}
+          </button>
+          <button
+            class="hifi-btn hifi-btn-fuchsia"
+            :disabled="isGitmActing || !gitmJson.remoteOrigin"
+            @click="pushToRemote"
+          >
+            Push
+          </button>
+          <button class="hifi-btn hifi-btn-purple" @click="goScpManagement">
+            SCP Management →
+          </button>
+        </div>
+      </section>
 
       <!-- Branches list · MD-B THE BRANCH LIST — fuzzy-find + Sword-marked b/* rows + Set Active
            (the Branch-Set Law). Each non-current row carries a Set Active control that fires
@@ -2923,6 +3009,45 @@ function spawnResolver(): void {
 }
 .gitm-remote-input {
   min-width: 16rem;
+}
+
+/* D-RD2 · THE RELEASE PANE — the first-class release surface above the Branches. */
+.gitm-release {
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+}
+.gitm-release-lede {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+.gitm-release-origin-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.gitm-release-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+}
+.gitm-release-sync {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.gitm-release-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.gitm-release-input {
+  flex: 1 1 16rem;
+  min-width: 14rem;
 }
 
 .gitm-devbar {

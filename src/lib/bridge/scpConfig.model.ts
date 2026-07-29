@@ -25,6 +25,11 @@ export const SCP_CONFIG_FILENAME = 'scp.config.json';
 
 export interface ScpConfig {
   scpName: string;
+  // D-RD1 · THE APPLIED-COUNTER (the Red Discipline): the scp Muxameter counter last
+  // LANDED into this SCP — born at install (the installing package's counter), stamped
+  // at every update-apply success. Absent (pre-law SCP) → verdicts fall back to the
+  // installed-vs-remote comparison until the first stamped apply.
+  scsMuxameterScp?: number | null;
 }
 
 /**

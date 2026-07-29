@@ -67,6 +67,24 @@ const RELEASE_SITE: ReleaseCategory[] = [
           'Template-only releases now get the same <span class="hifi-hl-purple">one-press install</span> as CLI releases — the Update page offers it whenever any part of a release is newer, and says plainly that <span class="hifi-hl-green">no relaunch is needed</span> for this kind: install, then Run Update, and the new payload arrives.',
         ],
       },
+      {
+        title: 'The red label tells the truth to the end',
+        color: 'red',
+        summary: 'The version label stays red until an update actually LANDS in your app — not merely when the install finishes — and stays purple when a newer publish carries nothing of value for you.',
+        detail: [
+          'Each app now remembers which template payload it has <span class="hifi-hl-red">landed</span> — installing the newer package alone no longer flips the label: it stays red until you press Run Update and the payload arrives, then purple returns. The install action stands available the whole way — syncing the global never hides behind the label’s color again.',
+          'And the reverse holds: when a newer version is published but the counters say <span class="hifi-hl-green">nothing changed for your app anor the CLI</span>, the label stays purple — no nag, with an optional sync offered quietly on the Update page.',
+        ],
+      },
+      {
+        title: 'The Release pane — ship your app',
+        color: 'fuchsia',
+        summary: 'A first-class Release surface now heads the GitM page: set your app’s remote origin, push, and step straight into SCP Management to copy its Configuration JSON.',
+        detail: [
+          'Just above the Branches, the <span class="hifi-hl-fuchsia">Release pane</span> reads the current origin with ahead/behind counts, sets anor modifies it, and pushes — the first push sets upstream on its own. The developer chips keep their Remote group; the pane is the release path made visible.',
+          'Its <span class="hifi-hl-purple">SCP Management</span> door lands where the app’s <span class="hifi-hl-fuchsia">Configuration JSON</span> is assembled and copied — the manifest others paste to install your app. Set origin, push, copy: released.',
+        ],
+      },
     ],
   },
   {
