@@ -6,17 +6,12 @@
   <img src="../../assets/scs-badge.png" alt="SCS Badge" width="128" />
 </p>
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/badge/npm-v0.37.0-blue" alt="npm v0.37.0" /></a>
-  <a href="../../CHANGELOG.md"><img src="https://img.shields.io/badge/status-push--ready-brightgreen" alt="push-ready" /></a>
-  <img src="https://img.shields.io/badge/Suite_8_SCS_Bridge-v8.2-purple" alt="SCS Bridge v8.2" />
-</p>
-
 <h1 align="center">The Suite Cascade System</h1>
 
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge">npm</a> · 
   <a href="https://poe.com/SCS-Researcher">Live Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
@@ -26,6 +21,12 @@
   <a href="./ARIOS-POSITION.md">ARIOS Position</a> · 
   <a href="./CLAUDE-AI-INSTRUCTIONS.md">Claude.ai Setup</a> · 
   <a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE">GPLv3</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/v/scs-bridge?label=scs-bridge&color=5286a6" alt="npm version" /></a>
+  &nbsp;<img src="https://img.shields.io/badge/version-%3D%20Cascade%20Cycle-8a6ba6" alt="version = Cascade Cycle" />
+  &nbsp;<a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-c25b52" alt="GPL-3.0" /></a>
 </p>
 
 ---
@@ -499,7 +500,7 @@ npm install -g .
 npm install -g scs-bridge
 ```
 
-> As of v0.37.0 — npm publish is pending; install from local clone. Post-publish, the same `scs` binary becomes available globally via `npm install -g scs-bridge`.
+> Published on npm — the `scs` binary installs globally via `npm install -g scs-bridge`; the npm badge above always carries the current version.
 
 #### Verify
 

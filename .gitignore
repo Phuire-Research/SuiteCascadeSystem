@@ -78,3 +78,6 @@ Cascades/Archive/*
 Cascades/Bridge/
 Cascades/Documentation/Cascades/ICED-SKILL-INDUCTION.md
 scripts/mirror-template-to-lab.sh
+/Cascades/Cascade.json
+/Cascades/hifiConfig.json
+*.bak.*
