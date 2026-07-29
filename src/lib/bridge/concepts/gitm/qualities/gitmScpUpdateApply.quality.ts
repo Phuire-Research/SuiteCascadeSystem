@@ -145,6 +145,7 @@ function readResolved(
 // collisions, and a hunk-less apply entry is a pre-fold diff needing the resolver's resultTree).
 function readDiffFallback(
   diffPath: string,
+  opCwd: string,
 ): { decisions: ApplyDecision[]; pending: number } | null {
   try {
     const raw = readFileSync(diffPath, 'utf8');
@@ -152,6 +153,7 @@ function readDiffFallback(
     const parsed = JSON.parse(raw) as {
       summary?: { apply?: unknown; conference?: unknown };
       buckets?: { apply?: unknown };
+      provenance?: { oursSha?: unknown; resultTree?: unknown };
     };
     const summary = parsed.summary ?? {};
     const conference = typeof summary.conference === 'number' ? summary.conference : 0;
@@ -162,14 +164,28 @@ function readDiffFallback(
     if (apply === 0) return { decisions: [], pending: 0 };
     // FOLD #5b — the apply bucket carries embedded hunks. Synthesize 'patch' decisions from them.
     const applyBucket = Array.isArray(parsed.buckets?.apply) ? (parsed.buckets!.apply as unknown[]) : [];
+    const oursSha =
+      typeof parsed.provenance?.oursSha === 'string' ? parsed.provenance.oursSha : '';
+    const resultTree =
+      typeof parsed.provenance?.resultTree === 'string' ? parsed.provenance.resultTree : '';
     const decisions: ApplyDecision[] = [];
     for (const rawEntry of applyBucket) {
       const e = (rawEntry ?? {}) as Record<string, unknown>;
       const path = typeof e.path === 'string' ? e.path : '';
-      const hunk = typeof e.hunk === 'string' ? e.hunk : '';
-      // A hunk-less apply entry means a PRE-FOLD diff (no embedded hunks) — the resolver is required
-      // (it has the resultTree to mint bytes). HALT the no-agent path by returning null.
-      if (path === '' || hunk === '') return null;
+      let hunk = typeof e.hunk === 'string' ? e.hunk : '';
+      if (path === '') return null;
+      // D-MB · THE OVERSIZE-HUNK EVICTION: an entry with hunkBytes declares its hunk was
+      // evicted from the JSON (a lock-file hunk alone measured 668KB) — the bytes live in
+      // the repo's object db; source them on demand (the same command the script ran).
+      if (hunk === '' && typeof e.hunkBytes === 'number' && oursSha !== '' && resultTree !== '') {
+        const sourced = gitmExec(['diff', oursSha, resultTree, '--', path], opCwd);
+        if (sourced.ok && sourced.stdout.trim() !== '') {
+          hunk = sourced.stdout;
+        }
+      }
+      // A hunk-less apply entry (and no eviction marker anor sourcing failed) means the
+      // resolver is required (it has the resultTree to mint bytes). HALT the no-agent path.
+      if (hunk === '') return null;
       decisions.push({ path, disposition: 'patch', resolvedContent: '', patch: hunk });
     }
     return { decisions, pending: 0 };
@@ -327,7 +343,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
       //    diff fallback. No source at all → HALT (return to 'reviewing').
       let source = readResolved(resolvedPath);
       if (source === null) {
-        source = readDiffFallback(diffPath);
+        source = readDiffFallback(diffPath, opCwd);
         if (source === null) {
           bucket.push({
             ok: false,
