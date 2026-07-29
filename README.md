@@ -150,10 +150,15 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.936.0
+## Release Notes — v0.937.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.937.0 — installs that say what happened**: an install the bridge declines now lands
+  its honest reason on the staged rail the page already watches — never a silent stall. And
+  the Configuration JSON's timestamp is accepted in either UTC spelling (`Z` or `+00:00`),
+  on both sides of the door.
 
 - **0.936.0 — the honest red label + the Release pane**: the version label now stays red
   until an update actually lands in your app (not merely when the install finishes) and stays
