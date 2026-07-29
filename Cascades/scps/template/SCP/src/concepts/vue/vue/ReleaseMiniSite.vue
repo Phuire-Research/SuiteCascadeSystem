@@ -55,6 +55,21 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0937',
+    label: 'New in 0.937.0',
+    features: [
+      {
+        title: 'Installs that say what happened',
+        color: 'green',
+        summary: 'A manifest install that cannot proceed now lands its reason on the staged rail — never silence — and the manifest accepts UTC timestamps in either standard spelling.',
+        detail: [
+          'A field run surfaced the one quiet corner left: an install the bridge declined was reported only to the logs — the rail sat on its first stage while nothing moved. Every declined install now writes its <span class="hifi-hl-green">honest reason</span> to the same rail the page already watches: what stopped, and why, within a beat.',
+          'And the stop that revealed it is itself cured: a Configuration JSON carrying its timestamp as <span class="hifi-hl-blue">+00:00</span> instead of <span class="hifi-hl-blue">Z</span> — the same UTC instant in either spelling — is now accepted on <span class="hifi-hl-green">both sides of the door</span>, the page and the bridge alike.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0936',
     label: 'New in 0.936.0',
     features: [

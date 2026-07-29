@@ -88,11 +88,30 @@ export const scsBridgeInstallScp = createQualityCardWithPayload<
         if (!check.ok) {
           log('scsbridge.install.manifest-rejected', { designation, reason: check.reason });
           console.error('[Scs Bridge InstallScp] manifest rejected:', check.reason);
+          // THE HONEST-REJECT RELAY (the field wound: a bridge-side reject was log-only —
+          // the page's rail sat on CLONE forever while the user was left wondering). The
+          // sidecar carries stage 'failed' + the reason; the intake already renders it.
+          writeInstallProgress(projectRoot, {
+            designation,
+            stage: 'failed',
+            detail: 'manifest rejected by the bridge',
+            reason: check.reason,
+            anchor: '',
+            at: Date.now(),
+          });
           return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
         }
         if (typeof sourceUrl !== 'string' || sourceUrl.length === 0) {
           log('scsbridge.install.manifest-rejected', { designation, reason: 'manifest installs require sourceUrl' });
           console.error('[Scs Bridge InstallScp] manifest install requires sourceUrl');
+          writeInstallProgress(projectRoot, {
+            designation,
+            stage: 'failed',
+            detail: 'manifest rejected by the bridge',
+            reason: 'manifest installs require sourceUrl',
+            anchor: '',
+            at: Date.now(),
+          });
           return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
         }
         anchorCommit = check.manifest.commit.hash;
