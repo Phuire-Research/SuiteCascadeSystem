@@ -150,10 +150,17 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.934.0
+## Release Notes — v0.935.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.935.0 — updates that land whole**: the update conductor is now held to carrying every
+  change byte-exact from the comparison itself — anything beyond exact carriage is written as
+  the whole resolved file, the always-safe form — so an update either lands complete or stages
+  a clear decision, never a stall. And template-only releases now get the same one-press
+  install as CLI releases, with the page saying plainly that no relaunch is needed for that
+  kind: install, then Run Update.
 
 - **0.934.0 — updates, classed**: every release now declares which aspect it changes — the
   CLI, the app template, or both — and each installation compares on its own. The version

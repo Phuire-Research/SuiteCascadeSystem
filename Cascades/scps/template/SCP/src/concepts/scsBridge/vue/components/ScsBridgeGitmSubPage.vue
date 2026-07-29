@@ -1074,13 +1074,17 @@ function spawnResolver(): void {
            even when idle: showUpdateSection switches the idle-entry CTA vs the live stage rail +
            buckets + collision diff WITHIN the always-rendered tab. -->
       <template v-if="activeGitmTab === 'update'">
-        <!-- ═ THE VERSIONING MUXAMETER PANEL ═ — the classed verdict heads the Update tab:
-             CLI-classed (cli/both/unknown) → the CLI self-update action (install automatic ·
-             RESTART in the user's hands); cli-only → the SAVED-RESOLVER note (no app changes
-             ride this release — the circuit below is not needed). Renders above every update
-             state (idle entry · staging view · apply success). -->
+        <!-- ═ THE VERSIONING MUXAMETER PANEL ═ — the classed verdict heads the Update tab.
+             The install action is offered for EVERY class (cli/scp/both/unknown): the npm
+             package carries the app template, so even an scp-only release needs the install
+             on disk before the circuit below can deliver it (the retained clone refreshes
+             from the installed tree). The distinctions are downstream of the install:
+             cli-only → the SAVED-RESOLVER note (the circuit below is not needed) + restart
+             required; scp-only → install then Run Update (no relaunch needed — the running
+             bridge reads the new template payload from disk); both → install + relaunch +
+             Run Update. Renders above every update state (idle · staging · apply success). -->
         <section
-          v-if="cliUpdateNeeded || resolverSaved || cliUpdateState?.status === 'restart-required'"
+          v-if="cliUpdateNeeded || scpUpdateNeeded || resolverSaved || cliUpdateState?.status === 'restart-required'"
           class="gitm-muxameter hifi-pane-purple"
         >
           <div class="gitm-muxameter-row">
@@ -1096,7 +1100,7 @@ function spawnResolver(): void {
               RESTART REQUIRED · v{{ cliUpdateState?.installedOnDisk }} installed — quit and relaunch <code>scs</code>
             </span>
             <button
-              v-else-if="cliUpdateNeeded"
+              v-else-if="cliUpdateNeeded || scpUpdateNeeded"
               class="hifi-btn hifi-btn-purple"
               :disabled="cliUpdateBusy || isGitmActing"
               @click="runCliUpdate"
@@ -1117,6 +1121,11 @@ function spawnResolver(): void {
           <p v-else-if="updateClass === 'both'" class="gitm-muxameter-saved">
             Both aspects updated: run the CLI update above (then relaunch), and carry your app
             current with Run Update below.
+          </p>
+          <p v-else-if="updateClass === 'scp'" class="gitm-muxameter-saved">
+            This release updates your app's template only — press the update above to bring the
+            new payload onto disk (<span class="hifi-hl-green">no relaunch needed</span> for
+            this kind), then carry your app current with Run Update below.
           </p>
         </section>
 

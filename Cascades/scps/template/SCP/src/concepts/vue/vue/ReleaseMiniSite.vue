@@ -55,6 +55,21 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0935',
+    label: 'New in 0.935.0',
+    features: [
+      {
+        title: 'Updates that land whole',
+        color: 'blue',
+        summary: 'The update conductor is now held to carrying every change exactly as computed — anor writing the whole file — so an update either lands complete or stages a clear decision, never a stall.',
+        detail: [
+          'A field run surfaced the one way an update could stall: a change bundle carried <span class="hifi-hl-red">imprecisely</span> between comparison and landing. The conductor now carries every change <span class="hifi-hl-blue">byte-exact from the comparison itself</span>, and anything beyond exact carriage is written as the <span class="hifi-hl-green">whole resolved file</span> instead — the always-safe form. The landing gate is unchanged: your own work is preserved, identity is preserved by rule.',
+          'Template-only releases now get the same <span class="hifi-hl-purple">one-press install</span> as CLI releases — the Update page offers it whenever any part of a release is newer, and says plainly that <span class="hifi-hl-green">no relaunch is needed</span> for this kind: install, then Run Update, and the new payload arrives.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0934',
     label: 'New in 0.934.0',
     features: [
