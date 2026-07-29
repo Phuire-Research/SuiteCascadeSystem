@@ -575,6 +575,20 @@ function handleTurnOverTriggered(): void {
   color: var(--ver-neon);
   text-shadow: 0 0 6px color-mix(in srgb, var(--ver-neon) 40%, transparent);
   cursor: pointer;
+  /* THE CLICKABLE FEEL — the label IS the update button; the cursor alone was the only
+     tell. Hover lifts + fills the neon; active PRESSES (the taskbar-btn family feel). */
+  background: transparent;
+  transition: background 0.14s ease, box-shadow 0.14s ease, transform 0.1s ease;
+}
+.taskbar-bridge-version:hover {
+  background: color-mix(in srgb, var(--ver-neon) 14%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ver-neon) 45%, transparent);
+  transform: translateY(-1px);
+}
+.taskbar-bridge-version:active {
+  background: color-mix(in srgb, var(--ver-neon) 26%, transparent);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--ver-neon) 60%, transparent) inset;
+  transform: translateY(1px) scale(0.97);
 }
 .taskbar-bridge-version--red {
   --ver-neon: var(--color-red, #f87171);
