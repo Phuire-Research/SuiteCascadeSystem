@@ -54,6 +54,14 @@ interface Props {
   // watcher · null until the staging-update engine writes the JSON · guard every access).
   updateDiff?: UpdateDiffShape | null;
   updateResolved?: UpdateResolvedShape | null;
+  // THE VERSIONING MUXAMETER · the ?sub=update deep-link seed (the TaskBar label's click
+  // lands the Update tab directly) + the SCP server's counter verdict (/scs-bridge-version).
+  initialTab?: 'workflow' | 'graph' | 'update' | null;
+  versionCheck?: {
+    updateClass?: string;
+    npmLatestVersion?: string | null;
+    installedVersion?: string | null;
+  } | null;
 }
 
 const props = defineProps<Props>();
@@ -73,7 +81,26 @@ const commitMessage = ref<string>('');
 // ──────────────────────────────────────────────────────────────────────────
 // GITM Dev Epoch (MD-C) — 'graph' adds the SVG commit-DAG tab (off gitmJson.commitGraph).
 type GitmTab = 'workflow' | 'graph' | 'update';
-const activeGitmTab = ref<GitmTab>('workflow');
+// THE VERSIONING MUXAMETER · the deep-link seed: the ?sub=update rail lands the Update tab.
+const activeGitmTab = ref<GitmTab>(props.initialTab ?? 'workflow');
+
+// THE MUXAMETER GATES — the classed verdict + the CLI self-update surface.
+const updateClass = computed<string>(() => props.versionCheck?.updateClass ?? 'none');
+const cliUpdateNeeded = computed<boolean>(
+  () => updateClass.value === 'cli' || updateClass.value === 'both' || updateClass.value === 'unknown',
+);
+const scpUpdateNeeded = computed<boolean>(
+  () => updateClass.value === 'scp' || updateClass.value === 'both' || updateClass.value === 'unknown',
+);
+// cli-only → the SAVED-RESOLVER note: no template changes ride this release — the Update
+// circuit (and its resolver) is not needed.
+const resolverSaved = computed<boolean>(() => updateClass.value === 'cli');
+const cliUpdateState = computed(() => props.gitmJson?.cliUpdate ?? null);
+const cliUpdateBusy = computed<boolean>(() => cliUpdateState.value?.status === 'installing');
+function runCliUpdate(): void {
+  if (cliUpdateBusy.value) return;
+  fireAction('gitm_run_cli_update', {});
+}
 
 function selectGitmTab(tab: GitmTab): void {
   activeGitmTab.value = tab;
@@ -1036,6 +1063,52 @@ function spawnResolver(): void {
            even when idle: showUpdateSection switches the idle-entry CTA vs the live stage rail +
            buckets + collision diff WITHIN the always-rendered tab. -->
       <template v-if="activeGitmTab === 'update'">
+        <!-- ═ THE VERSIONING MUXAMETER PANEL ═ — the classed verdict heads the Update tab:
+             CLI-classed (cli/both/unknown) → the CLI self-update action (install automatic ·
+             RESTART in the user's hands); cli-only → the SAVED-RESOLVER note (no app changes
+             ride this release — the circuit below is not needed). Renders above every update
+             state (idle entry · staging view · apply success). -->
+        <section
+          v-if="cliUpdateNeeded || resolverSaved || cliUpdateState?.status === 'restart-required'"
+          class="gitm-muxameter hifi-pane-purple"
+        >
+          <div class="gitm-muxameter-row">
+            <span class="gitm-muxameter-label hifi-mono">SCS-BRIDGE CLI</span>
+            <span v-if="versionCheck?.npmLatestVersion" class="gitm-muxameter-versions hifi-mono">
+              installed v{{ versionCheck?.installedVersion ?? '—' }} · npm v{{ versionCheck?.npmLatestVersion }}
+            </span>
+            <!-- RESTART REQUIRED — the install landed a newer CLI on disk; the relaunch is yours. -->
+            <span
+              v-if="cliUpdateState?.status === 'restart-required'"
+              class="gitm-muxameter-restart hifi-mono"
+            >
+              RESTART REQUIRED · v{{ cliUpdateState?.installedOnDisk }} installed — quit and relaunch <code>scs</code>
+            </span>
+            <button
+              v-else-if="cliUpdateNeeded"
+              class="hifi-btn hifi-btn-purple"
+              :disabled="cliUpdateBusy || isGitmActing"
+              @click="runCliUpdate"
+            >
+              {{ cliUpdateBusy ? 'Updating CLI…' : 'Update SCS-Bridge CLI' }}
+            </button>
+            <span
+              v-if="cliUpdateState?.status === 'failed'"
+              class="gitm-muxameter-failed hifi-mono"
+            >
+              CLI update failed — run <code>npm install -g scs-bridge</code> from a terminal.
+            </span>
+          </div>
+          <p v-if="resolverSaved" class="gitm-muxameter-saved">
+            This release changes the CLI only — <span class="hifi-hl-green">your app needs no
+            changes</span>, and the update circuit below is not needed this time.
+          </p>
+          <p v-else-if="updateClass === 'both'" class="gitm-muxameter-saved">
+            Both aspects updated: run the CLI update above (then relaunch), and carry your app
+            current with Run Update below.
+          </p>
+        </section>
+
         <!-- APPLY SUCCESS SCREEN — the update has landed (bridge C293 · stage idle + applied note).
              Renders INSTEAD of the stage rail + buckets + collision diff: the applied state is
              terminal, so the finalize motion is the only thing left to show (this also supersedes any
@@ -2713,6 +2786,52 @@ function spawnResolver(): void {
 .gitm-update-actions .hifi-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* THE VERSIONING MUXAMETER PANEL — the classed verdict at the Update tab's head. */
+.gitm-muxameter {
+  border-radius: 8px;
+  padding: 0.9rem 1.15rem;
+  margin-bottom: 1rem;
+}
+.gitm-muxameter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+.gitm-muxameter-label {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-purple, #a78bfa);
+}
+.gitm-muxameter-versions {
+  color: rgba(255, 255, 255, 0.65);
+}
+.gitm-muxameter-restart {
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid rgba(74, 222, 128, 0.6);
+  color: rgba(74, 222, 128, 0.95);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.gitm-muxameter-failed {
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 0.76rem;
+}
+.gitm-muxameter-saved {
+  margin: 0.55rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.gitm-muxameter code {
+  color: rgba(74, 222, 128, 0.9);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.08rem 0.35rem;
+  border-radius: 4px;
 }
 
 /* D-UP2 · THE OPTIONAL RESOLVER — a complete resolution exists (Apply is live); the resolver

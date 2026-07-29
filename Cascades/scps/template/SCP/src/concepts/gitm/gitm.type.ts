@@ -157,6 +157,11 @@ export type GitmJsonShape = {
   // GITM Staging-Update (D-U4.1) — the thin live STAGE RAIL + summary counts (INERT until
   // D-U4.3). TQNI byte-match with the bridge GitmStatusSnapshot.updateStatus field-for-field.
   updateStatus: UpdateStatusShape;
+  // THE VERSIONING MUXAMETER — the CLI self-update surface. TQNI byte-match with the bridge
+  // GitmStatusSnapshot.cliUpdate: 'restart-required' = a newer CLI sits on disk awaiting the
+  // relaunch the user conducts (installedOnDisk vs runningVersion — the honest derivation).
+  // Optional for backward-compat with pre-Muxameter bridges (absent ⇒ the idle treatment).
+  cliUpdate?: { status: string; installedOnDisk: string; runningVersion: string; error: string; at: number };
   detachedHead: boolean;
   conflicts: string[];
   lastReadAt: number;

@@ -64,8 +64,21 @@ onMounted(() => {
 // bridge (update it) · FUCHSIA = the npm publish is LESSER (this install is ahead).
 const bridgeInstalledVersion = ref<string | null>(null);
 const bridgeNpmVersion = ref<string | null>(null);
+// THE VERSIONING MUXAMETER · the classed verdict from the SCP server's counter comparison
+// ('cli' → the CLI update · 'scp' → the Update circuit · 'both' · 'unknown' = a pre-counter
+// publish, both paths). Drives the tip's routing lines; the click lands the Update page.
+const bridgeUpdateClass = ref<'none' | 'cli' | 'scp' | 'both' | 'unknown'>('none');
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
+
+// THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
+// island's Update tab is the one destination for every update class.
+function goUpdatePage(): void {
+  const params = new URLSearchParams(window.location.search);
+  params.set('island', 'gitm');
+  params.set('sub', 'update');
+  window.location.search = params.toString();
+}
 function versionNewer(a: string, b: string): boolean {
   const av = a.split('.').map((s) => parseInt(s, 10) || 0);
   const bv = b.split('.').map((s) => parseInt(s, 10) || 0);
@@ -88,8 +101,17 @@ const versionTipBody = computed<string>(() => {
   const n = bridgeNpmVersion.value;
   if (!n) return `Installed v${i} · npm not yet checked`;
   switch (versionState.value) {
-    case 'remote-greater':
-      return `Installed v${i} · npm v${n} — a newer SCS-Bridge is published: npm install -g scs-bridge, then relaunch.`;
+    case 'remote-greater': {
+      // THE MUXAMETER ROUTING LINES — the classed verdict names the honest path(s).
+      const routes: Record<string, string> = {
+        cli: 'A CLI update only — one install + restart from the Update page; your app needs no changes.',
+        scp: 'A template update — your app updates through its GitM Update page.',
+        both: 'Both aspects updated — the CLI install + restart, then your app updates through its GitM page.',
+        unknown: 'A newer SCS-Bridge is published — open the Update page for both paths.',
+        none: 'A newer SCS-Bridge is published — open the Update page.',
+      };
+      return `Installed v${i} · npm v${n} — ${routes[bridgeUpdateClass.value] ?? routes.unknown} Click to open.`;
+    }
     case 'remote-lesser':
       return `Installed v${i} · npm v${n} — this install is ahead of the npm publish.`;
     default:
@@ -101,9 +123,16 @@ onMounted(() => {
   const timer = setTimeout(() => abort.abort(), 5000);
   fetch('/scs-bridge-version', { signal: abort.signal })
     .then((r) => (r.ok ? r.json() : null))
-    .then((body: { installedVersion?: unknown; npmLatestVersion?: unknown } | null) => {
+    .then((body: { installedVersion?: unknown; npmLatestVersion?: unknown; updateClass?: unknown } | null) => {
       if (body && typeof body.installedVersion === 'string') bridgeInstalledVersion.value = body.installedVersion;
       if (body && typeof body.npmLatestVersion === 'string') bridgeNpmVersion.value = body.npmLatestVersion;
+      if (
+        body &&
+        typeof body.updateClass === 'string' &&
+        ['none', 'cli', 'scp', 'both', 'unknown'].includes(body.updateClass)
+      ) {
+        bridgeUpdateClass.value = body.updateClass as 'none' | 'cli' | 'scp' | 'both' | 'unknown';
+      }
     })
     .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
     .finally(() => clearTimeout(timer));
@@ -177,14 +206,20 @@ function handleTurnOverTriggered(): void {
              npm publish is greater (update) · FUCHSIA when lesser (ahead). The hover pane
              (the btn-tip idiom) carries installed-vs-npm and the difference verdict. -->
         <span v-if="bridgeInstalledVersion" class="taskbar-version-wrap">
+          <!-- THE MUXAMETER CLICK — the label navigates to the GitM island's Update tab
+               (the one destination for every update class · the DUAL-RAIL deep link). -->
           <span
             class="taskbar-bridge-version"
             :class="{
               'taskbar-bridge-version--red': versionState === 'remote-greater',
               'taskbar-bridge-version--fuchsia': versionState === 'remote-lesser',
             }"
+            role="button"
+            tabindex="0"
             @mouseenter="versionTipVisible = true"
             @mouseleave="versionTipVisible = false"
+            @click="goUpdatePage"
+            @keydown.enter="goUpdatePage"
           >
             v{{ bridgeInstalledVersion }}
           </span>
@@ -539,7 +574,7 @@ function handleTurnOverTriggered(): void {
   border: 1px solid color-mix(in srgb, var(--ver-neon) 55%, transparent);
   color: var(--ver-neon);
   text-shadow: 0 0 6px color-mix(in srgb, var(--ver-neon) 40%, transparent);
-  cursor: default;
+  cursor: pointer;
 }
 .taskbar-bridge-version--red {
   --ver-neon: var(--color-red, #f87171);
