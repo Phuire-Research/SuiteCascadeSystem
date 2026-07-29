@@ -222,6 +222,9 @@ export type GitmLoadDiffPayload = WithOrigin<{ path?: string; staged?: boolean }
 export type GitmDiscardPayload = WithOrigin<{ path: string; confirmed: boolean }>;
 export type GitmPullPayload = WithOrigin<Record<string, never>>;
 export type GitmPushPayload = WithOrigin<Record<string, never>>;
+// THE VERSIONING MUXAMETER · the CLI self-update (no origin — the bridge updates ITSELF,
+// not a target SCP: `npm install -g scs-bridge` at the global prefix).
+export type GitmRunCliUpdatePayload = Record<string, never>;
 // C928 · THE RELEASE DOOR — set/modify the remote origin URL (PARAMSEAL'd in the quality).
 export type GitmSetRemotePayload = WithOrigin<{ url: string }>;
 export type GitmMergeFfOnlyPayload = WithOrigin<{ branch: string }>;
@@ -456,6 +459,7 @@ export type GitmLoadLogGraph = Quality<GitmState, GitmLoadLogGraphPayload>;
 export type GitmLoadDiff = Quality<GitmState, GitmLoadDiffPayload>;
 export type GitmDiscard = Quality<GitmState, GitmDiscardPayload>;
 export type GitmPull = Quality<GitmState, GitmPullPayload>;
+export type GitmRunCliUpdate = Quality<GitmState, GitmRunCliUpdatePayload>;
 export type GitmPush = Quality<GitmState, GitmPushPayload>;
 export type GitmSetRemote = Quality<GitmState, GitmSetRemotePayload>;
 export type GitmMergeFfOnly = Quality<GitmState, GitmMergeFfOnlyPayload>;

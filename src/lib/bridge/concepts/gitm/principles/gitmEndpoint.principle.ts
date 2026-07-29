@@ -68,6 +68,8 @@ type GitmEndpointDeck = Deck<MuxiumDeck & ServerDeck>;
 // MUST byte-match the SCP-side GitmJsonShape (gitm.type.ts) field-for-field — the relay
 // carries a null parse if these diverge.
 type GitmStatusSnapshot = {
+  // THE VERSIONING MUXAMETER · the CLI self-update surface (TQNI: SCP GitmJsonShape mirror).
+  cliUpdate: { status: string; installedOnDisk: string; runningVersion: string; error: string; at: number };
   isRepo: boolean;
   currentBranch: string;
   dirty: boolean;
@@ -301,6 +303,9 @@ function buildSnapshotFromSlice(userCwd: string, slice: GitmRepoSlice): GitmStat
     unstagedFiles: slice.unstagedFiles,
     untrackedFiles: slice.untrackedFiles,
     updateStatus: slice.updateStatus,
+    // THE VERSIONING MUXAMETER — the CLI self-update is bridge-global (not per-repo); a
+    // non-active slice carries the idle seed (the ACTIVE rail carries the live state).
+    cliUpdate: { status: 'idle', installedOnDisk: '', runningVersion: '', error: '', at: 0 },
     detachedHead: slice.detachedHead,
     conflicts: slice.conflicts,
     lastReadAt: slice.lastReadAt,
@@ -366,6 +371,8 @@ export const gitmEndpointPrinciple: PrincipleFunction<
       untrackedFiles: k_.untrackedFiles.select(),
       // GITM Staging-Update (D-U4.1) — the thin live STAGE RAIL + summary counts (INERT).
       updateStatus: k_.updateStatus.select(),
+      // THE VERSIONING MUXAMETER — the CLI self-update surface rides the snapshot.
+      cliUpdate: k_.cliUpdate.select(),
       detachedHead: k_.detachedHead.select(),
       conflicts: k_.conflicts.select(),
       lastReadAt: k_.lastReadAt.select(),
@@ -447,6 +454,7 @@ export const gitmEndpointPrinciple: PrincipleFunction<
         untrackedFiles: k.untrackedFiles.select(),
         // GITM Staging-Update (D-U4.1) — the thin live STAGE RAIL + summary counts (INERT).
         updateStatus: k.updateStatus.select(),
+        cliUpdate: k.cliUpdate.select(),
         detachedHead: k.detachedHead.select(),
         conflicts: k.conflicts.select(),
         lastReadAt,

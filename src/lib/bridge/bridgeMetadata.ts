@@ -98,6 +98,14 @@ export type BridgeMetadata = {
   npmLatestVersion?: string | null;
   updateAvailable?: boolean;
   versionCheckedAt?: number;
+  // THE VERSIONING MUXAMETER · two Demometers under the one Cascade Position — the installed
+  // counters (the running bridge's package.json), the remote counters (the /latest custom
+  // field), and the classed verdict ('cli' → the npm CLI update · 'scp' → the Update circuit ·
+  // 'both' → both · 'unknown' → a pre-counter publish, treat as both). All ride the
+  // ...getNpmVersionCheck() composer spread — nothing else to thread.
+  installedMuxameter?: { cli: number; scp: number } | null;
+  remoteMuxameter?: { cli: number; scp: number } | null;
+  updateClass?: 'none' | 'cli' | 'scp' | 'both' | 'unknown';
   // Model Control · the PUBLISHED model catalog (the shared model · modelCatalog.model.ts) —
   // written on every bridge.json write (mirrors availableRenderModes · no drift between surfaces).
   availableModels?: ModelCatalogEntry[];

@@ -1432,6 +1432,25 @@ const buildToolRoster = (): {
     relatedActionables: [],
   };
 
+  // THE VERSIONING MUXAMETER · the CLI self-update — the bridge updates ITSELF (npm
+  // install -g scs-bridge at the global prefix · WITH scripts). On success gitm.json's
+  // cliUpdate stamps 'restart-required' (fresh on-disk version vs the running process);
+  // the RESTART stays in the user's hands.
+  const gitmRunCliUpdateMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'gitm',
+    qualityName: 'gitmRunCliUpdate',
+    toolName: 'gitm_run_cli_update',
+    description:
+      'GITM · THE VERSIONING MUXAMETER · run `npm install -g scs-bridge` (the CLI self-update). ' +
+      'Fires when the counter verdict is cli anor both (remote.cli > installed.cli). On success ' +
+      'gitm.json cliUpdate reads restart-required — the user relaunches the bridge to load it.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+    toolType: 'actionable',
+    handlerType: 'quality',
+    strategyName: '',
+    relatedActionables: [],
+  };
+
   const gitmPullMetadata: SCPQualityMetadataRegistered = {
     conceptName: 'gitm',
     qualityName: 'gitmPull',
@@ -2303,6 +2322,7 @@ const buildToolRoster = (): {
     gitmLoadDiffMetadata,       // gitm_load_diff        · git diff (informative · → activeDiff)
     gitmDiscardMetadata,        // gitm_discard          · DESTRUCTIVE (hard confirm gate)
     gitmPullMetadata,           // gitm_pull             · git pull --ff-only (catch-based)
+    gitmRunCliUpdateMetadata,   // gitm_run_cli_update   · npm install -g scs-bridge (the Muxameter)
     gitmPushMetadata,           // gitm_push             · git push (behind-remote GUARDSHUNT + re-read)
     gitmSetRemoteMetadata,      // gitm_set_remote       · C928 remote add/set-url origin (PARAMSEAL url)
     gitmMergeFfOnlyMetadata,    // gitm_merge_ff_only    · git merge --ff-only <branch> (catch-based)

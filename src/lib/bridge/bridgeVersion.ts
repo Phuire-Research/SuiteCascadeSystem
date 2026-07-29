@@ -16,6 +16,73 @@ import * as path from 'node:path';
 
 let cachedVersion: string | null = null;
 
+// THE VERSIONING MUXAMETER · the two Demometers under the one Cascade Position. The
+// GENERAL count = the npm version; each release increments cli anor scp per what changed
+// (the Routine's mechanical classification). Monotonic integers — comparison is the whole
+// verdict: remote.cli > installed.cli → the CLI update · remote.scp > installed.scp → the
+// SCP Update circuit · both → both. null = the package.json predates the counters.
+export type ScsMuxameter = { cli: number; scp: number };
+
+let cachedMuxameter: ScsMuxameter | null | undefined;
+
+// The Grandparent-Muxameter-Read — the SAME parse getBridgeVersion performs; zero new disk
+// reads when both are consulted (each caches independently for the process lifetime).
+// `fresh: true` bypasses the cache AND re-reads the file — the post-install probe: after
+// `npm install -g scs-bridge` the ON-DISK grandparent package.json is the NEW release while
+// this RUNNING process still is the old one; the fresh read names what a restart loads.
+export function getBridgeMuxameter(cliPathOverride?: string, fresh = false): ScsMuxameter | null {
+  if (!fresh && cachedMuxameter !== undefined) return cachedMuxameter;
+  try {
+    const rawPath = cliPathOverride ?? process.argv[1] ?? '';
+    if (!rawPath) {
+      cachedMuxameter = null;
+      return cachedMuxameter;
+    }
+    let cliPath: string;
+    try {
+      cliPath = realpathSync(rawPath);
+    } catch {
+      cliPath = rawPath;
+    }
+    const pkgPath = path.resolve(path.dirname(cliPath), '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+      version?: string;
+      scsMuxameter?: { cli?: unknown; scp?: unknown };
+    };
+    const m = pkg.scsMuxameter;
+    const parsed =
+      m && typeof m.cli === 'number' && typeof m.scp === 'number'
+        ? { cli: m.cli, scp: m.scp }
+        : null;
+    if (!fresh) cachedMuxameter = parsed;
+    return parsed;
+  } catch {
+    if (!fresh) cachedMuxameter = null;
+    return null;
+  }
+}
+
+// The post-install fresh-disk version read (uncached sibling of getBridgeVersion) — the
+// RESTART-REQUIRED derivation: freshVersion !== getBridgeVersion() ⇒ a newer CLI sits on
+// disk awaiting the relaunch the user conducts.
+export function getBridgeVersionFresh(cliPathOverride?: string): string {
+  try {
+    const rawPath = cliPathOverride ?? process.argv[1] ?? '';
+    if (!rawPath) return 'unknown';
+    let cliPath: string;
+    try {
+      cliPath = realpathSync(rawPath);
+    } catch {
+      cliPath = rawPath;
+    }
+    const pkgPath = path.resolve(path.dirname(cliPath), '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string };
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 // Diamond B-25-UX-fix3 (CD-110 DVSP): read package.json once · cache for process lifetime.
 // `process.argv[1]` is the cli.cjs path (e.g.,
 // `/opt/homebrew/lib/node_modules/scs-bridge/dist/cli.cjs`); package.json is at
