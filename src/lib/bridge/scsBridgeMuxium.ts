@@ -39,6 +39,7 @@
 import { muxification } from 'stratimux';
 import { readFile } from 'node:fs/promises';
 import { startNpmVersionWatch } from './npmVersionCheck';
+import { resolveScpInstallDirs } from './bridgeMetadata';
 import { resolve } from 'node:path';
 import { createServerConcept, serverName, type ServerDeck } from './concepts/server/server.concept';
 import { createSCPConcept, type SCPDeck } from './concepts/scp/scp.concept';
@@ -304,7 +305,11 @@ export function createScsBridgeMuxium(
                   // (deferred boot check + 6h cadence · non-blocking · failure-silent).
                   // Results ride bridge.json via the composer leg on every rewrite AND an
                   // immediate RMW on check completion → the SCP chokidar relay → the UI.
-                  startNpmVersionWatch(bridgeVersion, perProjectPath);
+                  startNpmVersionWatch(bridgeVersion, perProjectPath, () =>
+                    Object.values(resolveScpInstallDirs(options.userCwd)).map((dir) =>
+                      resolve(dir, 'Cascades', 'Bridge', 'bridge.json'),
+                    ),
+                  );
                   // RM-D2 · BDAP SSGH generation. Immediately after bridge.json is
                   // written (port known), generate the live Base SCS-Bridge system
                   // prompt sibling to bridge.json. This precedes any open-session

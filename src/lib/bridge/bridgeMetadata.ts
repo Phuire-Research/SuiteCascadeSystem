@@ -193,7 +193,9 @@ export function bridgeMetadataPath(homeDirOverride?: string): string {
 // small local registry and the write chain is already serialized. AFPR: absent /
 // malformed SCPs.json → empty map (every dir stays undefined → resolvers fall back to
 // the bridge root · never a thrown write). NEVER throws.
-function resolveScpInstallDirs(userCwd: string): Record<string, string> {
+// EXPORTED for the npm-version watch's sovereign fan-out (the Rose prescription — the lazy
+// perScpPaths getter enumerates the LIVE per-SCP bridge.json paths at RMW time).
+export function resolveScpInstallDirs(userCwd: string): Record<string, string> {
   const dirs: Record<string, string> = {};
   try {
     const scpsPath = resolve(userCwd, 'Cascades', 'SCPs.json');

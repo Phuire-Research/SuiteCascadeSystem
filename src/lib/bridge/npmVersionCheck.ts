@@ -182,12 +182,29 @@ export async function applyVersionCheckToBridgeJson(bridgeJsonPath: string): Pro
 // Boot entry — one deferred check + the 6h interval, both unref'd (never hold the
 // process open). The caller supplies the bridge.json path (no import cycle with
 // bridgeMetadata — it imports THIS module for the composer leg).
-export function startNpmVersionWatch(currentVersion: string, bridgeJsonPath: string): void {
+export function startNpmVersionWatch(
+  currentVersion: string,
+  bridgeJsonPath: string,
+  perScpPaths?: () => string[],
+): void {
+  // THE ROSE SEED (the two-wound synthesis · the pruned pattern: a local truth gated behind
+  // a remote success): the installed counters are a grandparent-package.json read — seeded
+  // HERE unconditionally, so EVERY composer write carries them from boot (curing the
+  // pong-re-snapshot overwrite class, not just the boot instance); the remote check merely
+  // refreshes the same field on success.
+  cache.installedMuxameter = getBridgeMuxameter();
   const runOnce = async (): Promise<void> => {
     const before = cache.versionCheckedAt;
     await checkNpmLatestVersion(currentVersion);
     if (cache.versionCheckedAt !== before) {
       await applyVersionCheckToBridgeJson(bridgeJsonPath);
+      // THE SOVEREIGN FAN-OUT (S6's structural finding: the per-SCP copies were composer-
+      // leg-only — written pre-check, never RMW'd): the lazy getter enumerates the LIVE
+      // sovereign paths at RMW time (SCPs registered after boot are covered); each RMW is
+      // already failure-silent per-path.
+      for (const p of perScpPaths?.() ?? []) {
+        await applyVersionCheckToBridgeJson(p);
+      }
     }
   };
   const bootTimer = setTimeout(() => {
