@@ -500,7 +500,7 @@ npm install -g .
 npm install -g scs-bridge
 ```
 
-> As of v0.37.0 — npm publish is pending; install from local clone. Post-publish, the same `scs` binary becomes available globally via `npm install -g scs-bridge`.
+> Published on npm — the `scs` binary installs globally via `npm install -g scs-bridge`; the npm badge above always carries the current version.
 
 #### Verify
 
