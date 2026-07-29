@@ -28,6 +28,14 @@ import ScsBridgeGitmSubPage from '../../scsBridge/vue/components/ScsBridgeGitmSu
 
 // GITM PAGE · gitm.json relay ref (populated from Huirth via the gitmJsonWatcher relay).
 const gitmJson = ref<GitmJsonShape | null>(null);
+
+// THE VERSIONING MUXAMETER · the ?sub=update seed + the /scs-bridge-version verdict.
+const initialGitmTab = ref<'workflow' | 'graph' | 'update' | null>(null);
+const versionCheck = ref<{
+  updateClass?: string;
+  npmLatestVersion?: string | null;
+  installedVersion?: string | null;
+} | null>(null);
 // GITM SCP-UPD (C282) · the HEAVY diff body — MOCH-carried (the update watcher's C1 relay
 // fires at server boot before any client connects and BOCR is dead #640); the /gitm page
 // previously passed NO update-diff at all. generatedAt-guarded.
@@ -90,6 +98,26 @@ function onGitmAction(action: GitmPendingAction) {
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
+
+  // THE VERSIONING MUXAMETER · the ?sub=update deep link (the C821-mirror reader — the
+  // TaskBar version label's DUAL-RAIL click lands /?island=gitm&sub=update) → seed the
+  // sub-page's Update tab. 'update' is the only tagged tab; unknown tags fall through.
+  const subTag = new URLSearchParams(window.location.search).get('sub');
+  if (subTag === 'update') initialGitmTab.value = 'update';
+
+  // THE MUXAMETER VERDICT · one fetch on mount (the TaskBar/scp-config idiom) — the SCP
+  // server's counter comparison drives the sub-page's class gates.
+  {
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 5000);
+    fetch('/scs-bridge-version', { signal: abort.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: { updateClass?: unknown; npmLatestVersion?: unknown; installedVersion?: unknown } | null) => {
+        if (body) versionCheck.value = body as typeof versionCheck.value;
+      })
+      .catch(() => { /* absent route (an older server) — the gates stay class-less */ })
+      .finally(() => clearTimeout(timer));
+  }
 
   // scsBridge is the universal base (BASE_CONCEPTS_CREATORS) — no page concepts needed;
   // gitmJson + scsBridgeSetGitmPendingAction live on the base scsBridge deck.
@@ -164,7 +192,14 @@ onUnmounted(() => {
     </header>
 
     <main class="landing-content">
-      <ScsBridgeGitmSubPage :gitm-json="gitmJson" :update-diff="updateDiff" :update-resolved="updateResolved" @gitm-action="onGitmAction" />
+      <ScsBridgeGitmSubPage
+        :gitm-json="gitmJson"
+        :update-diff="updateDiff"
+        :update-resolved="updateResolved"
+        :initial-tab="initialGitmTab"
+        :version-check="versionCheck"
+        @gitm-action="onGitmAction"
+      />
     </main>
   </div>
 </template>

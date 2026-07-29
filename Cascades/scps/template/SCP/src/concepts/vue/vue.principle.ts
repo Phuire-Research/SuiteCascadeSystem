@@ -2263,36 +2263,98 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // and colors the label: purple = current/unknown · red = the npm publish is GREATER than
   // the installed bridge · fuchsia = the npm publish is LESSER (this install is ahead).
   // Failure-silent throughout: no npm, no network, no bridge.json → nulls, purple label.
+  // THE VERSIONING MUXAMETER — two Demometers under the one Cascade Position. The counters
+  // (scsMuxameter { cli, scp } · monotonic) ride the npm /latest custom field; the verdict is
+  // pure comparison: remote.cli > installed.cli → the CLI update · remote.scp > installed.scp
+  // → the SCP Update circuit · both → both · pre-counter publishes → 'unknown' (both-paths).
+  type ScsCounterPair = { cli: number; scp: number };
   const scsBridgeVersionCheck: {
     installedVersion: string | null;
     npmLatestVersion: string | null;
     checkedAt: number;
-  } = { installedVersion: null, npmLatestVersion: null, checkedAt: 0 };
-  const readInstalledBridgeVersion = (): string | null => {
+    installedMuxameter: ScsCounterPair | null;
+    remoteMuxameter: ScsCounterPair | null;
+    updateClass: 'none' | 'cli' | 'scp' | 'both' | 'unknown';
+  } = {
+    installedVersion: null,
+    npmLatestVersion: null,
+    checkedAt: 0,
+    installedMuxameter: null,
+    remoteMuxameter: null,
+    updateClass: 'none',
+  };
+  const parseCounterPair = (m: unknown): ScsCounterPair | null => {
+    const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+    return o && typeof o.cli === 'number' && typeof o.scp === 'number'
+      ? { cli: o.cli, scp: o.scp }
+      : null;
+  };
+  const readInstalledBridgeVersion = (): void => {
     try {
       const raw = fs.readFileSync(path.join(resolveScpLocalBridgeDir(), 'bridge.json'), 'utf-8');
-      const parsed = JSON.parse(raw) as { bridgeVersion?: unknown };
-      return typeof parsed?.bridgeVersion === 'string' ? parsed.bridgeVersion : null;
+      const parsed = JSON.parse(raw) as { bridgeVersion?: unknown; installedMuxameter?: unknown };
+      scsBridgeVersionCheck.installedVersion =
+        typeof parsed?.bridgeVersion === 'string' ? parsed.bridgeVersion : null;
+      // The installed counters — written by a Muxameter-aware bridge; absent on older
+      // bridges (⇒ 'unknown' verdicts when an update exists · both-paths, safe once).
+      scsBridgeVersionCheck.installedMuxameter = parseCounterPair(parsed?.installedMuxameter);
     } catch {
-      return null;
+      scsBridgeVersionCheck.installedVersion = null;
+      scsBridgeVersionCheck.installedMuxameter = null;
     }
   };
+  const versionIsNewer = (a: string, b: string): boolean => {
+    const av = a.split('.').map((s) => parseInt(s, 10) || 0);
+    const bv = b.split('.').map((s) => parseInt(s, 10) || 0);
+    for (let i = 0; i < Math.max(av.length, bv.length); i += 1) {
+      if ((av[i] ?? 0) > (bv[i] ?? 0)) return true;
+      if ((av[i] ?? 0) < (bv[i] ?? 0)) return false;
+    }
+    return false;
+  };
+  const deriveScsUpdateClass = (): void => {
+    const i = scsBridgeVersionCheck.installedVersion;
+    const n = scsBridgeVersionCheck.npmLatestVersion;
+    const updateAvailable = !!i && !!n && versionIsNewer(n, i);
+    if (!updateAvailable) {
+      scsBridgeVersionCheck.updateClass = 'none';
+      return;
+    }
+    const im = scsBridgeVersionCheck.installedMuxameter;
+    const rm = scsBridgeVersionCheck.remoteMuxameter;
+    if (!im || !rm) {
+      scsBridgeVersionCheck.updateClass = 'unknown';
+      return;
+    }
+    const cli = rm.cli > im.cli;
+    const scp = rm.scp > im.scp;
+    scsBridgeVersionCheck.updateClass = cli && scp ? 'both' : cli ? 'cli' : scp ? 'scp' : 'none';
+  };
+  const acceptRemote = (version: string, muxameter: unknown): void => {
+    scsBridgeVersionCheck.npmLatestVersion = version;
+    scsBridgeVersionCheck.remoteMuxameter = parseCounterPair(muxameter);
+    scsBridgeVersionCheck.checkedAt = Date.now();
+    deriveScsUpdateClass();
+  };
   const runScsBridgeVersionCheck = (): void => {
-    scsBridgeVersionCheck.installedVersion = readInstalledBridgeVersion();
-    exec('npm view scs-bridge version', { timeout: 10_000 }, (err, stdout) => {
-      const fromNpm = err ? '' : stdout.trim();
-      if (/^\d+\.\d+\.\d+/.test(fromNpm)) {
-        scsBridgeVersionCheck.npmLatestVersion = fromNpm;
-        scsBridgeVersionCheck.checkedAt = Date.now();
-        return;
+    readInstalledBridgeVersion();
+    // `--json` carries the FULL published metadata (version + the scsMuxameter custom field).
+    exec('npm view scs-bridge --json', { timeout: 10_000 }, (err, stdout) => {
+      if (!err) {
+        try {
+          const meta = JSON.parse(stdout) as { version?: unknown; scsMuxameter?: unknown };
+          if (typeof meta.version === 'string' && /^\d+\.\d+\.\d+/.test(meta.version)) {
+            acceptRemote(meta.version.trim(), meta.scsMuxameter);
+            return;
+          }
+        } catch { /* fall through to the registry */ }
       }
       // The registry fallback (npm absent anor the command failed) — same data source.
       fetch('https://registry.npmjs.org/scs-bridge/latest', { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : null))
-        .then((body: { version?: unknown } | null) => {
+        .then((body: { version?: unknown; scsMuxameter?: unknown } | null) => {
           if (body && typeof body.version === 'string') {
-            scsBridgeVersionCheck.npmLatestVersion = body.version.trim();
-            scsBridgeVersionCheck.checkedAt = Date.now();
+            acceptRemote(body.version.trim(), body.scsMuxameter);
           }
         })
         .catch(() => { /* offline — the purple label stands honest */ });
@@ -2303,8 +2365,9 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   setInterval(runScsBridgeVersionCheck, 6 * 60 * 60 * 1000).unref?.();
   expressApp.get('/scs-bridge-version', (_req, res) => {
     // The installed side re-reads on every request (the bridge may have relaunched newer
-    // since boot); the npm side serves the boot/interval cache.
-    scsBridgeVersionCheck.installedVersion = readInstalledBridgeVersion();
+    // since boot); the npm side serves the boot/interval cache; the verdict re-derives.
+    readInstalledBridgeVersion();
+    deriveScsUpdateClass();
     res.json(scsBridgeVersionCheck);
   });
 

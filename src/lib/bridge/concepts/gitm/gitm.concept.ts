@@ -45,6 +45,7 @@ import { gitmLoadLogGraph, type GitmLoadLogGraph } from './qualities/gitmLoadLog
 import { gitmLoadDiff, type GitmLoadDiff } from './qualities/gitmLoadDiff.quality';
 import { gitmDiscard, type GitmDiscard } from './qualities/gitmDiscard.quality';
 import { gitmPull, type GitmPull } from './qualities/gitmPull.quality';
+import { gitmRunCliUpdate, type GitmRunCliUpdate } from './qualities/gitmRunCliUpdate.quality';
 import { gitmPush, type GitmPush } from './qualities/gitmPush.quality';
 import { gitmSetRemote, type GitmSetRemote } from './qualities/gitmSetRemote.quality';
 import { gitmMergeFfOnly, type GitmMergeFfOnly } from './qualities/gitmMergeFfOnly.quality';
@@ -155,6 +156,7 @@ export type GitmQualities = {
   gitmLoadDiff: GitmLoadDiff;
   gitmDiscard: GitmDiscard;
   gitmPull: GitmPull;
+  gitmRunCliUpdate: GitmRunCliUpdate;
   gitmPush: GitmPush;
   gitmSetRemote: GitmSetRemote;
   gitmMergeFfOnly: GitmMergeFfOnly;
@@ -248,6 +250,7 @@ export const createGitmConcept = (options: CreateGitmConceptOptions) =>
       gitmLoadDiff,
       gitmDiscard,
       gitmPull,
+      gitmRunCliUpdate,
       gitmPush,
       gitmSetRemote,
       gitmMergeFfOnly,

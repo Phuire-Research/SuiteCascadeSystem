@@ -11,6 +11,7 @@
 <h3 align="center">ARIOS — Functional Agentic Orchestration</h3>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/scs-bridge">npm</a> · 
   <a href="https://poe.com/SCS-Researcher">Live Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
@@ -149,10 +150,17 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.933.0
+## Release Notes — v0.934.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.934.0 — updates, classed**: every release now declares which aspect it changes — the
+  CLI, the app template, or both — and each installation compares on its own. The version
+  label beside your app's name turns red when npm carries something newer, its hover names
+  the exact path, and clicking it lands the Update page: a one-press CLI update with an
+  honest restart notice when the CLI is due, and the whole circuit standing down when only
+  the CLI changed.
 
 - **0.933.0 — the update circuit, conducted**: the update surface reads as a sequence — a
   state legend explains every button state in place, the resolver shows a dotted border when

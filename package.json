@@ -1,7 +1,11 @@
 {
   "name": "scs-bridge",
-  "version": "0.933.0",
-  "description": "SCS Bridge CLI — Suite Cascade System command-line interface",
+  "version": "0.934.0",
+  "scsMuxameter": {
+    "cli": 2,
+    "scp": 2
+  },
+  "description": "SCS Bridge CLI \u2014 Suite Cascade System command-line interface",
   "keywords": [
     "Suite Cascade",
     "Stratimux",

@@ -64,8 +64,38 @@ onMounted(() => {
 // bridge (update it) · FUCHSIA = the npm publish is LESSER (this install is ahead).
 const bridgeInstalledVersion = ref<string | null>(null);
 const bridgeNpmVersion = ref<string | null>(null);
+// THE VERSIONING MUXAMETER · the classed verdict from the SCP server's counter comparison
+// ('cli' → the CLI update · 'scp' → the Update circuit · 'both' · 'unknown' = a pre-counter
+// publish, both paths). Drives the tip's routing lines; the click lands the Update page.
+const bridgeUpdateClass = ref<'none' | 'cli' | 'scp' | 'both' | 'unknown'>('none');
+// THE FULL MUXAMETER LINE — the two Demometers' counters, installed → remote, rendered in
+// the pop over once available (installed rides bridge.json; remote rides the npm /latest
+// custom field — absent until a counter-carrying publish).
+type CounterPair = { cli: number; scp: number };
+const installedCounters = ref<CounterPair | null>(null);
+const remoteCounters = ref<CounterPair | null>(null);
+const muxameterLine = computed<string | null>(() => {
+  const i = installedCounters.value;
+  const r = remoteCounters.value;
+  if (!i && !r) return null;
+  const side = (label: string, iv: number | undefined, rv: number | undefined): string => {
+    if (iv === undefined && rv === undefined) return `${label} —`;
+    if (rv === undefined || iv === rv) return `${label} #${iv ?? rv}`;
+    return `${label} #${iv ?? '—'} → #${rv}`;
+  };
+  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}`;
+});
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
+
+// THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
+// island's Update tab is the one destination for every update class.
+function goUpdatePage(): void {
+  const params = new URLSearchParams(window.location.search);
+  params.set('island', 'gitm');
+  params.set('sub', 'update');
+  window.location.search = params.toString();
+}
 function versionNewer(a: string, b: string): boolean {
   const av = a.split('.').map((s) => parseInt(s, 10) || 0);
   const bv = b.split('.').map((s) => parseInt(s, 10) || 0);
@@ -88,8 +118,17 @@ const versionTipBody = computed<string>(() => {
   const n = bridgeNpmVersion.value;
   if (!n) return `Installed v${i} · npm not yet checked`;
   switch (versionState.value) {
-    case 'remote-greater':
-      return `Installed v${i} · npm v${n} — a newer SCS-Bridge is published: npm install -g scs-bridge, then relaunch.`;
+    case 'remote-greater': {
+      // THE MUXAMETER ROUTING LINES — the classed verdict names the honest path(s).
+      const routes: Record<string, string> = {
+        cli: 'A CLI update only — one install + restart from the Update page; your app needs no changes.',
+        scp: 'A template update — your app updates through its GitM Update page.',
+        both: 'Both aspects updated — the CLI install + restart, then your app updates through its GitM page.',
+        unknown: 'A newer SCS-Bridge is published — open the Update page for both paths.',
+        none: 'A newer SCS-Bridge is published — open the Update page.',
+      };
+      return `Installed v${i} · npm v${n} — ${routes[bridgeUpdateClass.value] ?? routes.unknown} Click to open.`;
+    }
     case 'remote-lesser':
       return `Installed v${i} · npm v${n} — this install is ahead of the npm publish.`;
     default:
@@ -101,9 +140,32 @@ onMounted(() => {
   const timer = setTimeout(() => abort.abort(), 5000);
   fetch('/scs-bridge-version', { signal: abort.signal })
     .then((r) => (r.ok ? r.json() : null))
-    .then((body: { installedVersion?: unknown; npmLatestVersion?: unknown } | null) => {
+    .then((body: {
+      installedVersion?: unknown;
+      npmLatestVersion?: unknown;
+      updateClass?: unknown;
+      installedMuxameter?: unknown;
+      remoteMuxameter?: unknown;
+    } | null) => {
       if (body && typeof body.installedVersion === 'string') bridgeInstalledVersion.value = body.installedVersion;
       if (body && typeof body.npmLatestVersion === 'string') bridgeNpmVersion.value = body.npmLatestVersion;
+      if (
+        body &&
+        typeof body.updateClass === 'string' &&
+        ['none', 'cli', 'scp', 'both', 'unknown'].includes(body.updateClass)
+      ) {
+        bridgeUpdateClass.value = body.updateClass as 'none' | 'cli' | 'scp' | 'both' | 'unknown';
+      }
+      const pair = (m: unknown): CounterPair | null => {
+        const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+        return o && typeof o.cli === 'number' && typeof o.scp === 'number'
+          ? { cli: o.cli, scp: o.scp }
+          : null;
+      };
+      if (body) {
+        installedCounters.value = pair(body.installedMuxameter);
+        remoteCounters.value = pair(body.remoteMuxameter);
+      }
     })
     .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
     .finally(() => clearTimeout(timer));
@@ -177,14 +239,20 @@ function handleTurnOverTriggered(): void {
              npm publish is greater (update) · FUCHSIA when lesser (ahead). The hover pane
              (the btn-tip idiom) carries installed-vs-npm and the difference verdict. -->
         <span v-if="bridgeInstalledVersion" class="taskbar-version-wrap">
+          <!-- THE MUXAMETER CLICK — the label navigates to the GitM island's Update tab
+               (the one destination for every update class · the DUAL-RAIL deep link). -->
           <span
             class="taskbar-bridge-version"
             :class="{
               'taskbar-bridge-version--red': versionState === 'remote-greater',
               'taskbar-bridge-version--fuchsia': versionState === 'remote-lesser',
             }"
+            role="button"
+            tabindex="0"
             @mouseenter="versionTipVisible = true"
             @mouseleave="versionTipVisible = false"
+            @click="goUpdatePage"
+            @keydown.enter="goUpdatePage"
           >
             v{{ bridgeInstalledVersion }}
           </span>
@@ -200,6 +268,9 @@ function handleTurnOverTriggered(): void {
             >
               <span class="taskbar-version-tip-title">SCS-Bridge</span>
               <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
+              <!-- THE FULL MUXAMETER LINE — the two counters, installed → remote, once
+                   the data serves (installed via bridge.json · remote via the npm publish). -->
+              <span v-if="muxameterLine" class="taskbar-version-tip-counters">{{ muxameterLine }}</span>
             </span>
           </Teleport>
         </span>
@@ -539,7 +610,21 @@ function handleTurnOverTriggered(): void {
   border: 1px solid color-mix(in srgb, var(--ver-neon) 55%, transparent);
   color: var(--ver-neon);
   text-shadow: 0 0 6px color-mix(in srgb, var(--ver-neon) 40%, transparent);
-  cursor: default;
+  cursor: pointer;
+  /* THE CLICKABLE FEEL — the label IS the update button; the cursor alone was the only
+     tell. Hover lifts + fills the neon; active PRESSES (the taskbar-btn family feel). */
+  background: transparent;
+  transition: background 0.14s ease, box-shadow 0.14s ease, transform 0.1s ease;
+}
+.taskbar-bridge-version:hover {
+  background: color-mix(in srgb, var(--ver-neon) 14%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ver-neon) 45%, transparent);
+  transform: translateY(-1px);
+}
+.taskbar-bridge-version:active {
+  background: color-mix(in srgb, var(--ver-neon) 26%, transparent);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--ver-neon) 60%, transparent) inset;
+  transform: translateY(1px) scale(0.97);
 }
 .taskbar-bridge-version--red {
   --ver-neon: var(--color-red, #f87171);
@@ -585,6 +670,15 @@ function handleTurnOverTriggered(): void {
   line-height: 1.45;
   letter-spacing: 0.02em;
   color: rgba(228, 232, 240, 0.82);
+}
+.taskbar-version-tip-counters {
+  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--color-purple, #a78bfa) 85%, #fff);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
+  margin-top: 2px;
 }
 .taskbar-version-tip--visible {
   opacity: 1;

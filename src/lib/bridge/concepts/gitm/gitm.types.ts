@@ -117,6 +117,18 @@ export type GitmWorktreeRow = {
   head: string;
 };
 
+// THE VERSIONING MUXAMETER · the CLI self-update surface shape. 'installing' stamps on the
+// entry beat (the apply-precedent defensive empty-pop); 'restart-required' = the on-disk
+// grandparent package.json (installedOnDisk) is newer than the RUNNING process
+// (runningVersion) — a relaunch loads it; the user conducts the restart.
+export type GitmCliUpdateState = {
+  status: 'idle' | 'installing' | 'restart-required' | 'failed';
+  installedOnDisk: string;
+  runningVersion: string;
+  error: string;
+  at: number;
+};
+
 export type GitmState = {
   userCwd: string;
   isRepo: boolean;
@@ -171,6 +183,12 @@ export type GitmState = {
   commitGraph: GitmCommitGraphEntry[];
   activeDiff: string; // gitmLoadDiff result — raw unified diff string
   lastActionResult: GitmActionResult; // action outcome surface — UI/MCP reads it
+  // THE VERSIONING MUXAMETER · the CLI self-update surface (gitmRunCliUpdate). status
+  // 'restart-required' = the install landed a NEWER package.json on disk than the RUNNING
+  // process (installedOnDisk vs runningVersion — the honest derivation); the RESTART stays
+  // in the user's hands. Non-optional (KeyedSelector law · the idle default).
+  // TQNI: mirror in GitmStatusSnapshot (gitmEndpoint.principle.ts) + SCP gitm.type.ts.
+  cliUpdate: GitmCliUpdateState;
   // D4 (#635) — T3 guarded-op surfaces (non-optional · KeyedSelector law)
   pendingConfirm: PendingConfirm | null; // WATCHKEY token (null = no pending confirm)
   activeWarnings: GitmWarning[]; // REACTIVE-WARDEN latent warnings — REBUILT by gitmSetStatus
@@ -312,6 +330,8 @@ export const createGitmState = (userCwd: string): GitmState => ({
   commitGraph: [],
   activeDiff: '',
   lastActionResult: createGitmActionResultDefault(),
+  // THE VERSIONING MUXAMETER — the CLI self-update idle seed.
+  cliUpdate: { status: 'idle', installedOnDisk: '', runningVersion: '', error: '', at: 0 },
   pendingConfirm: null,
   activeWarnings: [],
   // GITM A↔B (#641) — A/B reserve-mechanism defaults (none registered · idle).
