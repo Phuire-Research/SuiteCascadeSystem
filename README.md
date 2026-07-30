@@ -178,10 +178,15 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.938.0
+## Release Notes — v0.939.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.939.0 — the substrate renewed**: Stratimux advances to 0.3.296 across the whole
+  manifold — the bridge, the app template, and the flagship apps in one motion, boot-proven
+  before shipping. The Open Race rides both faces: the Home page's section and this README's,
+  one door to the Commons.
 
 - **0.938.0 — updates that weigh what they carry**: the update circuit now computes from
   the last update you landed rather than from install day: a one-file release reads as a
