@@ -7,10 +7,11 @@
 # NEVER mutated — the merge is computed in-memory by `git merge-tree --write-tree`
 # and "theirs" is minted into a throwaway temp index (no checkout, no temp branch).
 #
-#   base    = the SCP RED repo's `SCS: initialize nested location repository` ROOT
-#             commit (the original template snapshot at install time). HALT-guarded:
-#             must EXIST and BE the root, else exit non-zero (the #1 false-collision-
-#             flood mitigation).
+#   base    = THE MOVING BASE (D-MB · three tiers): the scp.config.json `scpBaseSha`
+#             pin (ancestor-verified) → the most recent `SCS update ·` landing commit
+#             (the last-applied template vintage — only the TRUE new delta diffs) →
+#             the HALT-guarded `SCS: initialize` init root (the legacy law, for fresh
+#             installs anor pre-landing SCPs).
 #   ours    = the SCP repo HEAD (the user's changes since install).
 #   theirs  = a synthetic commit minting the clone's template files off `base`
 #             (read-tree base → overlay template → write-tree → commit-tree).
@@ -62,39 +63,86 @@ THEIRS_LEAF="$(basename "$THEIRS_TEMPLATE")"   # expected: SCP
 
 GIT() { git -C "$SCP_REPO_ROOT" "$@"; }
 
-# ── base · the HALT-guarded init root commit (#1-risk mitigation) ────────────
-# Cycle 282: the installer now writes the DYNAMIC init message
-# ('SCS: initialize <name> — <stamp>' · gitmNestedMaintain.ts:234); the legacy literal
-# ('SCS: initialize nested location repository' · installConstants GITM_NESTED_GIT_COMMIT_MSG)
-# still exists on older installs. The base assert matches the PREFIX — both forms prove
-# the root is the SCS template snapshot.
+# ── base · THE MOVING BASE (D-MB) — three-tier resolution ────────────────────
+# The field wound this cures: with the base fixed at the init root FOREVER, every
+# update re-computed (and re-serialized, and made the resolver re-read) every
+# template change since install — a 1.66 MB diff JSON for a 1.2 KB landing. The
+# base now CURRIES FORWARD to "the most recent valid": each successful apply's
+# landing commit carries the merged state (template delta + the user's work baked
+# in, a direct DESCENDANT of the init root — lineage preserved), so the next diff
+# computes only the true new delta.
+#   Tier 1 · THE PIN: scp.config.json `scpBaseSha` — an explicit override seat
+#            (manual repair anor future stamps). Must name an existing commit that
+#            is an ancestor of HEAD; a broken pin falls through with a note, never
+#            HALTs.
+#   Tier 2 · THE LANDING: the most recent `SCS update ·`-prefixed commit reachable
+#            from HEAD (the apply quality's own landing message — the same trust
+#            class as the init gate).
+#   Tier 3 · THE INIT ROOT (the legacy law, UNCHANGED): the HALT-guarded
+#            `SCS: initialize` root — fresh installs anor SCPs with no landing yet.
 INIT_MSG_PREFIX="SCS: initialize"
+LANDING_MSG_PREFIX="SCS update ·"
 
-# The root commit (no parents). There must be exactly one for a clean RED repo.
-ROOT_COMMITS="$(GIT rev-list --max-parents=0 HEAD)"
-ROOT_COUNT="$(printf '%s\n' "$ROOT_COMMITS" | grep -c . || true)"
-if [ "$ROOT_COUNT" -ne 1 ]; then
-  echo "ERROR: expected exactly 1 root commit in the SCP RED repo, found $ROOT_COUNT — base lineage ambiguous; HALT (the false-collision-flood mitigation)" >&2
-  exit 4
+BASE=""
+BASE_SOURCE=""
+
+# Tier 1 · the pin (scp.config.json lives at <repo>/SCP/ normally; the package
+# root itself on the older shape — try both).
+PIN_SHA=""
+for cfg in "$SCP_REPO_ROOT/SCP/scp.config.json" "$SCP_REPO_ROOT/scp.config.json"; do
+  if [ -f "$cfg" ]; then
+    PIN_SHA="$(jq -r '.scpBaseSha // empty' "$cfg" 2>/dev/null || true)"
+    break
+  fi
+done
+if [ -n "$PIN_SHA" ]; then
+  if GIT cat-file -e "$PIN_SHA^{commit}" 2>/dev/null && GIT merge-base --is-ancestor "$PIN_SHA" HEAD 2>/dev/null; then
+    BASE="$PIN_SHA"
+    BASE_SOURCE="pinned"
+  else
+    echo "NOTE: scp.config.json scpBaseSha '$PIN_SHA' is not a HEAD-ancestor commit — falling through to the landing tier" >&2
+  fi
 fi
-BASE="$(printf '%s\n' "$ROOT_COMMITS" | head -1)"
 
-# Assert the root commit carries the SCS init message — proves it is the template
-# snapshot, not some other first commit.
-BASE_MSG="$(GIT log -1 --format=%s "$BASE")"
-case "$BASE_MSG" in
-  "$INIT_MSG_PREFIX"*) ;;
-  *)
-    echo "ERROR: SCP root commit message is '$BASE_MSG', expected an '$INIT_MSG_PREFIX …' init — this SCP has no SCS init base; HALT" >&2
+# Tier 2 · the landing (git log walks ancestors of HEAD only — reachability is
+# structural; no separate ancestor check needed).
+if [ -z "$BASE" ]; then
+  LANDING_SHA="$(GIT log --grep="^$LANDING_MSG_PREFIX" --format=%H -1 2>/dev/null || true)"
+  if [ -n "$LANDING_SHA" ]; then
+    BASE="$LANDING_SHA"
+    BASE_SOURCE="landing"
+  fi
+fi
+
+# Tier 3 · the init root (the original HALT-guarded law, byte-preserved).
+if [ -z "$BASE" ]; then
+  # The root commit (no parents). There must be exactly one for a clean RED repo.
+  ROOT_COMMITS="$(GIT rev-list --max-parents=0 HEAD)"
+  ROOT_COUNT="$(printf '%s\n' "$ROOT_COMMITS" | grep -c . || true)"
+  if [ "$ROOT_COUNT" -ne 1 ]; then
+    echo "ERROR: expected exactly 1 root commit in the SCP RED repo, found $ROOT_COUNT — base lineage ambiguous; HALT (the false-collision-flood mitigation)" >&2
     exit 4
-    ;;
-esac
+  fi
+  BASE="$(printf '%s\n' "$ROOT_COMMITS" | head -1)"
 
-# Also assert the commit found by message IS the root (no later re-init confusion).
-GREP_SHA="$(GIT log --grep="^$INIT_MSG_PREFIX" --format=%H | tail -1)"
-if [ -n "$GREP_SHA" ] && [ "$GREP_SHA" != "$BASE" ]; then
-  echo "ERROR: the '$INIT_MSG_PREFIX …' commit ($GREP_SHA) is NOT the repo root ($BASE) — base lineage mismatch; HALT" >&2
-  exit 4
+  # Assert the root commit carries the SCS init message — proves it is the template
+  # snapshot, not some other first commit.
+  BASE_MSG="$(GIT log -1 --format=%s "$BASE")"
+  case "$BASE_MSG" in
+    "$INIT_MSG_PREFIX"*) ;;
+    *)
+      echo "ERROR: SCP root commit message is '$BASE_MSG', expected an '$INIT_MSG_PREFIX …' init — this SCP has no SCS init base; HALT" >&2
+      exit 4
+      ;;
+  esac
+
+  # Also assert the commit found by message IS the root (no later re-init confusion).
+  GREP_SHA="$(GIT log --grep="^$INIT_MSG_PREFIX" --format=%H | tail -1)"
+  if [ -n "$GREP_SHA" ] && [ "$GREP_SHA" != "$BASE" ]; then
+    echo "ERROR: the '$INIT_MSG_PREFIX …' commit ($GREP_SHA) is NOT the repo root ($BASE) — base lineage mismatch; HALT" >&2
+    exit 4
+  fi
+  BASE_SOURCE="init-root"
 fi
 
 OURS="$(GIT rev-parse HEAD)"
@@ -216,10 +264,20 @@ emit_entry() {  # status path collisionZone collisionZoneName
 # The hunk is the exact patch git apply would take to move OURS to the merged result for this path.
 # Emits the entry WITH a `hunk` field. Per-hunk size is bounded by the diff itself (one path).
 emit_apply_entry() {  # status path
-  local hunk
+  local hunk hunk_bytes
   hunk="$(GIT diff "$OURS" "$RESULT_TREE" -- "$2" 2>/dev/null || true)"
-  jq -nc --arg path "$2" --arg status "$1" --arg hunk "$hunk" \
-        '{path:$path,status:$status,collisionZone:false,hunk:$hunk}'
+  hunk_bytes="${#hunk}"
+  if [ "$hunk_bytes" -gt 65536 ]; then
+    # THE OVERSIZE-HUNK EVICTION (D-MB): a single lock-file hunk measured 668KB — 40% of
+    # the whole diff JSON. The bytes already live in the repo's object db; the no-agent
+    # fallback sources the hunk on demand (git diff <oursSha> <resultTree> -- <path>), and
+    # the resolver sources from git by law regardless. `hunkBytes` names the eviction.
+    jq -nc --arg path "$2" --arg status "$1" --argjson hunkBytes "$hunk_bytes" \
+          '{path:$path,status:$status,collisionZone:false,hunk:"",hunkBytes:$hunkBytes}'
+  else
+    jq -nc --arg path "$2" --arg status "$1" --arg hunk "$hunk" \
+          '{path:$path,status:$status,collisionZone:false,hunk:$hunk}'
+  fi
 }
 
 COLLISION_HITS=0
@@ -249,6 +307,18 @@ while IFS=$'\t' read -r status p rest; do
     echo "$p" >> "$APPLY_PATHS"   # mark so preserve also excludes it
     continue
   fi
+  case "$status" in
+    D*)
+      # THE DELETE-SUPPRESSION (D-MB): a base→theirs deletion is either the user's own
+      # addition (absent from the template by nature) anor a template prune — and the
+      # apply seam's NEVER-DELETE law refuses both. Routing them through apply carried
+      # ~70 noise entries per run, each with its full removed content as a deletion
+      # hunk. They belong to preserve: no hunk, no weight, the same landed outcome.
+      emit_entry "delete-suppressed" "$p" "false" "" >> "$PRESERVE_JSON"
+      echo "$p" >> "$APPLY_PATHS"   # mark so the preserve loop never double-emits
+      continue
+      ;;
+  esac
   # FOLD #5b — embed the ours→result hunk so a conference-0 update lands NO-AGENT.
   emit_apply_entry "$status" "$p" >> "$APPLY_JSON"
   echo "$p" >> "$APPLY_PATHS"
@@ -287,6 +357,7 @@ jq -n \
   --arg scpName "$SCP_NAME" \
   --arg generatedAt "$GENERATED_AT" \
   --arg baseSha "$BASE" \
+  --arg baseSource "$BASE_SOURCE" \
   --arg oursSha "$OURS" \
   --arg theirsSha "$THEIRS" \
   --arg resultTree "$RESULT_TREE" \
@@ -305,6 +376,7 @@ jq -n \
     generatedAt: $generatedAt,
     provenance: {
       baseSha: $baseSha,
+      baseSource: $baseSource,
       oursSha: $oursSha,
       theirsSha: $theirsSha,
       resultTree: $resultTree,
