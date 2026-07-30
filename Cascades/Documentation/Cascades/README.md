@@ -26,6 +26,8 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/v/scs-bridge?label=scs-bridge&color=5286a6" alt="npm version" /></a>
   &nbsp;<img src="https://img.shields.io/badge/version-%3D%20Cascade%20Cycle-8a6ba6" alt="version = Cascade Cycle" />
+  &nbsp;<a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/last-update/scs-bridge?label=renewed&color=8a6ba6" alt="last renewed" /></a>
+  &nbsp;<img src="https://img.shields.io/node/v/scs-bridge?color=52a675" alt="node version" />
   &nbsp;<a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-c25b52" alt="GPL-3.0" /></a>
 </p>
 

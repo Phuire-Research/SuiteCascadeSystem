@@ -25,6 +25,8 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/v/scs-bridge?label=scs-bridge&color=5286a6" alt="npm version" /></a>
   &nbsp;<img src="https://img.shields.io/badge/version-%3D%20Cascade%20Cycle-8a6ba6" alt="version = Cascade Cycle" />
+  &nbsp;<a href="https://www.npmjs.com/package/scs-bridge"><img src="https://img.shields.io/npm/last-update/scs-bridge?label=renewed&color=8a6ba6" alt="last renewed" /></a>
+  &nbsp;<img src="https://img.shields.io/node/v/scs-bridge?color=52a675" alt="node version" />
   &nbsp;<a href="https://github.com/Phuire-Research/SuiteCascadeSystem/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-c25b52" alt="GPL-3.0" /></a>
 </p>
 
@@ -150,10 +152,41 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
-## Release Notes — v0.938.0
+## Contribute — the Open Race
+
+This is a race run in the open, and right now is the Training Season: the machine you are
+using is the first car on the grid, built and proven before it takes the course. The course
+runs one racing line after another — the Testing Season (the Reference Design Marketplace),
+the Season Opener (the Suite Bulletin System), the Summer Stretch — to a single finishing
+line: SCS Dedicated Hardware, the Grand Prix.
+
+**Why contribute**: the whole run is funded in the open. Donations accelerate the current
+racing line directly; subscriptions are continued support of the paradigm shift itself.
+
+**What comes back**:
+
+- A subscription grants a **Mozilla Public License 2.0** to the release projects — the
+  SCS-Bridge CLI and the pinned SCP configuration — free to use, including in your own
+  commercial work.
+- Access to a **Shared Router** for contributors, with additional tooling built out on that
+  ground to better enable **co-functioning UnSocially** — builds combined, remixed, and
+  Reworked on Location, the work speaking with no words required.
+- Donations fund the open RoadMap directly and can be directed at the items that matter to
+  you — no account required.
+
+**How**: [scp-origin.com/contribute](https://scp-origin.com/contribute) — subscribe or
+donate; both move the project forward, neither requires the other. The same door rides
+every SCP's Home page as the Open Race section.
+
+## Release Notes — v0.939.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.939.0 — the substrate renewed**: Stratimux advances to 0.3.296 across the whole
+  manifold — the bridge, the app template, and the flagship apps in one motion, boot-proven
+  before shipping. The Open Race rides both faces: the Home page's section and this README's,
+  one door to the Commons.
 
 - **0.938.0 — updates that weigh what they carry**: the update circuit now computes from
   the last update you landed rather than from install day: a one-file release reads as a
