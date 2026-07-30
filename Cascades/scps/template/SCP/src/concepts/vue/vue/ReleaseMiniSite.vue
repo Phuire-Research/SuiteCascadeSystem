@@ -55,6 +55,21 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0938',
+    label: 'New in 0.938.0',
+    features: [
+      {
+        title: 'Updates that weigh what they carry',
+        color: 'blue',
+        summary: 'The update now computes from the last update you landed — not from the day the app was installed — so a one-file release reads as a one-file update.',
+        detail: [
+          'Each successful update becomes the <span class="hifi-hl-blue">starting point for the next comparison</span>. Before this, every run re-carried everything since install; measured live, a one-page release weighed 1.6 MB of working papers — the same run now weighs <span class="hifi-hl-green">tens of KB</span>, and the review reads in moments. Files your app already carries identically are invisible to the update entirely: nothing to review, nothing to land.',
+          'And the update’s conductor now holds a standing law for <span class="hifi-hl-fuchsia">your own working surfaces</span>: pages and suites you created that the template never shipped are yours by decision — never a deletion candidate, never a question. Where a shared roster overlaps, the union keeps your entries whole.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0937',
     label: 'New in 0.937.0',
     features: [
@@ -65,15 +80,6 @@ const RELEASE_SITE: ReleaseCategory[] = [
         detail: [
           'A field run surfaced the one quiet corner left: an install the bridge declined was reported only to the logs — the rail sat on its first stage while nothing moved. Every declined install now writes its <span class="hifi-hl-green">honest reason</span> to the same rail the page already watches: what stopped, and why, within a beat.',
           'And the stop that revealed it is itself cured: a Configuration JSON carrying its timestamp as <span class="hifi-hl-blue">+00:00</span> instead of <span class="hifi-hl-blue">Z</span> — the same UTC instant in either spelling — is now accepted on <span class="hifi-hl-green">both sides of the door</span>, the page and the bridge alike.',
-        ],
-      },
-      {
-        title: 'Updates that weigh what they carry',
-        color: 'blue',
-        summary: 'The update now computes from the last update you landed — not from the day the app was installed — so a one-file release reads as a one-file update.',
-        detail: [
-          'Each successful update becomes the <span class="hifi-hl-blue">starting point for the next comparison</span>. Before this, every run re-carried everything since install; measured live, a one-page release weighed 1.6 MB of working papers — the same run now weighs <span class="hifi-hl-green">tens of KB</span>, and the review reads in moments. Files your app already carries identically are invisible to the update entirely: nothing to review, nothing to land.',
-          'And the update’s conductor now holds a standing law for <span class="hifi-hl-fuchsia">your own working surfaces</span>: pages and suites you created that the template never shipped are yours by decision — never a deletion candidate, never a question. Where a shared roster overlaps, the union keeps your entries whole.',
         ],
       },
     ],
