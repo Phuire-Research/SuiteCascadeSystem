@@ -152,6 +152,32 @@ The system updates along two dedicated paths, each owning its own layer:
 The two paths never cross: updating the method never touches your apps, and updating an app
 never touches the method.
 
+## Contribute — the Open Race
+
+This is a race run in the open, and right now is the Training Season: the machine you are
+using is the first car on the grid, built and proven before it takes the course. The course
+runs one racing line after another — the Testing Season (the Reference Design Marketplace),
+the Season Opener (the Suite Bulletin System), the Summer Stretch — to a single finishing
+line: SCS Dedicated Hardware, the Grand Prix.
+
+**Why contribute**: the whole run is funded in the open. Donations accelerate the current
+racing line directly; subscriptions are continued support of the paradigm shift itself.
+
+**What comes back**:
+
+- A subscription grants a **Mozilla Public License 2.0** to the release projects — the
+  SCS-Bridge CLI and the pinned SCP configuration — free to use, including in your own
+  commercial work.
+- Access to a **Shared Router** for contributors, with additional tooling built out on that
+  ground to better enable **co-functioning UnSocially** — builds combined, remixed, and
+  Reworked on Location, the work speaking with no words required.
+- Donations fund the open RoadMap directly and can be directed at the items that matter to
+  you — no account required.
+
+**How**: [scp-origin.com/contribute](https://scp-origin.com/contribute) — subscribe or
+donate; both move the project forward, neither requires the other. The same door rides
+every SCP's Home page as the Open Race section.
+
 ## Release Notes — v0.938.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
