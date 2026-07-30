@@ -155,10 +155,15 @@ never touches the method.
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
-- **0.937.0 — installs that say what happened**: an install the bridge declines now lands
-  its honest reason on the staged rail the page already watches — never a silent stall. And
-  the Configuration JSON's timestamp is accepted in either UTC spelling (`Z` or `+00:00`),
-  on both sides of the door.
+- **0.937.0 — installs that say what happened, updates that weigh what they carry**: an
+  install the bridge declines now lands its honest reason on the staged rail the page
+  already watches — never a silent stall — and the Configuration JSON's timestamp is
+  accepted in either UTC spelling (`Z` or `+00:00`) on both sides of the door. The update
+  circuit now computes from the last update you landed rather than from install day: a
+  one-file release reads as a one-file update (measured live: 1.6 MB of working papers down
+  to tens of KB), files your app already carries identically are invisible to the update,
+  and your own pages and suites — the ones the template never shipped — stand beyond
+  question by standing law.
 
 - **0.936.0 — the honest red label + the Release pane**: the version label now stays red
   until an update actually lands in your app (not merely when the install finishes) and stays
