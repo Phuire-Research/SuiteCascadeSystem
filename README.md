@@ -60,6 +60,33 @@ Working surfaces — Suite 8s — emerge from your project's domains, each with 
 its own working sessions, and its own memory. The running app even rebuilds itself under you
 without losing your place.
 
+## The Working Example — the Isomorphic Expanse
+
+The paradigm above is not a diagram — it is running. The
+[Isomorphic Expanse](https://github.com/Phuire-Research/IsomorphicExpanse) is the first
+released SCP: a world the visitor and its guide build together, and the proof of concept for
+**Pass-Through Interaction with Agents** — driving agents from game worlds, play and work on
+the same clock.
+
+<img src="https://raw.githubusercontent.com/Phuire-Research/IsomorphicExpanse/4f157a4f111e2d743853db0216167d9f928cb84b/assets/pass-through.png" alt="The pass-through dialog — the guide speaking mid-session inside the game world" width="100%" />
+
+*The guide is inside the world, and the dialog over its head rides a real Claude Code
+session — its voice, its live tool feed, and its permission gate all pass through the game.*
+
+- **Talking to the guide reaches a real session** — replies come back brief and in
+  character, while the deep work lands in its terminal.
+- **Tool approval surfaces in the dialog** — the agent's real permission gate, answerable
+  from inside the world.
+- **One turn per step** — the turn you take in the game is the turn the agent takes in the
+  work.
+
+<img src="https://raw.githubusercontent.com/Phuire-Research/IsomorphicExpanse/4f157a4f111e2d743853db0216167d9f928cb84b/assets/game-world.png" alt="The Isomorphic Expanse game world — the isometric Personal Space" width="100%" />
+
+*The world itself — built with the same HiFi surfaces, Suite 8 pages, and update circuit
+every SCP carries. Everything shown installs from its
+[Configuration JSON](https://github.com/Phuire-Research/IsomorphicExpanse) through SCP
+Management, the same way any SCP does.*
+
 ## Requirements
 
 - **[Claude Code](https://claude.com/claude-code)** installed globally — the one true
