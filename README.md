@@ -16,6 +16,7 @@
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/">Static Demo</a> · 
   <a href="https://phuire-research.github.io/SuiteCascadeSystem/muxonomy.html">Muxonomy Proof</a> · 
   <a href="https://github.com/Phuire-Research/Stratimux">Stratimux</a> · 
+  <a href="https://github.com/Phuire-Research/IsomorphicExpanse">IsomorphicExpanse</a> · 
   <a href="https://scp-origin.com">SCP-Origin</a> · 
   <a href="Cascades/Documentation/Cascades/ARIOS-POSITION.md">ARIOS Position</a> · 
   <a href="Cascades/Documentation/Cascades/CLAUDE-AI-INSTRUCTIONS.md">Claude.ai Setup</a> · 
