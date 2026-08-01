@@ -1535,9 +1535,12 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
       /* stdout gone — ignore */
     }
     // ULT · Unified-Lifecycle-Termination · best-effort fire-and-forget quit
-    // to Electron tray via CSSP socket. 150ms socket budget · settles before
-    // the 200ms exit-defer below allows the process to terminate.
-    void sendElectronQuitViaSocket(150);
+    // to Electron tray via CSSP socket. S6 SALVO (the surviving-window wound): the
+    // prior 150ms budget could lose the race — the TUI exited at 200ms while the quit
+    // was still in flight, orphaning Electron (whose SCP windows then held their
+    // WebSockets open, so the SCP servers' zero-connection self-shutdown never armed).
+    // 1200ms budget · settles before the 1500ms exit-defer below.
+    void sendElectronQuitViaSocket(1200);
     if (frameInterval) {
       clearInterval(frameInterval);
       frameInterval = null;
@@ -1590,7 +1593,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
     restoreTerminalIO();
     // ULT exit-defer · 200ms grace for sendElectronQuitViaSocket (above)
     // to propagate the quit command before the Node process terminates.
-    setTimeout(() => exit(0), 200);
+    setTimeout(() => exit(0), 1500);
   };
 
   const handleResume = async (): Promise<void> => {
