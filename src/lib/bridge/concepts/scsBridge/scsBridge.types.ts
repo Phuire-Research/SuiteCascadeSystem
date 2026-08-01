@@ -224,6 +224,13 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // so the presenter paints the Stand By overlay while the directive delivery is pending.
   // Only meaningful alongside asWorker=true; ignored on the anchor path.
   manualMode?: boolean;
+  // RS.2b · THE COMBINED INITIAL ENTRY · the per-run directive (an SCS:Vermillion
+  // anchor built by the CALLER at spawn time — parameters are spawn-derivable, so
+  // waiting for a post-boot typed delivery was the C285 interleave class). Persisted
+  // onto the registry entry (setSessionInitialDirective) BEFORE spawn; cli-handler's
+  // open-session appends it to the Onboard seed as ONE initial positional prompt.
+  // When present, the standBy overlay arm is SKIPPED (no pending delivery to wait on).
+  initialDirective?: string;
   callerSessionUlid?: string;
 };
 

@@ -170,6 +170,14 @@ export type RegistryEntry = {
   // moment the FKIS delivery lands — a re-engage never re-shows a stale overlay.
   // Optional · additive · undefined = no overlay (the default).
   standBy?: boolean;
+  // RS.2b · THE COMBINED INITIAL ENTRY · the per-run directive (an SCS:Vermillion
+  // anchor) persisted at spawn time so the detached open-session composes it INTO
+  // the initial positional prompt (appended after the Onboard seed — one entry,
+  // no post-boot typed delivery racing a mid-turn input; the C285 interleave
+  // class retired for spawn-time directives). Only the 'new'-mode initial-prompt
+  // compose reads it; a resume never re-fires it.
+  // Optional · additive · undefined = no directive (the default).
+  initialDirective?: string;
   // D3RM-E · WIPS · RegistryEntry parallel to SessionMeta.terminalWindowId.
   // macOS Terminal.app window-id captured at spawn time; targeted by the FOCUS
   // primitive (focusTerminalWindow) for per-session window-front activation.

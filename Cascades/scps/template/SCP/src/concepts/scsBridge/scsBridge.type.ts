@@ -171,6 +171,12 @@ export type ScsBridgeClientState = {
   // Gitm Resolver's user-controlled update law). undefined/false = the ordinary worker auto-accept.
   // Cleared alongside the name (TFCD).
   pendingSpawnSuite8ManualMode: boolean | undefined;
+  // RS.2b · THE COMBINED INITIAL ENTRY · companion to pendingSpawnSuite8Name read at fire
+  // time. The per-run SCS:Vermillion directive threaded into the MCP args as
+  // initialDirective → the bridge persists it on the registry entry → cli-handler appends
+  // it to the Onboard seed as ONE initial positional prompt (no post-boot typed delivery).
+  // Cleared alongside the name (TFCD).
+  pendingSpawnSuite8InitialDirective: string | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -346,6 +352,12 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // MCP manualMode arg) — approval gate INTACT + the Stand By overlay on the primed session.
   // The Gitm Resolver's flag. Omitted/false = the ordinary worker auto-accept.
   manualMode?: boolean;
+  // RS.2b · THE COMBINED INITIAL ENTRY · optional companion. A per-run SCS:Vermillion
+  // directive composed at spawn time (→ pendingSpawnSuite8InitialDirective → the
+  // InvokeSpawnSuite8 principle → MCP initialDirective arg) — the bridge appends it to the
+  // Onboard seed as ONE initial positional prompt, retiring the post-boot typed delivery
+  // (the C285 interleave class). When present, the bridge skips the standBy overlay arm.
+  initialDirective?: string;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue

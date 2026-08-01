@@ -38,7 +38,7 @@ import type {
 } from '../scsBridge.types';
 import { createSession, hasResumableIdentity } from '../../../manager';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
-import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel } from '../../../registry';
+import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective } from '../../../registry';
 // DF1 · THE S8 SESSION BINDING · the durable-mirror READ leg. THE DF1 BINDING LAW: S8.json =
 // the S8's durable session memory. The ABSENT-anchor spawn path consults readSuite8BoundSession
 // to RESUME a page's prior session (a fresh SCP install / wiped registry lost the operational
@@ -295,11 +295,32 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           if (asWorker && !manualMode) {
             await setSessionWorker(sessionId);
           }
+          // RS.2b · THE COMBINED INITIAL ENTRY · persist the caller-built directive BEFORE
+          // spawn so the detached open-session (registry-derived by ULID) appends it to the
+          // Onboard seed as ONE initial positional prompt. Failure = fall back to the
+          // delivery-era behavior honestly (no directive on the entry → the caller's own
+          // fallback delivery leg still functions); NEVER block the spawn.
+          const initialDirective =
+            typeof payload.initialDirective === 'string' && payload.initialDirective.trim().length > 0
+              ? payload.initialDirective
+              : undefined;
+          if (initialDirective !== undefined) {
+            try {
+              await setSessionInitialDirective(sessionId, initialDirective);
+            } catch (directiveErr) {
+              log('scsbridge.spawn-suite8.initial-directive-failed', {
+                sessionId,
+                error: directiveErr instanceof Error ? directiveErr.message.slice(0, 200) : String(directiveErr),
+              });
+            }
+          }
           // D-UP4 · SPAWN-PATH HARDENING: the standBy marker is COSMETIC (it only drives the
           // presenter overlay) — a registry hiccup here must NEVER block the spawn itself.
           // The prior unguarded await sat directly on the spawn path; now a failure logs and
           // the spawn proceeds without the overlay (degraded honestly, never dead).
-          if (manualMode) {
+          // RS.2b: when the directive rides the spawn there is NO pending delivery — the
+          // overlay would wait on a clear that never comes; skip the arm.
+          if (manualMode && initialDirective === undefined) {
             try {
               await setSessionStandBy(sessionId, true);
             } catch (standByErr) {

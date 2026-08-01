@@ -1277,6 +1277,30 @@ export function createCliHandler(ctx: CliHandlerContext) {
             });
           }
 
+          // RS.2b · THE COMBINED INITIAL ENTRY · append the registry-carried per-run
+          // directive to the initial positional prompt. OUTSIDE the anchor-only gate above:
+          // repeat resolver runs spawn fresh workers while a prior anchor row exists
+          // (otherAnchorExists → no Onboard) — the directive must ride REGARDLESS, alone
+          // when the Onboard seed is absent. mode 'new' only; a resume never re-fires it.
+          // Retires the post-boot typed delivery for spawn-time directives (the C285
+          // interleave class — the delivery raced a mid-turn input and fragmented).
+          const entryInitialDirective =
+            mode === 'new' && typeof entry?.initialDirective === 'string' && entry.initialDirective.length > 0
+              ? entry.initialDirective
+              : undefined;
+          if (entryInitialDirective !== undefined) {
+            onboardPromptText = onboardPromptText
+              ? `${onboardPromptText}\n\n---\n\n${entryInitialDirective}`
+              : entryInitialDirective;
+            sdia('cli-handler.open-session.initial-directive-composed', {
+              ulid: sessionUlid,
+              suite8Name: suite8Name ?? null,
+              directiveChars: entryInitialDirective.length,
+              onboardPresent: typeof onboardPromptText === 'string' && onboardPromptText !== entryInitialDirective,
+              composedChars: onboardPromptText.length,
+            });
+          }
+
           // W1.3 · D2 Recurse-5 BNPC diagnostic · pre/post writeSpawnSettings
           // Proves cli-handler IS the Electron-context caller invoking the BNPC
           // write site. Captures process.execPath + process.argv[1] AT THIS LAYER

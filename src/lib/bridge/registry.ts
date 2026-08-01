@@ -812,6 +812,31 @@ export async function setSessionStandBy(ulid: string, standBy: boolean): Promise
 }
 
 /**
+ * RS.2b · THE COMBINED INITIAL ENTRY · setSessionInitialDirective — the per-run
+ * directive carrier. The setSessionStandBy rail exactly: persisted at spawn time
+ * (BEFORE spawnElectronSessionForUlid) so the detached open-session — which
+ * re-derives ALL spawn state from the registry by ULID — appends the directive
+ * to the Onboard seed as ONE initial positional prompt. Retires the post-boot
+ * typed delivery for spawn-time directives (the C285 interleave class).
+ *
+ * Callers: scsBridgeSpawnSuite8Session quality (payload.initialDirective → set).
+ */
+export async function setSessionInitialDirective(ulid: string, directive: string): Promise<void> {
+  return chainWrite('setSessionInitialDirective', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if (entry.initialDirective === directive) {
+      log('registry.initial-directive.noop', { ulid, reason: 'already-set' });
+      return;
+    }
+    entry.initialDirective = directive;
+    await saveRegistry(registry);
+    log('registry.initial-directive.set', { ulid, directiveChars: directive.length });
+  });
+}
+
+/**
  * D3C · JTCH · Turn-Index-Counter-Registry (TICR) atomic merge.
  *
  * Updates the four finalTurn* / lastActivityAt fields on the session entry
