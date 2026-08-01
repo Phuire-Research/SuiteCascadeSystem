@@ -652,7 +652,32 @@ export interface InstallScpResult {
  * without a seeded registry.
  */
 export function resolveBundledTemplatePath(projectRoot?: string): string {
-  // 0. Registry lookup (Template Citizenship) — authoritative when citizen is seeded
+  // THE FRESHEST-TEMPLATE LAW (the AmberlightStudio wound): the workspace registry's
+  // 'template' citizen was AUTHORITATIVE here — seeded once at its install and never
+  // advancing, it shadowed the bundled template forever, so new SCPs were born from an
+  // ancient vintage while wearing the running bridge's CURRENT applied counter (purple
+  // over old bones). The priority inverts: the BUNDLED template renews with every
+  // npm install of the bridge — it is the freshest by construction and now WINS.
+  // The registry citizen and the cwd copy remain as fallbacks for contexts with no
+  // bundled package on disk.
+  // 1. Env var override (tests + dev — explicit intent always wins)
+  const envOverride = process.env.SCS_TEMPLATE_PATH;
+  if (envOverride && existsSync(envOverride)) {
+    return envOverride;
+  }
+  // 2. Bundled template at {pkgRoot}/Cascades/scps/template/SCP — THE FRESH SOURCE.
+  //    __dirname when running from dist/cli.cjs: {pkgRoot}/dist
+  //    so package root is path.resolve(__dirname, '..')
+  try {
+    const pkgRoot = path.resolve(__dirname, '..');
+    const bundledPath = path.join(pkgRoot, 'Cascades', 'scps', 'template', 'SCP');
+    if (existsSync(bundledPath)) {
+      return bundledPath;
+    }
+  } catch {
+    // __dirname unavailable in some bundler contexts · fall through
+  }
+  // 3. Registry lookup (Template Citizenship · demoted from authoritative to fallback)
   const root = projectRoot ?? process.cwd();
   try {
     const registry = readScpRegistry(root);
@@ -666,24 +691,7 @@ export function resolveBundledTemplatePath(projectRoot?: string): string {
   } catch {
     // fall through
   }
-  // 1. Env var override (tests + dev)
-  const envOverride = process.env.SCS_TEMPLATE_PATH;
-  if (envOverride && existsSync(envOverride)) {
-    return envOverride;
-  }
-  // 2. Bundled template at {pkgRoot}/Cascades/scps/template/SCP
-  //    __dirname when running from dist/cli.cjs: {pkgRoot}/dist
-  //    so package root is path.resolve(__dirname, '..')
-  try {
-    const pkgRoot = path.resolve(__dirname, '..');
-    const bundledPath = path.join(pkgRoot, 'Cascades', 'scps', 'template', 'SCP');
-    if (existsSync(bundledPath)) {
-      return bundledPath;
-    }
-  } catch {
-    // __dirname unavailable in some bundler contexts · fall through
-  }
-  // 3. Fallback: user project's local template (dev repo with template in cwd)
+  // 4. Fallback: user project's local template (dev repo with template in cwd)
   return path.join(process.cwd(), 'Cascades', 'scps', 'template', 'SCP');
 }
 

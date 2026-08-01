@@ -55,6 +55,29 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0940',
+    label: 'New in 0.940.0',
+    features: [
+      {
+        title: 'Born from the freshest template',
+        color: 'green',
+        summary: 'Creating a new app now refreshes the template to the latest release before the birth — never a stale vintage — and a one-press Create door joins SCP Management.',
+        detail: [
+          'A field catch: a new app could be born from whatever template vintage its workspace had frozen at, wearing a current version over old bones. Every template birth now <span class="hifi-hl-green">refreshes to the freshest release first</span> — the same retained comparison machinery the update circuit already trusts — falling back gracefully when offline. The staged rail says so as it works: refreshing the template, then clone, install, ready.',
+          'And creation is now a page away: <span class="hifi-hl-green">Create a New SCP</span> in SCP Management — one PascalCase name, one press, the same staged rail the manifest install walks. The TUI path is honest too: typing lands from the first key, and every character belongs to the name you are writing.',
+        ],
+      },
+      {
+        title: 'The shader stands its ground',
+        color: 'purple',
+        summary: 'A render-mode choice now survives every internal rewrite — the chromatic shader no longer goes dark after a session of heavy motion.',
+        detail: [
+          'The one writer that recorded your render-mode choice could be overwritten by routine internal refreshes — the choice silently erased, the shader falling dark. Every writer now <span class="hifi-hl-purple">preserves the shader fields</span> it does not own. And closing the CLI now reliably carries the whole window set down with it — no orphaned windows holding the stage.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0939',
     label: 'New in 0.939.0',
     features: [

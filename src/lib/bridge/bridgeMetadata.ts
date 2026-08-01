@@ -266,6 +266,32 @@ async function writeBridgeMetadataUnsafe(
     };
   }
 
+  // S4·S6·S7 SALVO · THE SHADER-FIELD PRESERVATION (the IE dark-shader wound): the
+  // Settings RMW is the ONLY writer that SETS renderMode/scpRenderMode/shaderFps — the
+  // boot write and the TUI beat write compose their state WITHOUT them, so every full
+  // write ERASED the user's choice (undefined = key omitted by JSON.stringify) and the
+  // page shader fell to 'off' on the next hash-changing beat. Read-before-write: when
+  // the incoming state omits a shader field, the existing file's value stands. ONE seam
+  // — the per-SCP fan-out spreads this same object, so every copy carries it too.
+  let preservedRenderMode = state.renderMode;
+  let preservedScpRenderMode = state.scpRenderMode;
+  let preservedShaderFps = state.shaderFps;
+  if (
+    preservedRenderMode === undefined ||
+    preservedScpRenderMode === undefined ||
+    preservedShaderFps === undefined
+  ) {
+    try {
+      const existingRaw = await readFile(finalPath, 'utf8');
+      const existing = JSON.parse(existingRaw) as Partial<BridgeMetadata>;
+      preservedRenderMode = preservedRenderMode ?? existing.renderMode;
+      preservedScpRenderMode = preservedScpRenderMode ?? existing.scpRenderMode;
+      preservedShaderFps = preservedShaderFps ?? existing.shaderFps;
+    } catch {
+      /* no existing file — a fresh boot writes the fields absent (the honest default) */
+    }
+  }
+
   const metadata: BridgeMetadata = {
     schemaVersion: 1,
     bridgeVersion: state.bridgeVersion,
@@ -283,9 +309,9 @@ async function writeBridgeMetadataUnsafe(
     pongReceipt: null,
     // SWRM · D3 · current Terminal render mode (absent ⇒ bridge default Muxon · downstream
     // hydrates) + the published catalog (the shared model · always written so the SCP is aware).
-    renderMode: state.renderMode,
-    scpRenderMode: state.scpRenderMode,
-    shaderFps: state.shaderFps,
+    renderMode: preservedRenderMode,
+    scpRenderMode: preservedScpRenderMode,
+    shaderFps: preservedShaderFps,
     availableRenderModes: RENDER_MODE_CATALOG,
     // Model Control · the default is written EXPLICITLY (not omitted) so the field is
     // discoverable/editable in bridge.json; the catalog publishes alongside (the shared model).
