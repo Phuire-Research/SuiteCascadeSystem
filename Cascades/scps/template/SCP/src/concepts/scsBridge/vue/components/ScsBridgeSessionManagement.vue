@@ -4182,10 +4182,15 @@ onBeforeUnmount(() => {
 /* MD-9 · D-MC-3 · Per-Instance Model Control · the model dropdown (Pewter-neutral tooling
    chrome — the model picker is system tooling, not a suite-keyed action, so it wears the
    neutral pewter/muted treatment rather than a suite color). */
+/* THE ENLARGED SELECTION ROW · the Model + Suite 8 dropdowns each own a FULL row,
+   scaled up by 2/3 (trigger 0.75rem→1.25rem · padding 0.4/0.6rem→0.67/1rem); the
+   former inline "Model"/"Suite 8" text becomes the LABEL TO that row (stacked above,
+   unchanged small-caps pewter). Shared classes — one rule set covers both rows. */
 .spawn-model-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   margin-top: 8px;
   position: relative; /* MD-9 · anchor for the absolutely-positioned in-DOM drawer */
 }
@@ -4200,10 +4205,31 @@ onBeforeUnmount(() => {
 /* MD-9 · THE DROPDOWN COMPONENT · the model picker now delegates its trigger/drawer/row chrome
    to ScsDropdown (offscreen-safe · unscoped-inline CSS travels with the component). The prior
    inline .spawn-model-trigger / .spawn-model-drawer / .spawn-model-row-btn styles are retired.
-   The dropdown fills the row's remaining width beside the label. */
+   The dropdown fills its OWN row (the enlarged selection row). */
 .spawn-model-dropdown {
   flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
+}
+/* The 2/3 scale rides :deep onto the component's unscoped chrome — trigger + drawer rows
+   grow together so the open drawer matches its enlarged trigger; the drawer viewport
+   widens its cap so the larger rows still show several options. */
+.spawn-model-dropdown :deep(.scs-dropdown-trigger) {
+  font-size: 1.25rem;
+  padding: 0.67rem 1rem;
+  width: 100%;
+}
+.spawn-model-dropdown :deep(.scs-dropdown-row) {
+  padding: 0.67rem 1rem;
+}
+.spawn-model-dropdown :deep(.scs-dropdown-row-label) {
+  font-size: 1.2rem;
+}
+.spawn-model-dropdown :deep(.scs-dropdown-row-hint) {
+  font-size: 0.97rem;
+}
+.spawn-model-dropdown :deep(.scs-dropdown-drawer) {
+  max-height: 300px;
 }
 
 /* MD-9 · D-MC-3 · the recorded per-instance model tag on a session row (small · muted · pewter). */
