@@ -1178,7 +1178,12 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // H: the no-OTHER-anchor predicate EXCLUDES this session's own ulid (s.id !== sessionUlid)
           // so a hot-reuse / self entry never masks the spawn as "anchor-exists".
           let onboardPromptText: string | undefined;
-          if (mode === 'new' && suite8Name) {
+          // THE ONBOARD OPTION · a spawn that asked onboard:false persists suppressOnboard on
+          // its entry — skip the seed compose entirely for THIS spawn (the initialDirective,
+          // when present, rides alone via the RS.2b append below). Default undefined = the
+          // anchor predicate governs, unchanged.
+          const suppressOnboard = entry?.suppressOnboard === true;
+          if (mode === 'new' && suite8Name && !suppressOnboard) {
             const otherAnchorExists = sessions.some(
               (s) =>
                 s.suite8Name === suite8Name &&
@@ -1297,6 +1302,7 @@ export function createCliHandler(ctx: CliHandlerContext) {
               suite8Name: suite8Name ?? null,
               directiveChars: entryInitialDirective.length,
               onboardPresent: typeof onboardPromptText === 'string' && onboardPromptText !== entryInitialDirective,
+              suppressOnboard,
               composedChars: onboardPromptText.length,
             });
           }

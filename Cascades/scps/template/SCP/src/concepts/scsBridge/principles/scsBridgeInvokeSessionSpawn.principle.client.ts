@@ -216,6 +216,9 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // threaded when set → the bridge persists it on the registry entry and cli-handler
         // composes it into the initial positional prompt (no post-boot typed delivery).
         const pendingInitialDirective = k_.pendingSpawnSuite8InitialDirective.select();
+        // THE ONBOARD OPTION · read at fire-time (same lane) · only an explicit false threads
+        // (→ MCP onboard:false → the bridge suppresses the Onboard seed for this spawn).
+        const pendingOnboard = k_.pendingSpawnSuite8Onboard.select();
 
         console.log(
           '[SCS-Bridge CMIA-Spawn-Suite8] Gate · pendingSpawnSuite8Name=',
@@ -247,7 +250,7 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // spawns AGAIN → infinite "new session after new session". Clearing here means the clear
         // is applied DURING the fetch (while isSpawningSuite8=true blocks re-fires), so by the
         // time .finally() releases the guard the trigger is already undefined.
-        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined, initialDirective: undefined }), {
+        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined, initialDirective: undefined, onboard: undefined }), {
           throttle: 0
         });
         console.log('[SCS-Bridge CMIA-Spawn-Suite8] Gate FIRE · pendingSuite8Name=', pendingSuite8Name, '· asWorker=', pendingAsWorker ?? false, '· trigger cleared early (TFCD-EARLY)');
@@ -288,6 +291,8 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
               // RS.2b · thread the per-run anchor ONLY when set → the bridge composes it into
               // the initial positional prompt (the standBy arm is skipped bridge-side).
               ...(pendingInitialDirective ? { initialDirective: pendingInitialDirective } : {}),
+              // THE ONBOARD OPTION · thread ONLY the explicit false (omit = the Onboard rides).
+              ...(pendingOnboard === false ? { onboard: false } : {}),
             },
           },
         };

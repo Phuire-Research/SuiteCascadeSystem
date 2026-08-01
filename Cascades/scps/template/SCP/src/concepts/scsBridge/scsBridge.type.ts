@@ -177,6 +177,9 @@ export type ScsBridgeClientState = {
   // it to the Onboard seed as ONE initial positional prompt (no post-boot typed delivery).
   // Cleared alongside the name (TFCD).
   pendingSpawnSuite8InitialDirective: string | undefined;
+  // THE ONBOARD OPTION · companion read at fire time. undefined = default (Onboard rides per
+  // the anchor predicate); false = suppress (threaded as MCP onboard:false). Cleared (TFCD).
+  pendingSpawnSuite8Onboard: boolean | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -358,6 +361,11 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // Onboard seed as ONE initial positional prompt, retiring the post-boot typed delivery
   // (the C285 interleave class). When present, the bridge skips the standBy overlay arm.
   initialDirective?: string;
+  // THE ONBOARD OPTION · optional companion. true by DEFAULT (omit = the Onboard seed rides
+  // per the anchor predicate — the current behavior; the Session Manager spawns this way).
+  // false = suppress the Onboard placement for THIS spawn (→ pendingSpawnSuite8Onboard →
+  // the InvokeSpawnSuite8 principle → MCP onboard:false) — for callers supplying their own seed.
+  onboard?: boolean;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue

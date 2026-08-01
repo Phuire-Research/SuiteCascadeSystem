@@ -198,7 +198,9 @@ export type ScsBridgeController = {
   // RS.2b · initialDirective (6th arg) · a per-run SCS:Vermillion anchor composed at spawn time —
   // the bridge appends it to the Onboard seed as ONE initial positional prompt (no post-boot
   // typed delivery to race a mid-turn input; the standBy overlay arm is skipped when present).
-  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string) => void;
+  // THE ONBOARD OPTION · onboard (7th arg · default true) · false = suppress the Onboard seed
+  // for THIS spawn (the initialDirective, when present, rides alone) — callers with their own seed.
+  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean) => void;
   // C373 · THE RENAME-PROOF ALIAS · same signature as triggerSpawnSuite8Session; ONE implementation,
   // two names. The `suite8:page` pipeline recursively find-replaces `Suite8`→`{Domain}` /
   // `suite8`→`{domainLower}` across EVERY .ts/.vue in the copied concept dir (suite8PageCreate.ts
@@ -591,8 +593,8 @@ export function createScsBridgeController(): ScsBridgeController {
   // is reserved for a future SCP-bound spawn lane (C1 spawns Template SCP default).
   // D-UP · manualMode (5th param) = fresh-worker spawn WITHOUT the auto-permission marker —
   // approval gate intact + the Stand By overlay on the primed session (the Gitm Resolver's flag).
-  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string): void => {
-    console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode, '· initialDirectiveChars=', initialDirective?.length ?? 0);
+  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true): void => {
+    console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode, '· initialDirectiveChars=', initialDirective?.length ?? 0, '· onboard=', onboard);
     // C375 · THE ENGAGE AWAIT HARDENING · the S4 prescription — one loud line naming the Muxium state
     // BEFORE the try, so the relay pins whether the Engage reached a LIVE controller or a detached one.
     console.log('[ScsBridgeController] triggerSpawnSuite8Session · currentMuxium=', currentMuxium ? 'LIVE' : 'NULL');
@@ -621,6 +623,9 @@ export function createScsBridgeController(): ScsBridgeController {
         // RS.2b · thread the per-run anchor ONLY when supplied (→ the InvokeSpawnSuite8
         // principle → MCP initialDirective → the bridge composes it into the initial entry).
         ...(initialDirective ? { initialDirective } : {}),
+        // THE ONBOARD OPTION · thread ONLY the explicit false (default true = omit → the
+        // Onboard rides per the anchor predicate, unchanged).
+        ...(onboard === false ? { onboard: false } : {}),
       });
       mux.dispatch(action);
       console.log('[ScsBridgeController] triggerSpawnSuite8Session dispatched · trigger field set · asWorker=', asWorker, '· scpName=', scpName ?? null, '· fresh=', fresh);

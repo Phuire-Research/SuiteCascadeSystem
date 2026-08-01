@@ -178,6 +178,11 @@ export type RegistryEntry = {
   // compose reads it; a resume never re-fires it.
   // Optional · additive · undefined = no directive (the default).
   initialDirective?: string;
+  // THE ONBOARD OPTION · true iff the spawn asked to SUPPRESS the Onboard seed
+  // (payload.onboard === false). cli-handler's open-session skips the Onboard
+  // compose when set; the initialDirective (if present) rides alone.
+  // Optional · additive · undefined = Onboard rides per the anchor predicate (default).
+  suppressOnboard?: boolean;
   // D3RM-E · WIPS · RegistryEntry parallel to SessionMeta.terminalWindowId.
   // macOS Terminal.app window-id captured at spawn time; targeted by the FOCUS
   // primitive (focusTerminalWindow) for per-session window-front activation.

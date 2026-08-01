@@ -38,7 +38,7 @@ import type {
 } from '../scsBridge.types';
 import { createSession, hasResumableIdentity } from '../../../manager';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
-import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective } from '../../../registry';
+import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective, setSessionSuppressOnboard } from '../../../registry';
 // DF1 · THE S8 SESSION BINDING · the durable-mirror READ leg. THE DF1 BINDING LAW: S8.json =
 // the S8's durable session memory. The ABSENT-anchor spawn path consults readSuite8BoundSession
 // to RESUME a page's prior session (a fresh SCP install / wiped registry lost the operational
@@ -311,6 +311,19 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
               log('scsbridge.spawn-suite8.initial-directive-failed', {
                 sessionId,
                 error: directiveErr instanceof Error ? directiveErr.message.slice(0, 200) : String(directiveErr),
+              });
+            }
+          }
+          // THE ONBOARD OPTION · onboard is TRUE BY DEFAULT (omit = the Onboard seed rides
+          // per the anchor predicate, unchanged). Only an explicit false persists the
+          // suppression marker; a registry hiccup degrades to the default honestly.
+          if (payload.onboard === false) {
+            try {
+              await setSessionSuppressOnboard(sessionId, true);
+            } catch (suppressErr) {
+              log('scsbridge.spawn-suite8.suppress-onboard-failed', {
+                sessionId,
+                error: suppressErr instanceof Error ? suppressErr.message.slice(0, 200) : String(suppressErr),
               });
             }
           }

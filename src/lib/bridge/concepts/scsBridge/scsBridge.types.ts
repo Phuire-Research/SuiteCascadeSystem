@@ -231,6 +231,12 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // open-session appends it to the Onboard seed as ONE initial positional prompt.
   // When present, the standBy overlay arm is SKIPPED (no pending delivery to wait on).
   initialDirective?: string;
+  // THE ONBOARD OPTION · true by DEFAULT (omit = the current behavior: the Onboard seed
+  // rides an anchor spawn's initial prompt). false = suppress the Onboard placement —
+  // persisted as entry.suppressOnboard so cli-handler skips the seed compose (the
+  // initialDirective, when present, then rides ALONE as the initial entry). The Session
+  // Manager spawns with the default; false is for callers supplying their own seed.
+  onboard?: boolean;
   callerSessionUlid?: string;
 };
 

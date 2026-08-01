@@ -837,6 +837,27 @@ export async function setSessionInitialDirective(ulid: string, directive: string
 }
 
 /**
+ * THE ONBOARD OPTION · setSessionSuppressOnboard — the seed-suppression marker.
+ * Persisted at spawn time (payload.onboard === false) on the setSessionStandBy rail
+ * so the detached open-session skips the Onboard compose for THIS spawn. Default
+ * (never called) = the Onboard rides per the anchor predicate, unchanged.
+ */
+export async function setSessionSuppressOnboard(ulid: string, suppress: boolean): Promise<void> {
+  return chainWrite('setSessionSuppressOnboard', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if ((entry.suppressOnboard === true) === suppress) {
+      log('registry.suppress-onboard.noop', { ulid, suppress, reason: 'already-set' });
+      return;
+    }
+    entry.suppressOnboard = suppress;
+    await saveRegistry(registry);
+    log('registry.suppress-onboard.set', { ulid, suppress });
+  });
+}
+
+/**
  * D3C · JTCH · Turn-Index-Counter-Registry (TICR) atomic merge.
  *
  * Updates the four finalTurn* / lastActivityAt fields on the session entry
