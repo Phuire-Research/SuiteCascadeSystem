@@ -206,10 +206,17 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.940.0
+## Release Notes — v0.941.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.941.0 — the Forge cycle, completed**: the Entourage Forge engages the moment a page
+  is created; the turn-over becomes the trigger at the end of its work, surfacing once
+  there is work on the tree and resolving the right branch on its own — a fresh app takes
+  its first turn-over with the same overlay and care as the app's very first landing. And
+  git actions fired from any page now carry the app's own name to the bridge: a push lands
+  on the right repository regardless of session focus.
 
 - **0.940.0 — born from the freshest template**: creating a new app now refreshes the
   template to the latest release before the birth — never a stale vintage — with a one-press

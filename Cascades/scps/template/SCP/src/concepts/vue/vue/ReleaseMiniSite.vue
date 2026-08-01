@@ -55,6 +55,21 @@ interface ReleaseCategory {
 // The single typed structure — built from the salvo files' content, VERBATIM.
 const RELEASE_SITE: ReleaseCategory[] = [
   {
+    id: 'v0941',
+    label: 'New in 0.941.0',
+    features: [
+      {
+        title: 'The Forge cycle, completed',
+        color: 'green',
+        summary: 'The Entourage Forge engages the moment a page is created — and the turn-over becomes the trigger at the END of its work, resolving the right branch on its own.',
+        detail: [
+          'Before, a fresh page demanded a turn-over before the Forge could even begin — and on a brand-new app with a default git tree, that demand pointed at a working branch that did not exist yet. The order is now the cycle it always meant to be: <span class="hifi-hl-green">engage at creation, work, then land</span>. The landing trigger surfaces once there is work on the tree, and the press resolves the branch itself — a fresh app takes its <span class="hifi-hl-blue">first turn-over</span> with the same overlay and care as the app’s very first landing; a working branch simply restarts; an established app carries the work onto its working branch.',
+          'And git actions fired from any page now carry the app’s <span class="hifi-hl-green">own name</span> to the bridge — a push from the Release pane lands on the right repository whether or not anything ever set focus that session.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'v0940',
     label: 'New in 0.940.0',
     features: [
