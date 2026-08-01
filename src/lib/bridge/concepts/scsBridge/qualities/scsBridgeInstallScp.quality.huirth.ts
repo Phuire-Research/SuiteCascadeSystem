@@ -36,6 +36,8 @@ import type {
   ScsBridgeInstallScp,
 } from '../scsBridge.types';
 import { runInstallScpPipelineAsync } from '../../../../scp/scpInstall';
+import { ensureRetainedClone } from '../../../updateCloneManager';
+import { SCS_INSTALL_REPO_URL } from '../../../installConstants';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
 import { log } from '../../../debugLog';
 import { validateScpManifest } from '../../../../scp/scpManifest.model';
@@ -134,13 +136,48 @@ export const scsBridgeInstallScp = createQualityCardWithPayload<
         anchor: anchorForProgress,
         at: Date.now(),
       });
-      void runInstallScpPipelineAsync(
+      // FB-1 · THE FRESH-BIRTH SEAM (the AmberlightStudio wound, cured at the true root):
+      // even the bundled template is stale-from-installation — frozen at the last
+      // `npm i -g`. A TEMPLATE install (no sourcePath, no sourceUrl) now refreshes the
+      // retained clone (the proven D-U1 machinery · fetch + reset · offline reuses stale)
+      // and births from ITS template. Ladder: fresh clone → stale retained clone
+      // (offline) → the bundled template (no clone obtainable at all). The refresh rides
+      // the async fire-and-forget chain — the tool still ACKs immediately.
+      void (async () => {
+        let templateRoot: string | undefined;
+        if (!sourcePath && !sourceUrl) {
+          writeInstallProgress(projectRoot, {
+            designation,
+            stage: 'cloning',
+            detail: 'refreshing the template to the freshest release',
+            reason: '',
+            anchor: anchorForProgress,
+            at: Date.now(),
+          });
+          try {
+            const fresh = await ensureRetainedClone(SCS_INSTALL_REPO_URL, { offlineOk: true });
+            templateRoot = fresh.templatePath;
+            log('scsbridge.install.fresh-template', {
+              designation,
+              mode: fresh.mode,
+              headSha: fresh.headSha,
+            });
+          } catch (err: unknown) {
+            log('scsbridge.install.fresh-template-unavailable', {
+              designation,
+              error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+            });
+            // templateRoot stays undefined — the pipeline resolves the bundled template.
+          }
+        }
+        return runInstallScpPipelineAsync(
         {
           projectRoot,
           designation,
           sourcePath,
           sourceUrl,
           anchorCommit,
+          templateRoot,
           parentEnv: process.env as Record<string, string>,
         },
         (phase) => {
@@ -212,6 +249,7 @@ export const scsBridgeInstallScp = createQualityCardWithPayload<
             at: Date.now(),
           });
         });
+      })();
 
       console.log('[Scs Bridge InstallScp] ack · install pipeline started for:', designation);
 

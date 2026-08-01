@@ -2116,6 +2116,14 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
       // All other keys are absorbed — input-locked
       return;
     }
+    // FB-3 · THE TEXT-MODAL GUARD (the AmberlightStudio Escape-first wound): while a
+    // text-input modal owns the keyboard (the SCP wizard's designation field anor a
+    // rename buffer), the global hotkey intercepts MUST stand down — Esc belongs to the
+    // modal, and 'v', 'z', and digits are legitimate TYPED CHARACTERS for a name. The
+    // field mechanism: a live boot overlay drew OVER the wizard pane while typed keys
+    // fell invisibly into the buffer beneath; the first Esc dismissed the OVERLAY (not
+    // the wizard) — revealing the field — and the second cancelled the wizard.
+    const textModalActive = menuState.scpWizard !== undefined || menuState.renameMode !== undefined;
     // Boot Overlay Diamond · HIGH-3 Esc modal precedence + V hotkey.
     // Same precedence pattern as installAnimating above — boot overlay Esc
     // takes priority over menu Esc branches when an overlay is visible.
@@ -2150,7 +2158,18 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
           };
         };
         const activeOverlayScp = bootDeck.d.scp.d.scpBootOverlay.k.activeOverlayScpName.select();
-        if (activeOverlayScp !== null && key.name === 'escape') {
+        // FB-3 · the layering self-heal: an overlay still standing above a text modal is
+        // dismissed on the FIRST keypress — the pane beneath reveals, and the key itself
+        // still routes to the modal below (no return).
+        if (textModalActive && activeOverlayScp !== null) {
+          const dismissAction = bootDeck.d.scp.d.scpBootOverlay.e.scpBootOverlayDismiss({
+            scpName: activeOverlayScp,
+            reason: 'user-esc',
+          });
+          bootHandle.muxium.dispatch(dismissAction as never);
+          log('tui.overlay.text-modal-self-heal', { scpName: activeOverlayScp });
+        }
+        if (!textModalActive && activeOverlayScp !== null && key.name === 'escape') {
           const dismissAction = bootDeck.d.scp.d.scpBootOverlay.e.scpBootOverlayDismiss({
             scpName: activeOverlayScp,
             reason: 'user-esc',
@@ -2158,7 +2177,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
           bootHandle.muxium.dispatch(dismissAction as never);
           return;
         }
-        if (key.sequence === 'v' || key.sequence === 'V') {
+        if (!textModalActive && (key.sequence === 'v' || key.sequence === 'V')) {
           const candidate = menuState.activeScpFilter;
           if (candidate !== undefined && candidate.length > 0) {
             const showAction = bootDeck.d.scp.d.scpBootOverlay.e.scpBootOverlayShow({
@@ -2174,7 +2193,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
         // NOT cached. Acceptable shift on registry add/remove between presses.
         // Fires globally (any menu mode that has SCPs visible) BEFORE applyKeypress.
         // Citation: SUITE-3-YELLOW-UX-REFINEMENT-BLUEPRINT.md §2 (NKOR)
-        if (key.sequence !== undefined && /^[1-9]$/.test(key.sequence)) {
+        if (!textModalActive && key.sequence !== undefined && /^[1-9]$/.test(key.sequence)) {
           const digit = parseInt(key.sequence, 10);
           const scpIndex = digit - 1;
           const registrySnapshot = readScpRegistry(process.cwd());
@@ -2208,7 +2227,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
     // by ULID-based CSSP relay. focusElectronSessionForUlid invokes
     // `open-session <ulid>` which under Q2=Option A focuses-existing in Electron
     // main. HFGE gate: synthetic-row sentinels + non-launched all return silent no-op.
-    if (key.sequence === 'z' || key.sequence === 'Z') {
+    if (!textModalActive && (key.sequence === 'z' || key.sequence === 'Z')) {
       const sel = menuState.selectedUlid;
       if (
         sel !== null &&
