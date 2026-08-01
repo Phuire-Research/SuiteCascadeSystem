@@ -206,10 +206,17 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.939.0
+## Release Notes — v0.940.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.940.0 — born from the freshest template**: creating a new app now refreshes the
+  template to the latest release before the birth — never a stale vintage — with a one-press
+  Create door in SCP Management walking the same staged rail as the manifest install. The
+  TUI's create input is honest from the first key. And a render-mode choice now survives
+  every internal rewrite: the chromatic shader stands its ground, and closing the CLI
+  reliably carries the window set down with it.
 
 - **0.939.0 — the substrate renewed**: Stratimux advances to 0.3.296 across the whole
   manifold — the bridge, the app template, and the flagship apps in one motion, boot-proven
