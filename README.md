@@ -206,11 +206,16 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.942.0
+## Release Notes — v0.943.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.943.0 — updates that explain themselves**: the update diff is now self-describing —
+  its provenance block pins the exact preservation rules the merge was computed under
+  (identity fields held, never-delete paths), the apply step prefers those pinned rules
+  so what computed the update is what lands it even mid-bridge-update, and the resolver
+  working inside an SCP reads the guard directly from the artifact.
 - **0.942.0 — every SCP holds its own anchor**: the whole session-identity chain is now
   scoped per SCP — spawns carry their SCP's name, anchor claims stay within their SCP,
   a re-engaged session keeps its Suite identity, and a session with nothing to resume
