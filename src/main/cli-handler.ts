@@ -55,6 +55,8 @@ import { bridgeMetadataPathPerProject } from '../lib/bridge/bridgeMetadata';
 import { spawnSettingsPath, bridgeRoot } from '../lib/bridge/paths';
 import { resolveGeneratedBasePromptPath } from '../lib/bridge/baseSystemPrompt/baseSystemPrompt';
 import { resolveSuite8InstanceMd, resolveSuite8OnboardMd, resolveSuite8OnboardMdAcrossGrounds, resolveShatteriteMenuMd } from '../lib/bridge/instanceMdResolver.model';
+// THE GHOST-RESUME GUARD · the DAST/RSTM real-session path resolver — resume only what exists.
+import { resolveRealClaudeSessionPath } from '../lib/bridge/sessionArchival.model';
 import { sdia } from './diagnostics';
 import { executeFkis } from './messageDispatch';
 import type { ControlCommand, ControlResponse } from './control-server';
@@ -1167,7 +1169,25 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // presenter's did-finish-load paints the Stand By overlay while the directive
           // delivery is pending. Cleared by the sendMessage delivery leg.
           const standBy = entry?.standBy === true;
-          const mode: 'new' | 'resume' = claudeSessionId ? 'resume' : 'new';
+          // THE GHOST-RESUME GUARD (the FrontierTest2 field catch): a recorded
+          // claudeSessionId does NOT prove a conversation exists — Claude Code writes the
+          // .jsonl lazily at the FIRST message, and a plain (never-primed, zero-turn)
+          // session that went offline leaves an id with NO file. `claude --resume <ghost>`
+          // dies with "No conversation found". Resume ONLY when the conversation file is
+          // on disk for THIS cwd; else fall back to an honest fresh boot.
+          const conversationOnDisk =
+            typeof claudeSessionId === 'string' && claudeSessionId.length > 0
+              ? existsSync(resolveRealClaudeSessionPath(cwd, claudeSessionId))
+              : false;
+          if (claudeSessionId && !conversationOnDisk) {
+            sdia('cli-handler.open-session.ghost-resume-fallback', {
+              ulid: sessionUlid,
+              claudeSessionId,
+              cwd,
+              triedPath: resolveRealClaudeSessionPath(cwd, claudeSessionId),
+            });
+          }
+          const mode: 'new' | 'resume' = claudeSessionId && conversationOnDisk ? 'resume' : 'new';
 
           // ASDR · W2 spawn-prompt · ANCHOR-spawn detection + name-resolved Onboard read.
           // This spawn is the ANCHOR (and receives the Onboard Vermillion as its initial
