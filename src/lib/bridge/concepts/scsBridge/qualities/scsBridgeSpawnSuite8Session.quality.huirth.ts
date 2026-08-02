@@ -240,8 +240,23 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
             if (!fresh) {
               const boundSessionId = readSuite8BoundSession(suite8Name, scpName ?? undefined);
               if (boundSessionId) {
-                const resumableIdentity = await hasResumableIdentity(boundSessionId);
-                if (resumableIdentity) {
+                // THE ADOPTION LAW (the FrontierTest4 disjoint · the Shatterite contract):
+                // a binding may re-engage a session ONLY when (a) its registry entry still
+                // EXISTS (a meta-only ghost is not adoptable — setSessionAnchor would no-op
+                // and the page would gain a bare, unanchored zombie), (b) the entry belongs
+                // to THIS citizen, AND (c) it is resumable. ANY failure → fall THROUGH to
+                // the mint leg: a NEW session as anchor, Onboard riding, primed into motion
+                // — the remote-stable ground restored. A non-anchor session is NEVER
+                // adopted by the menu; it is invisible to this leg by construction (only
+                // the anchor seams write the binding).
+                const boundEntry = existingSessions.find((s) => s.id === boundSessionId);
+                const citizenMatch =
+                  boundEntry !== undefined && (boundEntry.scpName ?? null) === (scpName ?? null);
+                const resumableIdentity =
+                  boundEntry !== undefined && citizenMatch
+                    ? await hasResumableIdentity(boundSessionId)
+                    : undefined;
+                if (boundEntry !== undefined && citizenMatch && resumableIdentity) {
                   await setSessionAnchor(boundSessionId); // re-claim the page anchor onto the durable ULID
                   spawnElectronSessionForUlid(boundSessionId);
                   log('scsbridge.spawn-suite8.resumed-from-binding', {
@@ -254,10 +269,21 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
                   );
                   return;
                 }
-                log('scsbridge.spawn-suite8.binding-not-resumable', {
+                log('scsbridge.spawn-suite8.binding-rejected-mint-fresh', {
                   suite8Name,
                   boundSessionId,
+                  entryExists: boundEntry !== undefined,
+                  citizenMatch,
+                  resumable: resumableIdentity !== undefined && resumableIdentity !== null,
                 });
+                console.warn(
+                  '[SCS-Bridge SpawnSuite8Quality] binding REJECTED (exists=',
+                  boundEntry !== undefined,
+                  '· citizenMatch=',
+                  citizenMatch,
+                  ') · falling through to MINT · suite8Name=',
+                  suite8Name,
+                );
               }
             }
           }

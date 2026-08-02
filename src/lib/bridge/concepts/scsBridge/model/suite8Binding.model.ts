@@ -133,6 +133,25 @@ export function readSuite8BoundSession(suite8Name: string, scpName?: string): st
   if (typeof suite8Name !== 'string' || suite8Name.trim() === '') {
     return null;
   }
+  // THE CITIZEN-STRICT READ (the FrontierTest4 disjoint): when the caller NAMES its
+  // citizen, the binding may come ONLY from THAT citizen's Extended. A pending/
+  // unregistered citizen (resolveScpRootByName null — fresh mints before SCPs.json
+  // lands) has NO binding: return null. NEVER fall to the owning-probe — its
+  // first-found owner is ANOTHER citizen, and reading ITS binding adopted a foreign
+  // dead session (the template-poisoned boundSessionId that re-opened FrontierTest1's
+  // zombie on every fresh mint's page spawn).
+  if (scpName !== undefined) {
+    const ownRoot = resolveScpRootByName(scpName);
+    if (!ownRoot) {
+      log('suite8Binding.read.citizen-unresolved', { suite8Name, scpName });
+      return null;
+    }
+    const strictObj = readS8JsonObject(
+      resolve(ownRoot, 'Cascades', 'Extended', suite8Name, S8_JSON_BASENAME),
+    );
+    const strictValue = strictObj[BOUND_SESSION_ID_FIELD];
+    return typeof strictValue === 'string' && strictValue.length > 0 ? strictValue : null;
+  }
   const obj = readS8JsonObject(resolveS8JsonPath(suite8Name, scpName));
   const value = obj[BOUND_SESSION_ID_FIELD];
   return typeof value === 'string' && value.length > 0 ? value : null;
@@ -158,6 +177,16 @@ export function readSuite8BoundSession(suite8Name: string, scpName?: string): st
 export function writeSuite8BoundSession(suite8Name: string, sessionId: string | null, scpName?: string): void {
   if (typeof suite8Name !== 'string' || suite8Name.trim() === '') {
     log('suite8Binding.write.noop', { reason: 'blank-suite8Name' });
+    return;
+  }
+  // THE CITIZEN-STRICT WRITE (the contamination vector): when the caller NAMES its
+  // citizen but that citizen cannot resolve (pending mint · absent from SCPs.json),
+  // SKIP the write — the owning-probe fallback would land the binding in ANOTHER
+  // citizen's Extended (the exact write that poisoned the template citizen's S8.json
+  // with FrontierTest1's ULID). The registry anchor already landed; the durable
+  // mirror is best-effort and NEVER cross-citizen.
+  if (scpName !== undefined && !resolveScpRootByName(scpName)) {
+    log('suite8Binding.write.citizen-unresolved-skip', { suite8Name, scpName });
     return;
   }
   const filePath = resolveS8JsonPath(suite8Name, scpName);
