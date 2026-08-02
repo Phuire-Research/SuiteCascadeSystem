@@ -206,10 +206,19 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.941.0
+## Release Notes — v0.942.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.942.0 — every SCP holds its own anchor**: the whole session-identity chain is now
+  scoped per SCP — spawns carry their SCP's name, anchor claims stay within their SCP,
+  a re-engaged session keeps its Suite identity, and a session with nothing to resume
+  boots fresh instead of dying. The Session Manager's lanes are named (Spawn General
+  Session · the Suite 8 dropdown, reading your SCP's Suite folder live on every open),
+  a Session-Manager spawn is a plain instance that never claims a page's anchor, and
+  dispatched research workers boot bare with their streamed plan as their directive
+  while the page's own anchor keeps its onboarding, primed into motion.
 
 - **0.941.0 — the Forge cycle, completed**: the Entourage Forge engages the moment a page
   is created; the turn-over becomes the trigger at the end of its work, surfacing once
