@@ -65,7 +65,7 @@ import { getGlobalScsBridgeController, type ScsBridgeController } from '../../..
 // BO-1 · the rename-proof anchor contract (the C373 s8 law) — the session-field lookup and
 // the anchor-spawn route live in a NEVER-COPIED scsBridge model so the graphiteScribe:page token
 // rewrite cannot break them in mints (s.graphiteScribeName → s.{domain}Name was the BO-1 kill).
-import { resolveS8Anchor, listS8AnchorsByScp, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
+import { resolveS8Anchor, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
 // W1 (C758) · REWRITE-PROOF ROUTES (the BO-1 law) — the menu-floor path survives the mint rewrite.
 import { s8MenuPath, S8_MENU_STAGE_SET_PATH } from '../../../scsBridge/model/s8Routes.model';
 import ScsInput from '../../../vue/components/ScsInput.vue';
@@ -123,32 +123,14 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
 // C880 ref hoisted above the D-AFS block — the focus watchers evaluate their source at registration (TDZ guard).
 const originScpName = ref<string>('');
 // ============================================================
-// D-AFS · THE ANCHOR FOCUS SELECTOR — Specified (own citizen · default) anor Local
-// (tab through EACH SCP's anchor for this designation · labels = SCP names). Recorded
-// in S8.json beside Auto-Spawn/Auto Mode, so a worktree SCP re-opens onto the same
-// working anchor. The Cascade Memory + the menu stage render FROM the focused anchor.
+// D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
+// half · ACTIVE). The LOCAL cross-citizen tabbing is PRUNED to a disabled teaser chip —
+// the full design holds at Cascades/Working/RD-ANCHOR-FOCUS-LOCAL.md for re-entry
+// (the server record fields + the ?scpName= proxy + listS8AnchorsByScp remain landed).
 // ============================================================
-const anchorFocusMode = ref<'specified' | 'local'>('specified');
-const localAnchorScpName = ref<string | null>(null);
-// The focused citizen: Local + a selection → that SCP; else the page's OWN citizen
-// (originScpName · C880 — resolves via /scp-config; '' pre-resolve → undefined =
-// transitional designation-wide match until the config lands).
-const focusedAnchorScpName = computed<string | undefined>(() => {
-  if (anchorFocusMode.value === 'local' && localAnchorScpName.value) return localAnchorScpName.value;
-  return originScpName.value || undefined;
-});
-// Foreign = Local mode focused on a citizen that is NOT this page's own.
-const foreignFocused = computed<boolean>(
-  () =>
-    anchorFocusMode.value === 'local' &&
-    localAnchorScpName.value !== null &&
-    localAnchorScpName.value !== (originScpName.value || null),
-);
-// The Local tab roster — every citizen's anchor for this designation (Anchor Scope Law:
-// one per citizen). Labels render from scpName.
-const localAnchorTabs = computed<ScsBridgeSessionEntry[]>(() =>
-  listS8AnchorsByScp(sessionsList.value, props.graphiteScribeName),
-);
+// The focused citizen = the page's OWN citizen (originScpName · C880 — resolves via
+// /scp-config; '' pre-resolve → undefined = transitional designation-wide match).
+const focusedAnchorScpName = computed<string | undefined>(() => originScpName.value || undefined);
 // Own-citizen session matcher for the SOE/re-engage polls (spawn machinery is ALWAYS
 // own-citizen; a poll must never settle on another SCP's row).
 function matchesOwnCitizen(s: ScsBridgeSessionEntry): boolean {
@@ -262,12 +244,9 @@ onMounted(() => {
 // activeDoc: the relay document wins when FILLED; else the floor. localStageIndex is the
 // press/nav preview, reconciled from the document position whenever the file's authority
 // relays (the file remains the single authority — every client converges through it).
-const activeDoc = computed<MenuDocument>(() => {
-  // D-AFS · a FOREIGN focused anchor renders ITS citizen's stage — the own relay props
-  // and the own floor are both out of frame while Local focuses another SCP.
-  if (foreignFocused.value) return foreignDoc.value;
-  return props.menuDocument && props.menuDocument.stages.length > 0 ? props.menuDocument : floorDoc.value;
-});
+const activeDoc = computed<MenuDocument>(() =>
+  props.menuDocument && props.menuDocument.stages.length > 0 ? props.menuDocument : floorDoc.value,
+);
 const stageCount = computed<number>(() => activeDoc.value.stages.length);
 const localStageIndex = ref<number>(0);
 watch(
@@ -433,13 +412,6 @@ onMounted(() => {
     .then((j: { anchorSpawn?: string }) => {
       anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
       autoModeEnabled.value = (j as { autoMode?: unknown }).autoMode === true;
-      // D-AFS · hydrate the recorded Anchor Focus (same S8.json rail as the toggles).
-      const jf = j as { anchorFocus?: unknown; localAnchorScpName?: unknown };
-      anchorFocusMode.value = jf.anchorFocus === 'local' ? 'local' : 'specified';
-      localAnchorScpName.value =
-        typeof jf.localAnchorScpName === 'string' && jf.localAnchorScpName.length > 0
-          ? jf.localAnchorScpName
-          : null;
       // P1.1 · AD-Auto · 'auto' → run the settle-then-decide (NOT an immediate spawn). The naive
       // `!anchor.value → handleSpawnAnchor()` auto-fire raced sessionsList hydration: an offline
       // prior had not yet hydrated when this fetch resolved → !anchor.value was transiently true →
@@ -554,78 +526,9 @@ async function toggleAutoMode(): Promise<void> {
   }
 }
 
-// D-AFS · THE ANCHOR FOCUS TOGGLE + LOCAL TAB SELECT — persisted on the same S8.json
-// rail as Auto-Spawn/Auto Mode (the recorded value; worktree re-opens land on the same
-// working anchor). Returning to 'specified' clears the local selection honestly.
-async function toggleAnchorFocus(): Promise<void> {
-  const next = anchorFocusMode.value === 'local' ? 'specified' : 'local';
-  try {
-    const res = await fetch(s8AnchorSpawnPath(props.graphiteScribeName), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(
-        next === 'specified'
-          ? { anchorFocus: next, localAnchorScpName: null }
-          : { anchorFocus: next },
-      ),
-    });
-    if (res.ok) {
-      anchorFocusMode.value = next;
-      if (next === 'specified') localAnchorScpName.value = null;
-    }
-  } catch { /* toggle best-effort · the chip reflects only a confirmed write */ }
-}
-
-async function selectLocalAnchor(scpName: string | null): Promise<void> {
-  try {
-    const res = await fetch(s8AnchorSpawnPath(props.graphiteScribeName), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ localAnchorScpName: scpName }),
-    });
-    if (res.ok) localAnchorScpName.value = scpName;
-  } catch { /* best-effort */ }
-}
-
-// D-AFS · THE FOREIGN STAGE — when the focused anchor is another citizen's, the menu
-// stage reads from THAT citizen's Extended via the own server's cross-citizen proxy
-// (?scpName= · the R3-lawful boundScps filesystem read). The own relay props are
-// ignored while foreign; a light poll follows the foreign file (the IAJW watcher only
-// covers the OWN Extended).
-const foreignDoc = ref<MenuDocument>(EMPTY_MENU_DOCUMENT);
-let foreignPoll: ReturnType<typeof setInterval> | null = null;
-function fetchForeignDoc(): void {
-  const target = localAnchorScpName.value;
-  if (!target) return;
-  void fetch(`${s8MenuPath(props.graphiteScribeName)}?scpName=${encodeURIComponent(target)}`)
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc: unknown) => {
-      if (!doc || typeof doc !== 'object') return;
-      const d = doc as MenuDocument;
-      if (!Array.isArray(d.stages) || d.stages.length === 0) return;
-      if (typeof d.currentStageIndex !== 'number') return;
-      foreignDoc.value = d;
-    })
-    .catch(() => { /* absent foreign menu → the empty doc stands (honest) */ });
-}
-watch(
-  foreignFocused,
-  (isForeign) => {
-    if (foreignPoll) { clearInterval(foreignPoll); foreignPoll = null; }
-    foreignDoc.value = EMPTY_MENU_DOCUMENT;
-    if (isForeign) {
-      fetchForeignDoc();
-      foreignPoll = setInterval(fetchForeignDoc, 3000);
-    }
-  },
-  { immediate: false },
-);
-watch(localAnchorScpName, () => {
-  if (foreignFocused.value) {
-    foreignDoc.value = EMPTY_MENU_DOCUMENT;
-    fetchForeignDoc();
-  }
-});
+// D-AFS · the Local toggle/select/foreign-stage machinery is PRUNED — the full design
+// holds at Cascades/Working/RD-ANCHOR-FOCUS-LOCAL.md (the teaser chip below is the
+// only remaining surface; the server rail + the ?scpName= proxy stay landed for re-entry).
 
 async function toggleAnchorSpawnMode(): Promise<void> {
   const next = anchorSpawnMode.value === 'auto' ? 'prompt' : 'auto';
@@ -673,16 +576,8 @@ onBeforeUnmount(() => {
 function refreshS8ModeFromDisk(): void {
   void fetch(s8AnchorSpawnPath(props.graphiteScribeName))
     .then((r) => (r.ok ? r.json() : null))
-    .then((j: { anchorSpawn?: string; anchorFocus?: unknown; localAnchorScpName?: unknown } | null) => {
-      if (j) {
-        anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
-        // D-AFS · the focus record follows the file across windows exactly like the modes.
-        anchorFocusMode.value = j.anchorFocus === 'local' ? 'local' : 'specified';
-        localAnchorScpName.value =
-          typeof j.localAnchorScpName === 'string' && j.localAnchorScpName.length > 0
-            ? j.localAnchorScpName
-            : null;
-      }
+    .then((j: { anchorSpawn?: string } | null) => {
+      if (j) anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
     })
     .catch(() => { /* unreachable — the ref stands */ });
   }
@@ -776,9 +671,6 @@ async function handleSpawnAnchor(): Promise<void> {
   clearPing();
   const ctrl = controller.value;
   if (!ctrl || spawning.value) return;
-  // D-AFS · spawn machinery is OWN-citizen only — a foreign-focused menu never spawns
-  // (return to Specified anor the own tab to summon this page's anchor).
-  if (foreignFocused.value) return;
 
   spawning.value = true;
   console.log('[ShatteriteMenu SOE] spawn + anchor · graphiteScribeName=', props.graphiteScribeName);
@@ -1291,34 +1183,19 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       >
         Auto Mode: {{ autoModeEnabled ? 'ON' : 'OFF' }}
       </button>
-      <!-- D-AFS · THE ANCHOR FOCUS SELECTOR — Specified (own citizen · default) anor Local
-           (tab through each SCP's anchor for this designation · labels = SCP names).
-           Recorded in S8.json beside the two toggles; worktree re-opens land on the same
-           working anchor. -->
+      <!-- D-AFS · THE ANCHOR FOCUS TEASER — the disabled fixture. Specified (the own
+           citizen) is the active law; LOCAL cross-citizen tabbing is a coming refinement
+           (the design holds at RD-ANCHOR-FOCUS-LOCAL). Standard :disabled idiom — the
+           virtual cursor carries no disabled variant yet (seated in the RD). -->
       <button
         v-if="isAnchorAuthority"
         class="menu-anchorfocus-toggle"
         data-testid="menu-anchorfocus-toggle"
-        :class="{ 'anchorfocus-local': anchorFocusMode === 'local' }"
-        :title="anchorFocusMode === 'local'
-          ? 'Anchor LOCAL — tab through each SCP\'s anchor for this page; menus and memory follow the selected anchor'
-          : 'Anchor SPECIFIED — this page addresses its own SCP\'s anchor'"
-        @click="toggleAnchorFocus"
+        disabled
+        title="Anchor focus — Specified (this page's own citizen). LOCAL cross-citizen tabbing is a coming refinement."
       >
-        Anchor: {{ anchorFocusMode === 'local' ? 'LOCAL' : 'SPECIFIED' }}
+        Anchor: Specified
       </button>
-      <div v-if="anchorFocusMode === 'local' && localAnchorTabs.length > 0" class="menu-anchor-tabs">
-        <button
-          v-for="t in localAnchorTabs"
-          :key="t.id"
-          class="menu-anchor-tab"
-          :class="{ 'anchor-tab-active': (t.scpName ?? null) === (localAnchorScpName ?? (originScpName || null)) }"
-          :title="`Focus ${t.scpName ?? 'workspace'}'s ${props.graphiteScribeName} anchor`"
-          @click="selectLocalAnchor(t.scpName ?? null)"
-        >
-          {{ t.scpName ?? 'workspace' }}
-        </button>
-      </div>
       <p v-if="hasStage && effectiveStage.prompt" class="menu-prompt">{{ effectiveStage.prompt }}</p>
       <span :class="['menu-status', anchorAlive ? 'menu-status-alive' : 'menu-status-waiting']">
         {{ statusText }}
@@ -2001,8 +1878,9 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   border-color: var(--color-yellow);
   color: var(--color-yellow);
 }
-/* D-AFS · the Anchor Focus chip (the toggle family's shape) + the Local tab strip
-   (labels = SCP names · active tab carries the accent). */
+/* D-AFS · the Anchor Focus TEASER chip (the toggle family's shape · disabled fixture —
+   the standard :disabled idiom per style.css .hifi-btn:disabled; the Local design holds
+   at RD-ANCHOR-FOCUS-LOCAL for re-entry). */
 .menu-anchorfocus-toggle {
   margin-left: auto;
   margin-top: 0.25rem;
@@ -2014,39 +1892,10 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.menu-anchorfocus-toggle:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-.menu-anchorfocus-toggle.anchorfocus-local {
-  border-color: var(--color-blue);
-  color: var(--color-blue);
-}
-.menu-anchor-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 0.35rem;
-  width: 100%;
-}
-.menu-anchor-tab {
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.menu-anchor-tab:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-.menu-anchor-tab.anchor-tab-active {
-  border-color: var(--color-blue);
-  color: var(--color-blue);
+.menu-anchorfocus-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
