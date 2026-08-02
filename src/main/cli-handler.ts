@@ -598,6 +598,11 @@ async function buildOnboardValues(scpName: string): Promise<OnboardValues> {
   values['SCP_WINDOW_ID'] =
     typeof windowId === 'number' ? String(windowId) : STVI_ABSENT_FALLBACK;
 
+  // SCP_NAME — the citizen this spawn binds (the FrontierTest5 focus catch): the anchor
+  // passes it to scs_focus_bridge_window so the SHARED workspace muxium (no per-SCP env)
+  // resolves the RIGHT window record instead of falling to 'template'.
+  values['SCP_NAME'] = scpName;
+
   // BRIDGE_ENDPOINT — endpoint field from Cascades/Bridge/bridge.json.
   // Graceful: absent or malformed bridge.json → STVI_ABSENT_FALLBACK.
   let endpoint = STVI_ABSENT_FALLBACK;

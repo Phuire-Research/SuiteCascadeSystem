@@ -77,7 +77,7 @@ export const scsBridgeEnqueueRelayBatch = createQualityCardWithPayload<
             scsBridgeRelayFocus: (p: { sessionId: string }) => AnyAction;
             scsBridgeRelaySendMessage: (p: { sessionId: string; text: string; originScpName?: string }) => AnyAction;
             scsBridgeRelayResize: (p: { sessionId: string; scalePct: number }) => AnyAction;
-            scsBridgeRelaySpawn: (p: { suite8Name: string; text?: string; originScpName?: string; asWorker?: boolean; model?: string }) => AnyAction;
+            scsBridgeRelaySpawn: (p: { suite8Name: string; text?: string; originScpName?: string; scpName?: string; asWorker?: boolean; model?: string }) => AnyAction;
             scsBridgeRelayEnqueue: (p: { actions: AnyAction[] }) => AnyAction;
           };
         };
@@ -133,6 +133,11 @@ export const scsBridgeEnqueueRelayBatch = createQualityCardWithPayload<
                   suite8Name: spec.suite8Name,
                   text: typeof spec.text === 'string' && spec.text.length > 0 ? spec.text : undefined,
                   originScpName: typeof originScpName === 'string' && originScpName.length > 0 ? originScpName : undefined,
+                  // THE WORKER CITIZEN STAMP (the FrontierTest5 catch): the batch origin IS the
+                  // worker's citizen — thread it as scpName so createSession stamps the entry
+                  // and the citizen-scoped Onboard predicate SEES the own anchor (a stamp-less
+                  // worker read as a new citizen and received the anchor's seed).
+                  scpName: typeof originScpName === 'string' && originScpName.length > 0 ? originScpName : undefined,
                   asWorker: spec.asWorker,
                   model: spec.model,
                 }),
