@@ -652,8 +652,15 @@ export async function setSessionAnchor(ulid: string): Promise<void> {
       log('registry.anchor.noop', { ulid, reason: 'no-suite8Name-scope' });
       return;
     }
+    // THE ANCHOR SCOPE LAW · the reassign sweep clears ONLY the same-citizen prior anchor —
+    // claiming a designation's anchor on one SCP never unanchors another SCP's page.
     for (const s of registry.sessions) {
-      if (s.suite8Name === scope && s.id !== ulid && s.isAnchor) {
+      if (
+        s.suite8Name === scope &&
+        (s.scpName ?? null) === (entry.scpName ?? null) &&
+        s.id !== ulid &&
+        s.isAnchor
+      ) {
         delete s.isAnchor;
       }
     }
@@ -730,8 +737,14 @@ export async function claimAnchorIfUnclaimed(ulid: string): Promise<void> {
       log('registry.anchor.claim.skip', { ulid, suite8Name: scope, reason: 'autoAnchor-disabled' });
       return;
     }
+    // THE ANCHOR SCOPE LAW · anchor identity = (suite8Name, scpName) — a claim on one
+    // citizen never collides with another citizen's anchor of the same designation.
     const alreadyClaimed = registry.sessions.some(
-      (s) => s.suite8Name === scope && s.id !== ulid && s.isAnchor === true,
+      (s) =>
+        s.suite8Name === scope &&
+        (s.scpName ?? null) === (entry.scpName ?? null) &&
+        s.id !== ulid &&
+        s.isAnchor === true,
     );
     if (alreadyClaimed) {
       log('registry.anchor.claim.noop', { ulid, suite8Name: scope, reason: 'already-claimed' });

@@ -1184,9 +1184,12 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // anchor predicate governs, unchanged.
           const suppressOnboard = entry?.suppressOnboard === true;
           if (mode === 'new' && suite8Name && !suppressOnboard) {
+            // THE ANCHOR SCOPE LAW · the Onboard predicate scopes by citizen — another SCP's
+            // anchor of the same designation never denies THIS SCP's anchor its seed.
             const otherAnchorExists = sessions.some(
               (s) =>
                 s.suite8Name === suite8Name &&
+                (s.scpName ?? null) === (scpName ?? null) &&
                 s.isAnchor === true &&
                 s.id !== sessionUlid,
             );

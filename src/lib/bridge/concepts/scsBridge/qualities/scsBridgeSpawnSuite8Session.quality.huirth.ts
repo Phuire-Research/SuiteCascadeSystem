@@ -158,8 +158,18 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           const plain = payload.anchor === false;
           if (!asWorker && !plain) {
             const existingSessions = await listSessions();
+            // THE ANCHOR SCOPE LAW (the LambdaOfTheFrontier field catch): anchor identity is
+            // the (suite8Name, scpName) PAIR — the prior designation-only find grabbed the
+            // FIRST anchor off the session iteration regardless of citizen, so a new SCP's
+            // page surfaced/re-engaged ANOTHER SCP's onboarded anchor. Null-scpName matches
+            // null-scpName only (the workspace-default lane stays its own scope). The
+            // Sovereign Spawn Binding is the prerequisite: every page spawn carries scpName.
+            const anchorScope = scpName ?? null;
             const existingAnchor = existingSessions.find(
-              (s) => s.suite8Name === suite8Name && s.isAnchor === true,
+              (s) =>
+                s.suite8Name === suite8Name &&
+                (s.scpName ?? null) === anchorScope &&
+                s.isAnchor === true,
             );
             if (existingAnchor) {
               const anchorState = deriveSessionState(existingAnchor);
