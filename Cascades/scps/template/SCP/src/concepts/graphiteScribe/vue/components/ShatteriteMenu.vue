@@ -783,6 +783,15 @@ async function handleSpawnAnchor(): Promise<void> {
   spawning.value = true;
   console.log('[ShatteriteMenu SOE] spawn + anchor · graphiteScribeName=', props.graphiteScribeName);
 
+  // D-AFS2 · THE NEWBORN SCOPE (the plain-session anchor-steal wound): snapshot the session
+  // ids BEFORE the spawn — the poll and its timeout fallback may only settle on a session
+  // BORN OF THIS SPAWN. Under the Spawn-Lane Contract, plain (never-anchored) sessions of
+  // the same designation now linger legitimately; the old any-unanchored fallback grabbed
+  // one and set-anchored it — an Onboard-less session promoted to anchor with no priming.
+  // An elder is NEVER a fallback candidate; no newborn → wait honestly (the registry claim
+  // at spawn stands server-side).
+  const priorSessionIds = new Set(sessionsList.value.map((s) => s.id));
+
   // Spawn — the bridge claimAnchorIfUnclaimed auto-anchors the new session to this page.
   // C373 · triggerSpawnS8Session (rename-proof alias) — survives the graphiteScribe:page domain-token rewrite.
   const origin = await ensureOriginScpName();
@@ -799,8 +808,9 @@ async function handleSpawnAnchor(): Promise<void> {
       const sessions = sessionsList.value;
       // (1) launched anchor present → focus the Terminal, clear the poll, done.
       // D-AFS · own-citizen scoped — the poll must never settle on another SCP's row.
+      // D-AFS2 · newborn scoped — nor on any session that predates this spawn.
       const live = sessions.find(
-        (s) => s.graphiteScribeName === props.graphiteScribeName && matchesOwnCitizen(s) && s.isAnchor === true && s.status === 'launched',
+        (s) => s.graphiteScribeName === props.graphiteScribeName && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
       );
       if (live) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
@@ -816,7 +826,9 @@ async function handleSpawnAnchor(): Promise<void> {
       if (elapsedMs >= SOE_MAX_MS) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
         const existingAnchor = sessions.find((s) => s.graphiteScribeName === props.graphiteScribeName && matchesOwnCitizen(s) && s.isAnchor === true);
-        const unanchored = sessions.find((s) => s.graphiteScribeName === props.graphiteScribeName && matchesOwnCitizen(s) && !s.isAnchor);
+        // D-AFS2 · the fallback set-anchor candidate MUST be the newborn — an elder plain
+        // session is never promoted (the anchor-steal wound). No newborn → no action.
+        const unanchored = sessions.find((s) => s.graphiteScribeName === props.graphiteScribeName && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
         if (existingAnchor) {
           console.log('[ShatteriteMenu SOE] fallback · existing anchor present → re-engage (NO steal) · anchorId=', existingAnchor.id);
           ctrl.triggerEngageSession(existingAnchor.id);
