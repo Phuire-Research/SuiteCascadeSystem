@@ -534,16 +534,19 @@ function refreshS8Roster(): void {
   void controller?.fetchAvailableSuite8s();
 }
 
-// Spawn handler · reuses the SBST exactly as Suite8OnDemand.vue:217. Gated by the
-// isSpawningSuite8 SIGR; the SIGR-reset watcher (below) clears the in-flight state.
-// THE ONBOARD OPTION: no flag passed = the default (Onboard attached) — the Session
-// Manager's spawns are ALWAYS seeded; onboard:false is for callers with their own seed.
+// Spawn handler · THE SPAWN-LANE CONTRACT (the TestingAFrontier field catch): the Session
+// Manager's default Suite 8 spawn is the PLAIN lane — onboard:false (the seed is specific
+// to the point of calling: the page/Shatterite Menu anchor + the Gitm Resolver keep it) +
+// anchor:false (anchoring belongs to the Shatterite Menu system FIRST — an SM spawn never
+// claims a page's anchor; a future SM anchor-toggle may opt in on its own terms). scpName
+// omitted → the controller's Sovereign Spawn Binding resolves the OWN citizen, so the
+// C857 first-found probe never mis-binds under a designation collision.
 function handleSpawnSuite8(): void {
   if (isSpawningSuite8.value) return;
   const name = selectedSpawnSuite8Name.value;
   if (!name) return;
-  console.log('[SCS-Bridge SSP] handleSpawnSuite8 · name=', name);
-  controller?.triggerSpawnSuite8Session(name);
+  console.log('[SCS-Bridge SSP] handleSpawnSuite8 · name=', name, '· lane=plain (onboard:false · anchor:false)');
+  controller?.triggerSpawnSuite8Session(name, undefined, false, false, false, undefined, false, false);
 }
 
 // SSP · SIGR-reset watcher · mirrors Suite8OnDemand.vue's spawning→idle transition.
@@ -2052,7 +2055,8 @@ onBeforeUnmount(() => {
             Starting {{ selectedSpawnSuite8Name }} — it will appear in the list below.
           </template>
           <template v-else-if="selectedSpawnSuite8Name">
-            Spawns {{ selectedSpawnSuite8Name }} with its Onboard seed attached.
+            Spawns {{ selectedSpawnSuite8Name }} as a plain instance — the page's
+            Shatterite Menu anchors first.
           </template>
           <template v-else>
             Select a Suite 8 to enable its spawn. General sessions spawn above.

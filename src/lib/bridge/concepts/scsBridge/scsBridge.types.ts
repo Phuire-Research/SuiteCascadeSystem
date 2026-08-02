@@ -237,6 +237,13 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // initialDirective, when present, then rides ALONE as the initial entry). The Session
   // Manager spawns with the default; false is for callers supplying their own seed.
   onboard?: boolean;
+  // THE PLAIN-SPAWN LANE (the Spawn-Lane Contract) · true by DEFAULT (omit = the anchor
+  // lane: liveness guard + claim/re-engage/durable-binding — the page/Shatterite Menu
+  // door). false = a PLAIN instance: the ENTIRE anchor machinery is skipped (no
+  // anti-flood, no claim, no re-engage) while the approval gate stays intact (no worker
+  // marker). The Session Manager's default Suite 8 spawn is this lane (anchor:false +
+  // onboard:false) — anchoring belongs to the Shatterite Menu system first.
+  anchor?: boolean;
   callerSessionUlid?: string;
 };
 

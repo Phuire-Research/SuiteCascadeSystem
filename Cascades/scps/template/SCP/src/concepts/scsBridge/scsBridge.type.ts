@@ -180,6 +180,9 @@ export type ScsBridgeClientState = {
   // THE ONBOARD OPTION · companion read at fire time. undefined = default (Onboard rides per
   // the anchor predicate); false = suppress (threaded as MCP onboard:false). Cleared (TFCD).
   pendingSpawnSuite8Onboard: boolean | undefined;
+  // THE PLAIN-SPAWN LANE · companion read at fire time. undefined = default (anchor lane);
+  // false = plain instance (threaded as MCP anchor:false). Cleared (TFCD).
+  pendingSpawnSuite8Anchor: boolean | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -366,6 +369,11 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // false = suppress the Onboard placement for THIS spawn (→ pendingSpawnSuite8Onboard →
   // the InvokeSpawnSuite8 principle → MCP onboard:false) — for callers supplying their own seed.
   onboard?: boolean;
+  // THE PLAIN-SPAWN LANE · optional companion. true by DEFAULT (omit = the anchor lane —
+  // the page/Shatterite Menu door). false = a PLAIN instance (→ pendingSpawnSuite8Anchor →
+  // MCP anchor:false): the bridge skips the whole anchor machinery. The Session Manager's
+  // default Suite 8 spawn is this lane (anchor:false + onboard:false).
+  anchor?: boolean;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue

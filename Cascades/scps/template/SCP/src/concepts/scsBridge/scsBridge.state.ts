@@ -112,6 +112,8 @@ export function createScsBridgeClientState(): ScsBridgeClientState {
     pendingSpawnSuite8InitialDirective: undefined,
     // THE ONBOARD OPTION · undefined = default (Onboard rides); false = suppress this spawn's seed.
     pendingSpawnSuite8Onboard: undefined,
+    // THE PLAIN-SPAWN LANE · undefined = default (anchor lane); false = plain instance.
+    pendingSpawnSuite8Anchor: undefined,
     // MD-9 · D-MC-3 · Per-Instance Model Control · seeded to the default model so the dropdown
     // opens on Opus 4.8 and every spawn threads a model unless the user chooses otherwise.
     pendingSpawnModel: SCS_DEFAULT_MODEL,
@@ -196,6 +198,8 @@ export const SCSBRIDGE_FILTER_KEYS: string[] = [
   'pendingSpawnSuite8InitialDirective',
   // THE ONBOARD OPTION companion (client-local; not bidirectionally synced)
   'pendingSpawnSuite8Onboard',
+  // THE PLAIN-SPAWN LANE companion (client-local; not bidirectionally synced)
+  'pendingSpawnSuite8Anchor',
   // MD-9 · D-MC-3 · Per-Instance Model Control selection (client-local; not bidirectionally synced)
   'pendingSpawnModel',
   'pendingEngageSessionId',

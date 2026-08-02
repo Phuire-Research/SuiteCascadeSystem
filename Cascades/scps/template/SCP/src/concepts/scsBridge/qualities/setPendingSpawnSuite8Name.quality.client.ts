@@ -58,6 +58,7 @@ export const scsBridgeSetPendingSpawnSuite8Name = createQualityCardWithPayload<
       pendingSpawnSuite8ManualMode: action.payload.manualMode,
       pendingSpawnSuite8InitialDirective: action.payload.initialDirective,
       pendingSpawnSuite8Onboard: action.payload.onboard,
+      pendingSpawnSuite8Anchor: action.payload.anchor,
     };
   },
   methodCreator: defaultMethodCreator,

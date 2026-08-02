@@ -151,7 +151,12 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           // PARAMETERIZED: a research WORKER spawn (asWorker:true) MUST skip this whole block — PPOL
           // already created the suite8Name anchor, so the guard would silently return early on every
           // worker spawn → "0 dispatched · 1 skipped (no worker)".
-          if (!asWorker) {
+          // THE PLAIN-SPAWN LANE · anchor === false = a plain instance: skip the WHOLE
+          // anchor machinery (guard + claim + re-engage + durable binding) — the Session
+          // Manager's default Suite 8 spawn. Anchoring belongs to the page/Shatterite
+          // Menu lane first (anchor omitted/true).
+          const plain = payload.anchor === false;
+          if (!asWorker && !plain) {
             const existingSessions = await listSessions();
             const existingAnchor = existingSessions.find(
               (s) => s.suite8Name === suite8Name && s.isAnchor === true,
@@ -268,7 +273,7 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           // per-suite8Name writer: sets isAnchor on this entry + clears it on every OTHER entry of
           // this suite8Name → the dead prior keeps its history, loses the claim). Ordinary fresh /
           // absent / non-fresh paths keep the claimAnchorIfUnclaimed auto-anchor.
-          if (!asWorker) {
+          if (!asWorker && !plain) {
             if (reclaimFromPriorAnchorId !== null) {
               await setSessionAnchor(sessionId);
               log('scsbridge.spawn-suite8.anchor-reclaimed', {
