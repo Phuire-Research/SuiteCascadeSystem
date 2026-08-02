@@ -38,7 +38,7 @@ import type {
 } from '../scsBridge.types';
 import { createSession, hasResumableIdentity } from '../../../manager';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
-import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel } from '../../../registry';
+import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective, setSessionSuppressOnboard } from '../../../registry';
 // DF1 · THE S8 SESSION BINDING · the durable-mirror READ leg. THE DF1 BINDING LAW: S8.json =
 // the S8's durable session memory. The ABSENT-anchor spawn path consults readSuite8BoundSession
 // to RESUME a page's prior session (a fresh SCP install / wiped registry lost the operational
@@ -151,10 +151,25 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           // PARAMETERIZED: a research WORKER spawn (asWorker:true) MUST skip this whole block — PPOL
           // already created the suite8Name anchor, so the guard would silently return early on every
           // worker spawn → "0 dispatched · 1 skipped (no worker)".
-          if (!asWorker) {
+          // THE PLAIN-SPAWN LANE · anchor === false = a plain instance: skip the WHOLE
+          // anchor machinery (guard + claim + re-engage + durable binding) — the Session
+          // Manager's default Suite 8 spawn. Anchoring belongs to the page/Shatterite
+          // Menu lane first (anchor omitted/true).
+          const plain = payload.anchor === false;
+          if (!asWorker && !plain) {
             const existingSessions = await listSessions();
+            // THE ANCHOR SCOPE LAW (the LambdaOfTheFrontier field catch): anchor identity is
+            // the (suite8Name, scpName) PAIR — the prior designation-only find grabbed the
+            // FIRST anchor off the session iteration regardless of citizen, so a new SCP's
+            // page surfaced/re-engaged ANOTHER SCP's onboarded anchor. Null-scpName matches
+            // null-scpName only (the workspace-default lane stays its own scope). The
+            // Sovereign Spawn Binding is the prerequisite: every page spawn carries scpName.
+            const anchorScope = scpName ?? null;
             const existingAnchor = existingSessions.find(
-              (s) => s.suite8Name === suite8Name && s.isAnchor === true,
+              (s) =>
+                s.suite8Name === suite8Name &&
+                (s.scpName ?? null) === anchorScope &&
+                s.isAnchor === true,
             );
             if (existingAnchor) {
               const anchorState = deriveSessionState(existingAnchor);
@@ -225,8 +240,23 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
             if (!fresh) {
               const boundSessionId = readSuite8BoundSession(suite8Name, scpName ?? undefined);
               if (boundSessionId) {
-                const resumableIdentity = await hasResumableIdentity(boundSessionId);
-                if (resumableIdentity) {
+                // THE ADOPTION LAW (the FrontierTest4 disjoint · the Shatterite contract):
+                // a binding may re-engage a session ONLY when (a) its registry entry still
+                // EXISTS (a meta-only ghost is not adoptable — setSessionAnchor would no-op
+                // and the page would gain a bare, unanchored zombie), (b) the entry belongs
+                // to THIS citizen, AND (c) it is resumable. ANY failure → fall THROUGH to
+                // the mint leg: a NEW session as anchor, Onboard riding, primed into motion
+                // — the remote-stable ground restored. A non-anchor session is NEVER
+                // adopted by the menu; it is invisible to this leg by construction (only
+                // the anchor seams write the binding).
+                const boundEntry = existingSessions.find((s) => s.id === boundSessionId);
+                const citizenMatch =
+                  boundEntry !== undefined && (boundEntry.scpName ?? null) === (scpName ?? null);
+                const resumableIdentity =
+                  boundEntry !== undefined && citizenMatch
+                    ? await hasResumableIdentity(boundSessionId)
+                    : undefined;
+                if (boundEntry !== undefined && citizenMatch && resumableIdentity) {
                   await setSessionAnchor(boundSessionId); // re-claim the page anchor onto the durable ULID
                   spawnElectronSessionForUlid(boundSessionId);
                   log('scsbridge.spawn-suite8.resumed-from-binding', {
@@ -239,10 +269,21 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
                   );
                   return;
                 }
-                log('scsbridge.spawn-suite8.binding-not-resumable', {
+                log('scsbridge.spawn-suite8.binding-rejected-mint-fresh', {
                   suite8Name,
                   boundSessionId,
+                  entryExists: boundEntry !== undefined,
+                  citizenMatch,
+                  resumable: resumableIdentity !== undefined && resumableIdentity !== null,
                 });
+                console.warn(
+                  '[SCS-Bridge SpawnSuite8Quality] binding REJECTED (exists=',
+                  boundEntry !== undefined,
+                  '· citizenMatch=',
+                  citizenMatch,
+                  ') · falling through to MINT · suite8Name=',
+                  suite8Name,
+                );
               }
             }
           }
@@ -268,7 +309,7 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           // per-suite8Name writer: sets isAnchor on this entry + clears it on every OTHER entry of
           // this suite8Name → the dead prior keeps its history, loses the claim). Ordinary fresh /
           // absent / non-fresh paths keep the claimAnchorIfUnclaimed auto-anchor.
-          if (!asWorker) {
+          if (!asWorker && !plain) {
             if (reclaimFromPriorAnchorId !== null) {
               await setSessionAnchor(sessionId);
               log('scsbridge.spawn-suite8.anchor-reclaimed', {
@@ -295,11 +336,45 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
           if (asWorker && !manualMode) {
             await setSessionWorker(sessionId);
           }
+          // RS.2b · THE COMBINED INITIAL ENTRY · persist the caller-built directive BEFORE
+          // spawn so the detached open-session (registry-derived by ULID) appends it to the
+          // Onboard seed as ONE initial positional prompt. Failure = fall back to the
+          // delivery-era behavior honestly (no directive on the entry → the caller's own
+          // fallback delivery leg still functions); NEVER block the spawn.
+          const initialDirective =
+            typeof payload.initialDirective === 'string' && payload.initialDirective.trim().length > 0
+              ? payload.initialDirective
+              : undefined;
+          if (initialDirective !== undefined) {
+            try {
+              await setSessionInitialDirective(sessionId, initialDirective);
+            } catch (directiveErr) {
+              log('scsbridge.spawn-suite8.initial-directive-failed', {
+                sessionId,
+                error: directiveErr instanceof Error ? directiveErr.message.slice(0, 200) : String(directiveErr),
+              });
+            }
+          }
+          // THE ONBOARD OPTION · onboard is TRUE BY DEFAULT (omit = the Onboard seed rides
+          // per the anchor predicate, unchanged). Only an explicit false persists the
+          // suppression marker; a registry hiccup degrades to the default honestly.
+          if (payload.onboard === false) {
+            try {
+              await setSessionSuppressOnboard(sessionId, true);
+            } catch (suppressErr) {
+              log('scsbridge.spawn-suite8.suppress-onboard-failed', {
+                sessionId,
+                error: suppressErr instanceof Error ? suppressErr.message.slice(0, 200) : String(suppressErr),
+              });
+            }
+          }
           // D-UP4 · SPAWN-PATH HARDENING: the standBy marker is COSMETIC (it only drives the
           // presenter overlay) — a registry hiccup here must NEVER block the spawn itself.
           // The prior unguarded await sat directly on the spawn path; now a failure logs and
           // the spawn proceeds without the overlay (degraded honestly, never dead).
-          if (manualMode) {
+          // RS.2b: when the directive rides the spawn there is NO pending delivery — the
+          // overlay would wait on a clear that never comes; skip the arm.
+          if (manualMode && initialDirective === undefined) {
             try {
               await setSessionStandBy(sessionId, true);
             } catch (standByErr) {

@@ -55,6 +55,7 @@ import {
   setSessionSuite8Name,
   setSessionModel,
   setSessionWorker,
+  setSessionSuppressOnboard,
   listSessions,
 } from '../../../registry';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
@@ -115,6 +116,18 @@ export const scsBridgeRelaySpawn = createQualityCardWithPayload<
           await setSessionModel(sessionId, model);
           if (asWorker !== false) {
             await setSessionWorker(sessionId);
+          }
+          // THE BARE-WORKER LAW (the FrontierTest5 catch · the Tool's Means): a relay-spawned
+          // researcher is NEVER seeded — its Vermillion prime (Leg 2/3) IS its directive. The
+          // citizen stamp above already scopes the Onboard predicate; this is the explicit
+          // belt so a stamp-less edge can never seed a worker. Best-effort (never blocks).
+          try {
+            await setSessionSuppressOnboard(sessionId, true);
+          } catch (suppressErr) {
+            log('scsbridge.relaySpawn.suppress-onboard-failed', {
+              sessionId,
+              error: suppressErr instanceof Error ? suppressErr.message.slice(0, 200) : String(suppressErr),
+            });
           }
           spawnElectronSessionForUlid(sessionId);
           log('scsbridge.relaySpawn.spawned', { suite8Name, sessionId });

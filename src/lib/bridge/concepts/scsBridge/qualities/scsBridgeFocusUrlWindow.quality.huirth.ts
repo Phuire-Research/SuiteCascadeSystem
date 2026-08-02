@@ -82,12 +82,19 @@ async function resolveBridgeWindowId(preferredScpName?: string): Promise<number 
 // BWRF · resolve the SCS-Bridge UI window URL server-side. Returns the exact
 // urlWindowMap-key URL focusUrlWindow expects, or null when nothing resolves
 // (graceful no-focus · the routine continues). EVRC env → bridge.json browserUrl.
-async function resolveBridgeWindowUrl(override?: string): Promise<string | null> {
+async function resolveBridgeWindowUrl(override?: string, preferredScpName?: string): Promise<string | null> {
   if (typeof override === 'string' && override.length > 0) {
     return override;
   }
+  // M3 parity (the FrontierTest5 focus catch): the caller's known citizen wins here too —
+  // the SHARED workspace muxium carries no per-SCP env, so the env-only read fell to the
+  // endpoint fallback (the wrong anor a non-interactive window instead of the bound page).
   const originScpName =
-    process.env.SCS_BRIDGE_ORIGIN_SCP ?? process.env.SCS_BRIDGE_SCP_NAME;
+    (typeof preferredScpName === 'string' && preferredScpName.length > 0
+      ? preferredScpName
+      : undefined) ??
+    process.env.SCS_BRIDGE_ORIGIN_SCP ??
+    process.env.SCS_BRIDGE_SCP_NAME;
   try {
     // CDV Break B · read the PROJECT-LOCAL bridge.json (Cascades/Bridge/bridge.json) the bridge
     // actually writes. readBridgeMetadata() with no arg defaults to the absent ~/.scs-bridge/
@@ -176,7 +183,8 @@ export const scsBridgeFocusUrlWindow = createQualityCardWithPayload<
 
         // BWRF fallback · no bound windowId (or a payload.url override) → resolve
         // the URL and use the original focus-url relay (preserves browserUrl override).
-        const resolvedUrl = await resolveBridgeWindowUrl(url);
+        // M3 parity: the caller's known citizen threads into the URL leg too.
+        const resolvedUrl = await resolveBridgeWindowUrl(url, payloadScpName);
         if (!resolvedUrl) {
           log('scsbridge.focusUrl.no-url', {});
           console.warn(

@@ -122,6 +122,20 @@ export async function addSession(entry: RegistryEntry): Promise<void> {
       if (entry.displayName === undefined && prior.displayName !== undefined) {
         entry.displayName = prior.displayName;
       }
+      // D3RM-H · the RM-D4 clobber vector, closed for the IDENTITY fields too:
+      // a re-add of an existing ULID with a minimal row was dropping suite8Name /
+      // scpName / isAnchor (the FrontierTest1 field wound — suite8Name gone by the
+      // 04:48 re-engage). PRESERVE all three from the prior entry on ULID-match;
+      // an explicitly-set value on the new entry still wins.
+      if (entry.suite8Name === undefined && prior.suite8Name !== undefined) {
+        entry.suite8Name = prior.suite8Name;
+      }
+      if (entry.scpName === undefined && prior.scpName !== undefined) {
+        entry.scpName = prior.scpName;
+      }
+      if (entry.isAnchor === undefined && prior.isAnchor !== undefined) {
+        entry.isAnchor = prior.isAnchor;
+      }
     }
     registry.sessions = registry.sessions.filter((s) => s.id !== entry.id);
     registry.sessions.push(entry);
@@ -652,8 +666,15 @@ export async function setSessionAnchor(ulid: string): Promise<void> {
       log('registry.anchor.noop', { ulid, reason: 'no-suite8Name-scope' });
       return;
     }
+    // THE ANCHOR SCOPE LAW · the reassign sweep clears ONLY the same-citizen prior anchor —
+    // claiming a designation's anchor on one SCP never unanchors another SCP's page.
     for (const s of registry.sessions) {
-      if (s.suite8Name === scope && s.id !== ulid && s.isAnchor) {
+      if (
+        s.suite8Name === scope &&
+        (s.scpName ?? null) === (entry.scpName ?? null) &&
+        s.id !== ulid &&
+        s.isAnchor
+      ) {
         delete s.isAnchor;
       }
     }
@@ -730,8 +751,14 @@ export async function claimAnchorIfUnclaimed(ulid: string): Promise<void> {
       log('registry.anchor.claim.skip', { ulid, suite8Name: scope, reason: 'autoAnchor-disabled' });
       return;
     }
+    // THE ANCHOR SCOPE LAW · anchor identity = (suite8Name, scpName) — a claim on one
+    // citizen never collides with another citizen's anchor of the same designation.
     const alreadyClaimed = registry.sessions.some(
-      (s) => s.suite8Name === scope && s.id !== ulid && s.isAnchor === true,
+      (s) =>
+        s.suite8Name === scope &&
+        (s.scpName ?? null) === (entry.scpName ?? null) &&
+        s.id !== ulid &&
+        s.isAnchor === true,
     );
     if (alreadyClaimed) {
       log('registry.anchor.claim.noop', { ulid, suite8Name: scope, reason: 'already-claimed' });
@@ -808,6 +835,52 @@ export async function setSessionStandBy(ulid: string, standBy: boolean): Promise
     entry.standBy = standBy;
     await saveRegistry(registry);
     log('registry.standby.set', { ulid, standBy });
+  });
+}
+
+/**
+ * RS.2b · THE COMBINED INITIAL ENTRY · setSessionInitialDirective — the per-run
+ * directive carrier. The setSessionStandBy rail exactly: persisted at spawn time
+ * (BEFORE spawnElectronSessionForUlid) so the detached open-session — which
+ * re-derives ALL spawn state from the registry by ULID — appends the directive
+ * to the Onboard seed as ONE initial positional prompt. Retires the post-boot
+ * typed delivery for spawn-time directives (the C285 interleave class).
+ *
+ * Callers: scsBridgeSpawnSuite8Session quality (payload.initialDirective → set).
+ */
+export async function setSessionInitialDirective(ulid: string, directive: string): Promise<void> {
+  return chainWrite('setSessionInitialDirective', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if (entry.initialDirective === directive) {
+      log('registry.initial-directive.noop', { ulid, reason: 'already-set' });
+      return;
+    }
+    entry.initialDirective = directive;
+    await saveRegistry(registry);
+    log('registry.initial-directive.set', { ulid, directiveChars: directive.length });
+  });
+}
+
+/**
+ * THE ONBOARD OPTION · setSessionSuppressOnboard — the seed-suppression marker.
+ * Persisted at spawn time (payload.onboard === false) on the setSessionStandBy rail
+ * so the detached open-session skips the Onboard compose for THIS spawn. Default
+ * (never called) = the Onboard rides per the anchor predicate, unchanged.
+ */
+export async function setSessionSuppressOnboard(ulid: string, suppress: boolean): Promise<void> {
+  return chainWrite('setSessionSuppressOnboard', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if ((entry.suppressOnboard === true) === suppress) {
+      log('registry.suppress-onboard.noop', { ulid, suppress, reason: 'already-set' });
+      return;
+    }
+    entry.suppressOnboard = suppress;
+    await saveRegistry(registry);
+    log('registry.suppress-onboard.set', { ulid, suppress });
   });
 }
 

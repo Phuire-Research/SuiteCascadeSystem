@@ -55,6 +55,8 @@ import { bridgeMetadataPathPerProject } from '../lib/bridge/bridgeMetadata';
 import { spawnSettingsPath, bridgeRoot } from '../lib/bridge/paths';
 import { resolveGeneratedBasePromptPath } from '../lib/bridge/baseSystemPrompt/baseSystemPrompt';
 import { resolveSuite8InstanceMd, resolveSuite8OnboardMd, resolveSuite8OnboardMdAcrossGrounds, resolveShatteriteMenuMd } from '../lib/bridge/instanceMdResolver.model';
+// THE GHOST-RESUME GUARD · the DAST/RSTM real-session path resolver — resume only what exists.
+import { resolveRealClaudeSessionPath } from '../lib/bridge/sessionArchival.model';
 import { sdia } from './diagnostics';
 import { executeFkis } from './messageDispatch';
 import type { ControlCommand, ControlResponse } from './control-server';
@@ -253,7 +255,14 @@ function resolveScpDir(scpName: string | undefined): string | undefined {
   // sibling one level up (<root>/Cascades/SCPs.json).
   const bridgeJsonPath = nodePath.join(bridgeRoot(), 'bridge.json');
   const scpsJsonPath = nodePath.join(bridgeRoot(), '..', 'SCPs.json');
-  const scpsJsonBase = nodePath.dirname(scpsJsonPath); // <root>/Cascades — SCPs.json `path` base
+  // F4 · THE DOUBLED-PATH CURE (FrontierTest1 field wound): SCPs.json `path` entries
+  // are WORKSPACE-ROOT-relative ("Cascades/scps/<name>/SCP" — the SAME base
+  // anchorConfig.model.ts resolveScpRootByName resolves against), NOT
+  // Cascades-relative. The prior base (<root>/Cascades) doubled the segment —
+  // 04:39 instance.resolve scpRoot=<root>/Cascades/Cascades/scps/… → the SCP-local
+  // Instance.md probe failed → ground=workspace. Base = bridgeRoot()/../.. (the
+  // workspace root · SCPs.json's own grandparent).
+  const workspaceRoot = nodePath.resolve(bridgeRoot(), '..', '..');
   // 1. bridge.json boundScps[scpName].dir — the live, bridge-resolved absolute root.
   try {
     const raw = readFileSync(bridgeJsonPath, 'utf8');
@@ -272,7 +281,13 @@ function resolveScpDir(scpName: string | undefined): string | undefined {
       ? parsed.scps.find((s) => s?.name === scpName && typeof s?.path === 'string')
       : undefined;
     if (entry && typeof entry.path === 'string' && entry.path.length > 0) {
-      return nodePath.resolve(scpsJsonBase, entry.path);
+      // F4 normalization Concluder: an absolute stored path is used AS-IS; a
+      // relative one resolves exactly ONCE against the workspace root — never a
+      // blind join against a base that itself ends in Cascades (the doubled-path
+      // field wound).
+      return nodePath.isAbsolute(entry.path)
+        ? entry.path
+        : nodePath.resolve(workspaceRoot, entry.path);
     }
   } catch {
     /* absent/malformed SCPs.json → undefined (bridge-root fallback downstream) */
@@ -582,6 +597,11 @@ async function buildOnboardValues(scpName: string): Promise<OnboardValues> {
   const windowId = await lookupScpWindowId(scpName);
   values['SCP_WINDOW_ID'] =
     typeof windowId === 'number' ? String(windowId) : STVI_ABSENT_FALLBACK;
+
+  // SCP_NAME — the citizen this spawn binds (the FrontierTest5 focus catch): the anchor
+  // passes it to scs_focus_bridge_window so the SHARED workspace muxium (no per-SCP env)
+  // resolves the RIGHT window record instead of falling to 'template'.
+  values['SCP_NAME'] = scpName;
 
   // BRIDGE_ENDPOINT — endpoint field from Cascades/Bridge/bridge.json.
   // Graceful: absent or malformed bridge.json → STVI_ABSENT_FALLBACK.
@@ -1140,8 +1160,13 @@ export function createCliHandler(ctx: CliHandlerContext) {
           const claudeSessionId = entry?.claudeSessionId ?? meta?.claudeSessionId;
           const cwd = entry?.cwd ?? meta?.cwd ?? process.cwd();
           const scpName = entry?.scpName ?? meta?.scpName;
-          // A-3 SAPR · suite8Name resolution (registry only — not persisted to meta.json)
-          const suite8Name = entry?.suite8Name;
+          // A-3 SAPR · D3RM-H · suite8Name resolution — the SAME dual-source rail as
+          // claudeSessionId/scpName above (registry first, meta.json fallback). The
+          // registry-only read was the FrontierTest1 field wound: the row lost its
+          // suite8Name between 04:39 and 04:48 → the ASDR Onboard gate skipped →
+          // the Cadmium session re-engaged as a BARE general agent. meta.suite8Name
+          // is stamped at birth (createSession) + by sessionStartHook (env leg).
+          const suite8Name = entry?.suite8Name ?? meta?.suite8Name;
           // MD-9 · D-MC-2 · Per-Instance Model Control · the recorded per-session model
           // (registry only). Threaded into resolved.model so buildBlcwSpawnOpts injects it
           // OVER the global default (new AND resume). Undefined ⇒ the global default.
@@ -1167,7 +1192,25 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // presenter's did-finish-load paints the Stand By overlay while the directive
           // delivery is pending. Cleared by the sendMessage delivery leg.
           const standBy = entry?.standBy === true;
-          const mode: 'new' | 'resume' = claudeSessionId ? 'resume' : 'new';
+          // THE GHOST-RESUME GUARD (the FrontierTest2 field catch): a recorded
+          // claudeSessionId does NOT prove a conversation exists — Claude Code writes the
+          // .jsonl lazily at the FIRST message, and a plain (never-primed, zero-turn)
+          // session that went offline leaves an id with NO file. `claude --resume <ghost>`
+          // dies with "No conversation found". Resume ONLY when the conversation file is
+          // on disk for THIS cwd; else fall back to an honest fresh boot.
+          const conversationOnDisk =
+            typeof claudeSessionId === 'string' && claudeSessionId.length > 0
+              ? existsSync(resolveRealClaudeSessionPath(cwd, claudeSessionId))
+              : false;
+          if (claudeSessionId && !conversationOnDisk) {
+            sdia('cli-handler.open-session.ghost-resume-fallback', {
+              ulid: sessionUlid,
+              claudeSessionId,
+              cwd,
+              triedPath: resolveRealClaudeSessionPath(cwd, claudeSessionId),
+            });
+          }
+          const mode: 'new' | 'resume' = claudeSessionId && conversationOnDisk ? 'resume' : 'new';
 
           // ASDR · W2 spawn-prompt · ANCHOR-spawn detection + name-resolved Onboard read.
           // This spawn is the ANCHOR (and receives the Onboard Vermillion as its initial
@@ -1178,10 +1221,18 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // H: the no-OTHER-anchor predicate EXCLUDES this session's own ulid (s.id !== sessionUlid)
           // so a hot-reuse / self entry never masks the spawn as "anchor-exists".
           let onboardPromptText: string | undefined;
-          if (mode === 'new' && suite8Name) {
+          // THE ONBOARD OPTION · a spawn that asked onboard:false persists suppressOnboard on
+          // its entry — skip the seed compose entirely for THIS spawn (the initialDirective,
+          // when present, rides alone via the RS.2b append below). Default undefined = the
+          // anchor predicate governs, unchanged.
+          const suppressOnboard = entry?.suppressOnboard === true;
+          if (mode === 'new' && suite8Name && !suppressOnboard) {
+            // THE ANCHOR SCOPE LAW · the Onboard predicate scopes by citizen — another SCP's
+            // anchor of the same designation never denies THIS SCP's anchor its seed.
             const otherAnchorExists = sessions.some(
               (s) =>
                 s.suite8Name === suite8Name &&
+                (s.scpName ?? null) === (scpName ?? null) &&
                 s.isAnchor === true &&
                 s.id !== sessionUlid,
             );
@@ -1274,6 +1325,31 @@ export function createCliHandler(ctx: CliHandlerContext) {
               otherAnchorExists,
               onboardPromptInjected: typeof onboardPromptText === 'string',
               onboardPromptLength: onboardPromptText?.length ?? 0,
+            });
+          }
+
+          // RS.2b · THE COMBINED INITIAL ENTRY · append the registry-carried per-run
+          // directive to the initial positional prompt. OUTSIDE the anchor-only gate above:
+          // repeat resolver runs spawn fresh workers while a prior anchor row exists
+          // (otherAnchorExists → no Onboard) — the directive must ride REGARDLESS, alone
+          // when the Onboard seed is absent. mode 'new' only; a resume never re-fires it.
+          // Retires the post-boot typed delivery for spawn-time directives (the C285
+          // interleave class — the delivery raced a mid-turn input and fragmented).
+          const entryInitialDirective =
+            mode === 'new' && typeof entry?.initialDirective === 'string' && entry.initialDirective.length > 0
+              ? entry.initialDirective
+              : undefined;
+          if (entryInitialDirective !== undefined) {
+            onboardPromptText = onboardPromptText
+              ? `${onboardPromptText}\n\n---\n\n${entryInitialDirective}`
+              : entryInitialDirective;
+            sdia('cli-handler.open-session.initial-directive-composed', {
+              ulid: sessionUlid,
+              suite8Name: suite8Name ?? null,
+              directiveChars: entryInitialDirective.length,
+              onboardPresent: typeof onboardPromptText === 'string' && onboardPromptText !== entryInitialDirective,
+              suppressOnboard,
+              composedChars: onboardPromptText.length,
             });
           }
 

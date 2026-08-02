@@ -100,6 +100,14 @@ export type SessionMeta = {
   // for meta.json persistence. Populated by sessionStartHook when SAID resolution
   // succeeds (env var override anor CWD-match).
   scpName?: string;
+  // A-3 SAPR follow-through · D3RM-H · suite8Name Diameter: SessionMeta carries
+  // suite8Name parallel to RegistryEntry.suite8Name (the SAME dual-source rail
+  // claudeSessionId rides). Field wound (FrontierTest1 · 04:48 re-engage): the
+  // registry row vanished between engagements and suite8Name had NO meta.json
+  // fallback → the ASDR Onboard gate skipped → the session re-engaged BARE.
+  // Written at birth (createSession) + by sessionStartHook (SCS_BRIDGE_SUITE8_NAME
+  // env). Optional · additive · backward-compatible with all prior meta writes.
+  suite8Name?: string;
   // SS-Final · SPMEM Diameter: Session-Preferred-SCP-Memory persists across bridge
   // reboots. Written by animatedTui ADSC Live-detection closure when SLAC confirms
   // Live state for a TUI-originated boot. Read by sessionStartHook as the second
@@ -170,6 +178,19 @@ export type RegistryEntry = {
   // moment the FKIS delivery lands — a re-engage never re-shows a stale overlay.
   // Optional · additive · undefined = no overlay (the default).
   standBy?: boolean;
+  // RS.2b · THE COMBINED INITIAL ENTRY · the per-run directive (an SCS:Vermillion
+  // anchor) persisted at spawn time so the detached open-session composes it INTO
+  // the initial positional prompt (appended after the Onboard seed — one entry,
+  // no post-boot typed delivery racing a mid-turn input; the C285 interleave
+  // class retired for spawn-time directives). Only the 'new'-mode initial-prompt
+  // compose reads it; a resume never re-fires it.
+  // Optional · additive · undefined = no directive (the default).
+  initialDirective?: string;
+  // THE ONBOARD OPTION · true iff the spawn asked to SUPPRESS the Onboard seed
+  // (payload.onboard === false). cli-handler's open-session skips the Onboard
+  // compose when set; the initialDirective (if present) rides alone.
+  // Optional · additive · undefined = Onboard rides per the anchor predicate (default).
+  suppressOnboard?: boolean;
   // D3RM-E · WIPS · RegistryEntry parallel to SessionMeta.terminalWindowId.
   // macOS Terminal.app window-id captured at spawn time; targeted by the FOCUS
   // primitive (focusTerminalWindow) for per-session window-front activation.

@@ -224,6 +224,26 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // so the presenter paints the Stand By overlay while the directive delivery is pending.
   // Only meaningful alongside asWorker=true; ignored on the anchor path.
   manualMode?: boolean;
+  // RS.2b · THE COMBINED INITIAL ENTRY · the per-run directive (an SCS:Vermillion
+  // anchor built by the CALLER at spawn time — parameters are spawn-derivable, so
+  // waiting for a post-boot typed delivery was the C285 interleave class). Persisted
+  // onto the registry entry (setSessionInitialDirective) BEFORE spawn; cli-handler's
+  // open-session appends it to the Onboard seed as ONE initial positional prompt.
+  // When present, the standBy overlay arm is SKIPPED (no pending delivery to wait on).
+  initialDirective?: string;
+  // THE ONBOARD OPTION · true by DEFAULT (omit = the current behavior: the Onboard seed
+  // rides an anchor spawn's initial prompt). false = suppress the Onboard placement —
+  // persisted as entry.suppressOnboard so cli-handler skips the seed compose (the
+  // initialDirective, when present, then rides ALONE as the initial entry). The Session
+  // Manager spawns with the default; false is for callers supplying their own seed.
+  onboard?: boolean;
+  // THE PLAIN-SPAWN LANE (the Spawn-Lane Contract) · true by DEFAULT (omit = the anchor
+  // lane: liveness guard + claim/re-engage/durable-binding — the page/Shatterite Menu
+  // door). false = a PLAIN instance: the ENTIRE anchor machinery is skipped (no
+  // anti-flood, no claim, no re-engage) while the approval gate stays intact (no worker
+  // marker). The Session Manager's default Suite 8 spawn is this lane (anchor:false +
+  // onboard:false) — anchoring belongs to the Shatterite Menu system first.
+  anchor?: boolean;
   callerSessionUlid?: string;
 };
 
