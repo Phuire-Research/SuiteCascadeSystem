@@ -120,6 +120,8 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
   () => controller.value?.sessionsList.value ?? [],
 );
 
+// C880 ref hoisted above the D-AFS block — the focus watchers evaluate their source at registration (TDZ guard).
+const originScpName = ref<string>('');
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS SELECTOR — Specified (own citizen · default) anor Local
 // (tab through EACH SCP's anchor for this designation · labels = SCP names). Recorded
@@ -756,7 +758,7 @@ watch(settledAnchorStatus, (nowStatus, prevStatus) => {
 // RIGHT SCP: registry entry.scpName → the Dock §4 stamp + Instance compose + the S8.json
 // seat all land in THIS citizen (the Pewter template-origin confusion: the omitted arg
 // let the first-found designation probe bind the anchor to the template).
-const originScpName = ref<string>('');
+// (originScpName ref moved above the D-AFS block — see hoist comment there.)
 async function ensureOriginScpName(): Promise<string> {
   if (originScpName.value) return originScpName.value;
   try {

@@ -120,6 +120,8 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
   () => controller.value?.sessionsList.value ?? [],
 );
 
+// C880 ref hoisted above the D-AFS block — the focus watchers evaluate their source at registration (TDZ guard).
+const originScpName = ref<string>('');
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS SELECTOR — Specified (own citizen · default) anor Local
 // (tab through EACH SCP's anchor for this designation · labels = SCP names). Recorded
@@ -754,7 +756,7 @@ watch(settledAnchorStatus, (nowStatus, prevStatus) => {
 // C880 · THE SPAWN-ORIGIN THREAD — the page's OWN citizen (GET /scp-config → scpName ·
 // the FKIS precedent). Passed as triggerSpawnS8Session arg 2 so the bridge minds the
 // RIGHT SCP (the Pewter template-origin confusion class).
-const originScpName = ref<string>('');
+// (originScpName ref moved above the D-AFS block — see hoist comment there.)
 async function ensureOriginScpName(): Promise<string> {
   if (originScpName.value) return originScpName.value;
   try {
