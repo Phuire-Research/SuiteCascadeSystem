@@ -135,6 +135,10 @@ export async function createSession(opts: CreateSessionOpts = {}): Promise<Creat
   // (the C389 contrast: hot-reuse resolved scp-local clean). Stamp scpName at birth
   // on BOTH lanes so the LINCHPIN ordering (createSession → setSessionSuite8Name →
   // spawn) carries the full identity before the relay fires.
+  // D3RM-H · suite8Name joins the birth-stamp on BOTH lanes (the C390 lesson,
+  // second field): registry-only suite8Name was the FrontierTest1 field wound —
+  // the row vanished between engagements and the open-session RFCL had no meta
+  // fallback → re-engage composed BARE. meta.json now carries it from birth.
   const meta: SessionMeta = {
     id: sessionId,
     claudeSessionId: undefined,
@@ -143,6 +147,7 @@ export async function createSession(opts: CreateSessionOpts = {}): Promise<Creat
     claudeBinary: 'claude',
     cwd,
     scpName: opts.scpName,
+    suite8Name: opts.suite8Name,
   };
 
   await writeSessionMeta(sessionId, meta);
@@ -153,6 +158,7 @@ export async function createSession(opts: CreateSessionOpts = {}): Promise<Creat
     status: 'allocated',
     cwd,
     scpName: opts.scpName,
+    suite8Name: opts.suite8Name,
     isProcessing: false,  // D3D · SSBF · initial OPEN state; prevents undefined no-badge on first render
   });
   log('manager.create', { ulid: sessionId, scpName: opts.scpName ?? null });
@@ -174,6 +180,12 @@ export async function createSession(opts: CreateSessionOpts = {}): Promise<Creat
 //
 // Dual-source resolution mirrors launchInformative L149-156: registry entry
 // first, meta.json fallback. Pure observation · no side effects.
+//
+// D3RM-H · KNOWN GAP (dormant · LOW): a recorded claudeSessionId does NOT prove
+// the conversation .jsonl exists on disk (Claude Code writes it lazily at the
+// first message — the same ghost the cli-handler open-session GHOST-RESUME GUARD
+// closes via hasPersistedSession). Only the retired TUI/launchInformative path
+// reads this helper without that guard; do NOT restructure the TUI path for it.
 export async function hasResumableIdentity(
   sessionId: string,
 ): Promise<string | undefined> {

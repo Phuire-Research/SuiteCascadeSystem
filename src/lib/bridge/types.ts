@@ -100,6 +100,14 @@ export type SessionMeta = {
   // for meta.json persistence. Populated by sessionStartHook when SAID resolution
   // succeeds (env var override anor CWD-match).
   scpName?: string;
+  // A-3 SAPR follow-through · D3RM-H · suite8Name Diameter: SessionMeta carries
+  // suite8Name parallel to RegistryEntry.suite8Name (the SAME dual-source rail
+  // claudeSessionId rides). Field wound (FrontierTest1 · 04:48 re-engage): the
+  // registry row vanished between engagements and suite8Name had NO meta.json
+  // fallback → the ASDR Onboard gate skipped → the session re-engaged BARE.
+  // Written at birth (createSession) + by sessionStartHook (SCS_BRIDGE_SUITE8_NAME
+  // env). Optional · additive · backward-compatible with all prior meta writes.
+  suite8Name?: string;
   // SS-Final · SPMEM Diameter: Session-Preferred-SCP-Memory persists across bridge
   // reboots. Written by animatedTui ADSC Live-detection closure when SLAC confirms
   // Live state for a TUI-originated boot. Read by sessionStartHook as the second

@@ -153,6 +153,15 @@ export async function runSessionStartHook(): Promise<void> {
     if (matchedScpName) {
       meta.scpName = matchedScpName;
     }
+    // D3RM-H · A-3 SAPR follow-through: persist suite8Name into meta.json exactly
+    // as claudeSessionId persists above — the dual-source rail's meta leg. The
+    // spawnSettings command-prefix carries SCS_BRIDGE_SUITE8_NAME (A-3 SAPR);
+    // absent env NEVER clobbers an existing meta.suite8Name (empty = absent,
+    // matching the envScpName convention above).
+    const envSuite8Name = process.env.SCS_BRIDGE_SUITE8_NAME?.trim() || undefined;
+    if (envSuite8Name) {
+      meta.suite8Name = envSuite8Name;
+    }
     const tmp = path + '.tmp';
     await writeFile(tmp, JSON.stringify(meta, null, 2), 'utf8');
     await rename(tmp, path);

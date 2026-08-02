@@ -122,6 +122,20 @@ export async function addSession(entry: RegistryEntry): Promise<void> {
       if (entry.displayName === undefined && prior.displayName !== undefined) {
         entry.displayName = prior.displayName;
       }
+      // D3RM-H · the RM-D4 clobber vector, closed for the IDENTITY fields too:
+      // a re-add of an existing ULID with a minimal row was dropping suite8Name /
+      // scpName / isAnchor (the FrontierTest1 field wound — suite8Name gone by the
+      // 04:48 re-engage). PRESERVE all three from the prior entry on ULID-match;
+      // an explicitly-set value on the new entry still wins.
+      if (entry.suite8Name === undefined && prior.suite8Name !== undefined) {
+        entry.suite8Name = prior.suite8Name;
+      }
+      if (entry.scpName === undefined && prior.scpName !== undefined) {
+        entry.scpName = prior.scpName;
+      }
+      if (entry.isAnchor === undefined && prior.isAnchor !== undefined) {
+        entry.isAnchor = prior.isAnchor;
+      }
     }
     registry.sessions = registry.sessions.filter((s) => s.id !== entry.id);
     registry.sessions.push(entry);

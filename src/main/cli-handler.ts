@@ -255,7 +255,14 @@ function resolveScpDir(scpName: string | undefined): string | undefined {
   // sibling one level up (<root>/Cascades/SCPs.json).
   const bridgeJsonPath = nodePath.join(bridgeRoot(), 'bridge.json');
   const scpsJsonPath = nodePath.join(bridgeRoot(), '..', 'SCPs.json');
-  const scpsJsonBase = nodePath.dirname(scpsJsonPath); // <root>/Cascades — SCPs.json `path` base
+  // F4 · THE DOUBLED-PATH CURE (FrontierTest1 field wound): SCPs.json `path` entries
+  // are WORKSPACE-ROOT-relative ("Cascades/scps/<name>/SCP" — the SAME base
+  // anchorConfig.model.ts resolveScpRootByName resolves against), NOT
+  // Cascades-relative. The prior base (<root>/Cascades) doubled the segment —
+  // 04:39 instance.resolve scpRoot=<root>/Cascades/Cascades/scps/… → the SCP-local
+  // Instance.md probe failed → ground=workspace. Base = bridgeRoot()/../.. (the
+  // workspace root · SCPs.json's own grandparent).
+  const workspaceRoot = nodePath.resolve(bridgeRoot(), '..', '..');
   // 1. bridge.json boundScps[scpName].dir — the live, bridge-resolved absolute root.
   try {
     const raw = readFileSync(bridgeJsonPath, 'utf8');
@@ -274,7 +281,13 @@ function resolveScpDir(scpName: string | undefined): string | undefined {
       ? parsed.scps.find((s) => s?.name === scpName && typeof s?.path === 'string')
       : undefined;
     if (entry && typeof entry.path === 'string' && entry.path.length > 0) {
-      return nodePath.resolve(scpsJsonBase, entry.path);
+      // F4 normalization Concluder: an absolute stored path is used AS-IS; a
+      // relative one resolves exactly ONCE against the workspace root — never a
+      // blind join against a base that itself ends in Cascades (the doubled-path
+      // field wound).
+      return nodePath.isAbsolute(entry.path)
+        ? entry.path
+        : nodePath.resolve(workspaceRoot, entry.path);
     }
   } catch {
     /* absent/malformed SCPs.json → undefined (bridge-root fallback downstream) */
@@ -1142,8 +1155,13 @@ export function createCliHandler(ctx: CliHandlerContext) {
           const claudeSessionId = entry?.claudeSessionId ?? meta?.claudeSessionId;
           const cwd = entry?.cwd ?? meta?.cwd ?? process.cwd();
           const scpName = entry?.scpName ?? meta?.scpName;
-          // A-3 SAPR · suite8Name resolution (registry only — not persisted to meta.json)
-          const suite8Name = entry?.suite8Name;
+          // A-3 SAPR · D3RM-H · suite8Name resolution — the SAME dual-source rail as
+          // claudeSessionId/scpName above (registry first, meta.json fallback). The
+          // registry-only read was the FrontierTest1 field wound: the row lost its
+          // suite8Name between 04:39 and 04:48 → the ASDR Onboard gate skipped →
+          // the Cadmium session re-engaged as a BARE general agent. meta.suite8Name
+          // is stamped at birth (createSession) + by sessionStartHook (env leg).
+          const suite8Name = entry?.suite8Name ?? meta?.suite8Name;
           // MD-9 · D-MC-2 · Per-Instance Model Control · the recorded per-session model
           // (registry only). Threaded into resolved.model so buildBlcwSpawnOpts injects it
           // OVER the global default (new AND resume). Undefined ⇒ the global default.
