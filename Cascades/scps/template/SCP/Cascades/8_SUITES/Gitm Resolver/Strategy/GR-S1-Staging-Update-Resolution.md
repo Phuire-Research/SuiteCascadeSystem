@@ -75,11 +75,13 @@ PART-RENEWAL ORIENTATION: Identity-bearing fields — package.json name/descript
 
 UI-PROGRESS (best-effort — attempt before each Step below): Stamp progress to the UI via the
   bridge tool gitm_update_progress at the /mcp endpoint (read the endpoint from
-  Cascades/Bridge/bridge.json) with { stage: 'resolving', note: '<what you are doing now>' }.
+  Cascades/Bridge/bridge.json) with { "originScpName": "<scpName>", "stage": "resolving",
+  "note": "<what you are doing now>" }.
   /MCP CALL DISCIPLINE (every bridge tool call): curl -s -m 15 -H 'Content-Type: application/json'
     — the response is ONE JSON body; read it, then proceed. NEVER background these calls and never
-    omit the -m timeout. Fire strictly sequentially. Never pass scpName to any gitm tool — the
-    bridge resolves the active SCP from its own update state.
+    omit the -m timeout. Fire strictly sequentially. SOVEREIGN CALLS: EVERY gitm tool call MUST
+    carry "originScpName": "<scpName>" (your §4 stamp) — the update rail is PER-SCP; your stamps
+    land on YOUR SCP's rail and never cross another update running beside yours.
   FAILURE RULE: a failed or timed-out progress stamp NEVER blocks the work — proceed immediately.
     The stamp is informational only; the resolution file is the deliverable.
 

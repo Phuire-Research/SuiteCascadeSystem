@@ -152,6 +152,12 @@ export type GitmState = {
   // D-U4.3). The GITEP snapshot carries it to gitm.json; the SCP relay propagates it. TQNI:
   // mirror in GitmStatusSnapshot + SCP GitmJsonShape byte-for-byte.
   updateStatus: UpdateStatusShape;
+  // RS.4 · THE PER-SCP RAIL — the fan-out witness tick. A NON-active target's update stamp
+  // lands ONLY on its slice (the flat updateStatus is the ACTIVE projection); this counter
+  // is the one flat field such a stamp writes so the GITEP writer fires and relays the
+  // slice-only change to that rail's gitm.json (the MC-W3 M7 lastActionResult precedent,
+  // given its own honest field). Bridge-internal — never rides GitmStatusSnapshot.
+  updateRailTick: number;
   detachedHead: boolean;
   conflicts: string[];
   lastReadAt: number;
@@ -315,6 +321,7 @@ export const createGitmState = (userCwd: string): GitmState => ({
   unstagedFiles: [],
   untrackedFiles: [],
   updateStatus: UPDATE_STATUS_EMPTY,
+  updateRailTick: 0,
   detachedHead: false,
   conflicts: [],
   lastReadAt: 0,

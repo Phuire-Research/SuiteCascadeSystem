@@ -28,9 +28,11 @@ import {
   muxiumConclude,
   strategySuccess,
   strategyData_select,
+  selectPayload,
   type Concept,
 } from 'stratimux';
 import type { GitmState, UpdateStatusShape } from '../gitm.types';
+import { stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
 import type {
   GitmScpUpdateStageRelayPayload,
   GitmScpUpdateStageRelay,
@@ -51,8 +53,8 @@ type DiffSummary = {
   collisionZones: string[];
 };
 type RelayBucketItem =
-  | { ok: true; summary: DiffSummary; generatedAt: string }
-  | { ok: false; error: string };
+  | { ok: true; summary: DiffSummary; generatedAt: string; targetDir: string }
+  | { ok: false; error: string; targetDir: string };
 const bucket: RelayBucketItem[] = [];
 
 export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
@@ -66,6 +68,20 @@ export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
     if (!item) {
       return {};
     }
+    // RS.4 · THE PER-SCP RAIL — stamp the TARGET's slice; flat is the ACTIVE projection.
+    const stamp = item.ok
+      ? {
+          stage: 'reviewing' as const,
+          stageError: '',
+          diffPresent: true,
+          summary: item.summary,
+          generatedAt: item.generatedAt,
+        }
+      : { stage: 'error' as const, stageError: item.error };
+    stampSliceUpdateStatus(item.targetDir, stamp);
+    if (item.targetDir !== '' && item.targetDir !== state.activeScpDir) {
+      return { updateRailTick: state.updateRailTick + 1 };
+    }
     if (!item.ok) {
       const updateStatus: UpdateStatusShape = {
         ...state.updateStatus,
@@ -76,11 +92,7 @@ export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
     }
     const updateStatus: UpdateStatusShape = {
       ...state.updateStatus,
-      stage: 'reviewing',
-      stageError: '',
-      diffPresent: true,
-      summary: item.summary,
-      generatedAt: item.generatedAt,
+      ...stamp,
     };
     return { updateStatus };
   },
@@ -88,16 +100,25 @@ export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
     createMethodWithConcepts(({ action, deck }) => {
       const activeScpDir = deck.gitm.k.activeScpDir.select();
       const userCwd = deck.gitm.k.userCwd.select();
+      // RS.4 — identity rides the node payload (Begin resolved once); the strategyData +
+      // state fallbacks remain for a payload-less legacy dispatch only.
+      const payload = selectPayload<GitmScpUpdateStageRelayPayload>(action);
+      const targetDir =
+        payload?.targetScpDir && payload.targetScpDir !== ''
+          ? payload.targetScpDir
+          : activeScpDir;
       const diffData = action.strategy
         ? strategyData_select<GitmScpUpdateDiffStrategyData>(action.strategy)
         : undefined;
       const stateScpName = deck.gitm.k.updateStatus.select().scpName;
       const scpName =
-        diffData?.scpName && diffData.scpName !== ''
-          ? diffData.scpName
-          : stateScpName !== ''
-            ? stateScpName
-            : basename(activeScpDir !== '' ? activeScpDir : userCwd);
+        payload?.scpName && payload.scpName !== ''
+          ? payload.scpName
+          : diffData?.scpName && diffData.scpName !== ''
+            ? diffData.scpName
+            : stateScpName !== ''
+              ? stateScpName
+              : basename(activeScpDir !== '' ? activeScpDir : userCwd);
 
       log('gitm.update.stage-relay.entry', { scpName });
       const diffPath = join(userCwd, 'Cascades', 'Bridge', `scp-update-diff.${scpName}.json`);
@@ -115,10 +136,10 @@ export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
           collisionZones: Array.isArray(s.collisionZones) ? s.collisionZones : [],
         };
         const generatedAt = typeof parsed.generatedAt === 'string' ? parsed.generatedAt : '';
-        bucket.push({ ok: true, summary, generatedAt });
+        bucket.push({ ok: true, summary, generatedAt, targetDir });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        bucket.push({ ok: false, error: `update relay: ${message}` });
+        bucket.push({ ok: false, error: `update relay: ${message}`, targetDir });
       }
       // Concluder: no successNode follows; the strategy is exhausted after this fire.
       return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();

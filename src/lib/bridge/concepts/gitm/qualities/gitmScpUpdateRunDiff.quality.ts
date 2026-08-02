@@ -37,9 +37,11 @@ import {
   strategyFailed,
   strategyData_select,
   strategyData_muxifyData,
+  selectPayload,
   type Concept,
 } from 'stratimux';
 import type { GitmState, UpdateStatusShape } from '../gitm.types';
+import { stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
 import type {
   GitmScpUpdateRunDiffPayload,
   GitmScpUpdateRunDiff,
@@ -53,8 +55,8 @@ type GitmSelfDeck = {
 };
 
 type DiffBucketItem =
-  | { ok: true }
-  | { ok: false; errorCode: string; errorMessage: string };
+  | { ok: true; targetDir: string }
+  | { ok: false; errorCode: string; errorMessage: string; targetDir: string };
 const bucket: DiffBucketItem[] = [];
 
 // Map the script's exit code → a canonical errorCode for the branch-flow relay.
@@ -80,6 +82,14 @@ export const gitmScpUpdateRunDiff = createQualityCardWithPayload<
       const updateStatus: UpdateStatusShape = { ...state.updateStatus, stage: 'diffing' };
       return { updateStatus };
     }
+    // RS.4 · THE PER-SCP RAIL — stamp the TARGET's slice; flat is the ACTIVE projection.
+    const stamp = item.ok
+      ? { stage: 'diffing' as const }
+      : { stage: 'error' as const, stageError: item.errorMessage };
+    stampSliceUpdateStatus(item.targetDir, stamp);
+    if (item.targetDir !== '' && item.targetDir !== state.activeScpDir) {
+      return { updateRailTick: state.updateRailTick + 1 };
+    }
     if (!item.ok) {
       const updateStatus: UpdateStatusShape = {
         ...state.updateStatus,
@@ -95,17 +105,27 @@ export const gitmScpUpdateRunDiff = createQualityCardWithPayload<
     createMethodWithConcepts(({ action, deck }) => {
       const activeScpDir = deck.gitm.k.activeScpDir.select();
       const userCwd = deck.gitm.k.userCwd.select();
-      // RED-repo root resolution (Cycle 282 · the 077 exit-3 root): activeScpDir is the SCP
+      // RS.4 — identity rides the node payload (Begin resolved once); state fallbacks
+      // remain for a payload-less legacy dispatch only.
+      const payload = selectPayload<GitmScpUpdateRunDiffPayload>(action);
+      const payloadTarget = payload?.targetScpDir ?? '';
+      // RED-repo root resolution (Cycle 282 · the 077 exit-3 root): the target dir is the SCP
       // SUBDIR (Cascades/scps/<name>/SCP); the .git lives ONE UP at Cascades/scps/<name>/ —
       // the script's documented <scp-repo-root>. Walk up (bounded 2) to the dir holding .git.
-      const candidate = activeScpDir !== '' ? activeScpDir : userCwd;
+      const candidate =
+        payloadTarget !== '' ? payloadTarget : activeScpDir !== '' ? activeScpDir : userCwd;
       const scpRepoRoot = existsSync(join(candidate, '.git'))
         ? candidate
         : existsSync(join(dirname(candidate), '.git'))
           ? dirname(candidate)
           : candidate;
       const stateScpName = deck.gitm.k.updateStatus.select().scpName;
-      const scpName = stateScpName !== '' ? stateScpName : basename(scpRepoRoot);
+      const scpName =
+        payload?.scpName && payload.scpName !== ''
+          ? payload.scpName
+          : stateScpName !== ''
+            ? stateScpName
+            : basename(scpRepoRoot);
 
       const cloneData = action.strategy
         ? strategyData_select<GitmScpUpdateCloneStrategyData>(action.strategy)
@@ -115,7 +135,12 @@ export const gitmScpUpdateRunDiff = createQualityCardWithPayload<
 
       if (templatePath === '') {
         const errorMessage = 'update diff: no template path from clone node';
-        bucket.push({ ok: false, errorCode: 'update-diff-no-template', errorMessage });
+        bucket.push({
+          ok: false,
+          errorCode: 'update-diff-no-template',
+          errorMessage,
+          targetDir: candidate,
+        });
         return action.strategy ? strategyFailed(action.strategy) : muxiumConclude();
       }
 
@@ -135,7 +160,7 @@ export const gitmScpUpdateRunDiff = createQualityCardWithPayload<
           stdio: ['pipe', 'pipe', 'pipe'],
           env: { ...process.env, SCP_UPD_CLONE_MODE: cloneMode },
         });
-        bucket.push({ ok: true });
+        bucket.push({ ok: true, targetDir: candidate });
         return action.strategy
           ? strategySuccess(
               action.strategy,
@@ -153,7 +178,7 @@ export const gitmScpUpdateRunDiff = createQualityCardWithPayload<
               ? e.message
               : String(err)) || 'update diff failed';
         log('gitm.update.run-diff.failed', { errorCode, errorMessage: errorMessage.slice(0, 200) });
-        bucket.push({ ok: false, errorCode, errorMessage });
+        bucket.push({ ok: false, errorCode, errorMessage, targetDir: candidate });
         return action.strategy ? strategyFailed(action.strategy) : muxiumConclude();
       }
     }),

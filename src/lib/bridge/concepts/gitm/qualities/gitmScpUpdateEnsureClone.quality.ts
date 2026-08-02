@@ -31,9 +31,11 @@ import {
   strategyFailed,
   strategyData_muxifyData,
   refreshAction,
+  selectPayload,
   type Action,
 } from 'stratimux';
 import type { GitmState, UpdateStatusShape } from '../gitm.types';
+import { stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
 import { ensureRetainedClone } from '../../../updateCloneManager';
 import { SCS_INSTALL_REPO_URL } from '../../../installConstants';
 import type {
@@ -47,8 +49,8 @@ export type { GitmScpUpdateEnsureClone };
 // Module-level bucket the async callback fills; the reducer pops it on the next beat
 // (gitmPull discipline). Carries the obtain-mode for the relay stamp + any error.
 type CloneBucketItem =
-  | { ok: true; cloneMode: string }
-  | { ok: false; error: string };
+  | { ok: true; cloneMode: string; targetDir: string }
+  | { ok: false; error: string; targetDir: string };
 const bucket: CloneBucketItem[] = [];
 
 export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
@@ -60,6 +62,14 @@ export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
     const item = bucket.pop();
     if (!item) {
       return {};
+    }
+    // RS.4 · THE PER-SCP RAIL — stamp the TARGET's slice; flat is the ACTIVE projection.
+    const stamp = item.ok
+      ? { cloneMode: item.cloneMode }
+      : { stage: 'error' as const, stageError: item.error };
+    stampSliceUpdateStatus(item.targetDir, stamp);
+    if (item.targetDir !== '' && item.targetDir !== state.activeScpDir) {
+      return { updateRailTick: state.updateRailTick + 1 };
     }
     if (!item.ok) {
       const updateStatus: UpdateStatusShape = {
@@ -81,9 +91,12 @@ export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
   },
   methodCreator: () =>
     createAsyncMethod(({ action, controller }) => {
+      // RS.4 — the target rides the node payload (baked by the factory · no state re-read).
+      const targetDir =
+        selectPayload<GitmScpUpdateEnsureClonePayload>(action)?.targetScpDir ?? '';
       ensureRetainedClone(SCS_INSTALL_REPO_URL)
         .then((result) => {
-          bucket.push({ ok: true, cloneMode: result.mode });
+          bucket.push({ ok: true, cloneMode: result.mode, targetDir });
           const data: GitmScpUpdateCloneStrategyData = {
             templatePath: result.templatePath,
             cloneMode: result.mode,
@@ -100,7 +113,7 @@ export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
         })
         .catch((err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
-          bucket.push({ ok: false, error: message });
+          bucket.push({ ok: false, error: message, targetDir });
           const live = refreshAction(action as unknown as Action);
           controller.fire(
             live.strategy ? strategyFailed(live.strategy) : muxiumConclude(),

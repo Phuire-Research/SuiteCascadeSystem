@@ -30,6 +30,8 @@ import {
 import type { GitmState, UpdateStatusShape } from '../gitm.types';
 import { UPDATE_APPLIED_NOTE } from '../gitm.types';
 import { log } from '../../../debugLog';
+import { resolveGitmTargetCwd } from '../model/gitmOpCwd.model';
+import { getSlice, stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
 import type { GitmScpUpdateProgressPayload, GitmScpUpdateProgress } from './types';
 
 export type { GitmScpUpdateProgress };
@@ -39,11 +41,14 @@ type GitmSelfDeck = {
 };
 
 // The provided-fields bucket — only the keys the caller supplied land on updateStatus.
+// RS.3/RS.4: targetDir = the resolver's OWN SCP (originScpName-resolved) — the stamp
+// lands on THAT rail's slice; flat is the ACTIVE projection.
 type ProgressBucketItem = {
   stage?: UpdateStatusShape['stage'];
   note?: string;
   resolvedPending?: number;
   diffPresent?: boolean;
+  targetDir: string;
 };
 const bucket: ProgressBucketItem[] = [];
 
@@ -58,31 +63,46 @@ export const gitmScpUpdateProgress = createQualityCardWithPayload<
     if (!item) {
       return {};
     }
+    const isActive = item.targetDir === '' || item.targetDir === state.activeScpDir;
     // C293 · THE REGRESSION GUARD (the STAMP RACE fix): once the bridge's auto-apply has stamped
     // the terminal applied note, a LATE resolver stamp that would drag the rail back to 'resolving'
-    // would strand the SCP (Apply Success never fires · buttons disabled). If the CURRENT note is
-    // the applied terminal AND the incoming stamp would set stage 'resolving' — REFUSE it (never
-    // silent-swallowed: log the refusal marker). FailureNode: the refusal is recorded, not dropped.
-    if (state.updateStatus.note === UPDATE_APPLIED_NOTE && item.stage === 'resolving') {
+    // would strand the SCP (Apply Success never fires · buttons disabled). If the TARGET rail's
+    // note is the applied terminal AND the incoming stamp would set stage 'resolving' — REFUSE it
+    // (never silent-swallowed: log the refusal marker). RS.4: the guarded note is the TARGET's —
+    // the active flat, anor the non-active target's own slice.
+    const guardNote = isActive
+      ? state.updateStatus.note
+      : (getSlice(item.targetDir)?.updateStatus.note ?? '');
+    if (guardNote === UPDATE_APPLIED_NOTE && item.stage === 'resolving') {
       log('gitm.update.progress.regression-refused', {
-        currentNote: state.updateStatus.note,
+        currentNote: guardNote,
         refusedStage: item.stage,
         refusedNote: item.note ?? null,
       });
       return {};
     }
+    // RS.4 · THE PER-SCP RAIL — the provided fields land on the TARGET's slice (authoritative);
+    // flat is the ACTIVE projection: a non-active target ticks the fan-out witness only.
+    const stamp: Partial<UpdateStatusShape> = {};
+    if (item.stage !== undefined) stamp.stage = item.stage;
+    if (item.note !== undefined) stamp.note = item.note;
+    if (item.resolvedPending !== undefined) stamp.resolvedPending = item.resolvedPending;
+    if (item.diffPresent !== undefined) stamp.diffPresent = item.diffPresent;
+    stampSliceUpdateStatus(item.targetDir, stamp);
+    if (!isActive) {
+      return { updateRailTick: state.updateRailTick + 1 };
+    }
     // Partial stamp: copy ONLY the provided fields onto updateStatus (shortest path).
-    const updateStatus: UpdateStatusShape = { ...state.updateStatus };
-    if (item.stage !== undefined) updateStatus.stage = item.stage;
-    if (item.note !== undefined) updateStatus.note = item.note;
-    if (item.resolvedPending !== undefined) updateStatus.resolvedPending = item.resolvedPending;
-    if (item.diffPresent !== undefined) updateStatus.diffPresent = item.diffPresent;
+    const updateStatus: UpdateStatusShape = { ...state.updateStatus, ...stamp };
     return { updateStatus };
   },
   methodCreator: () =>
-    createMethodWithConcepts(({ action }) => {
+    createMethodWithConcepts(({ action, deck }) => {
       const payload = selectPayload<GitmScpUpdateProgressPayload>(action);
-      const item: ProgressBucketItem = {};
+      // RS.3 · SOVEREIGN TOOL CALLS — the resolver names its SCP; resolve the target rail
+      // (absent originScpName → the active fallback, targetDir === activeScpDir).
+      const targetDir = resolveGitmTargetCwd(deck, payload?.originScpName);
+      const item: ProgressBucketItem = { targetDir };
       // 'stage' is a constrained union — coerce only a valid stage string; else ignore.
       const stageRaw = payload?.stage;
       if (

@@ -57,6 +57,7 @@ import {
 } from 'stratimux';
 import type { GitmState, UpdateStatusShape, GitmABMode } from '../gitm.types';
 import { UPDATE_APPLIED_NOTE } from '../gitm.types';
+import { stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
 import { gitmExec } from '../model/gitmExec.model';
 import { resolveGitmTargetCwd } from '../model/gitmOpCwd.model';
 import { isWorkingBranchFor, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
@@ -98,9 +99,17 @@ type ApplyDecision = {
 };
 
 // The result the reducer stamps onto updateStatus (applied count + error surface).
+// RS.4: targetDir = the resolved target SCP dir (the slice key) rides every landing.
 type ApplyBucketItem =
-  | { ok: true; applied: number; preserved: number; committed: boolean; mintedSword: string }
-  | { ok: false; error: string; halt: boolean }; // halt=true → return rail to 'reviewing'
+  | {
+      ok: true;
+      applied: number;
+      preserved: number;
+      committed: boolean;
+      mintedSword: string;
+      targetDir: string;
+    }
+  | { ok: false; error: string; halt: boolean; targetDir: string }; // halt → rail back to 'reviewing'
 const bucket: ApplyBucketItem[] = [];
 
 // Coerce ONE raw resolved decision → the apply decision (the silent-coerce trap guard:
@@ -311,13 +320,28 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
       const updateStatus: UpdateStatusShape = { ...state.updateStatus, stage: 'applying' };
       return { updateStatus };
     }
+    // RS.4 · THE PER-SCP RAIL — stamp the TARGET's slice; flat is the ACTIVE projection.
+    const stamp = item.ok
+      ? {
+          stage: 'idle' as const,
+          stageError: '',
+          diffPresent: false,
+          resolvedPending: 0,
+        }
+      : {
+          stage: item.halt ? ('reviewing' as const) : ('error' as const),
+          stageError: item.halt ? '' : item.error,
+        };
+    stampSliceUpdateStatus(item.targetDir, stamp);
+    if (item.targetDir !== '' && item.targetDir !== state.activeScpDir) {
+      return { updateRailTick: state.updateRailTick + 1 };
+    }
     if (!item.ok) {
       // HALT (pending/no-source) → return the rail to 'reviewing' so the user can resolve +
       // retry; a real write/apply/commit failure → 'error' with the message.
       const updateStatus: UpdateStatusShape = {
         ...state.updateStatus,
-        stage: item.halt ? 'reviewing' : 'error',
-        stageError: item.halt ? '' : item.error,
+        ...stamp,
       };
       return item.halt
         ? { updateStatus }
@@ -327,10 +351,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
     // in the normal git panels). Clear the diff-present flag so the section collapses.
     const updateStatus: UpdateStatusShape = {
       ...state.updateStatus,
-      stage: 'idle',
-      stageError: '',
-      diffPresent: false,
-      resolvedPending: 0,
+      ...stamp,
     };
     // C324: the apply minted the Sword — register the signifier so the Turn Over system
     // (the panel's B control · the seat law · the merge-back gate) sees the working B.
@@ -376,6 +397,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
             halt: true,
             error:
               'apply: no resolved manifest and the diff is non-trivial — run the resolver first',
+            targetDir: opCwd,
           });
           return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
         }
@@ -387,6 +409,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
           ok: false,
           halt: true,
           error: `apply: ${source.pending} conference decision(s) still pending`,
+          targetDir: opCwd,
         });
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
@@ -407,6 +430,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
           halt: true,
           error:
             'apply: B carries uncommitted changes — Turn Over B first (commits + boot-tests them), then re-run the update',
+          targetDir: opCwd,
         });
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
@@ -432,6 +456,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
               ok: false,
               halt: false,
               error: `apply sword-seat mint "${sword}": ${mint.error || mint.stderr}`,
+              targetDir: opCwd,
             });
             return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
           }
@@ -563,7 +588,12 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        bucket.push({ ok: false, halt: false, error: `apply write loop: ${message}` });
+        bucket.push({
+          ok: false,
+          halt: false,
+          error: `apply write loop: ${message}`,
+          targetDir: opCwd,
+        });
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
 
@@ -608,6 +638,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
             ok: false,
             halt: false,
             error: `apply stage sweep: ${add.error || add.stderr}`,
+            targetDir: opCwd,
           });
           return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
         }
@@ -618,6 +649,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
             ok: false,
             halt: false,
             error: `apply commit: ${commit.error || commit.stderr}`,
+            targetDir: opCwd,
           });
           return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
         }
@@ -641,7 +673,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
       }
       log('gitm.update.apply.artifacts-cleared', { scpName });
 
-      bucket.push({ ok: true, applied, preserved, committed, mintedSword });
+      bucket.push({ ok: true, applied, preserved, committed, mintedSword, targetDir: opCwd });
       // C289 AUTO-SEQUENCE (the bridge-owned Concluding Sequence): when the manifest watcher
       // triggered this apply, the bridge itself fires the boot-test turn-over to B after the
       // beat settles — the resolver session's in-turn /mcp calls (the queue-serialization
@@ -656,9 +688,12 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
           const h = getActiveScsBridgeMuxiumHandle();
           if (h !== null) {
             h.muxium.dispatch(
+              // RS.3 · SOVEREIGN — the terminal applied note routes to THIS update's rail
+              // (originScpName carried; scpName fallback = the target IS the updated SCP).
               h.muxium.deck.d.gitm.e.gitmScpUpdateProgress({
                 stage: 'idle',
                 note: UPDATE_APPLIED_NOTE,
+                originScpName: payload?.originScpName ?? scpName,
               }) as never,
             );
             // F3 · THE PASS BACK — after the terminal applied stamp lands (the Apply Success
