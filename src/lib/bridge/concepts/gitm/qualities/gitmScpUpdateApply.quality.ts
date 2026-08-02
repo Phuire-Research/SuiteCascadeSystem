@@ -239,6 +239,32 @@ function loadPartRenewalRules(userCwd: string): PartRenewalRules {
   return EMPTY_RULES;
 }
 
+// RS.2c · THE SELF-DESCRIBING DIFF: the diff script pins the rules the merge was computed
+// under into provenance.rules — prefer them over any on-disk rules file (a bridge update
+// mid-flight can skew the disk rules away from the computed merge, and the update flow is
+// exactly where that window opens). Absent/malformed → null (older diffs use the disk chain).
+function readPinnedRules(diffPath: string): PartRenewalRules | null {
+  try {
+    if (!existsSync(diffPath)) return null;
+    const raw = readFileSync(diffPath, 'utf8');
+    if (!raw.trim()) return null;
+    const parsed = JSON.parse(raw) as { provenance?: { rules?: unknown } };
+    const rules = parsed.provenance?.rules;
+    if (!rules || typeof rules !== 'object') return null;
+    const r = rules as { preservedJsonFields?: unknown; neverDeletePaths?: unknown };
+    const preservedJsonFields =
+      r.preservedJsonFields && typeof r.preservedJsonFields === 'object'
+        ? (r.preservedJsonFields as Record<string, string[]>)
+        : {};
+    const neverDeletePaths = Array.isArray(r.neverDeletePaths)
+      ? r.neverDeletePaths.filter((x): x is string => typeof x === 'string')
+      : [];
+    return { preservedJsonFields, neverDeletePaths };
+  } catch {
+    return null;
+  }
+}
+
 // Copy the preserved field values from the user's ON-DISK JSON onto the incoming parsed content.
 // Selector "packages..name" = packages[""].name (the package-lock root-package name mirror);
 // every other selector is a flat root field by name. Mutates `into` in place.
@@ -365,8 +391,9 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
 
-      // 2.5) LOAD THE PART-RENEWAL RULES (R3 · apply-seam placement). Absent → EMPTY_RULES.
-      const rules = loadPartRenewalRules(userCwd);
+      // 2.5) LOAD THE PART-RENEWAL RULES (R3 · apply-seam placement). The diff's own pinned
+      // provenance.rules first (RS.2c); the disk chain only for older diffs. Absent → EMPTY_RULES.
+      const rules = readPinnedRules(diffPath) ?? loadPartRenewalRules(userCwd);
 
       // 2.7) THE DIRTY-TREE GATE (C284 · the 077 second-run collision): the diff computes
       // against HEAD, but patches land on the WORKING TREE — a tree carrying uncommitted

@@ -345,6 +345,20 @@ done <<< "$DIFF_OURS"
 CLONE_MODE="${SCP_UPD_CLONE_MODE:-unknown}"   # set by the caller (D-U1 RetainedCloneResult.mode)
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+# RS.2c · THE SELF-DESCRIBING DIFF: pin the part-renewal rules INTO the provenance so the
+# artifact carries the guard the merge was computed under — in-SCP readable by the resolver
+# (the bridge's scripts/ path resolves to nothing from inside an SCP) and skew-proof (the
+# apply seam prefers these over any on-disk rules a mid-flight bridge update may have moved).
+# The rules file lives beside this script in both seats (dev repo · update-clone). Absent or
+# unparseable → null (older behavior · the apply seam falls back to its disk chain).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RULES_FILE="$SCRIPT_DIR/scp-update-rules.json"
+RULES_JSON='null'
+if [ -f "$RULES_FILE" ]; then
+  PINNED="$(jq -c '{preservedJsonFields: (.preservedJsonFields // {}), neverDeletePaths: (.neverDeletePaths // [])}' "$RULES_FILE" 2>/dev/null || true)"
+  if [ -n "$PINNED" ]; then RULES_JSON="$PINNED"; fi
+fi
+
 # Output home: Cascades/Bridge/ under the CURRENT working directory (the bridge runtime
 # root). Atomic write via tmp+mv (mirrors install BECIS tmp+rename).
 OUT_DIR="${SCP_UPD_OUT_DIR:-$(pwd)/Cascades/Bridge}"
@@ -366,6 +380,7 @@ jq -n \
   --arg theirsTemplateRoot "$THEIRS_PARENT" \
   --arg theirsTemplate "$THEIRS_TEMPLATE" \
   --arg mergeMechanism "merge-tree --write-tree" \
+  --argjson rules "$RULES_JSON" \
   --argjson collisionZones "$COLLISION_HITS" \
   --slurpfile apply "$APPLY_JSON" \
   --slurpfile preserve "$PRESERVE_JSON" \
@@ -384,7 +399,8 @@ jq -n \
       cloneMode: $cloneMode,
       scpRepoRoot: $scpRepoRoot,
       theirsTemplateRoot: $theirsTemplateRoot,
-      mergeMechanism: $mergeMechanism
+      mergeMechanism: $mergeMechanism,
+      rules: $rules
     },
     summary: {
       apply: ($apply | length),
