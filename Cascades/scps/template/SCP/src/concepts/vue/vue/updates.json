@@ -41,7 +41,8 @@
           "summary": "The Update page now carries the release notes themselves — filtered to what YOUR SCP would actually gain, each release weighed with a magnitude, before you decide to update.",
           "detail": [
             "Every release is recorded in a versioned manifest the bridge reads live — anor straight from your own machine in a development loop. The Update page folds it open as <span class=\"hifi-hl-green\">What this update carries</span>: the releases your SCP has not yet landed, each with its features in full and a <span class=\"hifi-hl-yellow\">magnitude</span> of one to five marking the degree of change it brings.",
-            "The filter keys on what your SCP has <span class=\"hifi-hl-blue\">actually applied</span> — not the version string — so an SCP that skipped three releases sees all three, and one that is current sees the plain release notes with nothing pending. The same notes render on the Home page as the full tour, from one shared source."
+            "The filter keys on what your SCP has <span class=\"hifi-hl-blue\">actually applied</span> — not the version string — so an SCP that skipped three releases sees all three, and one that is current sees the plain release notes with nothing pending. The same notes render on the Home page as the full tour, from one shared source.",
+            "When an update is pending, the panel <span class=\"hifi-hl-green\">opens itself</span> — the notes are the first thing you meet on the Update page. It folds away the moment the update process begins, yielding the floor to the review rail; your own toggle always wins over the automatic motion."
           ]
         }
       ]
