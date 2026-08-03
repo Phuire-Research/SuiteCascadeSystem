@@ -133,7 +133,7 @@ onUnmounted(() => {
         <span class="status-label hifi-mono">BRIDGE</span>
         <span :class="['status-value', isConnected ? 'ready' : 'loading']">{{ connectionStatus }}</span>
         <span class="status-sep">·</span>
-        <span class="status-label hifi-mono">RELEASE</span>
+        <span class="status-label hifi-mono">VERSION</span>
         <span class="status-value ready">v{{ RELEASE_VERSION }}</span>
       </div>
     </header>
