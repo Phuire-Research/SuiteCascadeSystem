@@ -713,10 +713,15 @@ const hasWorkingB = computed<boolean>(() => {
   return wb !== '' || isWorkingBranchPer(cur, g);
 });
 
-// F4 · fire the hard turn-over (the finalize gesture when no working B exists). The bridge-side
-// guards remain the authoritative safety rail; this is the UI trigger for the reboot-proof.
-function finalizeHardTurnOver(): void {
-  controller.value?.triggerHardTurnOver();
+// MD-ATC-F · THE TRACKED A FINALIZE (the disjointed-extra-step cure): the prior hard leg
+// restarted WITHOUT the turn-over protocol — no turnOver stamp (the alert overlay
+// re-appeared on resume) and no boot-proof reset (the panel never yielded). The finalize
+// now rides the SAME tracked pipe as every turn-over (gitm_turn_over_with_source ·
+// source 'A' — the clean post-apply tree passes the bridge guard plainly): the stamp
+// retires the alert, the reboot proves the update, and the boot-report reset yields
+// this panel so the Update workflow can run again. Bridge guards stay authoritative.
+function finalizeTurnOverA(): void {
+  fireAction('gitm_turn_over_with_source', { source: 'A' });
 }
 
 // The summary conference count (true overlaps surfaced from the diff · 0 when no diff).
@@ -1174,12 +1179,14 @@ function spawnResolver(): void {
               <GitmTurnOverBButton />
             </template>
             <template v-else>
+              <!-- MD-ATC-F · the TRACKED Turn Over A (the A-family green · honest label) —
+                   rides the same protocol as B: stamp → reboot-proof → the panel yields. -->
               <button
-                class="hifi-btn hifi-btn-blue gitm-apply-success-hard-turnover"
+                class="hifi-btn hifi-btn-green gitm-apply-success-hard-turnover"
                 :disabled="isGitmActing"
-                @click="finalizeHardTurnOver"
+                @click="finalizeTurnOverA"
               >
-                Turn Over &amp; Restart to Prove the Update
+                Turn Over A &amp; Restart to Prove the Update
               </button>
               <p class="gitm-apply-success-hard-note">
                 Restarting the app on the updated code is the proof — if it boots, the update holds.
