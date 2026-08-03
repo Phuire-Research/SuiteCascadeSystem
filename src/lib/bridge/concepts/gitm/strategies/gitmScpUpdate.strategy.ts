@@ -82,10 +82,13 @@ export function createGitmScpUpdateStrategy(carriage: GitmScpUpdateCarriage): Ac
   });
 
   // NODE 1 FAILURE (terminal · no successNode) · flips the TARGET's rail to stage='error'.
+  // The note names the Cold-Clone retry: an expiry-routed failure carries NO stageError
+  // (no bucket item) — the honest voice tells the user the first run may still be
+  // refreshing and a re-run lands warm.
   const ensureCloneFailureNode = createActionNode(
     gitmScpUpdateProgress.actionCreator({
       stage: 'error',
-      note: 'clone failed; see stageError',
+      note: 'clone failed anor timed out — a first run refreshes the source (minutes on a local dev source); re-run the update',
       originScpName: failureOrigin,
     }),
     {},
@@ -100,11 +103,14 @@ export function createGitmScpUpdateStrategy(carriage: GitmScpUpdateCarriage): Ac
       denoter: 'SCS template clone ensured;',
     },
     // THE C282 STALL ROOT (layer 6): the WTSR file:// refresh (rm + full repo copy) runs
-    // ~10-15s — past the default action lifetime. The async .then() then fired
-    // strategySuccess on an EXPIRED action and the Muxium dropped it: stage stuck at
-    // 'cloning', cloneMode never stamped, runDiff never entered. The agreement extends
-    // the action's intended lifetime to cover the copy.
-    agreement: 120_000,
+    // past the default action lifetime — the async .then() then fired strategySuccess on
+    // an EXPIRED action and the Muxium dropped it. THE COLD-CLONE WINDOW (the CaseB field
+    // break): a COLD refresh of a local dev source measured ~7 MINUTES (990MB repo →
+    // 360MB clone) — past the prior 120s agreement; the expiry routed to the failure
+    // node ('clone failed' · NO bucket item → stageError empty · cloneMode unstamped)
+    // while the copy completed in the background and the NEXT run sailed warm. The
+    // agreement now covers the measured cold window with headroom.
+    agreement: 900_000,
   });
 
   return createStrategy({
