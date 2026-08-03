@@ -382,7 +382,7 @@ onUnmounted(() => {
     </main>
 
     <footer class="home-footer">
-      <p class="footer-line hifi-mono">Suite Cascade System · <ScpMark /> Template · v{{ RELEASE_VERSION }}</p>
+      <p class="footer-line hifi-mono">Suite Cascade System · <ScpMark /> · v{{ RELEASE_VERSION }}</p>
       <p class="footer-sub hifi-label">The window rebuilds itself under you.</p>
     </footer>
   </div>
