@@ -130,7 +130,7 @@ onUnmounted(() => {
         <p class="hero-welcome hifi-heading">Welcome to the Unlimited Frontier.</p>
       </div>
       <div class="hero-status">
-        <span class="status-label hifi-mono">BRIDGE</span>
+        <span class="status-label hifi-mono">CLI BRIDGE</span>
         <span :class="['status-value', isConnected ? 'ready' : 'loading']">{{ connectionStatus }}</span>
         <span class="status-sep">·</span>
         <span class="status-label hifi-mono">VERSION</span>
