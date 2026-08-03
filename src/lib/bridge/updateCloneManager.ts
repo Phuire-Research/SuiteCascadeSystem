@@ -58,6 +58,14 @@ export function templatePathFor(clonePath: string): string {
   return path.join(clonePath, 'Cascades', 'scps', 'template', 'SCP');
 }
 
+// MD-UFS · THE REFRESH MUTEX (the Case 2 cold-race field break): ensureRetainedClone
+// had NO concurrency guard — a second Run Update's rmSync destroyed the first's
+// in-flight copy (the file:// refresh is rm + full re-copy EVERY call). The disrupted
+// chain died with the empty-stageError all-red fingerprint while the survivor's copy
+// completed and the NEXT run sailed warm. Concurrent callers now JOIN the in-flight
+// refresh instead of racing it.
+const inFlightRefreshByPath = new Map<string, Promise<RetainedCloneResult>>();
+
 // Clone-if-absent / pull-if-present into the stable cache. Returns the retained
 // clone path, the template root, the obtain-mode, and the clone HEAD sha.
 export async function ensureRetainedClone(
@@ -66,6 +74,25 @@ export async function ensureRetainedClone(
 ): Promise<RetainedCloneResult> {
   const cacheRoot = opts.cacheRoot ?? retainedCloneCacheRoot();
   const clonePath = path.join(cacheRoot, 'clone');
+  const inFlight = inFlightRefreshByPath.get(clonePath);
+  if (inFlight) {
+    log('update.clone.retained.joined-in-flight', { clonePath });
+    return inFlight;
+  }
+  const run = ensureRetainedCloneInner(repoUrl, opts, clonePath);
+  inFlightRefreshByPath.set(clonePath, run);
+  try {
+    return await run;
+  } finally {
+    inFlightRefreshByPath.delete(clonePath);
+  }
+}
+
+async function ensureRetainedCloneInner(
+  repoUrl: string,
+  opts: EnsureRetainedCloneOptions,
+  clonePath: string,
+): Promise<RetainedCloneResult> {
   const templatePath = templatePathFor(clonePath);
   const isFileUrl = repoUrl.startsWith('file://');
   const gitDir = path.join(clonePath, '.git');
@@ -73,6 +100,9 @@ export async function ensureRetainedClone(
   // Presence test: a remote clone is "present" only when its .git exists; a file://
   // working-tree copy (no .git) is "present" when the clone dir itself exists.
   const present = isFileUrl ? existsSync(clonePath) : existsSync(gitDir);
+  // MD-UFS · the settling instrumentation: two same-second entries with
+  // present:false on one clonePath = the race the mutex now prevents.
+  log('update.clone.presence-check', { clonePath, present, isFileUrl });
 
   if (!present) {
     // Absent → fresh clone via the shared install primitive (file://-fsCp · remote

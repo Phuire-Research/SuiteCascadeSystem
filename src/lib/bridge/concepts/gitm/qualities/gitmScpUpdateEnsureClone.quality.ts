@@ -59,7 +59,10 @@ export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
 >({
   type: 'Gitm Scp Update Ensure Clone',
   reducer: (state) => {
-    const item = bucket.pop();
+    // MD-UFS · FIFO pairing: concurrent chains (two SCPs joining one refresh) push
+    // two items; the fires process in queue order — shift() pairs each reducer run
+    // with ITS chain's item (pop() swapped the targetDirs under concurrency).
+    const item = bucket.shift();
     if (!item) {
       return {};
     }
@@ -112,7 +115,13 @@ export const gitmScpUpdateEnsureClone = createQualityCardWithPayload<
           );
         })
         .catch((err: unknown) => {
-          const message = err instanceof Error ? err.message : String(err);
+          const raw = err instanceof Error ? err.message : String(err);
+          // MD-UFS · THE NON-EMPTY GUARANTEE: an empty-message rejection must never
+          // reach the rail as a silent '' (the all-red-with-no-information class).
+          const message =
+            raw.trim() !== ''
+              ? raw
+              : 'clone refresh rejected without a message (a concurrent refresh anor interrupted copy) — re-run the update';
           bucket.push({ ok: false, error: message, targetDir });
           const live = refreshAction(action as unknown as Action);
           controller.fire(

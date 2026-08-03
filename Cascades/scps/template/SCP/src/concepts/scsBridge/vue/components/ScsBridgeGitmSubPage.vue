@@ -623,14 +623,27 @@ const stageRail = computed<{ key: UpdateStage; label: string; state: StageChipSt
   const status = props.gitmJson?.updateStatus;
   const live = status?.stage ?? 'idle';
   const isError = live === 'error';
+  // MD-UFS · THE POSITION DERIVATION (no new schema — the rail already tells where):
+  // cloneMode never stamped → the CLONE leg died · no diff present → COMPARE ·
+  // an apply-prefixed stageError → APPLY · else the failure sat at/after REVIEW.
+  // The pills BEFORE the failed position read done; the failed one alone reads error.
+  const failedOrdinal = !isError
+    ? -1
+    : (status?.cloneMode ?? '') === ''
+      ? 0
+      : status?.diffPresent !== true
+        ? 1
+        : (status?.stageError ?? '').startsWith('apply')
+          ? 4
+          : 2;
   // On 'idle' the rail is not shown (the empty-state CTA renders instead). The current ordinal
   // is the live stage's index; 'idle'/'error' both resolve to -1 (no active chip on the rail).
   const currentOrdinal = UPDATE_STAGES.indexOf(live as UpdateStage);
   return UPDATE_STAGES.map((key, ordinal) => {
     let state: StageChipState;
     if (isError) {
-      // The engine halted — the rail reads error across the board (the message surfaces below).
-      state = 'error';
+      // The engine halted — the FAILED position reads error; the reached legs read done.
+      state = ordinal < failedOrdinal ? 'done' : ordinal === failedOrdinal ? 'error' : 'pending';
     } else if (ordinal < currentOrdinal) {
       state = 'done';
     } else if (ordinal === currentOrdinal) {
@@ -643,10 +656,15 @@ const stageRail = computed<{ key: UpdateStage; label: string; state: StageChipSt
 });
 
 // The live stage error message (empty when no error).
+// MD-UFS · THE NON-EMPTY GUARANTEE (view-side): the rail can carry the failure voice in
+// stageError ANOR note (the failure-node/expiry class leaves stageError '') — surface
+// WHATEVER it carries; an error stage must NEVER render as silent all-red.
 const stageErrorMessage = computed<string>(() => {
   const status = props.gitmJson?.updateStatus;
   if (!status || status.stage !== 'error') return '';
-  return status.stageError;
+  if (status.stageError !== '') return status.stageError;
+  if ((status.note ?? '') !== '') return status.note;
+  return 'the update engine halted without a message — Run Update again (a first run may have been refreshing the source)';
 });
 
 // Whether the engine is mid-flight (any non-terminal active stage). Gates the Run Update button.
@@ -1221,6 +1239,9 @@ function spawnResolver(): void {
         </div>
         <p v-if="stageErrorMessage !== ''" class="gitm-update-stage-error">
           {{ stageErrorMessage }}
+        </p>
+        <p v-if="stageErrorMessage !== ''" class="gitm-update-explainer">
+          Run Update again — the comparison restarts from the top; the red pill marks where this run stopped.
         </p>
 
         <!-- PRE-UPDATE STATE — no diff yet + engine idle → a single CTA + one-line explainer. -->
