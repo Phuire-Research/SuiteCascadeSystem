@@ -60,7 +60,7 @@ import { UPDATE_APPLIED_NOTE } from '../gitm.types';
 import { stampSliceUpdateStatus, getSlice, upsertSliceFields } from '../model/gitmSliceStore.model';
 import { gitmExec } from '../model/gitmExec.model';
 import { resolveGitmTargetCwd } from '../model/gitmOpCwd.model';
-import { isWorkingBranchFor, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
+import { isSelectedWorkingBranch } from '../model/gitmBranchRoot.model';
 import { log } from '../../../debugLog';
 import { getBridgeMuxameter } from '../../../bridgeVersion';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
@@ -453,33 +453,24 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
 
-      // 2.9) THE SWORD-SEAT GUARANTEE (C324 · the user law): an update NEVER lands on
-      // Shield A — the apply targets the Sword. If the seat is not the working B, mint the
-      // canonical working B (the C302 carry idiom) and land there; the Turn Over system
-      // then proves it (boot → merge-back). Master stays clean ground.
-      // D-BN · THE branchRoles SWEEP — the seat decision routes through the model chokepoint
-      // (isWorkingBranchFor · roles.b equality when set, `b/`-prefix fallback for legacy) — the prefix
-      // never decides the role. The mint uses mintWorkingBranchName (A name verbatim · UUID, not ts).
+      // 2.9) APPLY-TO-CURRENT (MD-ATC · the user law · REPEALS the C324 forced Sword-seat):
+      // the landing commits to WHATEVER branch is checked out — never force-minted onto a
+      // B. When the CURRENT branch is a working B (the Selected-B predicate: the b/
+      // namespace anor the registered roles.b — a hopped-to, never-registered B counts),
+      // it registers as the working B downstream (mintedSword carries it; the C324 flat
+      // registration + the RS.4 slice leg both key off it) so Turn Over B enables. On A
+      // anor any non-B branch, NO B registers and the landing simply arrives at the
+      // current branch — the dirty-tree gate above remains the guard.
       let mintedSword = '';
       {
         const knownB = deck.gitm.k.branchRoles.select().b;
         const cur = gitmExec(['branch', '--show-current'], opCwd);
         const curBranch = (cur.stdout ?? '').trim();
-        if (cur.ok && curBranch !== '' && !isWorkingBranchFor(curBranch, knownB)) {
-          const stable = deck.gitm.k.stableBranch.select() || curBranch;
-          const sword = mintWorkingBranchName(stable);
-          const mint = gitmExec(['switch', '-c', sword], opCwd);
-          if (!mint.ok) {
-            bucket.push({
-              ok: false,
-              halt: false,
-              error: `apply sword-seat mint "${sword}": ${mint.error || mint.stderr}`,
-              targetDir: opCwd,
-            });
-            return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
-          }
-          mintedSword = sword;
-          log('gitm.update.apply.sword-seat-minted', { sword, from: curBranch });
+        if (cur.ok && isSelectedWorkingBranch(curBranch, knownB)) {
+          mintedSword = curBranch;
+          log('gitm.update.apply.current-b-registered', { branch: curBranch });
+        } else {
+          log('gitm.update.apply.landing-on-current', { branch: curBranch });
         }
       }
 
