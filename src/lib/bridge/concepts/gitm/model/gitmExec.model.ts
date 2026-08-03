@@ -118,6 +118,17 @@ export function readCommandLog(): string[] {
   return commandLogRing.slice();
 }
 
+// 0.944.1 HOTFIX · THE PROMPT-HANG FREEZE (field · IE turn-over): gitmExec is a BLOCKING
+// execFileSync on the bridge's single event loop — a remote op (push/pull/fetch) whose
+// https transport stalls awaiting a credential answer it can never receive (stdio is fully
+// piped; the TUI holds the terminal) hung `git remote-https` for 8+ minutes and FROZE THE
+// WHOLE BRIDGE: 7111 accepted but never answered, every tool press timed out. Two guards:
+//   - GIT_TERMINAL_PROMPT=0 — git FAILS FAST ('could not read Username…') instead of
+//     prompting a pipe that never answers; the error surfaces through the taxonomy.
+//   - timeout — the backstop for a stalled transport that never prompts: execFileSync
+//     throws (SIGKILL) and the never-silent catch names it plainly.
+const GITM_EXEC_TIMEOUT_MS = 120_000;
+
 export function gitmExec(args: string[], cwd: string, input?: string): GitmExecResult {
   try {
     const stdout = execFileSync('git', args, {
@@ -125,6 +136,9 @@ export function gitmExec(args: string[], cwd: string, input?: string): GitmExecR
       input,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: GITM_EXEC_TIMEOUT_MS,
+      killSignal: 'SIGKILL',
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
     });
     const result: GitmExecResult = { ok: true, stdout: stdout.trim(), stderr: '', error: '' };
     appendCommandLog(args, result);
@@ -135,10 +149,13 @@ export function gitmExec(args: string[], cwd: string, input?: string): GitmExecR
     // hook that echoed its abort reason to stdout was invisible. composeExecError joins the message,
     // stderr, AND stdout verbatim so result.error carries the hook's own text — the CLI-parity the RD
     // requires ('shows the hook's own output and aborts exactly as CLI would').
-    const e = err as { stderr?: string; stdout?: string; message?: string };
+    const e = err as { stderr?: string; stdout?: string; message?: string; signal?: string; code?: string };
     const stderr = typeof e.stderr === 'string' ? e.stderr.trim() : '';
     const stdout = typeof e.stdout === 'string' ? e.stdout.trim() : '';
-    const message = typeof e.message === 'string' ? e.message : String(err);
+    const timedOut = e.signal === 'SIGKILL' || e.code === 'ETIMEDOUT';
+    const message = timedOut
+      ? `git ${args[0] ?? ''} timed out after ${GITM_EXEC_TIMEOUT_MS / 1000}s — the remote did not answer (credentials anor network); the bridge stays live`
+      : typeof e.message === 'string' ? e.message : String(err);
     const result: GitmExecResult = {
       ok: false,
       stdout,

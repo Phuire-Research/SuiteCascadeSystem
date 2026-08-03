@@ -206,11 +206,16 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.944.0
+## Release Notes — v0.944.1
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.944.1 — the bridge never hangs on git**: a remote git operation stalling on
+  credentials could freeze the whole bridge with it. Git is now told never to prompt
+  (it fails fast with its own reason), and a two-minute backstop ends any transport
+  that stalls silently — the failure lands in the command log, the bridge stays live.
+  CLI-only; SCPs need no changes.
 - **0.944.0 — the update flow, reinforced**: concurrent SCP updates share one source
   refresh, every SCP keeps its own update rail, failures name their exact stage, and the
   finalize is one gesture on whichever branch you stand. Two field-earned habits: run an
