@@ -57,7 +57,7 @@ import {
 } from 'stratimux';
 import type { GitmState, UpdateStatusShape, GitmABMode } from '../gitm.types';
 import { UPDATE_APPLIED_NOTE } from '../gitm.types';
-import { stampSliceUpdateStatus } from '../model/gitmSliceStore.model';
+import { stampSliceUpdateStatus, getSlice, upsertSliceFields } from '../model/gitmSliceStore.model';
 import { gitmExec } from '../model/gitmExec.model';
 import { resolveGitmTargetCwd } from '../model/gitmOpCwd.model';
 import { isWorkingBranchFor, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
@@ -334,6 +334,24 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
         };
     stampSliceUpdateStatus(item.targetDir, stamp);
     if (item.targetDir !== '' && item.targetDir !== state.activeScpDir) {
+      // THE STRANDED-SWORD CURE (the CaseA field break): the flat-only A/B
+      // registration was gated away here — the Turn Over then found NO working B,
+      // minted a FRESH Sword from pre-update A, and stranded the landing commit.
+      // A non-active target's minted Sword registers on ITS OWN slice (branchRoles.a
+      // = the TARGET's stable — never the active flat's); error surfaces likewise.
+      if (item.ok && item.mintedSword !== '') {
+        const targetStable = getSlice(item.targetDir)?.stableBranch ?? '';
+        upsertSliceFields(item.targetDir, {
+          workingBranch: item.mintedSword,
+          branchRoles: { a: targetStable, b: item.mintedSword },
+          abMode: 'candidate-created',
+        });
+      } else if (!item.ok && !item.halt) {
+        upsertSliceFields(item.targetDir, {
+          errorCode: 'update-apply-failed',
+          errorMessage: item.error,
+        });
+      }
       return { updateRailTick: state.updateRailTick + 1 };
     }
     if (!item.ok) {
