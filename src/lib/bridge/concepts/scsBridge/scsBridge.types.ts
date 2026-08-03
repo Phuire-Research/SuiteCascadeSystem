@@ -173,6 +173,25 @@ export type ScsBridgeStopScpPayload = {
   callerSessionUlid?: string;
 };
 
+// MD-ARC+C · SARC · scp_archive MCP tool payload. Archives a STOPPED SCP: the
+// vault move (Cascades/scps/<name>/ → .archive/<name>/) + the ledger mutation +
+// the retirement teardown. REFUSED live (3A: stop first) · WAPF-branched on
+// worktrees (H1 needs force=Path B anor retire-first · H2 redirects to retire).
+// ACK-OD: the durable products are the SCPs.json ledger + the sink log.
+export type ScsBridgeArchiveScpPayload = {
+  scpName: string;
+  // Path B consent (H1 owner): move + `git worktree repair` from the vault.
+  force?: boolean;
+  callerSessionUlid?: string;
+};
+
+// MD-ARC+C · SRST · scp_reinstate MCP tool payload. Moves the vault entry back
+// to its original seat + restores the ledger row to scps[] at status 'pending'.
+export type ScsBridgeReinstateScpPayload = {
+  scpName: string;
+  callerSessionUlid?: string;
+};
+
 export type ScsBridgeLaunchScpRuntimePayload = {
   scpName: string;
   callerSessionUlid?: string;
@@ -669,6 +688,12 @@ export type ScsBridgeActivateScpSession =
 // SES · THE STOP RAIL (C632) · scp_stop MCP tool Quality type.
 export type ScsBridgeStopScp =
   Quality<ScsBridgeState, ScsBridgeStopScpPayload>;
+
+// MD-ARC+C · SARC anor SRST Quality types.
+export type ScsBridgeArchiveScp =
+  Quality<ScsBridgeState, ScsBridgeArchiveScpPayload>;
+export type ScsBridgeReinstateScp =
+  Quality<ScsBridgeState, ScsBridgeReinstateScpPayload>;
 
 export type ScsBridgeLaunchScpRuntime =
   Quality<ScsBridgeState, ScsBridgeLaunchScpRuntimePayload>;

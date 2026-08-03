@@ -121,6 +121,42 @@ This management menu operates within the Suite 8 perimeter established by SM-SCP
 
 ---
 
+## The Lifecycle Controls — Close · Archive · Reinstate (MD-ARC+C · the Pewter Control Sync Law)
+
+BOTH control surfaces (the SCS-Bridge SessionManager AND this management surface) bear
+the SAME lifecycle set with the SAME predicates — Pewter D5 closed-box · D7 inversion ·
+destructive default-N:
+
+```
+[X] Close SCP <name>                         [Fuchsia]
+    Stop the running SCP: window closed · server SIGTERMed
+    (handle→pid→port fallback) · status → 'pending'.
+    → scsBridgeStopScp (the scp_stop three-leg · RECOVERABLE)
+    Enabled: status live · The precondition Archive's guard names.
+
+[A] Archive SCP <name>                       [Orange]
+    The reversible vault move: Cascades/scps/<name>/ →
+    Cascades/scps/.archive/<name>/ · entry → archivedScps[] ledger
+    (port/sessions preserved) · gitm watcher disarm + slice delete.
+    → archiveScpEntry (SARC · confirm default-N)
+    REFUSED live ("stop the SCP first · [X]") · system SCPs never ·
+    a worktree INSTANCE redirects to the Delete retire (the branch
+    survives in its parent) · an OWNER confers: retire instances
+    first anor [F] force (move + git worktree repair from the vault).
+    Enabled: status pending.
+
+▸ Archived (N)  ·  [T] toggle fold
+    Dimmed rows · archive date · [R] Reinstate on the selected row:
+    the reverse move + ledger restore at status 'pending' (launch is
+    manual). REFUSED on a name collision anor an occupied seat.
+    → reinstateScpEntry (SRST)
+```
+
+The predicates are shared verbatim across surfaces: live → Close enabled + Archive
+refused · pending → Archive enabled · archived → Reinstate only.
+
+---
+
 ## Cross-References
 
 - Parent menu: `SM-SCP.md` (lifecycle surface)
@@ -139,3 +175,4 @@ This management menu operates within the Suite 8 perimeter established by SM-SCP
 | Date | Cycle | Change |
 |---|---|---|
 | 2026-05-18 | 140 | RD created · MSCM Gap-1 closure · TQDR remap operational (launch_scp/dock_scp Quality branch · get_scp_status/get_scp_logs Strategy branch) · 6 CLI subcommands added · `[U] Unregister` stubbed pending Macro 3 |
+| 2026-08-02 | MD-ARC+C | The Lifecycle Controls landed — [X] Close · [A] Archive (WAPF-branched · default-N) · the Archived fold + [R] Reinstate · the Pewter Control Sync Law (both surfaces · shared predicates) |

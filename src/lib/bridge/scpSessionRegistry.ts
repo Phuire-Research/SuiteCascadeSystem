@@ -26,8 +26,19 @@
  */
 
 import { readFile, writeFile, rename } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { resolve, resolve as resolvePath } from 'node:path';
 import { log } from './debugLog';
+// MD-ARC+C · SARC/SRST — the vault-move primitives + WAPF (pure model) and the
+// gitmWorktreeRemove retirement legs (slice + watcher teardown on archive).
+import {
+  worktreeArchivePreFlight,
+  moveScpToArchive,
+  moveScpFromArchive,
+  repairWorktreesFromVault,
+} from './scpArchive.model';
+import { deleteSlice } from './concepts/gitm/model/gitmSliceStore.model';
+import { disarmWatchersForScp } from './concepts/gitm/model/gitmWatcherRegistry.model';
 
 export type ScpSessionEntry = {
   sessionId: string;
@@ -72,8 +83,20 @@ type ScpRegistryRecord = {
   [key: string]: unknown;
 };
 
+// MD-ARC+C · SARC — the archived ledger row: the full record preserved (port ·
+// sessions · description) so Reinstate restores identity exactly; path re-pointed
+// into the vault; originalPath enables exact-seat restoration without guessing.
+export type ArchivedScpEntry = ScpRegistryRecord & {
+  archivedAt: number;
+  originalPath: string;
+};
+
 type ScpsJsonShape = {
   scps?: ScpRegistryRecord[];
+  // MD-ARC+C · the sibling ledger — every existing scps[] reader excludes archived
+  // SCPs by construction (they never look here). The CLI-side surface
+  // (scpPersistence.ts) carries this field OPAQUELY through its parse/write.
+  archivedScps?: ArchivedScpEntry[];
 };
 
 function scpsJsonPath(): string {
@@ -238,6 +261,185 @@ export async function setScpStatus(
     await saveScpsJson({ ...data, scps });
     log('scpSessionRegistry.setStatus', { scpName, status });
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MD-ARC+C · SARC anor SRST — Archive anor Reinstate (rides the chainWrite mutex)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type ScpArchiveResult =
+  | { ok: true; archivedAt: number; worktreeRepair?: { ok: boolean; detail: string } }
+  | { ok: false; reason: string; detail?: string; instances?: string[] };
+
+export type ScpReinstateResult =
+  | { ok: true }
+  | { ok: false; reason: string; detail?: string };
+
+// SARC · archive an installed SCP: the guards (system · SARC-GUARD live · the
+// standard seat · WAPF) → the vault move → the ledger mutation → the teardown
+// (deleteSlice + disarmWatchersForScp — the gitmWorktreeRemove retirement legs).
+// ALL checks run INSIDE the chainWrite body (R3: no concurrent write interposes).
+// WAPF branches (the user's overrule of the flat refusal):
+//   H2 instance → refused toward the typed-Delete retire (the branch survives in
+//   the parent — archive is the wrong lifecycle verb for a derivative).
+//   H1 owner without force → 'worktrees-present' + the instance list (the caller
+//   confers Path A retire-first anor re-calls with force = Path B).
+//   H1 owner with force → move, then `git worktree repair` from the vault
+//   (non-fatal · the outcome rides the result for the sink).
+export async function archiveScpEntry(
+  scpName: string,
+  opts?: { force?: boolean },
+): Promise<ScpArchiveResult> {
+  let result: ScpArchiveResult = { ok: false, reason: 'archive-not-run' };
+  await chainWrite('archiveScpEntry', async () => {
+    const projectRoot = process.cwd();
+    const data = await loadScpsJson();
+    const scps = data.scps ?? [];
+    const idx = scps.findIndex((entry) => entry?.name === scpName);
+    if (idx < 0) {
+      result = { ok: false, reason: 'scp-not-found' };
+      return;
+    }
+    const target = scps[idx];
+    if (target.system === true || scpName === 'template') {
+      result = { ok: false, reason: 'system-scp-cannot-archive' };
+      return;
+    }
+    // SARC-GUARD (3A) — the persisted status rail is the contract (W-series);
+    // 'live' → refuse with the stop-first voice.
+    if (target.status === 'live') {
+      result = { ok: false, reason: 'scp-must-be-stopped-before-archive' };
+      return;
+    }
+    const packageDir = resolvePath(projectRoot, 'Cascades', 'scps', scpName);
+    if (!existsSync(packageDir)) {
+      // install-via-path SCPs may seat outside Cascades/scps/ — the vault move
+      // is standard-seat only this pass (no fine controls yet).
+      result = { ok: false, reason: 'scp-outside-standard-seat' };
+      return;
+    }
+    // WAPF — the Worktree Archive Pre-Flight (H0/H1/H2).
+    const preFlight = worktreeArchivePreFlight(packageDir);
+    if (preFlight.branch === 'instance') {
+      result = {
+        ok: false,
+        reason: 'worktree-instance-use-retire',
+        detail: preFlight.parentGitdir,
+      };
+      return;
+    }
+    if (preFlight.branch === 'owner' && opts?.force !== true) {
+      result = {
+        ok: false,
+        reason: 'worktrees-present',
+        instances: preFlight.instanceGitdirs,
+      };
+      return;
+    }
+    let vaultDir = '';
+    try {
+      vaultDir = moveScpToArchive(scpName, projectRoot);
+    } catch (err: unknown) {
+      result = {
+        ok: false,
+        reason: 'archive-move-failed',
+        detail: err instanceof Error ? err.message : String(err),
+      };
+      return;
+    }
+    // Path B — repair SYNCHRONOUSLY right after the rename (the prune-window
+    // caution); non-fatal — the archive stands regardless.
+    let worktreeRepair: { ok: boolean; detail: string } | undefined;
+    if (preFlight.branch === 'owner') {
+      worktreeRepair = repairWorktreesFromVault(vaultDir, preFlight.instanceGitdirs);
+      log('scpSessionRegistry.archive.worktree-repair', { scpName, ...worktreeRepair });
+    }
+    // The ledger mutation: path re-pointed into the vault (exact-suffix carry).
+    const originalPath =
+      typeof target.path === 'string' && target.path !== ''
+        ? target.path
+        : `Cascades/scps/${scpName}/SCP`;
+    const archivedPath = originalPath.startsWith(`Cascades/scps/${scpName}`)
+      ? `Cascades/scps/.archive/${originalPath.slice('Cascades/scps/'.length)}`
+      : `Cascades/scps/.archive/${scpName}/SCP`;
+    const archivedAt = Date.now();
+    const archivedEntry: ArchivedScpEntry = {
+      ...target,
+      path: archivedPath,
+      archivedAt,
+      originalPath,
+    };
+    const nextScps = scps.filter((entry) => entry?.name !== scpName);
+    const archivedScps = [...(data.archivedScps ?? []), archivedEntry];
+    await saveScpsJson({ ...data, scps: nextScps, archivedScps });
+    // Teardown — the retirement legs (key = the OLD SCP subdir absolute · the
+    // slice/watcher key convention).
+    const sliceKey = resolvePath(projectRoot, originalPath);
+    deleteSlice(sliceKey);
+    disarmWatchersForScp(sliceKey);
+    log('scpSessionRegistry.archive', { scpName, vaultDir, archivedAt });
+    result = worktreeRepair ? { ok: true, archivedAt, worktreeRepair } : { ok: true, archivedAt };
+  });
+  return result;
+}
+
+// SRST · reinstate an archived SCP: the ledger guards (present · RROC name
+// collision) → the reverse move (the occupied-seat throw honors RROC at the
+// filesystem too) → the entry restored to scps[] at status 'pending' (launch is
+// manual — no auto-spawn). Port re-validation is deferred to the launch path.
+export async function reinstateScpEntry(scpName: string): Promise<ScpReinstateResult> {
+  let result: ScpReinstateResult = { ok: false, reason: 'reinstate-not-run' };
+  await chainWrite('reinstateScpEntry', async () => {
+    const projectRoot = process.cwd();
+    const data = await loadScpsJson();
+    const scps = data.scps ?? [];
+    const archivedScps = data.archivedScps ?? [];
+    const archived = archivedScps.find((entry) => entry?.name === scpName);
+    if (!archived) {
+      result = { ok: false, reason: 'scp-not-in-archive' };
+      return;
+    }
+    if (scps.some((entry) => entry?.name === scpName)) {
+      result = { ok: false, reason: 'scp-name-collision-in-live-registry' };
+      return;
+    }
+    try {
+      moveScpFromArchive(scpName, projectRoot);
+    } catch (err: unknown) {
+      result = {
+        ok: false,
+        reason: 'reinstate-move-failed',
+        detail: err instanceof Error ? err.message : String(err),
+      };
+      return;
+    }
+    // A force-archived OWNER's worktree pointers re-break on the move BACK —
+    // the same repair leg runs from the restored seat (non-fatal · logged).
+    const restoredDir = resolvePath(projectRoot, 'Cascades', 'scps', scpName);
+    const restoredFlight = worktreeArchivePreFlight(restoredDir);
+    if (restoredFlight.branch === 'owner') {
+      const repair = repairWorktreesFromVault(restoredDir, restoredFlight.instanceGitdirs);
+      log('scpSessionRegistry.reinstate.worktree-repair', { scpName, ...repair });
+    }
+    const { archivedAt: _archivedAt, originalPath, ...rest } = archived;
+    const reinstated: ScpRegistryRecord = {
+      ...rest,
+      path: originalPath !== '' ? originalPath : `Cascades/scps/${scpName}/SCP`,
+      status: 'pending',
+      statusUpdatedAt: Date.now(),
+    };
+    const nextArchived = archivedScps.filter((entry) => entry?.name !== scpName);
+    await saveScpsJson({ ...data, scps: [...scps, reinstated], archivedScps: nextArchived });
+    log('scpSessionRegistry.reinstate', { scpName, path: reinstated.path });
+    result = { ok: true };
+  });
+  return result;
+}
+
+// The Archived fold's read (the helm renders it · dimmed rows + Reinstate).
+export async function listArchivedScps(): Promise<ArchivedScpEntry[]> {
+  const data = await loadScpsJson();
+  return data.archivedScps ?? [];
 }
 
 // PSSM · W4 · THE BOOT CONSISTENCY SWEEP (bridge side).

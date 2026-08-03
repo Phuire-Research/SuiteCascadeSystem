@@ -60,6 +60,10 @@ export interface ScpRegistryEntry {
 
 export interface ScpRegistry {
   scps: ScpRegistryEntry[];
+  // MD-ARC+C · the archived ledger — OPAQUE on the CLI side (the bridge's
+  // scpSessionRegistry owns the shape). Carried through parse/write + every
+  // immutable mutation so a CLI-side write NEVER erases archived SCPs.
+  archivedScps?: unknown[];
 }
 
 // AJMI types (inline-ported)
@@ -109,7 +113,10 @@ export function parseScpRegistry(content: string): ScpRegistry {
   try {
     const parsed = JSON.parse(content);
     if (parsed && Array.isArray(parsed.scps)) {
-      return { scps: parsed.scps as ScpRegistryEntry[] };
+      const registry: ScpRegistry = { scps: parsed.scps as ScpRegistryEntry[] };
+      // MD-ARC+C · carry the archived ledger opaquely (never reconstructed away).
+      if (Array.isArray(parsed.archivedScps)) registry.archivedScps = parsed.archivedScps;
+      return registry;
     }
     return { scps: [] };
   } catch {
@@ -174,9 +181,9 @@ export function appendScpEntry(registry: ScpRegistry, entry: ScpRegistryEntry): 
   if (existingIdx >= 0) {
     const scps = registry.scps.slice();
     scps[existingIdx] = entry;
-    return { scps };
+    return { ...registry, scps };
   }
-  return { scps: [...registry.scps, entry] };
+  return { ...registry, scps: [...registry.scps, entry] };
 }
 
 /**
@@ -199,7 +206,7 @@ export function updateScpStatus(
     managingInstancePid: pid !== undefined ? pid : scps[idx].managingInstancePid,
     boundBridgePort: port !== undefined ? port : scps[idx].boundBridgePort,
   };
-  return { scps };
+  return { ...registry, scps };
 }
 
 /**
@@ -208,7 +215,10 @@ export function updateScpStatus(
 export function removeScpEntry(registry: ScpRegistry, name: string): ScpRegistry {
   const idx = registry.scps.findIndex((s) => s.name === name);
   if (idx < 0) return registry;
-  return { scps: [...registry.scps.slice(0, idx), ...registry.scps.slice(idx + 1)] };
+  return {
+    ...registry,
+    scps: [...registry.scps.slice(0, idx), ...registry.scps.slice(idx + 1)],
+  };
 }
 
 // ============================================
