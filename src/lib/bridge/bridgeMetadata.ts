@@ -31,6 +31,11 @@ import { AVAILABLE_MODELS, DEFAULT_MODEL } from '../../shared/modelCatalog.model
 // shape → 'clean' | 'instance' | 'owner') reused so the widget renders worktree
 // rows + refuses archive-on-owner without a second registry read.
 import { worktreeArchivePreFlight } from './scpArchive.model';
+// MD-UM · LEG 3 · THE DIFFERENTIAL RELAY — the cached Update Manifest (updateManifest.model.ts)
+// rides bridge.json via the composer leg (the getNpmVersionCheck() precedent). Read from the
+// in-process cache at write time — the model's own timer performs the network fetch; the write
+// NEVER awaits a fetch inline (the non-blocking mandate).
+import { getCachedReleaseManifest, type UpdateManifest } from './updateManifest.model';
 
 // MD-ARC+C · Wave 7 · the worktree marker the roster serves. Probed CHEAPLY at
 // bridge.json write time from the SCP's package .git shape (WAPF): a .git FILE ⇒
@@ -172,6 +177,13 @@ export type BridgeMetadata = {
   // ⇒ the widget shows the empty-archived state. Always written [] so it is present +
   // discoverable. Carried FREE to each per-SCP copy by the spread (mirrors scpStatuses).
   archivedScps?: ArchivedScpMetaEntry[];
+  // MD-UM · LEG 3 · THE RELEASE MANIFEST (the differential relay) — the cached Update Manifest
+  // (updateManifest.model.ts · getCachedReleaseManifest). Rides EVERY bridge.json write via the
+  // composer leg (the archivedScps/getNpmVersionCheck precedent) so the SCP's /scs-bridge-version
+  // endpoint reads the incoming releases alongside the existing verdict fields. null = no fetch
+  // has completed yet this run (the honest degraded state · the advisory invariant). Carried FREE
+  // to each per-SCP copy by the spread below (mirrors archivedScps).
+  releaseManifest?: UpdateManifest | null;
 };
 
 export type BridgeMetadataState = {
@@ -429,6 +441,10 @@ async function writeBridgeMetadataUnsafe(
     // + discoverable. Carried FREE to each per-SCP copy by the spread below (mirrors scpStatuses).
     // The SCP-side /bridge-roster endpoint passes it through so the widget's Archived tab renders.
     archivedScps,
+    // MD-UM · LEG 3 · THE RELEASE MANIFEST — read from the model's in-process cache (NEVER an
+    // inline network fetch · the non-blocking mandate). null until the model's timer completes
+    // its first refresh (the advisory invariant). Carried FREE to each per-SCP copy by the spread.
+    releaseManifest: getCachedReleaseManifest(),
   };
 
   // Cobalt-FSGT · Cycle 160 R14 · log every bridge.json write site.
