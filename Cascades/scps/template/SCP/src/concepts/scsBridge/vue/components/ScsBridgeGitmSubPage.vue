@@ -1182,10 +1182,11 @@ function spawnResolver(): void {
               <!-- MD-ATC-F · the TRACKED Turn Over A (the A-family green · honest label) —
                    rides the same protocol as B: stamp → reboot-proof → the panel yields. -->
               <button
-                class="hifi-btn hifi-btn-green gitm-apply-success-hard-turnover"
+                class="gitm-apply-success-hard-turnover"
                 :disabled="isGitmActing"
                 @click="finalizeTurnOverA"
               >
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                 Turn Over A &amp; Restart to Prove the Update
               </button>
               <p class="gitm-apply-success-hard-note">
@@ -2747,6 +2748,59 @@ function spawnResolver(): void {
   text-transform: uppercase;
   color: var(--color-viridian, #4ade80);
   text-align: center;
+}
+
+/* MD-ATC-F2 · PEWTER TESSERA · THE TACTICAL A REGISTER (the blend-in cure): the finalize
+   takes the Tactical Bridge StratiPUNK voice — the GitmTurnOverAButton construction at
+   label width: a deep near-black chamfered body whose viridian identity reads through the
+   thin glowing edge (the color informs via the glow, NEVER a flooded fill that sinks into
+   the green pane). Mirrors the 44px dock register's field/edge/chamfer/glow verbatim. */
+.gitm-apply-success-hard-turnover {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.6rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  background:
+    radial-gradient(ellipse at 38% 30%, rgba(19, 213, 148, 0.15) 0%, rgba(8, 14, 12, 0) 62%),
+    radial-gradient(ellipse at 50% 120%, rgba(19, 213, 148, 0.09) 0%, rgba(7, 12, 10, 0) 70%),
+    rgb(9, 14, 12);
+  border: 1px solid rgba(19, 213, 148, 0.55);
+  clip-path: polygon(
+    8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px), 0 8px
+  );
+  box-shadow:
+    0 0 8px 0 rgba(19, 213, 148, 0.28),
+    inset 0 0 10px 0 rgba(19, 213, 148, 0.10);
+  color: rgb(19, 213, 148);
+  text-shadow: 0 0 6px rgba(19, 213, 148, 0.6);
+}
+
+.gitm-apply-success-hard-turnover:hover:not(:disabled) {
+  border-color: rgba(19, 213, 148, 0.9);
+  color: rgb(110, 245, 200);
+  box-shadow:
+    0 0 14px 1px rgba(19, 213, 148, 0.5),
+    inset 0 0 14px 0 rgba(19, 213, 148, 0.18);
+}
+
+.gitm-apply-success-hard-turnover:active:not(:disabled) {
+  box-shadow: inset 0 0 12px 1px rgba(19, 213, 148, 0.35);
+}
+
+.gitm-apply-success-hard-turnover:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* STAGE RAIL — the ordinal chips + arrow separators. */
