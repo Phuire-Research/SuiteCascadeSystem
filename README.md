@@ -206,12 +206,12 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.943.0
+## Release Notes — v0.944.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
-- **0.943.0 — the update flow, reinforced**: concurrent SCP updates share one source
+- **0.944.0 — the update flow, reinforced**: concurrent SCP updates share one source
   refresh, every SCP keeps its own update rail, failures name their exact stage, and the
   finalize is one gesture on whichever branch you stand. Two field-earned habits: run an
   update with all your changes committed (the update lands on your current branch), and
@@ -219,6 +219,16 @@ advances it. The npm badge above always carries the published version.
   stochastic miss, not a failure — run the update again, or tell the resolver session:
   "Finalize the resolution — write the pending-0 resolution file and fire the Turn Over
   prompt."
+- **0.944.0 — your SCPs, curated**: the Installation page carries Installed and Archived
+  tabs — archive a finished SCP into a vault beside the working set, restore it intact
+  (git and all), or delete it behind a typed-name guard. Worktree SCPs wear their own
+  marking and keep both trees whole through the vault; the template itself is
+  system-protected.
+- **0.944.0 — release notes that know your SCP**: every release rides a versioned
+  manifest with an authored magnitude (1-5); the Update page folds it open filtered to
+  what YOUR SCP has actually applied — not the version string — so the decision to
+  update is informed before it is taken. The same notes render on the Home page as the
+  full tour.
 - **0.943.0 — updates that explain themselves**: the update diff is now self-describing —
   its provenance block pins the exact preservation rules the merge was computed under
   (identity fields held, never-delete paths), the apply step prefers those pinned rules
