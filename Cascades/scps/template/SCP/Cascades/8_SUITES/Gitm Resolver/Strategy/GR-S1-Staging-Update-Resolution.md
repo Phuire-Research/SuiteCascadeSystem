@@ -169,7 +169,14 @@ CONCLUDING SEQUENCE: The resolution file (pending 0) + the contract line below I
   bridge's terminal applied stamp and strand the rail. After writing the file:
   (1) Do NOT fire any further gitm_update_progress stamp. The last stamp you may fire is a
       per-step 'resolving' note BEFORE the write — never after. The write IS the hand-off.
-  (2) On ANY hang or timeout during the earlier steps: STOP calling. Report the contract line
+  (2) THE TURN-OVER PROMPT (MANDATORY · the ONE permitted post-write call): once the write
+      lands, call the bridge tool scp_alert_turn_over with
+      { "scpName": "<scpName>", "purpose": "SCS update applied — Turn Over boots the updated code" }.
+      This is an ALERT, never a progress stamp — it writes the turnOverAlert banner + focuses
+      the SCP window; it does NOT touch the stage rail (rule 1 stands). The USER performs the
+      Turn Over; you STAND BY. A failed anor timed-out alert follows the FAILURE RULE (never
+      blocks — the Apply Success panel still carries the control; report it in the contract line).
+  (3) On ANY hang or timeout during the earlier steps: STOP calling. Report the contract line
       with the HALT note appended:
       SCS:Vermillion:OK:<summary> · invocation-channel HALT: <which call hung>
   The user watches the bridge carry the boot-proof through.

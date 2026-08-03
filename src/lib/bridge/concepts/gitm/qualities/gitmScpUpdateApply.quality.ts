@@ -707,14 +707,14 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
             );
             // F3 · THE PASS BACK — after the terminal applied stamp lands (the Apply Success
             // panel now firing), bring the SCP window to the foreground so the user's eyes land
-            // on it. Reuse the scs_focus_bridge_window Lambda DIRECTLY (its quality on the same
-            // live-handle seam · no HTTP). It resolves the SCP window by env SCS_BRIDGE_ORIGIN_SCP
-            // → lookupScpWindowId; set it to this update's scpName so the EXACT window is focused.
-            // Guard: only on the auto-sequence path (the manifest-watcher landing · user is elsewhere).
+            // on it. THE ENV-POISON CURE (the CaseA1↔CaseB1 field break): the prior env write
+            // (process.env.SCS_BRIDGE_ORIGIN_SCP = scpName) PERSISTED process-wide — the NEXT
+            // SCP's watcher-fired apply then env-first-resolved to THIS SCP and ran against the
+            // WRONG repo. The focus quality prefers payload.scpName (M3 focus-record seam) —
+            // the hand-off rides the payload; the env is NEVER touched from the apply path.
             try {
-              process.env.SCS_BRIDGE_ORIGIN_SCP = scpName;
               h.muxium.dispatch(
-                h.muxium.deck.d.scsBridge.e.scsBridgeFocusUrlWindow({}) as never,
+                h.muxium.deck.d.scsBridge.e.scsBridgeFocusUrlWindow({ scpName }) as never,
               );
             } catch (focusErr: unknown) {
               log('gitm.update.apply.focus-failed', {
