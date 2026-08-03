@@ -145,7 +145,7 @@ onUnmounted(() => {
       <section class="home-section hifi-pane-green">
         <p class="section-eyebrow hifi-mono">01 · THE NAMED <ScpMark /></p>
         <h2 class="section-title named-scp-title hifi-heading">Introducing the Named <ScpMark /></h2>
-        <span class="named-scp-badge hifi-mono">PHUIRE RESEARCH · FIRST PUBLIC VIEWING</span>
+        <span class="named-scp-badge hifi-mono">PHUIRE RESEARCH · PUSHING THE BOULDER</span>
         <p class="section-lede">You are used to numbered, classified <ScpMark />s in traditional canon. Here, from PhuirE Research, we present the first Named <ScpMark />.</p>
         <!-- C805 · THE HIGHLIGHT REWORK — the prose rides the Pewter Tessera subtext ground (light
              text on the dark gem-lit Onyx, never on the suite color) with the functional color law
