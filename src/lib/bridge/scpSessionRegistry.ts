@@ -26,8 +26,9 @@
  */
 
 import { readFile, writeFile, rename } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { resolve, resolve as resolvePath } from 'node:path';
+import { existsSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { resolve, resolve as resolvePath, dirname } from 'node:path';
 import { log } from './debugLog';
 // MD-ARC+C · SARC/SRST — the vault-move primitives + WAPF (pure model) and the
 // gitmWorktreeRemove retirement legs (slice + watcher teardown on archive).
@@ -275,6 +276,15 @@ export type ScpReinstateResult =
   | { ok: true }
   | { ok: false; reason: string; detail?: string };
 
+// MD-ARC+C · Wave 7 · SDEL — the PERMANENT delete result. The destructive
+// sibling of ScpArchiveResult (which is reversible via reinstate). `worktreeNote`
+// carries a non-fatal 'worktree-metadata-dangling' marker when the git-worktree
+// removal fell back to a plain rmSync (the parent's metadata may need a later
+// `git worktree prune`).
+export type ScpDeleteResult =
+  | { ok: true; worktreeNote?: string }
+  | { ok: false; reason: string; detail?: string; instances?: string[] };
+
 // SARC · archive an installed SCP: the guards (system · SARC-GUARD live · the
 // standard seat · WAPF) → the vault move → the ledger mutation → the teardown
 // (deleteSlice + disarmWatchersForScp — the gitmWorktreeRemove retirement legs).
@@ -434,6 +444,184 @@ export async function reinstateScpEntry(scpName: string): Promise<ScpReinstateRe
     result = { ok: true };
   });
   return result;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MD-ARC+C · Wave 7 · SDEL — deleteScpEntry (the PERMANENT rm · rides chainWrite)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The destructive sibling of archiveScpEntry: it does NOT vault — it removes the
+// package dir from disk AND removes the ledger row (scps[] anor archivedScps[]).
+// ALL checks run INSIDE the chainWrite body (R3: no concurrent write interposes).
+//
+// Guards (INSIDE the body):
+//   system/template            → 'system-scp-cannot-delete'
+//   live status                → 'scp-must-be-stopped-before-delete'
+//   not-found (either ledger)  → 'scp-not-found'
+//   H1 owner-with-instances    → 'worktrees-present-retire-first' (delete never
+//                                strands instances — retire the branch first)
+//
+// Seat resolution: fromArchive → Cascades/scps/.archive/<name> · else the
+// installed seat Cascades/scps/<name>.
+//
+// WAPF branches (the .git shape probe):
+//   H2 instance → resolve the parent repo root from parentGitdir and run
+//     `git worktree remove --force <packageDir>` from that root (registry-first
+//     cleanup · the branch survives in the parent). Non-fatal fallback: plain
+//     rmSync + a logged 'worktree-metadata-dangling' note.
+//   H1 owner   → REFUSED (see above · delete never strands instances).
+//   H0 clean   → plain rmSync of the package dir.
+export async function deleteScpEntry(
+  scpName: string,
+  opts?: { fromArchive?: boolean },
+): Promise<ScpDeleteResult> {
+  let result: ScpDeleteResult = { ok: false, reason: 'delete-not-run' };
+  await chainWrite('deleteScpEntry', async () => {
+    const projectRoot = process.cwd();
+    const fromArchive = opts?.fromArchive === true;
+    const data = await loadScpsJson();
+    const scps = data.scps ?? [];
+    const archivedScps = data.archivedScps ?? [];
+
+    // The ledger row — installed seat searches scps[]; archive seat searches
+    // archivedScps[] (a fromArchive delete of a still-installed entry is a caller
+    // error, resolved to not-found here).
+    const liveIdx = scps.findIndex((entry) => entry?.name === scpName);
+    const archivedIdx = archivedScps.findIndex((entry) => entry?.name === scpName);
+    const target = fromArchive ? archivedScps[archivedIdx] : scps[liveIdx];
+    if (target === undefined) {
+      result = { ok: false, reason: 'scp-not-found' };
+      return;
+    }
+    if (target.system === true || scpName === 'template') {
+      result = { ok: false, reason: 'system-scp-cannot-delete' };
+      return;
+    }
+    // Only an installed (non-archived) SCP can be live — an archived entry is
+    // inert by construction; the guard is a no-op there but harmless.
+    if (!fromArchive && target.status === 'live') {
+      result = { ok: false, reason: 'scp-must-be-stopped-before-delete' };
+      return;
+    }
+
+    // Seat resolution: the vault dir vs the installed dir.
+    const packageDir = fromArchive
+      ? resolvePath(projectRoot, 'Cascades', 'scps', '.archive', scpName)
+      : resolvePath(projectRoot, 'Cascades', 'scps', scpName);
+
+    // WAPF — the .git shape probe branches the physical delete.
+    let worktreeNote: string | undefined;
+    if (existsSync(packageDir)) {
+      const preFlight = worktreeArchivePreFlight(packageDir);
+      if (preFlight.branch === 'owner') {
+        // H1 owner-with-instances — delete never strands linked instances.
+        result = {
+          ok: false,
+          reason: 'worktrees-present-retire-first',
+          instances: preFlight.instanceGitdirs,
+        };
+        return;
+      }
+      if (preFlight.branch === 'instance') {
+        // H2 instance — this SCP IS a linked worktree of a parent. Resolve the
+        // parent repo root from parentGitdir (<parent>/.git/worktrees/<i>) and run
+        // `git worktree remove --force <packageDir>` from there so the parent's
+        // worktree metadata is cleaned (registry-first · the branch survives).
+        const parentRoot = resolveParentRepoRoot(preFlight.parentGitdir);
+        let removed = false;
+        if (parentRoot !== '') {
+          try {
+            execFileSync('git', ['worktree', 'remove', '--force', packageDir], {
+              cwd: parentRoot,
+              encoding: 'utf8',
+              stdio: ['pipe', 'pipe', 'pipe'],
+            });
+            removed = true;
+            log('scpSessionRegistry.delete.worktree-remove', { scpName, parentRoot });
+          } catch (err: unknown) {
+            const e = err as { stderr?: string; message?: string };
+            log('scpSessionRegistry.delete.worktree-remove-failed', {
+              scpName,
+              detail: (typeof e.stderr === 'string' && e.stderr.trim() !== ''
+                ? e.stderr.trim()
+                : e.message ?? 'remove failed').slice(0, 300),
+            });
+          }
+        }
+        if (!removed) {
+          // Non-fatal fallback: plain rmSync + the dangling-metadata note.
+          try {
+            rmSync(packageDir, { recursive: true, force: true });
+          } catch (err: unknown) {
+            result = {
+              ok: false,
+              reason: 'delete-rm-failed',
+              detail: err instanceof Error ? err.message : String(err),
+            };
+            return;
+          }
+          worktreeNote = 'worktree-metadata-dangling';
+          log('scpSessionRegistry.delete.worktree-metadata-dangling', { scpName, packageDir });
+        }
+      } else {
+        // H0 clean — plain rmSync of the package dir.
+        try {
+          rmSync(packageDir, { recursive: true, force: true });
+        } catch (err: unknown) {
+          result = {
+            ok: false,
+            reason: 'delete-rm-failed',
+            detail: err instanceof Error ? err.message : String(err),
+          };
+          return;
+        }
+      }
+    } else {
+      // The dir is already gone — the ledger removal still proceeds (idempotent).
+      log('scpSessionRegistry.delete.dir-absent', { scpName, packageDir });
+    }
+
+    // The ledger mutation — remove from BOTH arrays (a bare name never lingers).
+    const nextScps = scps.filter((entry) => entry?.name !== scpName);
+    const nextArchived = archivedScps.filter((entry) => entry?.name !== scpName);
+    await saveScpsJson({ ...data, scps: nextScps, archivedScps: nextArchived });
+
+    // Teardown — the archive precedent's retirement legs (key = the OLD SCP subdir
+    // absolute · the slice/watcher key convention). Installed seat uses the record's
+    // path (or the standard suffix); archived seat uses originalPath when present.
+    const teardownRel =
+      fromArchive && typeof (target as ArchivedScpEntry).originalPath === 'string'
+        ? (target as ArchivedScpEntry).originalPath
+        : typeof target.path === 'string' && target.path !== ''
+          ? target.path
+          : `Cascades/scps/${scpName}/SCP`;
+    const sliceKey = resolvePath(projectRoot, teardownRel);
+    deleteSlice(sliceKey);
+    disarmWatchersForScp(sliceKey);
+
+    log('scpSessionRegistry.delete', { scpName, fromArchive, worktreeNote: worktreeNote ?? null });
+    result = worktreeNote ? { ok: true, worktreeNote } : { ok: true };
+  });
+  return result;
+}
+
+// SDEL helper — resolve the parent repo root from an instance's parentGitdir. The
+// .git file names `<parent>/.git/worktrees/<i>`; the parent working tree is the
+// dir two levels up from that (…/worktrees/<i> → …/worktrees → …/.git → parent).
+// When the pointer instead names the parent's .git DIRECTORY directly, dirname of
+// .git is the root. Returns '' when it cannot be resolved (caller falls back).
+function resolveParentRepoRoot(parentGitdir: string): string {
+  if (parentGitdir === '') return '';
+  // Walk up to the `.git` component, then dirname is the repo root.
+  const marker = `${'/.git/'}worktrees${'/'}`;
+  const gitIdx = parentGitdir.indexOf(marker);
+  if (gitIdx >= 0) {
+    // parentGitdir = <root>/.git/worktrees/<i> → <root> is up to gitIdx.
+    return parentGitdir.slice(0, gitIdx);
+  }
+  // Fallback: if it ends in /.git, the parent is its dirname; else best-effort.
+  if (parentGitdir.endsWith(`${'/'}.git`)) return dirname(parentGitdir);
+  return '';
 }
 
 // The Archived fold's read (the helm renders it · dimmed rows + Reinstate).
