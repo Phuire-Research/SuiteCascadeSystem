@@ -196,6 +196,25 @@ export function upsertSliceFields(scpDir: string, partial: Partial<GitmRepoSlice
   log('gitm.slice.set', { scpDir, fields: Object.keys(partial).length });
 }
 
+// RS.4 · THE PER-SCP RAIL — merge a partial onto the TARGET's slice updateStatus (authoritative
+// per SCP; the flat field is the ACTIVE projection). The update-family reducers call this for
+// their resolved target, then write flat ONLY when the target IS the active dir (else they tick
+// updateRailTick so the GITEP fan-out relays the slice-only change). Seeds the empty slice if
+// the dir has no rail yet (the C645 fan-out gate still holds a never-enumerated rail).
+export function stampSliceUpdateStatus(
+  scpDir: string,
+  partial: Partial<GitmRepoSlice['updateStatus']>,
+): void {
+  if (scpDir === '') return;
+  const current = sliceByScpDir.get(scpDir) ?? createEmptyGitmRepoSlice(scpDir);
+  const next: GitmRepoSlice = {
+    ...current,
+    updateStatus: { ...current.updateStatus, ...partial },
+  };
+  sliceByScpDir.set(scpDir, next);
+  log('gitm.slice.update-status.stamp', { scpDir, stage: next.updateStatus.stage });
+}
+
 // Test-teardown only (childProcessRegistry precedent). Production never calls this.
 export function clearSliceStore(): void {
   sliceByScpDir.clear();

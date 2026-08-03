@@ -10,6 +10,10 @@ import { getBridgeVersion } from './bridgeVersion';
 import type { RegistryEntry } from './types';
 import type { ScpLifecycleStateValue } from './concepts/scpLifecycle/scpLifecycle.type';
 import { renderScpLifecycleBadgeWithFallback } from './scpLifecycleBadge';
+// MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.3) — the Archived fold's row type.
+// Type-only import (zero runtime cost) · the bridge's scpSessionRegistry owns the
+// authoritative ArchivedScpEntry shape (name · archivedAt · path · originalPath).
+import type { ArchivedScpEntry } from './scpSessionRegistry';
 import {
   filterRecentHeartbeats,
   INTERACTIVE_STALENESS_THRESHOLD_MS,
@@ -280,6 +284,25 @@ export type MenuState = {
     // count per SCP. R4 authoritative: 'interactive' is DERIVED at render
     // time · NOT a new FSM state on scpLifecycle.
     interactiveSessionsByScp?: Map<string, Map<string, number>>;
+    // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.3) — the Archived fold.
+    // archivedItems: the vault ledger snapshot (listArchivedScps()) read at
+    // menu-open time alongside reg.scps. Absent/empty → the fold header is
+    // hidden. showArchived: [T] toggle — collapsed "▸ Archived (N)" by default;
+    // expanded joins the archived rows to the navigable list ([R] reinstates
+    // the selected archived row).
+    archivedItems?: ArchivedScpEntry[];
+    showArchived?: boolean;
+  };
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.2) — the SCP Archive confirm modal.
+  // When defined, renderMenu renders renderScpArchiveConfirmPane INSTEAD of the
+  // sub-menu (Pewter D5 closed-box · destructive default-N). worktreeInstances is
+  // populated on the second pass (WAPF H1 'worktrees-present' reason) → the pane
+  // re-renders in its force form ([F] force-archive · lists the instances dimmed).
+  // notice carries an inline refusal string (stop-first · retire-first · etc.).
+  scpArchiveConfirm?: {
+    name: string;
+    worktreeInstances?: string[];
+    notice?: string;
   };
   // Epoch Extension · Macro AV · AVMS (Archive-View-Modal-State):
   // When defined, renderFrame and renderMenu render the archive pane INSTEAD of the
@@ -375,6 +398,20 @@ export type KeyAction =
   // SB-Final: Launch SCP runtime — Sub-Diamond CLOSURE action. Routes through
   // the bridge Muxium via BSBRE envelope write (animatedTui handler).
   | { type: 'launch-scp-runtime'; scpName: string }
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5) — Close / Archive / Reinstate.
+  // scp-menu-stop: [X] on a live-or-pending SCP row → dispatch scsBridgeStopScp.
+  // scp-menu-archive-confirm: [A] on a selected row → open the confirm modal.
+  // scp-menu-archive-execute: [Y]/[F] in the modal → AWAIT archiveScpEntry directly.
+  //   force carries the WAPF Path-B overrule ([F] on the 'worktrees-present' pane).
+  // scp-menu-archive-cancel: [N]/Esc in the modal → clear the confirm slot.
+  // scp-menu-toggle-archived: [T] on the sub-menu → expand/collapse the fold.
+  // scp-menu-reinstate: [R] on a selected archived row → AWAIT reinstateScpEntry.
+  | { type: 'scp-menu-stop'; scpName: string }
+  | { type: 'scp-menu-archive-confirm'; scpName: string }
+  | { type: 'scp-menu-archive-execute'; scpName: string; force?: boolean }
+  | { type: 'scp-menu-archive-cancel' }
+  | { type: 'scp-menu-toggle-archived' }
+  | { type: 'scp-menu-reinstate'; scpName: string }
   // SCP-3 · BSSPS · [B] Engage via SCS-Bridge post-install. Mirrors
   // launch-scp-runtime structurally (BSBRE envelope write) but dispatches
   // from the wizard done-step shortcut rather than the SCP sub-menu.
@@ -859,6 +896,31 @@ export function renderScpSubMenuPane(state: MenuState): string {
   const installSuffix = isInstallSel ? ANSI.RESET : '';
   lines.push('');
   lines.push(`  ${installPrefix}${ochre}⊕ Install Another SCP${ANSI.RESET}${installSuffix}`);
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.3) — the Archived fold.
+  // Collapsed: a single "▸ Archived (N)" line ([T] expands). Expanded: the
+  // archived rows join the navigable list at index [installIdx+1 .. +N] DIMMED
+  // (name + archive date) · the selected archived row shows "[R] reinstate".
+  const archived = sm.archivedItems ?? [];
+  if (archived.length > 0) {
+    lines.push('');
+    if (!sm.showArchived) {
+      lines.push(`  ${ANSI.DIM}▸ Archived (${archived.length})  ·  [T] expand${ANSI.RESET}`);
+    } else {
+      lines.push(`  ${ANSI.DIM}▾ Archived (${archived.length})  ·  [T] collapse${ANSI.RESET}`);
+      archived.forEach((a, ai) => {
+        const rowIdx = installIdx + 1 + ai;
+        const isSel = rowIdx === sm.selectedIdx;
+        const prefix = isSel ? `${ANSI.REVERSE}→ ` : '  ';
+        const suffix = isSel ? ANSI.RESET : '';
+        const when =
+          typeof a.archivedAt === 'number' ? new Date(a.archivedAt).toISOString().slice(0, 10) : '';
+        const reinstateHint = isSel ? '  [R] reinstate' : '';
+        lines.push(
+          `  ${prefix}${ANSI.DIM}○ ${a.name.padEnd(16)}  ${when}${reinstateHint}${ANSI.RESET}${suffix}`,
+        );
+      });
+    }
+  }
   lines.push('');
   lines.push(`  ${viridian}╚══════════════════════════════════════════════════════════════════════╝${ANSI.RESET}`);
   lines.push('');
@@ -872,13 +934,150 @@ export function renderScpSubMenuPane(state: MenuState): string {
     const pad = Math.max(0, Math.floor((w - visible) / 2));
     return ' '.repeat(pad) + text;
   };
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5) — hint rows gain the lifecycle
+  // verbs. Row 1 pointing (navigation); Row 2 acting (activate/launch/close/archive);
+  // Row 3 (only when the fold is non-empty) the Archived fold verbs.
   const subRow1 = `${ANSI.DIM}↑/↓ navigate · Home/End jump · V boot log${ANSI.RESET}`;
-  const subRow2 = `${ANSI.DIM}(N) open overlay · Enter activate · L launch · Esc back${ANSI.RESET}`;
+  const subRow2 = `${ANSI.DIM}Enter activate · L launch · X close · A archive · Esc back${ANSI.RESET}`;
   lines.push(centerRow(subRow1, state.termWidth));
   lines.push(centerRow(subRow2, state.termWidth));
+  if ((sm.archivedItems?.length ?? 0) > 0) {
+    const subRow3 = `${ANSI.DIM}T ${sm.showArchived ? 'collapse' : 'expand'} archived${sm.showArchived ? ' · R reinstate' : ''}${ANSI.RESET}`;
+    lines.push(centerRow(subRow3, state.termWidth));
+  }
 
   const padded = lines.map((l) => clipAndPadToWidth(l, state.termWidth));
   return padToHeight(padded, state.termHeight).join('\n');
+}
+
+/**
+ * MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.2) · renderScpArchiveConfirmPane.
+ * Pewter HiFi D5 closed-box confirm modal for the SCP Archive verb. Mirrors
+ * renderUninstallConfirmPane's construction (D5 borders · destructive default-N ·
+ * arrow-nav-free direct [Y]/[N]). Archive is REVERSIBLE (Reinstate recovers it),
+ * so this is a single-confirmation (NOT the typed-Delete PARAMSEAL guard).
+ *
+ * Two forms driven by scpArchiveConfirm state:
+ *   BASE     (no worktreeInstances)         → "Archive <name>? [Y] archive · [N] cancel"
+ *   H1 FORCE (worktreeInstances present)    → lists the instances DIMMED +
+ *                                             "[F] force-archive · [N] cancel"
+ * A `notice` string (stop-first · retire-first · move-failed) renders inline
+ * above the buttons when the direct call surfaced a refusal reason.
+ */
+export function renderScpArchiveConfirmPane(state: MenuState): string {
+  const ac = state.scpArchiveConfirm!;
+  const w = state.termWidth;
+  const h = state.termHeight;
+
+  const PEWTER_RGB = { r: 180, g: 185, b: 190 } as const;
+  const PEWTER = rgbToAnsi(PEWTER_RGB, TERMINAL_CAPS);
+  const PEWTER_DIM = `${ANSI.DIM}${PEWTER}`;
+  const COBALT = rgbToAnsi(SUITE_COLORS.Cobalt, TERMINAL_CAPS); // safe-default N accent
+  const ROSE = rgbToAnsi(SUITE_COLORS.Rose, TERMINAL_CAPS); // destructive title + force/Y accent
+  const OCHRE = rgbToAnsi(SUITE_COLORS.Ochre, TERMINAL_CAPS); // notice glyph
+
+  const BORDER_DARK = `${ANSI.DIM}${PEWTER}`;
+  const BORDER_LIGHT = `${ANSI.BOLD}${PEWTER}`;
+  const innerWidth = Math.max(40, w - 4);
+  const horiz = '─'.repeat(Math.max(innerWidth - 2, 8));
+  const topBorder = `${BORDER_DARK}┌${horiz}┐${ANSI.RESET}`;
+  const botBorder = `${BORDER_LIGHT}└${horiz}┘${ANSI.RESET}`;
+  const leftEdge = `${BORDER_LIGHT}│${ANSI.RESET}`;
+  const rightEdge = `${BORDER_DARK}│${ANSI.RESET}`;
+
+  const bodyLine = (content: string): string => `${leftEdge}${content}${rightEdge}`;
+  const padCenter = (text: string, visibleLen: number): string => {
+    const pad = Math.max(0, innerWidth - 2 - visibleLen);
+    const left = Math.floor(pad / 2);
+    const right = pad - left;
+    return ' '.repeat(left) + text + ' '.repeat(right);
+  };
+  const padLeft = (text: string, visibleLen: number, indent = 2): string => {
+    const pad = Math.max(0, innerWidth - 2 - visibleLen - indent);
+    return ' '.repeat(indent) + text + ' '.repeat(pad);
+  };
+  const blank = (): string => bodyLine(' '.repeat(innerWidth - 2));
+
+  const hasWorktrees = (ac.worktreeInstances?.length ?? 0) > 0;
+
+  const out: string[] = [];
+
+  // Header (outside box · matches uninstall/trust confirm shape)
+  out.push(clipAndPadToWidth(`${ANSI.BOLD}SCS Bridge — Archive SCP${ANSI.RESET}`, w));
+  out.push(
+    clipAndPadToWidth(
+      `${ANSI.DIM}Reversible · the SCP moves to the vault · Reinstate recovers it${ANSI.RESET}`,
+      w,
+    ),
+  );
+
+  out.push(clipAndPadToWidth(topBorder, w));
+
+  // Title row · Rose-tint (destructive-shaped signal · default-N)
+  const titleText = `⚠  Archive ${ac.name}`;
+  const titleColored = `${ANSI.BOLD}${ROSE}⚠  Archive ${ac.name}${ANSI.RESET}`;
+  out.push(clipAndPadToWidth(bodyLine(padLeft(titleColored, titleText.length, 2)), w));
+
+  out.push(clipAndPadToWidth(blank(), w));
+
+  if (!hasWorktrees) {
+    const body = 'Moves Cascades/scps/<name>/ → the .archive vault.';
+    out.push(
+      clipAndPadToWidth(bodyLine(padLeft(`${PEWTER_DIM}${body}${ANSI.RESET}`, body.length, 2)), w),
+    );
+  } else {
+    // WAPF H1 · this SCP owns worktree instances — list them DIMMED + require [F].
+    const wtHeader = 'This SCP owns worktree instances:';
+    out.push(
+      clipAndPadToWidth(bodyLine(padLeft(`${PEWTER_DIM}${wtHeader}${ANSI.RESET}`, wtHeader.length, 2)), w),
+    );
+    for (const inst of ac.worktreeInstances ?? []) {
+      const maxLen = Math.max(8, innerWidth - 2 - 4);
+      const shown = inst.length > maxLen ? truncateMiddle(inst, maxLen) : inst;
+      const text = `· ${shown}`;
+      out.push(
+        clipAndPadToWidth(bodyLine(padLeft(`${PEWTER_DIM}${text}${ANSI.RESET}`, text.length, 4)), w),
+      );
+    }
+    out.push(clipAndPadToWidth(blank(), w));
+    const forceNote = '[F] force-archive moves them + runs git worktree repair.';
+    out.push(
+      clipAndPadToWidth(
+        bodyLine(padLeft(`${PEWTER_DIM}${forceNote}${ANSI.RESET}`, forceNote.length, 2)),
+        w,
+      ),
+    );
+  }
+
+  // Inline notice (refusal reason surfaced by the direct call · Ochre glyph).
+  if (ac.notice) {
+    out.push(clipAndPadToWidth(blank(), w));
+    const noticeText = `⚠ ${ac.notice}`;
+    const noticeColored = `${ANSI.BOLD}${OCHRE}⚠${ANSI.RESET} ${PEWTER}${ac.notice}${ANSI.RESET}`;
+    out.push(clipAndPadToWidth(bodyLine(padLeft(noticeColored, noticeText.length, 2)), w));
+  }
+
+  out.push(clipAndPadToWidth(blank(), w));
+
+  // Buttons · destructive default-N. Confirm key is [Y] (base) OR [F] (H1 force).
+  // No arrow-nav — the pane is direct-key only (mirrors the confirm idiom, static).
+  const yesText = hasWorktrees ? '[F] Force-archive' : '[Y] Yes, archive';
+  const noText = '[N] No, cancel';
+  const yesBtn = `${ANSI.BOLD}${ROSE}${yesText}${ANSI.RESET}`;
+  const noBtn = `${ANSI.REVERSE}${ANSI.BOLD}${COBALT}▶ ${noText}${ANSI.RESET}`;
+  const buttonRow = `${yesBtn}    ${noBtn}`;
+  const buttonRowVisLen = yesText.length + 4 + 2 + noText.length;
+  out.push(clipAndPadToWidth(bodyLine(padCenter(buttonRow, buttonRowVisLen)), w));
+
+  out.push(clipAndPadToWidth(blank(), w));
+  out.push(clipAndPadToWidth(botBorder, w));
+
+  const hint = hasWorktrees
+    ? 'F force-archive · N/Esc cancel'
+    : 'Y archive · N/Esc cancel';
+  out.push(clipAndPadToWidth(`${ANSI.DIM}${hint}${ANSI.RESET}`, w));
+
+  return padToHeight(out, h && h > 0 ? h : 24).join('\n');
 }
 
 /**
@@ -1873,11 +2072,40 @@ export function applyKeypress(
     return { newState: state, action: { type: 'noop' } };
   }
 
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.2): SCP Archive confirm modal
+  // early-return. Direct-key (no arrow-nav · destructive default-N). [Y] confirms
+  // the base archive; [F] confirms the WAPF Path-B force-archive (only meaningful
+  // when worktreeInstances is present); [N]/Esc cancels. The animatedTui handler
+  // AWAITs archiveScpEntry directly (the guard reasons surface inline via notice).
+  // Placed BEFORE the scpSubMenu branch — the modal sits ON TOP of the sub-menu.
+  if (state.scpArchiveConfirm !== undefined) {
+    const ac = state.scpArchiveConfirm;
+    const hasWorktrees = (ac.worktreeInstances?.length ?? 0) > 0;
+    if (key.name === 'escape' || key.sequence === 'n' || key.sequence === 'N') {
+      return { newState: state, action: { type: 'scp-menu-archive-cancel' } };
+    }
+    if (!hasWorktrees && (key.sequence === 'y' || key.sequence === 'Y')) {
+      return { newState: state, action: { type: 'scp-menu-archive-execute', scpName: ac.name } };
+    }
+    if (hasWorktrees && (key.sequence === 'f' || key.sequence === 'F')) {
+      return {
+        newState: state,
+        action: { type: 'scp-menu-archive-execute', scpName: ac.name, force: true },
+      };
+    }
+    return { newState: state, action: { type: 'noop' } };
+  }
+
   // Diamond β RM-Asp-2: SCP sub-menu modal early-return. When scpSubMenu is
   // active, Up/Down navigate within sub-menu items (incl. "Install Another"
   // appended as last entry), Enter activates, Esc closes.
   if (state.scpSubMenu !== undefined) {
-    const total = state.scpSubMenu.items.length + 1; // +1 for "Install Another" entry
+    // MD-ARC+C · Wave 5a — when the Archived fold is expanded, its rows join the
+    // navigable list at [items.length+1 .. +archivedCount]; total extends so the
+    // cursor can reach them ([R] reinstates the selected archived row).
+    const archivedCount =
+      state.scpSubMenu.showArchived === true ? (state.scpSubMenu.archivedItems?.length ?? 0) : 0;
+    const total = state.scpSubMenu.items.length + 1 + archivedCount; // +1 for "Install Another"
     if (key.name === 'escape') {
       // SS-P2 · SCFC clear: Esc back-to-main also clears any active filter.
       // Pure-reducer parity with animatedTui close-scp-menu handler so tests
@@ -1938,6 +2166,61 @@ export function applyKeypress(
           newState: state,
           action: { type: 'launch-scp-runtime', scpName: target.name },
         };
+      }
+    }
+    // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.1) — [X] close (stop) a live SCP.
+    // Only on a real installed row (< installIdx). Dispatches scsBridgeStopScp.
+    if (key.sequence === 'x' || key.sequence === 'X') {
+      const sel = state.scpSubMenu.selectedIdx;
+      const installIdx = state.scpSubMenu.items.length;
+      if (sel < installIdx) {
+        const target = state.scpSubMenu.items[sel];
+        return { newState: state, action: { type: 'scp-menu-stop', scpName: target.name } };
+      }
+    }
+    // MD-ARC+C · Wave 5a (§5.2) — [A] open the Archive confirm modal for the row.
+    if (key.sequence === 'a' || key.sequence === 'A') {
+      const sel = state.scpSubMenu.selectedIdx;
+      const installIdx = state.scpSubMenu.items.length;
+      if (sel < installIdx) {
+        const target = state.scpSubMenu.items[sel];
+        return {
+          newState: { ...state, scpArchiveConfirm: { name: target.name } },
+          action: { type: 'scp-menu-archive-confirm', scpName: target.name },
+        };
+      }
+    }
+    // MD-ARC+C · Wave 5a (§5.3) — [T] toggle the Archived fold (expand/collapse).
+    // Only meaningful when the fold is non-empty. Collapsing snaps a cursor that
+    // was parked on an archived row back to the "Install Another" row.
+    if (key.sequence === 't' || key.sequence === 'T') {
+      if ((state.scpSubMenu.archivedItems?.length ?? 0) > 0) {
+        const nextShow = !state.scpSubMenu.showArchived;
+        const installIdx = state.scpSubMenu.items.length;
+        const clampedIdx = nextShow
+          ? state.scpSubMenu.selectedIdx
+          : Math.min(state.scpSubMenu.selectedIdx, installIdx);
+        return {
+          newState: {
+            ...state,
+            scpSubMenu: { ...state.scpSubMenu, showArchived: nextShow, selectedIdx: clampedIdx },
+          },
+          action: { type: 'scp-menu-toggle-archived' },
+        };
+      }
+    }
+    // MD-ARC+C · Wave 5a (§5.3) — [R] reinstate the SELECTED archived row. Only
+    // when the fold is expanded AND the cursor is on an archived row
+    // ([items.length+1 .. +N]). Dispatches reinstateScpEntry via animatedTui.
+    if (key.sequence === 'r' || key.sequence === 'R') {
+      const archivedItems = state.scpSubMenu.archivedItems ?? [];
+      if (state.scpSubMenu.showArchived === true && archivedItems.length > 0) {
+        const archivedBase = state.scpSubMenu.items.length + 1;
+        const archivedOffset = state.scpSubMenu.selectedIdx - archivedBase;
+        if (archivedOffset >= 0 && archivedOffset < archivedItems.length) {
+          const target = archivedItems[archivedOffset];
+          return { newState: state, action: { type: 'scp-menu-reinstate', scpName: target.name } };
+        }
       }
     }
     return { newState: state, action: { type: 'noop' } };
@@ -2844,6 +3127,12 @@ export function renderMenu(state: MenuState): string {
   // pane when state.scpWizard is active. Mirrors trustConfer override placement.
   if (state.scpWizard !== undefined) {
     return renderScpWizardPane(state);
+  }
+  // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.2): SCP Archive confirm modal
+  // override · renders ahead of the sub-menu (the confirm swallows the pane while
+  // scpArchiveConfirm is set · mutually exclusive with the other modals).
+  if (state.scpArchiveConfirm !== undefined) {
+    return renderScpArchiveConfirmPane(state);
   }
   // Diamond β RM-Asp-2: scpSubMenu pane override · lists installed SCPs +
   // "+ Install Another" entry when state.scpSubMenu is active.

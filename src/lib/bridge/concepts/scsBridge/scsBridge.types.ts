@@ -173,6 +173,38 @@ export type ScsBridgeStopScpPayload = {
   callerSessionUlid?: string;
 };
 
+// MD-ARC+C · SARC · scp_archive MCP tool payload. Archives a STOPPED SCP: the
+// vault move (Cascades/scps/<name>/ → .archive/<name>/) + the ledger mutation +
+// the retirement teardown. REFUSED live (3A: stop first) · WAPF-branched on
+// worktrees (H1 needs force=Path B anor retire-first · H2 redirects to retire).
+// ACK-OD: the durable products are the SCPs.json ledger + the sink log.
+export type ScsBridgeArchiveScpPayload = {
+  scpName: string;
+  // Path B consent (H1 owner): move + `git worktree repair` from the vault.
+  force?: boolean;
+  callerSessionUlid?: string;
+};
+
+// MD-ARC+C · SRST · scp_reinstate MCP tool payload. Moves the vault entry back
+// to its original seat + restores the ledger row to scps[] at status 'pending'.
+export type ScsBridgeReinstateScpPayload = {
+  scpName: string;
+  callerSessionUlid?: string;
+};
+
+// MD-ARC+C · Wave 7 · SDEL · scp_delete MCP tool payload. PERMANENT rm of an SCP
+// package dir + ledger removal (scps[] anor archivedScps[]). fromArchive selects
+// the vault seat (.archive/<name>) vs the installed seat (scps/<name>). REFUSED
+// system/template · live (stop first) · owner-with-instances (retire first). The
+// destructive sibling of scp_archive (which is reversible via scp_reinstate).
+export type ScsBridgeDeleteScpPayload = {
+  scpName: string;
+  // Select the vault seat (Cascades/scps/.archive/<name>) instead of the installed
+  // seat — set true when deleting an already-archived SCP.
+  fromArchive?: boolean;
+  callerSessionUlid?: string;
+};
+
 export type ScsBridgeLaunchScpRuntimePayload = {
   scpName: string;
   callerSessionUlid?: string;
@@ -670,6 +702,15 @@ export type ScsBridgeActivateScpSession =
 export type ScsBridgeStopScp =
   Quality<ScsBridgeState, ScsBridgeStopScpPayload>;
 
+// MD-ARC+C · SARC anor SRST Quality types.
+export type ScsBridgeArchiveScp =
+  Quality<ScsBridgeState, ScsBridgeArchiveScpPayload>;
+export type ScsBridgeReinstateScp =
+  Quality<ScsBridgeState, ScsBridgeReinstateScpPayload>;
+// MD-ARC+C · Wave 7 · SDEL · scp_delete Quality type (PERMANENT).
+export type ScsBridgeDeleteScp =
+  Quality<ScsBridgeState, ScsBridgeDeleteScpPayload>;
+
 export type ScsBridgeLaunchScpRuntime =
   Quality<ScsBridgeState, ScsBridgeLaunchScpRuntimePayload>;
 
@@ -899,6 +940,11 @@ export type ScsBridgeQualities = {
   scsBridgeActivateScpSession: ScsBridgeActivateScpSession;
   // SES · THE STOP RAIL (C632) · scp_stop MCP tool · close window + SIGTERM server + FSM + status pending
   scsBridgeStopScp: ScsBridgeStopScp;
+  // MD-ARC+C · SARC anor SRST anor SDEL · scp_archive / scp_reinstate / scp_delete
+  scsBridgeArchiveScp: ScsBridgeArchiveScp;
+  scsBridgeReinstateScp: ScsBridgeReinstateScp;
+  // MD-ARC+C · Wave 7 · SDEL · scp_delete MCP tool · PERMANENT rm + ledger removal
+  scsBridgeDeleteScp: ScsBridgeDeleteScp;
   scsBridgeLaunchScpRuntime: ScsBridgeLaunchScpRuntime;
   scsBridgeSpawnNewScpSession: ScsBridgeSpawnNewScpSession;
   // C1-D2 · SBST · scs_spawn_suite8_session MCP tool · setSessionSuite8Name BEFORE spawn

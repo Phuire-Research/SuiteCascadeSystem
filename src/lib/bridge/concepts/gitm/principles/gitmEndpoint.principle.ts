@@ -635,6 +635,10 @@ export const gitmEndpointPrinciple: PrincipleFunction<
         // needs its own witness or NO stage transition (including failures) ever reaches
         // gitm.json — the stage rail reads idle forever while the strategy runs and dies unseen.
         k_.updateStatus,
+        // RS.4 · THE PER-SCP RAIL — a NON-active target's update stamp lands ONLY on its slice
+        // and ticks this counter (the flat updateStatus is the ACTIVE projection), so it needs
+        // its own witness or a concurrent second SCP's stage rail never relays to its gitm.json.
+        k_.updateRailTick,
         // GITM Dev Epoch (MD-C · THE DAG · fold #4) — commitGraph + activeDiff change WITHOUT
         // lastReadAt (the on-demand graph/diff reads write them directly), so each needs its own
         // witness or the graph view + the Diff panel never relay to the SCP.

@@ -91,7 +91,13 @@ export const gitmResolvedManifestWatchPrinciple: PrincipleFunction<
       // manifest (no dispatch + no retry = the rail stuck at reviewing with no outcome).
       lastActedMtime.set(name, mtimeMs);
       h.muxium.dispatch(
-        h.muxium.deck.d.gitm.e.gitmScpUpdateApply({ scpName, autoSequence: true }) as never,
+        // RS.3 · SOVEREIGN TOOL CALLS — the manifest filename names the target; thread it as
+        // originScpName so the apply routes to THAT SCP's repo + rail, not the active fallback.
+        h.muxium.deck.d.gitm.e.gitmScpUpdateApply({
+          scpName,
+          originScpName: scpName,
+          autoSequence: true,
+        }) as never,
       );
     } else {
       log('gitm.update.manifest-watch.no-handle-retry', { scpName });

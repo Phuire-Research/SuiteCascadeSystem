@@ -27,6 +27,32 @@ import { RENDER_MODE_CATALOG } from '../../shared/renderModeCatalog.model';
 import { getNpmVersionCheck } from './npmVersionCheck';
 import type { ModelCatalogEntry } from '../../shared/modelCatalog.model';
 import { AVAILABLE_MODELS, DEFAULT_MODEL } from '../../shared/modelCatalog.model';
+// MD-ARC+C · Wave 7 · the roster relay — the cheap write-time WAPF probe (.git
+// shape → 'clean' | 'instance' | 'owner') reused so the widget renders worktree
+// rows + refuses archive-on-owner without a second registry read.
+import { worktreeArchivePreFlight } from './scpArchive.model';
+// MD-UM · LEG 3 · THE DIFFERENTIAL RELAY — the cached Update Manifest (updateManifest.model.ts)
+// rides bridge.json via the composer leg (the getNpmVersionCheck() precedent). Read from the
+// in-process cache at write time — the model's own timer performs the network fetch; the write
+// NEVER awaits a fetch inline (the non-blocking mandate).
+import { getCachedReleaseManifest, type UpdateManifest } from './updateManifest.model';
+
+// MD-ARC+C · Wave 7 · the worktree marker the roster serves. Probed CHEAPLY at
+// bridge.json write time from the SCP's package .git shape (WAPF): a .git FILE ⇒
+// 'instance' (a linked worktree of a parent) · a .git DIR with worktrees/ ⇒
+// 'owner' (owns linked instances) · else 'clean'. Optional for backward-compat;
+// absent ⇒ the widget treats the row as a standard (clean) SCP.
+export type ScpWorktreeRole = 'clean' | 'instance' | 'owner';
+
+// MD-ARC+C · Wave 7 · the archived-roster row the /bridge-roster relay passes to
+// the SCP-side widget's Archived tab (name + archivedAt for display + worktree for
+// the ochre-hatch/refusal surfacing). A thin projection of archivedScps[] — the
+// full ArchivedScpEntry stays bridge-local.
+export type ArchivedScpMetaEntry = {
+  name: string;
+  archivedAt: number;
+  worktree: ScpWorktreeRole;
+};
 
 export type BoundScpEntry = {
   port: number;
@@ -39,6 +65,9 @@ export type BoundScpEntry = {
   // with bridge.json files written pre-this-Diamond; absent ⇒ resolvers fall back to
   // the bridge root (unchanged behavior).
   dir?: string;
+  // MD-ARC+C · Wave 7 · the worktree marker (WAPF role · probed at write time).
+  // Optional for backward-compat; absent ⇒ 'clean' at the widget.
+  worktree?: ScpWorktreeRole;
 };
 
 // PP-D2 · Ping Pong Liveness Diameter · pongReceipt field (Option β)
@@ -141,6 +170,20 @@ export type BridgeMetadata = {
   // string · degrades honestly). Optional for backward-compat; absent ⇒ the helm treats every
   // instance as install-complete (the pre-C653 behaviour). The boot-time writer emits {}.
   scpStatuses?: Record<string, string>;
+  // MD-ARC+C · Wave 7 · THE ARCHIVED ROSTER (the sibling ledger relay) · the thin
+  // {name, archivedAt, worktree} projection of SCPs.json archivedScps[]. The SCP-side
+  // /bridge-roster endpoint passes this through so the widget's Archived tab renders
+  // Restore + Delete rows without a second read. Optional for backward-compat; absent
+  // ⇒ the widget shows the empty-archived state. Always written [] so it is present +
+  // discoverable. Carried FREE to each per-SCP copy by the spread (mirrors scpStatuses).
+  archivedScps?: ArchivedScpMetaEntry[];
+  // MD-UM · LEG 3 · THE RELEASE MANIFEST (the differential relay) — the cached Update Manifest
+  // (updateManifest.model.ts · getCachedReleaseManifest). Rides EVERY bridge.json write via the
+  // composer leg (the archivedScps/getNpmVersionCheck precedent) so the SCP's /scs-bridge-version
+  // endpoint reads the incoming releases alongside the existing verdict fields. null = no fetch
+  // has completed yet this run (the honest degraded state · the advisory invariant). Carried FREE
+  // to each per-SCP copy by the spread below (mirrors archivedScps).
+  releaseManifest?: UpdateManifest | null;
 };
 
 export type BridgeMetadataState = {
@@ -218,6 +261,49 @@ export function resolveScpInstallDirs(userCwd: string): Record<string, string> {
   return dirs;
 }
 
+// MD-ARC+C · Wave 7 · THE CHEAP WORKTREE PROBE (write-time WAPF). Maps the WAPF
+// branch to the roster marker ('clean' | 'instance' | 'owner'). Synchronous fs read
+// (the SCP package .git shape) — the same primitive archive uses, run at roster
+// build. NEVER throws (WAPF itself swallows read failures → 'clean').
+function resolveScpWorktreeRole(packageDirAbs: string): ScpWorktreeRole {
+  try {
+    const flight = worktreeArchivePreFlight(packageDirAbs);
+    return flight.branch;
+  } catch {
+    return 'clean';
+  }
+}
+
+// MD-ARC+C · Wave 7 · THE ARCHIVED-ROSTER RESOLVER (write-time projection). Reads
+// SCPs.json archivedScps[] and projects each row to {name, archivedAt, worktree}.
+// The vault seat (Cascades/scps/.archive/<name>) is probed for the marker so a
+// force-archived owner still surfaces the ochre-hatch on the Archived tab. AFPR:
+// absent/malformed SCPs.json → [] (the widget shows the empty state). NEVER throws.
+export function resolveArchivedScpMeta(userCwd: string): ArchivedScpMetaEntry[] {
+  const out: ArchivedScpMetaEntry[] = [];
+  try {
+    const scpsPath = resolve(userCwd, 'Cascades', 'SCPs.json');
+    const raw = readFileSync(scpsPath, 'utf8');
+    const parsed = JSON.parse(raw) as {
+      archivedScps?: Array<{ name?: string; archivedAt?: number }>;
+    };
+    if (!parsed || !Array.isArray(parsed.archivedScps)) return out;
+    for (const entry of parsed.archivedScps) {
+      if (typeof entry?.name === 'string' && entry.name.length > 0) {
+        const vaultDir = resolve(userCwd, 'Cascades', 'scps', '.archive', entry.name);
+        out.push({
+          name: entry.name,
+          archivedAt: typeof entry.archivedAt === 'number' ? entry.archivedAt : 0,
+          worktree: resolveScpWorktreeRole(vaultDir),
+        });
+      }
+    }
+  } catch {
+    // AFPR: absent/unreadable/malformed → empty list.
+  }
+  return out;
+}
+
 // PPRR · Per-project bridge.json relocation (Multi-Bridge Port-Scan Diamond).
 // Returns <userCwd>/Cascades/Bridge/bridge.json — the canonical per-project
 // registry location that replaces the global ~/.scs-bridge/bridge.json path
@@ -255,6 +341,7 @@ async function writeBridgeMetadataUnsafe(
   const scpInstallDirs = resolveScpInstallDirs(state.userCwd);
   const boundScps: Record<string, BoundScpEntry> = {};
   for (const [name, entry] of state.spawnsByScp) {
+    const scpDir = scpInstallDirs[name];
     boundScps[name] = {
       port: entry.port,
       status: 'live',
@@ -262,9 +349,18 @@ async function writeBridgeMetadataUnsafe(
       // dir = the SCP's absolute install root (SCPs.json `path` resolved against
       // userCwd). Absent from the map (unregistered / SCPs.json missing) ⇒ omit
       // the field ⇒ downstream resolvers fall back to the bridge root.
-      ...(scpInstallDirs[name] ? { dir: scpInstallDirs[name] } : {}),
+      ...(scpDir ? { dir: scpDir } : {}),
+      // MD-ARC+C · Wave 7 · the worktree marker — probed CHEAPLY from the SCP's
+      // package .git shape (WAPF) so the widget renders the ochre-hatch instance
+      // row + refuses archive-on-owner without a second registry read. Omitted when
+      // the dir is unknown (⇒ 'clean' at the widget).
+      ...(scpDir ? { worktree: resolveScpWorktreeRole(scpDir) } : {}),
     };
   }
+
+  // MD-ARC+C · Wave 7 · THE ARCHIVED ROSTER (the sibling ledger relay) — projected
+  // from SCPs.json archivedScps[] (name + archivedAt + the vault-seat worktree probe).
+  const archivedScps = resolveArchivedScpMeta(state.userCwd);
 
   // S4·S6·S7 SALVO · THE SHADER-FIELD PRESERVATION (the IE dark-shader wound): the
   // Settings RMW is the ONLY writer that SETS renderMode/scpRenderMode/shaderFps — the
@@ -340,6 +436,15 @@ async function writeBridgeMetadataUnsafe(
     // present + discoverable. Carried FREE to each per-SCP copy by the spread below (mirrors scpWindows).
     // The helm reads this to hold the MULTIPLY INSTALL tick + disable Spawn while an instance installs.
     scpStatuses: state.scpStatuses ?? {},
+    // MD-ARC+C · Wave 7 · THE ARCHIVED ROSTER — the {name, archivedAt, worktree} projection of
+    // SCPs.json archivedScps[]. Always written (default [] via the resolver) so the field is present
+    // + discoverable. Carried FREE to each per-SCP copy by the spread below (mirrors scpStatuses).
+    // The SCP-side /bridge-roster endpoint passes it through so the widget's Archived tab renders.
+    archivedScps,
+    // MD-UM · LEG 3 · THE RELEASE MANIFEST — read from the model's in-process cache (NEVER an
+    // inline network fetch · the non-blocking mandate). null until the model's timer completes
+    // its first refresh (the advisory invariant). Carried FREE to each per-SCP copy by the spread.
+    releaseManifest: getCachedReleaseManifest(),
   };
 
   // Cobalt-FSGT · Cycle 160 R14 · log every bridge.json write site.

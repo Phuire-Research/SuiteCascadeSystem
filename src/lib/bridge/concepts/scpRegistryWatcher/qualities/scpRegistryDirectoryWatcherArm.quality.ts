@@ -106,6 +106,12 @@ export const scpRegistryDirectoryWatcherArm = createQualityCardWithPayload<
           ignoreInitial: true,
           persistent: true,
           depth: 0,
+          // MD-ARC+C · THE .archive EXCLUSION (the addDir contamination cure): the
+          // vault move fires dir events for .archive/ + .archive/<name>/ — without
+          // this ignore the admission chain could write the vault path into
+          // installedScps. Any dot-dir path segment is excluded (the dot-dir
+          // convention the scps/ scans already honor).
+          ignored: /(^|[/\\])\.[^/\\]+([/\\]|$)/,
           awaitWriteFinish: {
             stabilityThreshold: 300,
             pollInterval: 100,

@@ -52,6 +52,7 @@ import {
   readDeadlineArm,
 } from '../model/bridgeOwnedDeadline.model';
 import type { GitmState, GitmABMode } from '../gitm.types';
+import { UPDATE_APPLIED_NOTE } from '../gitm.types';
 import type { GitmQualities } from '../gitm.concept';
 import type { GitmSetStatusPayload, GitmScpUpdateProgressPayload } from '../qualities/types';
 
@@ -182,6 +183,54 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
         }, 2000);
       }
       return; // B-proof handled — do NOT fall through to the armed A-return path.
+    }
+
+    // MD-ATC-F · THE UPDATE-FINALIZE RESET (side-agnostic · the no-reset field break): a boot
+    // report arriving while the origin's Update rail still shows the APPLIED terminal is the
+    // reboot-proof of the UPDATE itself — the Apply-to-Current A-side finalize boots on A/master
+    // and the B-proof branch above cannot match. Yield the panel + clear the artifacts exactly
+    // as the B-proof does, so the Update workflow can run again. The Progress stamp carries the
+    // ORIGIN (RS.4 — the reset lands on the booted SCP's own rail). One-shot per boot (the mtime
+    // dedup guards re-fires) · does NOT consume the seat-return arm (falls through to it).
+    const originUpdateStatus = originSlice?.updateStatus ?? k_.updateStatus.select();
+    if (originUpdateStatus.note === UPDATE_APPLIED_NOTE) {
+      const finalizeHandle = getActiveScsBridgeMuxiumHandle();
+      if (finalizeHandle !== null) {
+        const finalizeDeck = finalizeHandle.muxium.deck.d.gitm;
+        setTimeout(() => {
+          finalizeHandle.muxium.dispatch(
+            finalizeDeck.e.gitmScpUpdateProgress({
+              stage: 'idle',
+              note: '',
+              diffPresent: false,
+              ...(reportScpName !== '' ? { originScpName: reportScpName } : {}),
+            } as GitmScpUpdateProgressPayload) as never,
+          );
+          const userCwd = k_.userCwd.select();
+          const finalizeScpName =
+            reportScpName !== ''
+              ? reportScpName
+              : originUpdateStatus.scpName !== ''
+                ? originUpdateStatus.scpName
+                : basename(k_.activeScpDir.select() !== '' ? k_.activeScpDir.select() : userCwd);
+          const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+          for (const artifact of [
+            `scp-update-diff.${finalizeScpName}.json`,
+            `scp-update-resolved.${finalizeScpName}.json`,
+          ]) {
+            const artifactPath = join(bridgeDir, artifact);
+            try {
+              if (existsSync(artifactPath)) unlinkSync(artifactPath);
+            } catch (err) {
+              log('gitm.update.cycle-reset.unlink-failed', {
+                artifact,
+                error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+              });
+            }
+          }
+          log('gitm.update.cycle-reset', { scpName: finalizeScpName, bridgeDir, via: 'update-finalize' });
+        }, 2000);
+      }
     }
 
     // THE ONE-SHOT GATE — no arm = no seat-return in flight (a boot-report is otherwise inert).

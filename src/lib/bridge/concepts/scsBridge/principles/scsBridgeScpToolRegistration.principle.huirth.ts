@@ -226,6 +226,93 @@ const buildToolRoster = (): {
     relatedActionables: ['scp_launch_session_management', 'launch_scp'],
   };
 
+  // MD-ARC+C · SARC · scp_archive — the reversible vault move (the gentler sibling
+  // of the typed-Delete retire). TQNI: 'scsBridgeArchiveScp' byte-matches scsBridge.e.
+  const masnArchiveScpMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeArchiveScp',
+    toolName: 'scp_archive',
+    description:
+      'SARC · Archive an installed SCP. MOVES Cascades/scps/<name>/ → ' +
+      'Cascades/scps/.archive/<name>/ and moves the entry from scps[] to the ' +
+      'archivedScps[] ledger in SCPs.json (port/sessions/description preserved for ' +
+      'reinstate). REFUSED if the SCP is live (scp_stop it first), if it is a ' +
+      'system SCP, anor if it IS a worktree instance (use the typed-Delete retire — ' +
+      'the branch survives in the parent). An SCP that OWNS worktrees needs either ' +
+      'the instances retired first anor force=true (move + git worktree repair from ' +
+      'the vault). Teardown: gitm watcher disarm + slice delete. Recoverable via ' +
+      'scp_reinstate.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scpName: { type: 'string', description: 'SCP name to archive (must be in scps[] and stopped)' },
+        force: { type: 'boolean', description: 'H1 owner consent: archive despite owned worktrees (move + git worktree repair)' },
+        callerSessionUlid: { type: 'string', description: 'Caller agent session ULID (optional · diagnostic)' },
+      },
+      required: ['scpName'],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',
+    strategyName: '',
+    relatedActionables: ['scp_stop', 'scp_reinstate'],
+  };
+
+  // MD-ARC+C · SRST · scp_reinstate — the reverse move + ledger restoration.
+  const masnReinstateScpMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeReinstateScp',
+    toolName: 'scp_reinstate',
+    description:
+      'SRST · Reinstate an archived SCP. MOVES Cascades/scps/.archive/<name>/ back ' +
+      'to its original seat and restores the ledger entry to scps[] at status ' +
+      '"pending" (launch is manual — no auto-spawn). REFUSED on a name collision ' +
+      'with a live scps[] entry anor an occupied seat.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scpName: { type: 'string', description: 'Archived SCP name to reinstate' },
+        callerSessionUlid: { type: 'string', description: 'Caller agent session ULID (optional · diagnostic)' },
+      },
+      required: ['scpName'],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',
+    strategyName: '',
+    relatedActionables: ['scp_archive', 'scp_launch_session_management'],
+  };
+
+  // MD-ARC+C · Wave 7 · SDEL · scp_delete — the PERMANENT rm (the destructive
+  // sibling of scp_archive). TQNI: 'scsBridgeDeleteScp' byte-matches scsBridge.e.
+  const masnDeleteScpMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeDeleteScp',
+    toolName: 'scp_delete',
+    description:
+      'SDEL · PERMANENTLY delete an SCP. Unlike scp_archive (which is REVERSIBLE — ' +
+      'it vaults to .archive/ and can be reinstated), scp_delete REMOVES the SCP ' +
+      'package directory from disk and drops the ledger row — this CANNOT be undone. ' +
+      'Set fromArchive=true to delete an already-archived SCP (from Cascades/scps/' +
+      '.archive/<name>); otherwise it deletes the installed SCP (Cascades/scps/' +
+      '<name>). REFUSED if the SCP is live (scp_stop it first), if it is a system/' +
+      'template SCP, anor if it OWNS worktree instances (retire them first — delete ' +
+      'never strands instances). A worktree-INSTANCE delete runs git worktree remove ' +
+      '--force from the parent so the branch survives in its parent. Prefer ' +
+      'scp_archive when you may want the SCP back.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scpName: { type: 'string', description: 'SCP name to permanently delete' },
+        fromArchive: { type: 'boolean', description: 'Delete from the .archive/ vault seat instead of the installed seat' },
+        callerSessionUlid: { type: 'string', description: 'Caller agent session ULID (optional · diagnostic)' },
+      },
+      required: ['scpName'],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',
+    strategyName: '',
+    relatedActionables: ['scp_archive', 'scp_stop'],
+  };
+
   const masnLaunchRuntimeMetadata: SCPQualityMetadataRegistered = {
     conceptName: 'scsBridge',
     qualityName: 'scsBridgeLaunchScpRuntime',
@@ -2367,6 +2454,10 @@ const buildToolRoster = (): {
     gitmRunApplyMetadata,           // gitm_run_apply               · land resolved manifest → write/patch/preserve → stage+commit (gitmScpUpdateApply)
     // SCP-UPD · the progress UI-tool (conceptName 'gitm')
     gitmUpdateProgressMetadata,     // gitm_update_progress         · stamp updateStatus.{stage,note,resolvedPending} (gitmScpUpdateProgress)
+    // MD-ARC+C · SARC anor SRST anor SDEL (conceptName 'scsBridge')
+    masnArchiveScpMetadata,         // scp_archive                  · vault move + ledger + teardown (scsBridgeArchiveScp)
+    masnReinstateScpMetadata,       // scp_reinstate                · reverse move + ledger restore (scsBridgeReinstateScp)
+    masnDeleteScpMetadata,          // scp_delete                   · PERMANENT rm + ledger removal + teardown (scsBridgeDeleteScp)
   ];
 
   // MULTI-SCP GITM MUXIFICATION (Fork B · MC-W1 · THE ORIGIN THREAD) — every gitm_* tool's inputSchema

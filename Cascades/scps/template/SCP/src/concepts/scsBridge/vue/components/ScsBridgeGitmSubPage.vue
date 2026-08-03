@@ -47,6 +47,10 @@ import { parseUnifiedDiff, type DiffFile, type DiffHunk } from '../../../gitm/gi
 import GitmConflictEditor from '../../../gitm/vue/GitmConflictEditor.vue';
 // GITM Dev Epoch (MD-E · part 3 · THE COMMAND PALETTE) — Cmd/Ctrl+K fuzzy-find over the action roster.
 import GitmCommandPalette from '../../../gitm/vue/GitmCommandPalette.vue';
+// MD-UM · LEG 4 · THE UPDATE PAGE MOUNT — the portable release holder in differential mode. Reads
+// this SCP's applied increment (appliedScpMuxameter) + the incoming releases (releaseManifest) off
+// the SAME /scs-bridge-version verdict the page already holds. Home Page mount stays 'current'.
+import ReleaseMiniSite from '../../../vue/vue/ReleaseMiniSite.vue';
 
 interface Props {
   gitmJson: GitmJsonShape | null;
@@ -67,6 +71,22 @@ interface Props {
     syncAvailable?: boolean;
     installedMuxameter?: { cli: number; scp: number } | null;
     remoteMuxameter?: { cli: number; scp: number } | null;
+    // MD-UM · LEG 4 · THE DIFFERENTIAL RELAY — the incoming releases the bridge fetched
+    // (LEG 3 · the /scs-bridge-version response carries it). null on a pre-MD-UM bridge ⇒ the
+    // differential mount stands in with the SCP-local updates.json wings.
+    releaseManifest?: {
+      schemaVersion?: number;
+      current?: string;
+      muxameter?: { cli: number; scp: number };
+      releases?: Array<{
+        id: string;
+        version?: string;
+        label: string;
+        muxameter?: { cli: number; scp: number };
+        magnitude?: number;
+        features: Array<{ title: string; color: string; summary: string; detail: string[] }>;
+      }>;
+    } | null;
   } | null;
 }
 
@@ -129,6 +149,42 @@ const cliUpdateBusy = computed<boolean>(() => cliUpdateState.value?.status === '
 function runCliUpdate(): void {
   if (cliUpdateBusy.value) return;
   fireAction('gitm_run_cli_update', {});
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// MD-UM · LEG 4 · THE UPDATE PAGE DIFFERENTIAL MOUNT
+// ──────────────────────────────────────────────────────────────────────────
+// The applied increment (THE SHARPENED LAW) — this SCP's own scp.config.json scsMuxameterScp,
+// served on the /scs-bridge-version verdict the page already holds. Null (pre-law SCP) ⇒ the
+// mount treats every counter-bearing wing as incoming (no false current-state).
+const appliedScp = computed<number | null>(() => props.versionCheck?.appliedScpMuxameter ?? null);
+// The incoming releases (LEG 3's relay). The mount also falls back to its OWN local updates.json
+// when this is absent — so the panel renders even on a pre-MD-UM bridge (the local wings stand in).
+const differentialReleases = computed(() => props.versionCheck?.releaseManifest?.releases ?? null);
+// Whether any relayed wing is INCOMING for this SCP (muxameter.scp > appliedScp) — the same
+// discriminator the mount runs, computed here to pick the panel's mode.
+const carriesIncoming = computed<boolean>(() => {
+  const wings = differentialReleases.value ?? [];
+  const applied = appliedScp.value;
+  const floor = typeof applied === 'number' ? applied : -Infinity;
+  return wings.some((w) => (typeof w?.muxameter?.scp === 'number' ? w.muxameter.scp : -Infinity) > floor);
+});
+// The panel is ALWAYS present on the Update tab (the user decides whether an update is worth
+// taking from the notes themselves). Mode: an update is due anor incoming wings exist ⇒
+// 'differential' (the discriminator splits Incoming vs Operating); current ⇒ 'current' — the
+// plain release notes, minus the discriminator.
+const carriesMode = computed<'current' | 'differential'>(() =>
+  scpUpdateNeeded.value || carriesIncoming.value ? 'differential' : 'current');
+// The collapsible 'What this update carries' panel. AUTO-PRESENTED: when an update is
+// incoming and the engine is idle, the panel opens itself — the notes are the first thing
+// met; it folds away the moment the update process begins (Run Update anor a hydrated
+// in-flight rail), yielding the floor to the review rail. A user's own toggle is
+// sovereign — once touched, the auto never re-opens over it.
+const carriesOpen = ref<boolean>(false);
+const carriesUserTouched = ref<boolean>(false);
+function toggleCarries(): void {
+  carriesUserTouched.value = true;
+  carriesOpen.value = !carriesOpen.value;
 }
 
 function selectGitmTab(tab: GitmTab): void {
@@ -623,14 +679,27 @@ const stageRail = computed<{ key: UpdateStage; label: string; state: StageChipSt
   const status = props.gitmJson?.updateStatus;
   const live = status?.stage ?? 'idle';
   const isError = live === 'error';
+  // MD-UFS · THE POSITION DERIVATION (no new schema — the rail already tells where):
+  // cloneMode never stamped → the CLONE leg died · no diff present → COMPARE ·
+  // an apply-prefixed stageError → APPLY · else the failure sat at/after REVIEW.
+  // The pills BEFORE the failed position read done; the failed one alone reads error.
+  const failedOrdinal = !isError
+    ? -1
+    : (status?.cloneMode ?? '') === ''
+      ? 0
+      : status?.diffPresent !== true
+        ? 1
+        : (status?.stageError ?? '').startsWith('apply')
+          ? 4
+          : 2;
   // On 'idle' the rail is not shown (the empty-state CTA renders instead). The current ordinal
   // is the live stage's index; 'idle'/'error' both resolve to -1 (no active chip on the rail).
   const currentOrdinal = UPDATE_STAGES.indexOf(live as UpdateStage);
   return UPDATE_STAGES.map((key, ordinal) => {
     let state: StageChipState;
     if (isError) {
-      // The engine halted — the rail reads error across the board (the message surfaces below).
-      state = 'error';
+      // The engine halted — the FAILED position reads error; the reached legs read done.
+      state = ordinal < failedOrdinal ? 'done' : ordinal === failedOrdinal ? 'error' : 'pending';
     } else if (ordinal < currentOrdinal) {
       state = 'done';
     } else if (ordinal === currentOrdinal) {
@@ -643,10 +712,15 @@ const stageRail = computed<{ key: UpdateStage; label: string; state: StageChipSt
 });
 
 // The live stage error message (empty when no error).
+// MD-UFS · THE NON-EMPTY GUARANTEE (view-side): the rail can carry the failure voice in
+// stageError ANOR note (the failure-node/expiry class leaves stageError '') — surface
+// WHATEVER it carries; an error stage must NEVER render as silent all-red.
 const stageErrorMessage = computed<string>(() => {
   const status = props.gitmJson?.updateStatus;
   if (!status || status.stage !== 'error') return '';
-  return status.stageError;
+  if (status.stageError !== '') return status.stageError;
+  if ((status.note ?? '') !== '') return status.note;
+  return 'the update engine halted without a message — Run Update again (a first run may have been refreshing the source)';
 });
 
 // Whether the engine is mid-flight (any non-terminal active stage). Gates the Run Update button.
@@ -668,6 +742,20 @@ const showUpdateSection = computed<boolean>(() => {
   if (!status) return false;
   return status.diffPresent || status.stage !== 'idle';
 });
+
+// THE AUTO-PRESENTED FOLD (placed after its signals — isUpdating/showUpdateSection above):
+// incoming + idle ⇒ open (the informed decision leads); the process beginning ⇒ collapse.
+watch(
+  () => [carriesMode.value, isUpdating.value, showUpdateSection.value] as const,
+  ([mode, updating, sectionLive]) => {
+    if (updating || sectionLive) {
+      carriesOpen.value = false;
+      return;
+    }
+    if (mode === 'differential' && !carriesUserTouched.value) carriesOpen.value = true;
+  },
+  { immediate: true },
+);
 
 // APPLY-SUCCESS SIGNAL (bridge C293) — the update has LANDED and the bridge is inviting the finalize
 // gesture. The bridge stamps updateStatus = { stage: 'idle', note: UPDATE_APPLIED_NOTE } after an
@@ -695,10 +783,15 @@ const hasWorkingB = computed<boolean>(() => {
   return wb !== '' || isWorkingBranchPer(cur, g);
 });
 
-// F4 · fire the hard turn-over (the finalize gesture when no working B exists). The bridge-side
-// guards remain the authoritative safety rail; this is the UI trigger for the reboot-proof.
-function finalizeHardTurnOver(): void {
-  controller.value?.triggerHardTurnOver();
+// MD-ATC-F · THE TRACKED A FINALIZE (the disjointed-extra-step cure): the prior hard leg
+// restarted WITHOUT the turn-over protocol — no turnOver stamp (the alert overlay
+// re-appeared on resume) and no boot-proof reset (the panel never yielded). The finalize
+// now rides the SAME tracked pipe as every turn-over (gitm_turn_over_with_source ·
+// source 'A' — the clean post-apply tree passes the bridge guard plainly): the stamp
+// retires the alert, the reboot proves the update, and the boot-report reset yields
+// this panel so the Update workflow can run again. Bridge guards stay authoritative.
+function finalizeTurnOverA(): void {
+  fireAction('gitm_turn_over_with_source', { source: 'A' });
 }
 
 // The summary conference count (true overlaps surfaced from the diff · 0 when no diff).
@@ -707,6 +800,7 @@ const conferenceCount = computed<number>(() => props.updateDiff?.summary.confere
 // Run Update — fires the staging-update engine through the existing gitm-action emit pipe.
 function runUpdate(): void {
   if (isUpdating.value || isGitmActing.value) return;
+  carriesOpen.value = false;
   fireAction('gitm_run_update', {});
 }
 
@@ -1131,6 +1225,32 @@ function spawnResolver(): void {
           </p>
         </section>
 
+        <!-- ═ MD-UM · LEG 4 · WHAT THIS UPDATE CARRIES ═ — the collapsible differential panel ABOVE
+             the Run Update legend. Mounts the portable release holder in DIFFERENTIAL mode, fed the
+             applied increment (THE SHARPENED LAW · scp.config.json scsMuxameterScp) + the incoming
+             releases (LEG 3's relay). Collapsed by default (a fold, not the focus). ALWAYS present
+             on the Update tab — the user decides worth from the notes. Mode: incoming wings anor a
+             due update ⇒ 'differential' (the discriminator); current ⇒ 'current' (the plain release
+             notes, minus the discriminator). Citation: DIAMOND-UPDATE-MANIFEST.md §4 (the differential). -->
+        <section class="gitm-carries hifi-pane-base">
+          <button
+            type="button"
+            class="gitm-carries-toggle hifi-mono"
+            :aria-expanded="carriesOpen"
+            @click="toggleCarries"
+          >
+            <span class="gitm-carries-caret">{{ carriesOpen ? '▾' : '▸' }}</span>
+            {{ carriesMode === 'differential' ? 'What this update carries' : 'Release Notes · you are current' }}
+          </button>
+          <div v-if="carriesOpen" class="gitm-carries-body">
+            <ReleaseMiniSite
+              :mode="carriesMode"
+              :applied-scp="appliedScp"
+              :releases="differentialReleases"
+            />
+          </div>
+        </section>
+
         <!-- APPLY SUCCESS SCREEN — the update has landed (bridge C293 · stage idle + applied note).
              Renders INSTEAD of the stage rail + buckets + collision diff: the applied state is
              terminal, so the finalize motion is the only thing left to show (this also supersedes any
@@ -1156,12 +1276,15 @@ function spawnResolver(): void {
               <GitmTurnOverBButton />
             </template>
             <template v-else>
+              <!-- MD-ATC-F · the TRACKED Turn Over A (the A-family green · honest label) —
+                   rides the same protocol as B: stamp → reboot-proof → the panel yields. -->
               <button
-                class="hifi-btn hifi-btn-blue gitm-apply-success-hard-turnover"
+                class="gitm-apply-success-hard-turnover"
                 :disabled="isGitmActing"
-                @click="finalizeHardTurnOver"
+                @click="finalizeTurnOverA"
               >
-                Turn Over &amp; Restart to Prove the Update
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                Turn Over A &amp; Restart to Prove the Update
               </button>
               <p class="gitm-apply-success-hard-note">
                 Restarting the app on the updated code is the proof — if it boots, the update holds.
@@ -1221,6 +1344,9 @@ function spawnResolver(): void {
         </div>
         <p v-if="stageErrorMessage !== ''" class="gitm-update-stage-error">
           {{ stageErrorMessage }}
+        </p>
+        <p v-if="stageErrorMessage !== ''" class="gitm-update-explainer">
+          Run Update again — the comparison restarts from the top; the red pill marks where this run stopped.
         </p>
 
         <!-- PRE-UPDATE STATE — no diff yet + engine idle → a single CTA + one-line explainer. -->
@@ -1360,7 +1486,9 @@ function spawnResolver(): void {
               <p :class="{ 'gitm-legend-active': diffEntryCount === 0 }">
                 <strong>Run Update</strong> — compares this app three ways: as it was installed,
                 as you have changed it, and the template as it is now. Always the entry point;
-                run it again any time to refresh the comparison.
+                run it again any time to refresh the comparison. <em>Run it with all your
+                changes committed</em> — the update lands on your current branch, and a clean
+                tree is the ground the circuit expects.
               </p>
               <p :class="{ 'gitm-legend-active': resolverRequired || resolverOptional }">
                 <strong>Spawn Resolver</strong> — <em>solid</em>: required — this cycle's
@@ -1374,6 +1502,13 @@ function spawnResolver(): void {
                 <strong>Apply</strong> — dimmed until every decision is resolved; once complete,
                 it lands the update into this app and commits it. Your work is preserved and the
                 app's identity is kept by rule.
+              </p>
+              <p>
+                <strong>If the Turn Over prompt does not appear</strong> after the resolver
+                completes, that is a stochastic miss, not a failure — run the update again,
+                anor tell the resolver session: <em>“Finalize the resolution — write the
+                pending-0 resolution file and fire the Turn Over prompt.”</em> The apply lands
+                the moment the resolution arrives.
               </p>
             </div>
           </div>
@@ -2721,6 +2856,59 @@ function spawnResolver(): void {
   text-align: center;
 }
 
+/* MD-ATC-F2 · PEWTER TESSERA · THE TACTICAL A REGISTER (the blend-in cure): the finalize
+   takes the Tactical Bridge StratiPUNK voice — the GitmTurnOverAButton construction at
+   label width: a deep near-black chamfered body whose viridian identity reads through the
+   thin glowing edge (the color informs via the glow, NEVER a flooded fill that sinks into
+   the green pane). Mirrors the 44px dock register's field/edge/chamfer/glow verbatim. */
+.gitm-apply-success-hard-turnover {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.6rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  background:
+    radial-gradient(ellipse at 38% 30%, rgba(19, 213, 148, 0.15) 0%, rgba(8, 14, 12, 0) 62%),
+    radial-gradient(ellipse at 50% 120%, rgba(19, 213, 148, 0.09) 0%, rgba(7, 12, 10, 0) 70%),
+    rgb(9, 14, 12);
+  border: 1px solid rgba(19, 213, 148, 0.55);
+  clip-path: polygon(
+    8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px), 0 8px
+  );
+  box-shadow:
+    0 0 8px 0 rgba(19, 213, 148, 0.28),
+    inset 0 0 10px 0 rgba(19, 213, 148, 0.10);
+  color: rgb(19, 213, 148);
+  text-shadow: 0 0 6px rgba(19, 213, 148, 0.6);
+}
+
+.gitm-apply-success-hard-turnover:hover:not(:disabled) {
+  border-color: rgba(19, 213, 148, 0.9);
+  color: rgb(110, 245, 200);
+  box-shadow:
+    0 0 14px 1px rgba(19, 213, 148, 0.5),
+    inset 0 0 14px 0 rgba(19, 213, 148, 0.18);
+}
+
+.gitm-apply-success-hard-turnover:active:not(:disabled) {
+  box-shadow: inset 0 0 12px 1px rgba(19, 213, 148, 0.35);
+}
+
+.gitm-apply-success-hard-turnover:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 /* STAGE RAIL — the ordinal chips + arrow separators. */
 .gitm-update-rail {
   display: flex;
@@ -3388,5 +3576,39 @@ function spawnResolver(): void {
      and its inner input fill it entirely — the whole area is the click target. */
   flex: 1;
   min-width: 220px;
+}
+
+/* MD-UM · LEG 4 · WHAT THIS UPDATE CARRIES — the collapsible differential panel above Run Update. */
+.gitm-carries {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.gitm-carries-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: rgba(235, 231, 222, 0.82);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.gitm-carries-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.gitm-carries-caret {
+  font-size: 0.72rem;
+  color: rgba(235, 231, 222, 0.55);
+}
+.gitm-carries-body {
+  margin-top: 0.75rem;
+  /* The differential holder flows in the tab (no viewheight frame in this mode). */
+  max-height: 60vh;
+  overflow-y: auto;
 }
 </style>

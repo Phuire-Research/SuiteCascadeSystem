@@ -39,6 +39,9 @@
 import { muxification } from 'stratimux';
 import { readFile } from 'node:fs/promises';
 import { startNpmVersionWatch } from './npmVersionCheck';
+// MD-UM · LEG 3 · the reflexive Update Manifest watch — non-blocking · failure-silent · rides
+// bridge.json via the composer leg (the startNpmVersionWatch cadence precedent).
+import { startUpdateManifestWatch } from './updateManifest.model';
 import { resolveScpInstallDirs } from './bridgeMetadata';
 import { resolve } from 'node:path';
 import { createServerConcept, serverName, type ServerDeck } from './concepts/server/server.concept';
@@ -310,6 +313,12 @@ export function createScsBridgeMuxium(
                       resolve(dir, 'Cascades', 'Bridge', 'bridge.json'),
                     ),
                   );
+                  // MD-UM · LEG 3 · THE REFLEXIVE FETCH — start the Update Manifest watch (deferred
+                  // boot refresh + periodic re-poll · non-blocking · failure-silent). The cached
+                  // manifest rides bridge.json via the composer leg on every subsequent rewrite → the
+                  // SCP /scs-bridge-version relay → the differential mount. The env designation
+                  // (SCS_INSTALL_REPO_URL) selects the local fs read (file://) anor the raw fetch.
+                  startUpdateManifestWatch();
                   // RM-D2 · BDAP SSGH generation. Immediately after bridge.json is
                   // written (port known), generate the live Base SCS-Bridge system
                   // prompt sibling to bridge.json. This precedes any open-session

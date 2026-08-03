@@ -32,11 +32,24 @@ import { gitmScpUpdateRunDiff } from '../qualities/gitmScpUpdateRunDiff.quality'
 import { gitmScpUpdateStageRelay } from '../qualities/gitmScpUpdateStageRelay.quality';
 import { gitmScpUpdateProgress } from '../qualities/gitmScpUpdateProgress.quality';
 
+// RS.4 · THE PER-SCP RAIL — the carriage Begin resolves ONCE and the factory bakes into every
+// node payload. No node re-reads shared state for identity; two concurrent chains on two SCPs
+// never cross. originScpName rides the failure Progress nodes so an error stamp lands on the
+// TARGET's rail (scpName fallback — the target IS the calling SCP in the update flow).
+export type GitmScpUpdateCarriage = {
+  scpName: string;
+  targetScpDir: string;
+  originScpName: string;
+};
+
 // Build a fresh 3-node SCP-update strategy. Chained back-to-front: stageRelay is the
 // Concluder (no successNode → the strategy completes after it fires).
-export function createGitmScpUpdateStrategy(): ActionStrategy {
+export function createGitmScpUpdateStrategy(carriage: GitmScpUpdateCarriage): ActionStrategy {
+  const nodePayload = { scpName: carriage.scpName, targetScpDir: carriage.targetScpDir };
+  const failureOrigin =
+    carriage.originScpName !== '' ? carriage.originScpName : carriage.scpName;
   // NODE 3 (Concluder) · reads the diff JSON · stamps stage='reviewing'+summary.
-  const stageRelayNode = createActionNode(gitmScpUpdateStageRelay.actionCreator({}), {
+  const stageRelayNode = createActionNode(gitmScpUpdateStageRelay.actionCreator(nodePayload), {
     // C285 (the 078 diffing-stall): the relay node was the LAST without an agreement —
     // the runDiff→stageRelay strategySuccess dropped unseen. Lifetime + instrumentation.
     agreement: 60_000,
@@ -46,14 +59,18 @@ export function createGitmScpUpdateStrategy(): ActionStrategy {
     },
   });
 
-  // NODE 2 FAILURE (terminal · no successNode) · flips the rail to stage='error'.
+  // NODE 2 FAILURE (terminal · no successNode) · flips the TARGET's rail to stage='error'.
   const runDiffFailureNode = createActionNode(
-    gitmScpUpdateProgress.actionCreator({ stage: 'error', note: 'diff failed; see stageError' }),
+    gitmScpUpdateProgress.actionCreator({
+      stage: 'error',
+      note: 'diff failed; see stageError',
+      originScpName: failureOrigin,
+    }),
     {},
   );
 
   // NODE 2 · runs the read-only 3-way diff script · stamps stage='diffing'.
-  const runDiffNode = createActionNode(gitmScpUpdateRunDiff.actionCreator({}), {
+  const runDiffNode = createActionNode(gitmScpUpdateRunDiff.actionCreator(nodePayload), {
     successNode: stageRelayNode,
     failureNode: runDiffFailureNode,
     successNotes: {
@@ -64,14 +81,21 @@ export function createGitmScpUpdateStrategy(): ActionStrategy {
     agreement: 60_000,
   });
 
-  // NODE 1 FAILURE (terminal · no successNode) · flips the rail to stage='error'.
+  // NODE 1 FAILURE (terminal · no successNode) · flips the TARGET's rail to stage='error'.
+  // The note names the Cold-Clone retry: an expiry-routed failure carries NO stageError
+  // (no bucket item) — the honest voice tells the user the first run may still be
+  // refreshing and a re-run lands warm.
   const ensureCloneFailureNode = createActionNode(
-    gitmScpUpdateProgress.actionCreator({ stage: 'error', note: 'clone failed; see stageError' }),
+    gitmScpUpdateProgress.actionCreator({
+      stage: 'error',
+      note: 'clone failed anor timed out — a first run refreshes the source (minutes on a local dev source); re-run the update',
+      originScpName: failureOrigin,
+    }),
     {},
   );
 
   // NODE 1 (initial · async) · clone/pull the retained SCS template · stage='cloning'.
-  const ensureCloneNode = createActionNode(gitmScpUpdateEnsureClone.actionCreator({}), {
+  const ensureCloneNode = createActionNode(gitmScpUpdateEnsureClone.actionCreator(nodePayload), {
     successNode: runDiffNode,
     failureNode: ensureCloneFailureNode,
     successNotes: {
@@ -79,11 +103,14 @@ export function createGitmScpUpdateStrategy(): ActionStrategy {
       denoter: 'SCS template clone ensured;',
     },
     // THE C282 STALL ROOT (layer 6): the WTSR file:// refresh (rm + full repo copy) runs
-    // ~10-15s — past the default action lifetime. The async .then() then fired
-    // strategySuccess on an EXPIRED action and the Muxium dropped it: stage stuck at
-    // 'cloning', cloneMode never stamped, runDiff never entered. The agreement extends
-    // the action's intended lifetime to cover the copy.
-    agreement: 120_000,
+    // past the default action lifetime — the async .then() then fired strategySuccess on
+    // an EXPIRED action and the Muxium dropped it. THE COLD-CLONE WINDOW (the CaseB field
+    // break): a COLD refresh of a local dev source measured ~7 MINUTES (990MB repo →
+    // 360MB clone) — past the prior 120s agreement; the expiry routed to the failure
+    // node ('clone failed' · NO bucket item → stageError empty · cloneMode unstamped)
+    // while the copy completed in the background and the NEXT run sailed warm. The
+    // agreement now covers the measured cold window with headroom.
+    agreement: 900_000,
   });
 
   return createStrategy({

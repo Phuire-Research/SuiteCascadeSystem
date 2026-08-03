@@ -537,11 +537,16 @@ export type GitmAutoInductAB = Quality<GitmState, GitmAutoInductABPayload>;
 // from carried strategyData), except the entry which accepts an optional scpName override.
 export type GitmScpUpdateBeginPayload = WithOrigin<{ scpName?: string }>;
 export type GitmScpUpdateBegin = Quality<GitmState, GitmScpUpdateBeginPayload>;
-export type GitmScpUpdateEnsureClonePayload = Record<string, never>;
+// RS.4 · THE PER-SCP RAIL — the chain nodes carry their TARGET baked into the node payloads
+// (Begin resolves identity ONCE and the factory bakes it in; no node re-reads shared state
+// for identity — the cross-target hazard dies). targetScpDir = the resolved SCP package dir
+// (the slice-store key); scpName = the diff filename key. '' anor absent = the active fallback.
+export type GitmScpUpdateChainCarriage = { scpName?: string; targetScpDir?: string };
+export type GitmScpUpdateEnsureClonePayload = GitmScpUpdateChainCarriage;
 export type GitmScpUpdateEnsureClone = Quality<GitmState, GitmScpUpdateEnsureClonePayload>;
-export type GitmScpUpdateRunDiffPayload = Record<string, never>;
+export type GitmScpUpdateRunDiffPayload = GitmScpUpdateChainCarriage;
 export type GitmScpUpdateRunDiff = Quality<GitmState, GitmScpUpdateRunDiffPayload>;
-export type GitmScpUpdateStageRelayPayload = Record<string, never>;
+export type GitmScpUpdateStageRelayPayload = GitmScpUpdateChainCarriage;
 export type GitmScpUpdateStageRelay = Quality<GitmState, GitmScpUpdateStageRelayPayload>;
 
 // SCP-UPD D-U5 — the APPLY quality type (the held gate · gitm_run_apply · NEVER typeof).
@@ -560,7 +565,9 @@ export type GitmScpUpdateApply = Quality<GitmState, GitmScpUpdateApplyPayload>;
 // SCP-UPD · gitm_update_progress — the UI-tool the resolver session fires to STAMP its live
 // position onto updateStatus (the Update view renders it). All-optional payload; the reducer
 // stamps ONLY the provided fields (partial return · NEVER typeof).
-export type GitmScpUpdateProgressPayload = {
+// RS.3 · SOVEREIGN TOOL CALLS — WithOrigin: the resolver session stamps ITS OWN SCP's rail
+// (originScpName → resolveGitmTargetCwd → the per-SCP slice); absent = the active fallback.
+export type GitmScpUpdateProgressPayload = WithOrigin<{
   stage?: 'idle' | 'cloning' | 'diffing' | 'reviewing' | 'resolving' | 'applying' | 'error';
   note?: string;
   resolvedPending?: number;
@@ -568,7 +575,7 @@ export type GitmScpUpdateProgressPayload = {
   // (the panel yields). Same only-when-provided semantics as note/stage: the reducer copies it
   // ONLY when supplied (undefined = untouched · false actively clears the residual diff flag).
   diffPresent?: boolean;
-};
+}>;
 export type GitmScpUpdateProgress = Quality<GitmState, GitmScpUpdateProgressPayload>;
 
 // SCP-UPD D-U4.3 — the strategy-data shapes carried node→node (strategyData_muxifyData /

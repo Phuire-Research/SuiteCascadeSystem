@@ -51,7 +51,7 @@ import { resolveGitmTargetCwd, selectGitmDecisionFields } from '../model/gitmOpC
 // MD-C M7 · getSlice — the WATCHKEY confirm-token lifecycle moves to the ORIGIN's home (issue AND
 // validate), so a non-pointer origin's confirm dialog renders on ITS OWN surface, never the pointer's.
 import { getSlice, upsertSliceFields } from '../model/gitmSliceStore.model';
-import { isWorkingBranchFor, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
+import { isWorkingBranchFor, isSelectedWorkingBranch, mintWorkingBranchName } from '../model/gitmBranchRoot.model';
 import { issueToken, validateToken } from '../model/gitmConfirmToken.model';
 import { armSeatReturn, disarmSeatReturn } from '../model/seatReturnArm.model';
 // GITM Dev Epoch (MD-E · THE C318 FOLD) — the bridge-owned deadline is armed/disarmed ALONGSIDE the
@@ -341,9 +341,15 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
       // D-BN · THE branchRoles SWEEP — the B-resume fallback recognizes the on-disk B via roles.b
       // (isWorkingBranchFor · roles equality when set, `b/`-prefix fallback for legacy) — the prefix
       // never decides the role, roles.b does.
+      // MD-ATC · CHECKOUT-SOVEREIGN TARGETING (the Double-B cure): when the CURRENT branch
+      // is a Selected B (the b/ namespace anor the registered roles.b — a hopped-to,
+      // never-registered B counts), Turn Over B targets THE CURRENT BRANCH — period. The
+      // registered workingBranch is the fallback only when the checkout is not itself a B.
       const resolvedTargetBranch =
         source === 'B'
-          ? workingBranch || (isWorkingBranchFor(currentBranch, knownB) ? currentBranch : '')
+          ? (isSelectedWorkingBranch(currentBranch, knownB)
+              ? currentBranch
+              : workingBranch || (isWorkingBranchFor(currentBranch, knownB) ? currentBranch : ''))
           : stableBranch;
 
       // THE-TURN-OVER-A-GUARD (WATCHKEY · the working-seat-is-B Law). THE LAW: the working seat is

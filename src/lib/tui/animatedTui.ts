@@ -44,7 +44,16 @@ import {
 } from '../bridge/registry';
 import { registryPath } from '../bridge/paths';
 // PSSM · W4 · the SCPs.json boot consistency sweep (markAllSessionsOffline mirror).
-import { markAllScpsPending } from '../bridge/scpSessionRegistry';
+// MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5) — Archive / Reinstate direct calls.
+// The TUI hosts the bridge in-process, so these are AWAITed directly (NOT quality
+// dispatches) — the guard reasons (stop-first · worktrees-present · retire) surface
+// inline on the confirm pane. listArchivedScps populates the Archived fold.
+import {
+  markAllScpsPending,
+  archiveScpEntry,
+  reinstateScpEntry,
+  listArchivedScps,
+} from '../bridge/scpSessionRegistry';
 import {
   createSession,
   hasResumableIdentity,
@@ -2640,6 +2649,22 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
           ...menuState,
           scpSubMenu: { items: reg.scps, selectedIdx: 0 },
         };
+        // MD-ARC+C · Wave 5a (§5.3) — same Archived-fold populate as the manage
+        // route (both routes render renderScpSubMenuPane · the fold must be present
+        // on either entry point). renderFrame's spread preserves the async patch.
+        void (async () => {
+          try {
+            const archivedItems = await listArchivedScps();
+            menuState = {
+              ...menuState,
+              scpSubMenu: menuState.scpSubMenu
+                ? { ...menuState.scpSubMenu, archivedItems }
+                : menuState.scpSubMenu,
+            };
+          } catch (err) {
+            log('tui.menu.scp-menu.archived.error', { err: String(err) });
+          }
+        })();
         return;
       }
       // Cycle 141 SIPMT (MRSM) · CSPMSR-true row-Enter routes here.
@@ -2669,6 +2694,23 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
           ...menuState,
           scpSubMenu: { items: reg.scps, selectedIdx: 0 },
         };
+        // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5.3) — async-populate the
+        // Archived fold from the vault ledger. Mirrors the open-archive-view
+        // idiom: fire the async read, patch the still-open scpSubMenu slot;
+        // renderFrame picks it up next paint tick (the spread preserves it).
+        void (async () => {
+          try {
+            const archivedItems = await listArchivedScps();
+            menuState = {
+              ...menuState,
+              scpSubMenu: menuState.scpSubMenu
+                ? { ...menuState.scpSubMenu, archivedItems }
+                : menuState.scpSubMenu,
+            };
+          } catch (err) {
+            log('tui.menu.scp-manage.archived.error', { err: String(err) });
+          }
+        })();
         return;
       }
       case 'close-scp-menu':
@@ -2777,6 +2819,136 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
         //     log('tui.launch.scp.error', { scpName, message });
         //   }
         // })();
+      }
+      // ═══════════════════════════════════════════════════════════════════════
+      // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5) — Close / Archive / Reinstate
+      // ═══════════════════════════════════════════════════════════════════════
+      // §5.1 · [X] Close — stop a running SCP. Dispatches scsBridgeStopScp via the
+      // active bridge Muxium handle (the same handle+deck pattern as scp-menu-activate).
+      case 'scp-menu-stop': {
+        const scpName = action.scpName;
+        log('tui.menu.scp-stop.request', { scpName });
+        const stopHandle = getActiveScsBridgeMuxiumHandle();
+        if (stopHandle !== null) {
+          const stopDeck = stopHandle.muxium.deck as unknown as {
+            d: { scsBridge: { e: { scsBridgeStopScp: (p: { scpName: string }) => unknown } } };
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (stopHandle.muxium as any).dispatch(
+            stopDeck.d.scsBridge.e.scsBridgeStopScp({ scpName }),
+          );
+        } else {
+          log('tui.menu.scp-stop.no-handle', { scpName });
+        }
+        return;
+      }
+      // §5.2 · [A] Archive-confirm — the modal slot was already set in newState by
+      // applyKeypress (menuState = newState above); renderFrame paints the confirm
+      // pane next tick. No side effect here.
+      case 'scp-menu-archive-confirm':
+        return;
+      // §5.2 · [N]/Esc — clear the confirm slot.
+      case 'scp-menu-archive-cancel':
+        menuState = { ...menuState, scpArchiveConfirm: undefined };
+        return;
+      // §5.2 · [Y]/[F] — AWAIT archiveScpEntry DIRECTLY (the TUI hosts the bridge
+      // in-process). The guard reasons surface inline on the confirm pane; success
+      // re-reads the roster + the Archived fold (the open-scp-manage re-populate path).
+      case 'scp-menu-archive-execute': {
+        const scpName = action.scpName;
+        const force = action.force === true;
+        log('tui.menu.scp-archive.execute', { scpName, force });
+        void (async () => {
+          try {
+            const result = await archiveScpEntry(scpName, force ? { force: true } : undefined);
+            if (result.ok) {
+              // Clear the confirm slot + re-read the roster and the fold.
+              const reg = readScpRegistry(process.cwd());
+              const archivedItems = await listArchivedScps();
+              menuState = {
+                ...menuState,
+                scpArchiveConfirm: undefined,
+                scpSubMenu: menuState.scpSubMenu
+                  ? { ...menuState.scpSubMenu, items: reg.scps, archivedItems, selectedIdx: 0 }
+                  : menuState.scpSubMenu,
+              };
+              log('tui.menu.scp-archive.ok', { scpName, archivedAt: result.archivedAt });
+              return;
+            }
+            // Refusal — map the reason to an inline notice / the force re-render.
+            let notice: string;
+            let worktreeInstances: string[] | undefined;
+            switch (result.reason) {
+              case 'scp-must-be-stopped-before-archive':
+                notice = 'Stop the SCP first ([X] close).';
+                break;
+              case 'worktrees-present':
+                // WAPF H1 — re-render the confirm in its force form (list instances).
+                notice = 'This SCP owns worktree instances.';
+                worktreeInstances = result.instances ?? [];
+                break;
+              case 'worktree-instance-use-retire':
+                notice =
+                  'This SCP IS a worktree instance — retire it via Delete (the branch survives in its parent).';
+                break;
+              default:
+                notice = result.reason;
+                break;
+            }
+            menuState = {
+              ...menuState,
+              scpArchiveConfirm: menuState.scpArchiveConfirm
+                ? { ...menuState.scpArchiveConfirm, notice, worktreeInstances }
+                : { name: scpName, notice, worktreeInstances },
+            };
+            log('tui.menu.scp-archive.refused', { scpName, reason: result.reason });
+          } catch (err) {
+            log('tui.menu.scp-archive.error', { scpName, err: String(err) });
+            menuState = {
+              ...menuState,
+              scpArchiveConfirm: menuState.scpArchiveConfirm
+                ? { ...menuState.scpArchiveConfirm, notice: String(err) }
+                : { name: scpName, notice: String(err) },
+            };
+          }
+        })();
+        return;
+      }
+      // §5.3 · [T] toggle-archived — the fold expand/collapse was already applied to
+      // menuState.scpSubMenu in newState by applyKeypress; renderFrame repaints.
+      case 'scp-menu-toggle-archived':
+        return;
+      // §5.3 · [R] Reinstate — AWAIT reinstateScpEntry DIRECTLY; ok → re-populate
+      // roster + fold; refusal → inline notice (reuse the archive-confirm slot).
+      case 'scp-menu-reinstate': {
+        const scpName = action.scpName;
+        log('tui.menu.scp-reinstate.execute', { scpName });
+        void (async () => {
+          try {
+            const result = await reinstateScpEntry(scpName);
+            if (result.ok) {
+              const reg = readScpRegistry(process.cwd());
+              const archivedItems = await listArchivedScps();
+              menuState = {
+                ...menuState,
+                scpSubMenu: menuState.scpSubMenu
+                  ? { ...menuState.scpSubMenu, items: reg.scps, archivedItems, selectedIdx: 0 }
+                  : menuState.scpSubMenu,
+              };
+              log('tui.menu.scp-reinstate.ok', { scpName });
+              return;
+            }
+            // Refusal — surface via the confirm-modal slot as an inline notice.
+            menuState = {
+              ...menuState,
+              scpArchiveConfirm: { name: scpName, notice: `Reinstate refused: ${result.reason}` },
+            };
+            log('tui.menu.scp-reinstate.refused', { scpName, reason: result.reason });
+          } catch (err) {
+            log('tui.menu.scp-reinstate.error', { scpName, err: String(err) });
+          }
+        })();
+        return;
       }
       // SB-Direct-Spawn · BSSPS · Engage via SCS-Bridge post-install.
       // Structural reuse of launch-scp-runtime direct-spawn path. Wizard

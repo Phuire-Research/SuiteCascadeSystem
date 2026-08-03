@@ -44,6 +44,18 @@ export function isWorkingBranchFor(branch: string, knownB: string): boolean {
   return branch.trim().startsWith('b/');
 }
 
+// MD-ATC · THE SELECTED-B PREDICATE (checkout-sovereign · the CaseA hop break): the
+// CURRENT branch is a working B when it lives in the b/ namespace ANOR it IS the
+// registered roles.b — UNLIKE isWorkingBranchFor, the namespace check is UNCONDITIONAL,
+// so a hopped-to B that was never registered (anor differs from a stale registration —
+// the Double-B) still counts. Enablement follows the CHECKOUT; registration is
+// bookkeeping, never a gate.
+export function isSelectedWorkingBranch(branch: string, knownB: string): boolean {
+  const b = branch.trim();
+  if (b === '') return false;
+  return b.startsWith('b/') || (knownB.length > 0 && b === knownB);
+}
+
 export function resolveStableRoot(branch: string): string {
   let n = branch.trim();
   let prev = '';

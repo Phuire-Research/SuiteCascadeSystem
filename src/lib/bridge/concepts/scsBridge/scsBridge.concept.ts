@@ -33,6 +33,11 @@ import { scsBridgeInstallScp } from './qualities/scsBridgeInstallScp.quality.hui
 import { scsBridgeActivateScpSession } from './qualities/scsBridgeActivateScpSession.quality.huirth';
 // SES · THE STOP RAIL (C632) · scp_stop · close window + SIGTERM server + FSM + status pending
 import { scsBridgeStopScp } from './qualities/scsBridgeStopScp.quality.huirth';
+// MD-ARC+C · SARC anor SRST · scp_archive / scp_reinstate · the vault move + ledger
+import { scsBridgeArchiveScp } from './qualities/scsBridgeArchiveScp.quality.huirth';
+import { scsBridgeReinstateScp } from './qualities/scsBridgeReinstateScp.quality.huirth';
+// MD-ARC+C · Wave 7 · SDEL · scp_delete · PERMANENT rm + ledger removal + teardown
+import { scsBridgeDeleteScp } from './qualities/scsBridgeDeleteScp.quality.huirth';
 import { scsBridgeLaunchScpRuntime } from './qualities/scsBridgeLaunchScpRuntime.quality.huirth';
 import { scsBridgeSpawnNewScpSession } from './qualities/scsBridgeSpawnNewScpSession.quality.huirth';
 // C1-D2 · SBST · scs_spawn_suite8_session MCP tool · setSessionSuite8Name BEFORE spawn
@@ -132,6 +137,11 @@ export const createScsBridgeConcept = (options: CreateScsBridgeConceptOptions) =
       scsBridgeActivateScpSession,
       // SES · THE STOP RAIL (C632) · TQNI key matches `type:` 'Scs Bridge Stop Scp'
       scsBridgeStopScp,
+      // MD-ARC+C · SARC anor SRST anor SDEL · TQNI keys match their `type:` strings
+      scsBridgeArchiveScp,
+      scsBridgeReinstateScp,
+      // MD-ARC+C · Wave 7 · SDEL · scp_delete · PERMANENT · TQNI 'Scs Bridge Delete Scp'
+      scsBridgeDeleteScp,
       scsBridgeLaunchScpRuntime,
       scsBridgeSpawnNewScpSession,
       scsBridgeSpawnSuite8Session,
