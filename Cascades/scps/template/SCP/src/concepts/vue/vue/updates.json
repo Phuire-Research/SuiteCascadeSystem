@@ -1,11 +1,32 @@
 {
   "schemaVersion": 1,
-  "current": "0.944.0",
+  "current": "0.944.1",
   "muxameter": {
-    "cli": 10,
+    "cli": 11,
     "scp": 12
   },
   "releases": [
+    {
+      "id": "v09441",
+      "version": "0.944.1",
+      "label": "New in 0.944.1",
+      "muxameter": {
+        "cli": 11,
+        "scp": 12
+      },
+      "magnitude": 1,
+      "features": [
+        {
+          "title": "The bridge never hangs on git",
+          "color": "red",
+          "summary": "A remote git operation that stalls waiting for credentials can no longer freeze the bridge — it fails fast with a plain reason, and every control stays live.",
+          "detail": [
+            "A push anor pull whose transport stalled awaiting a credential answer used to hold the whole bridge with it — buttons pressed into silence until a relaunch. Git is now told <span class=\"hifi-hl-red\">never to prompt</span> (it fails immediately with its own reason instead), and a hard <span class=\"hifi-hl-yellow\">two-minute backstop</span> ends any transport that stalls without prompting. The failure surfaces in the command log like any other; the bridge stays live throughout.",
+            "This is a CLI-only release — your app needs no changes. Update the bridge from the Update page and relaunch."
+          ]
+        }
+      ]
+    },
     {
       "id": "v0944",
       "version": "0.944.0",
