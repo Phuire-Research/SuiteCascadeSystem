@@ -132,8 +132,12 @@ const DEFAULT_LANDING_MUXONOMIC: MuxonomicConfig<'default'> = {
 };
 
 import { graphiteScribeMuxonomic } from '../graphiteScribe/graphiteScribe.muxonomy';
-// SL-3 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
-import { resolveSyncLocality } from '../../model/suite8SyncLibrary.model';
+// SL-3/SL-4 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+import {
+  resolveSyncLocality,
+  readSpecifiedKey,
+  readLocalScpName,
+} from '../../model/suite8SyncLibrary.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -954,6 +958,27 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
     return null;
   };
+
+  // SL-4 · S1 · THE SYNC-LOCALITY ENDPOINT (the /scp-config idiom · read-at-fire · SRAFB).
+  // The ShatteriteMenu fetches this AT FIRE TIME: `targetScp` non-null = the RESOLVED landing
+  // vantage (the dispatch targets that SCP's anchor session by (suite8Name, targetScp) —
+  // originScpName stays LOCAL, the Vantage Law / M7). `specified` echoes the raw key (a ghost
+  // key shows specified non-null + targetScp null — the read paths fell back Local, so a Local
+  // fire is CONSISTENT with what the user sees). NEVER throws — any failure = the Local shape.
+  expressApp.get('/suite8-sync-locality/:designation', (req, res) => {
+    try {
+      const designation = req.params.designation ?? '';
+      const resolution = resolveSyncLocality(designation);
+      res.json({
+        ok: true,
+        localScp: readLocalScpName(),
+        specified: readSpecifiedKey(designation),
+        targetScp: resolution ? resolution.targetScp : null,
+      });
+    } catch {
+      res.json({ ok: true, localScp: null, specified: null, targetScp: null });
+    }
+  });
 
   // GET — enumerate prior-tier document filenames (DIAMOND-TIER-*.md / ONYX-TIER-*.md) WITHOUT
   // loading their content. The ACTIVE pair (the highest tier of each) is served by the live cascade

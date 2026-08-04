@@ -866,13 +866,60 @@ async function primeSend(
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// SL-4 · THE DISPATCH-ANCHOR RESOLUTION (the Vantage Law · DIAMOND-SYNC-LIBRARY.md)
+// ════════════════════════════════════════════════════════════════════════════
+// Fetched AT FIRE TIME (SRAFB — read-at-fire, no cache staleness): GET
+// /suite8-sync-locality/<designation>. `targetScp` non-null = a SPECIFIED locality is
+// RESOLVED — the dispatch targets THAT SCP's anchor session (found in the shared
+// sessionsList by (suite8Name, targetScp)); originScpName stays LOCAL inside
+// triggerSendMessage (the Firing-Vantage Name — the M7 cross-rail law; never conflated).
+// The ORIGIN `anchor` computed + ALL lifecycle machinery (spawn · re-engage · tombstone)
+// are NEVER touched by this resolution (the Anchor-Scope Law) — this resolves the
+// DISPATCH target only.
+//   - targetScp null (unspecified anor ghost key) → the local anchor, byte-identical.
+//   - targetScp resolved but its anchor ABSENT anor not launched → null + warn — the
+//     fire BLOCKS (never a silent local fire under a specified locality — the r4 hazard
+//     cure). The UI affordance (ring liveness) lands with SL-5.
+//   - the endpoint absent anor failing (an older server) → the local anchor (fail-open
+//     to the pre-SL-4 behavior).
+async function resolveDispatchAnchor(): Promise<ScsBridgeSessionEntry | null> {
+  try {
+    const abort = new AbortController();
+    const timeoutId = setTimeout(() => abort.abort(), 2000);
+    const res = await fetch(
+      `/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`,
+      { signal: abort.signal },
+    );
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const j = (await res.json()) as { targetScp?: string | null };
+      const targetScp = typeof j?.targetScp === 'string' && j.targetScp.length > 0 ? j.targetScp : null;
+      if (targetScp) {
+        const remote = resolveS8Anchor(sessionsList.value, props.suite8Name, targetScp);
+        if (remote && remote.status === 'launched') return remote;
+        console.warn(
+          '[ShatteriteMenu SL-4] specified locality has no alive anchor · targetScp=',
+          targetScp,
+          '· fire BLOCKED (never a silent local fire under a specified locality)',
+        );
+        return null;
+      }
+    }
+  } catch {
+    /* endpoint absent anor timed out — the Local anchor stands (pre-SL-4 behavior) */
+  }
+  return anchor.value ?? null;
+}
+
 async function handleOption(option: MenuOption): Promise<void> {
   // SMUP: ANY option engagement means the user has noticed the menu — clear the ping.
   clearPing();
   if (!optionsEnabled.value || dispatchingLabel.value) return;
 
   const ctrl = controller.value;
-  const target = anchor.value;
+  // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
+  const target = await resolveDispatchAnchor();
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu SMSP] no alive Anchor for option · suite8Name=', props.suite8Name);
     emit('option-selected', { label: option.label, kind: option.kind, ok: false });
@@ -1076,7 +1123,8 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   const pairDirective = option.inputConfig?.pairDirective;
   if (typeof pairDirective === 'string' && pairDirective.length > 0) {
     const ctrl = controller.value;
-    const target = anchor.value;
+    // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
+    const target = await resolveDispatchAnchor();
     if (!ctrl || !target) {
       console.warn('[ShatteriteMenu TRP] no alive Anchor for pairing submit · suite8Name=', props.suite8Name);
       emit('option-selected', { label: option.label, kind: option.kind, ok: false });
@@ -1111,7 +1159,8 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   if (!categories) return; // nothing to submit
 
   const ctrl = controller.value;
-  const target = anchor.value;
+  // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
+  const target = await resolveDispatchAnchor();
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu MOIS] no alive Anchor for submit · suite8Name=', props.suite8Name);
     emit('option-selected', { label: option.label, kind: option.kind, ok: false });
