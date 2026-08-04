@@ -24,7 +24,16 @@
  * Citation: ONYX-TIER-29.md numbering note (the stranded-chain substrate: the scpName stamp
  *           + the founding ladder + central registration).
  */
-import { mkdirSync, readFileSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+  appendFileSync,
+  readdirSync,
+  copyFileSync,
+  rmSync,
+} from 'node:fs';
 import path from 'node:path';
 
 export const SYNC_LIBRARY_SCHEMA_VERSION = 1;
@@ -50,6 +59,11 @@ export type SyncLibraryShape = {
   specified: string | null;
   local: SyncLibraryLocalPaths;
   paths: Record<string, SyncLibraryRemotePaths>;
+  // U1 · THE USHER REFRAME (C729) — the paths REGISTERED to the library: the watched
+  // locations the Zero-Knowledge Watchers consume, keyed by surface name, SCP-root-relative
+  // (a FILE anor a DIRECTORY — the usher stats at run time). Seeded from the local group;
+  // aspects register further surfaces (the Demometeric means · e.g. the Cadmium frontier).
+  registered: Record<string, string>;
 };
 
 // File-sunk telemetry (the C740 idiom · 2MB skip-guard · never-throw) — the seed's Lambda
@@ -160,12 +174,25 @@ export const normalizeSyncLibrary = (
     typeof doc.specified === 'string' && doc.specified.trim().length > 0
       ? doc.specified.trim()
       : null;
+  const local = normalizeLocalPaths(doc.local, designation);
+  // U1 · the registered map — user-borne keys PRESERVED; the three base surfaces always
+  // present (filled from the local group when absent).
+  const registered: Record<string, string> = {};
+  if (isPlainObject(doc.registered)) {
+    for (const [k, v] of Object.entries(doc.registered)) {
+      if (typeof v === 'string' && v.length > 0) registered[k] = v;
+    }
+  }
+  if (!registered.menu) registered.menu = local.menu;
+  if (!registered.cascadeManifest) registered.cascadeManifest = local.cascadeManifest;
+  if (!registered.working) registered.working = local.working;
   return {
     schemaVersion: SYNC_LIBRARY_SCHEMA_VERSION,
     localScp,
     specified,
-    local: normalizeLocalPaths(doc.local, designation),
+    local,
     paths: normalizeRemotePaths(doc.paths),
+    registered,
   };
 };
 
@@ -398,4 +425,221 @@ export const seedSyncLibraryAdditive = (designation: string): SyncLibrarySeedRes
     sinkSyncLibraryTelemetry('seed.write-failed', { designation, error: String(err) });
     return { shape, wrote: false };
   }
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// U1 · THE USHER PRIMITIVES (the Usher Reframe · C729 · DIAMOND-SYNC-LIBRARY.md)
+// ════════════════════════════════════════════════════════════════════════════
+// Content moves under FIXED paths — the Zero-Knowledge Watchers stay zero-knowledge; only
+// the SyncLibrary carries intelligence. THE LOCAL DIRECTORY (the protected vault) holds the
+// preserved local state: Cascades/Extended/<designation>/.syncLocal/ — OUTSIDE every watched
+// glob; target content NEVER enters it (the Truth Law's home). Vault layout is KEY-BASED:
+// a registered FILE lands at .syncLocal/<key>/<basename>; a registered DIRECTORY mirrors at
+// .syncLocal/<key>/ — deterministic + restorable from the registered map alone.
+
+export const SYNC_LOCAL_DIRECTORY_NAME = '.syncLocal';
+
+export const resolveSyncLocalDirectory = (designation: string): string =>
+  path.resolve(process.cwd(), 'Cascades', 'Extended', designation, SYNC_LOCAL_DIRECTORY_NAME);
+
+// Register further surfaces onto a designation's library (the Demometeric means — an aspect
+// declares its watched locations, e.g. the Cadmium frontier/). ADDITIVE: existing keys are
+// preserved (first registration wins — re-registration with a DIFFERENT path is refused with
+// telemetry, never a silent re-point); the write lands only on change.
+export const registerSyncSurfacesAdditive = (
+  designation: string,
+  surfaces: Record<string, string>,
+): SyncLibrarySeedResult => {
+  const seeded = seedSyncLibraryAdditive(designation);
+  const registered = { ...seeded.shape.registered };
+  let changed = false;
+  for (const [key, rel] of Object.entries(surfaces)) {
+    if (typeof rel !== 'string' || rel.length === 0) continue;
+    if (registered[key] === undefined) {
+      registered[key] = rel;
+      changed = true;
+    } else if (registered[key] !== rel) {
+      sinkSyncLibraryTelemetry('register-surface.refused', {
+        designation,
+        key,
+        held: registered[key],
+        requested: rel,
+        reason: 'key-already-registered-elsewhere',
+      });
+    }
+  }
+  if (!changed) return seeded;
+  const shape: SyncLibraryShape = { ...seeded.shape, registered };
+  try {
+    const filePath = resolveSyncLibraryPath(designation);
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    writeFileSync(filePath, JSON.stringify(shape, null, 2) + '\n', 'utf8');
+    sinkSyncLibraryTelemetry('register-surface.wrote', {
+      designation,
+      keys: Object.keys(surfaces),
+    });
+    return { shape, wrote: true };
+  } catch (err) {
+    sinkSyncLibraryTelemetry('register-surface.write-failed', {
+      designation,
+      error: String(err),
+    });
+    return { shape, wrote: false };
+  }
+};
+
+// THE IDENTITY GUARD — byte-compare before every usher write; an usher's own write firing
+// its own watcher lands on identical content and SKIPS (no feedback loop). Missing either
+// side ⇒ not identical.
+export const filesIdentical = (aAbs: string, bAbs: string): boolean => {
+  try {
+    const a = readFileSync(aAbs);
+    const b = readFileSync(bAbs);
+    return a.equals(b);
+  } catch {
+    return false;
+  }
+};
+
+export type UsherCopyResult = { copied: number; removed: number; skipped: number };
+
+const emptyUsherResult = (): UsherCopyResult => ({ copied: 0, removed: 0, skipped: 0 });
+
+const addResults = (a: UsherCopyResult, b: UsherCopyResult): UsherCopyResult => ({
+  copied: a.copied + b.copied,
+  removed: a.removed + b.removed,
+  skipped: a.skipped + b.skipped,
+});
+
+// Usher ONE FILE (identity-guarded). Never throws — a failed copy is telemetry.
+export const usherCopyFile = (srcAbs: string, destAbs: string): UsherCopyResult => {
+  const out = emptyUsherResult();
+  try {
+    if (filesIdentical(srcAbs, destAbs)) {
+      out.skipped += 1;
+      return out;
+    }
+    mkdirSync(path.dirname(destAbs), { recursive: true });
+    copyFileSync(srcAbs, destAbs);
+    out.copied += 1;
+  } catch (err) {
+    sinkSyncLibraryTelemetry('usher.copy-failed', {
+      srcAbs,
+      destAbs,
+      error: String(err).slice(0, 160),
+    });
+  }
+  return out;
+};
+
+// MIRROR a DIRECTORY tree src → dest: differing files copied · dest-only files removed
+// (a true replace) · identical files skipped. The removal guard: only ever removes INSIDE
+// destAbs. The vault's own name is excluded wherever encountered (the protection).
+export const usherMirrorTree = (srcAbs: string, destAbs: string): UsherCopyResult => {
+  let out = emptyUsherResult();
+  let srcEntries: string[] = [];
+  try {
+    srcEntries = readdirSync(srcAbs);
+  } catch {
+    return out; // src absent — nothing to mirror (the caller decides emptiness semantics).
+  }
+  mkdirSync(destAbs, { recursive: true });
+  const srcSet = new Set(srcEntries.filter((n) => n !== SYNC_LOCAL_DIRECTORY_NAME));
+  for (const name of srcSet) {
+    const s = path.join(srcAbs, name);
+    const d = path.join(destAbs, name);
+    try {
+      if (statSync(s).isDirectory()) {
+        out = addResults(out, usherMirrorTree(s, d));
+      } else {
+        out = addResults(out, usherCopyFile(s, d));
+      }
+    } catch {
+      /* raced away — skip */
+    }
+  }
+  try {
+    for (const name of readdirSync(destAbs)) {
+      if (name === SYNC_LOCAL_DIRECTORY_NAME) continue;
+      if (!srcSet.has(name)) {
+        const gone = path.join(destAbs, name);
+        if (gone.startsWith(destAbs + path.sep)) {
+          rmSync(gone, { recursive: true, force: true });
+          out.removed += 1;
+        }
+      }
+    }
+  } catch {
+    /* dest enumeration failed — the copies above still stand */
+  }
+  return out;
+};
+
+// Usher ONE REGISTERED SURFACE (file anor directory · statted at run time) from a source
+// root to a dest root. `rel` is the registered SCP-root-relative path; the vault variants
+// below key the vault side by the surface KEY instead of the rel path.
+const usherSurface = (srcAbs: string, destAbs: string): UsherCopyResult => {
+  try {
+    if (statSync(srcAbs).isDirectory()) return usherMirrorTree(srcAbs, destAbs);
+  } catch {
+    return emptyUsherResult(); // src absent — nothing to usher.
+  }
+  return usherCopyFile(srcAbs, destAbs);
+};
+
+const vaultPathFor = (designation: string, key: string, rel: string): string => {
+  const vaultBase = path.join(resolveSyncLocalDirectory(designation), key);
+  try {
+    if (statSync(path.resolve(process.cwd(), rel)).isDirectory()) return vaultBase;
+  } catch {
+    /* absent local — fall through to the file form */
+  }
+  return path.join(vaultBase, path.basename(rel));
+};
+
+// LOCAL MODE · the preservation motion — every registered surface ushers INTO the vault.
+export const snapshotRegisteredToVault = (designation: string): UsherCopyResult => {
+  const { shape } = seedSyncLibraryAdditive(designation);
+  let out = emptyUsherResult();
+  for (const [key, rel] of Object.entries(shape.registered)) {
+    out = addResults(
+      out,
+      usherSurface(path.resolve(process.cwd(), rel), vaultPathFor(designation, key, rel)),
+    );
+  }
+  sinkSyncLibraryTelemetry('usher.snapshot', { designation, ...out });
+  return out;
+};
+
+// RELEASE · the restoration motion — the vault's frozen truth returns to the watched
+// locations byte-intact.
+export const restoreRegisteredFromVault = (designation: string): UsherCopyResult => {
+  const { shape } = seedSyncLibraryAdditive(designation);
+  let out = emptyUsherResult();
+  for (const [key, rel] of Object.entries(shape.registered)) {
+    out = addResults(
+      out,
+      usherSurface(vaultPathFor(designation, key, rel), path.resolve(process.cwd(), rel)),
+    );
+  }
+  sinkSyncLibraryTelemetry('usher.restore', { designation, ...out });
+  return out;
+};
+
+// TARGET MODE · the delivery motion — every registered surface at the TARGET's root
+// replaces the local watched location (mirror semantics · NEVER touches the vault).
+export const replaceRegisteredFromTarget = (
+  designation: string,
+  targetRoot: string,
+): UsherCopyResult => {
+  const { shape } = seedSyncLibraryAdditive(designation);
+  let out = emptyUsherResult();
+  for (const rel of Object.values(shape.registered)) {
+    out = addResults(
+      out,
+      usherSurface(path.resolve(targetRoot, rel), path.resolve(process.cwd(), rel)),
+    );
+  }
+  sinkSyncLibraryTelemetry('usher.replace-from-target', { designation, targetRoot, ...out });
+  return out;
 };
