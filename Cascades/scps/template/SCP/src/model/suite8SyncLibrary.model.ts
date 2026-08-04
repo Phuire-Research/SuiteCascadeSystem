@@ -295,6 +295,58 @@ export const readSpecifiedKey = (designation: string): string | null => {
   }
 };
 
+// SL-5 · THE CHOSEN LOCALITY WRITE (the registration motion · DIAMOND-SYNC-LIBRARY.md).
+// Read → normalize (everything preserved · the Additive Law) → set `specified` → canonical
+// write. `specified` must be null (Local) anor a key PRESENT in `paths` — an unknown key
+// REFUSES with its reason (never a dark write). THE TRUTH LAW: `local` is never touched.
+export type WriteSpecifiedResult = {
+  ok: boolean;
+  error: string;
+  shape: SyncLibraryShape | null;
+};
+
+export const writeSpecifiedAdditive = (
+  designation: string,
+  specified: string | null,
+): WriteSpecifiedResult => {
+  const filePath = resolveSyncLibraryPath(designation);
+  const localScp = readLocalScpName() ?? 'template';
+  let raw: unknown = undefined;
+  try {
+    raw = JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch {
+    /* absent anor malformed — normalize builds the fresh default shape */
+  }
+  const normalized = normalizeSyncLibrary(raw, designation, localScp);
+  const ringed = composeRingIntoPaths(normalized, designation, readSyncRingFromBridgeJson());
+  const requested =
+    typeof specified === 'string' && specified.trim().length > 0 ? specified.trim() : null;
+  if (requested !== null && !(requested in ringed.paths)) {
+    sinkSyncLibraryTelemetry('write-specified.refused', {
+      designation,
+      requested,
+      reason: 'key-not-in-paths',
+    });
+    return { ok: false, error: `unknown locality key: ${requested}`, shape: null };
+  }
+  const shape: SyncLibraryShape = { ...ringed, specified: requested };
+  try {
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    writeFileSync(filePath, JSON.stringify(shape, null, 2) + '\n', 'utf8');
+    sinkSyncLibraryTelemetry('write-specified.wrote', {
+      designation,
+      specified: requested ?? 'Local',
+    });
+    return { ok: true, error: '', shape };
+  } catch (err) {
+    sinkSyncLibraryTelemetry('write-specified.write-failed', {
+      designation,
+      error: String(err),
+    });
+    return { ok: false, error: 'write failed', shape: null };
+  }
+};
+
 export type SyncLibrarySeedResult = {
   shape: SyncLibraryShape;
   wrote: boolean;

@@ -132,11 +132,13 @@ const DEFAULT_LANDING_MUXONOMIC: MuxonomicConfig<'default'> = {
 };
 
 import { graphiteScribeMuxonomic } from '../graphiteScribe/graphiteScribe.muxonomy';
-// SL-3/SL-4 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+// SL-3/SL-4/SL-5 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
 import {
   resolveSyncLocality,
   readSpecifiedKey,
   readLocalScpName,
+  readSyncRingFromBridgeJson,
+  writeSpecifiedAdditive,
 } from '../../model/suite8SyncLibrary.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
@@ -969,14 +971,44 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     try {
       const designation = req.params.designation ?? '';
       const resolution = resolveSyncLocality(designation);
+      const localScp = readLocalScpName();
+      // SL-5 · the ring rides the GET (the Locality Register's choosable rows) — the
+      // local key excluded (its row is the Local row, rendered from localScp).
+      const ring = readSyncRingFromBridgeJson()
+        .filter((e) => e.scpName !== localScp)
+        .map((e) => ({ scpName: e.scpName, status: e.status }));
       res.json({
         ok: true,
-        localScp: readLocalScpName(),
+        localScp,
         specified: readSpecifiedKey(designation),
         targetScp: resolution ? resolution.targetScp : null,
+        ring,
       });
     } catch {
-      res.json({ ok: true, localScp: null, specified: null, targetScp: null });
+      res.json({ ok: true, localScp: null, specified: null, targetScp: null, ring: [] });
+    }
+  });
+
+  // SL-5 · POST — THE CHOSEN LOCALITY WRITE (the registration motion · D-SL5-PEWTER-LOCALITY-RD).
+  // Body { specified: string | null }. The model refuses an unknown key with its reason (never a
+  // dark write); the Truth Law holds (`local` untouched). The SL-3 library watcher re-arms the
+  // menu on this write; the SL-4 fire resolution reads fresh — the page follows LIVE.
+  expressApp.post('/suite8-sync-locality/:designation', (req, res) => {
+    try {
+      const designation = req.params.designation ?? '';
+      const body = (req.body ?? {}) as { specified?: unknown };
+      const specified =
+        typeof body.specified === 'string' && body.specified.trim().length > 0
+          ? body.specified.trim()
+          : null;
+      const result = writeSpecifiedAdditive(designation, specified);
+      if (!result.ok) {
+        res.status(400).json({ ok: false, error: result.error });
+        return;
+      }
+      res.json({ ok: true, specified: result.shape?.specified ?? null });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
     }
   });
 

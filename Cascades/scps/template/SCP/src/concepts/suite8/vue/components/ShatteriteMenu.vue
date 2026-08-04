@@ -407,6 +407,8 @@ onMounted(() => {
   document.addEventListener('visibilitychange', refreshS8ModeOnVisible);
   // D-AFS · resolve the own citizen early — the focused-anchor scope needs it at render.
   void ensureOriginScpName();
+  // SL-5 · THE LOCALITY REGISTER — hydrate the chip at mount (the ring + the choice).
+  void fetchSyncLocality();
   void fetch(s8AnchorSpawnPath(props.suite8Name))
     .then((r) => (r.ok ? r.json() : { anchorSpawn: 'prompt' }))
     .then((j: { anchorSpawn?: string }) => {
@@ -867,6 +869,75 @@ async function primeSend(
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// SL-5 · THE LOCALITY REGISTER (D-SL5-PEWTER-LOCALITY-RD · fulfills the D-AFS teaser)
+// ════════════════════════════════════════════════════════════════════════════
+// The chosen-feature door: the chip renders the current locality (Local · <scp> anor the
+// specified target); the expansion lists Local + the ring (SL-2 · archived never appear);
+// choosing POSTs `specified` — the SL-3 library watcher re-arms the menu and the SL-4
+// fire resolution reads fresh: the page follows LIVE, no reload. An offline target is
+// choosable (a registration, not a call) — the chip dims + the blocked-fire warn carries
+// the honesty until it comes live. Never touches anchor lifecycle (the Anchor-Scope Law).
+type SyncLocalityInfo = {
+  localScp: string | null;
+  specified: string | null;
+  targetScp: string | null;
+  ring: { scpName: string; status: string }[];
+};
+const syncLocality = ref<SyncLocalityInfo | null>(null);
+const localityOpen = ref<boolean>(false);
+
+async function fetchSyncLocality(): Promise<void> {
+  try {
+    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`);
+    if (r.ok) {
+      const j = (await r.json()) as SyncLocalityInfo;
+      syncLocality.value = {
+        localScp: typeof j?.localScp === 'string' ? j.localScp : null,
+        specified: typeof j?.specified === 'string' ? j.specified : null,
+        targetScp: typeof j?.targetScp === 'string' ? j.targetScp : null,
+        ring: Array.isArray(j?.ring)
+          ? j.ring.filter((e) => e && typeof e.scpName === 'string')
+          : [],
+      };
+    }
+  } catch {
+    /* the endpoint absent (an older server) — the chip renders its Local default */
+  }
+}
+
+async function chooseLocality(scpName: string | null): Promise<void> {
+  try {
+    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ specified: scpName }),
+    });
+    if (!r.ok) {
+      console.warn('[ShatteriteMenu SL-5] locality write refused ·', await r.text());
+    }
+  } catch (err) {
+    console.warn('[ShatteriteMenu SL-5] locality write failed ·', err);
+  } finally {
+    localityOpen.value = false;
+    void fetchSyncLocality();
+  }
+}
+
+// The chip's dark test — a specified target whose ring status is offline (anor absent).
+const localityDark = computed<boolean>(() => {
+  const s = syncLocality.value;
+  if (!s?.specified) return false;
+  return !s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+});
+
+const localityLabel = computed<string>(() => {
+  const s = syncLocality.value;
+  if (!s) return 'Locality: Local';
+  if (s.specified) return `Locality: ${s.specified}${localityDark.value ? ' · offline' : ''}`;
+  return `Locality: Local${s.localScp ? ` · ${s.localScp}` : ''}`;
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // SL-4 · THE DISPATCH-ANCHOR RESOLUTION (the Vantage Law · DIAMOND-SYNC-LIBRARY.md)
 // ════════════════════════════════════════════════════════════════════════════
 // Fetched AT FIRE TIME (SRAFB — read-at-fire, no cache staleness): GET
@@ -1234,19 +1305,44 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       >
         Auto Mode: {{ autoModeEnabled ? 'ON' : 'OFF' }}
       </button>
-      <!-- D-AFS · THE ANCHOR FOCUS TEASER — the disabled fixture. Specified (the own
-           citizen) is the active law; LOCAL cross-citizen tabbing is a coming refinement
-           (the design holds at RD-ANCHOR-FOCUS-LOCAL). Standard :disabled idiom — the
-           virtual cursor carries no disabled variant yet (seated in the RD). -->
+      <!-- SL-5 · THE LOCALITY REGISTER (fulfills the D-AFS teaser · D-SL5-PEWTER-LOCALITY-RD).
+           The chip shows the chosen locality; the expansion lists Local + the ring; choosing
+           POSTs `specified` and the page follows LIVE (the SL-3 re-arm · the SL-4 resolution). -->
       <button
         v-if="isAnchorAuthority"
-        class="menu-anchorfocus-toggle"
-        data-testid="menu-anchorfocus-toggle"
-        disabled
-        title="Anchor focus — Specified (this page's own citizen). LOCAL cross-citizen tabbing is a coming refinement."
+        class="menu-locality-chip"
+        data-testid="menu-locality-chip"
+        :class="{ 'locality-specified': !!syncLocality?.specified, 'locality-dark': localityDark }"
+        :title="syncLocality?.specified
+          ? `This page's Shatterite Menu + Cascade Memory pertain to ${syncLocality.specified}'s locality`
+          : 'This page pertains to its own Local aspect — press to register a different locality'"
+        @click="localityOpen = !localityOpen"
       >
-        Anchor: Specified
+        {{ localityLabel }}
       </button>
+      <div v-if="localityOpen" class="menu-locality-drop">
+        <button
+          class="menu-locality-row"
+          :class="{ 'locality-row-current': !syncLocality?.specified }"
+          @click="chooseLocality(null)"
+        >
+          <span class="locality-bead locality-bead-live"></span>
+          Local{{ syncLocality?.localScp ? ` · ${syncLocality.localScp}` : '' }}
+        </button>
+        <button
+          v-for="entry in syncLocality?.ring ?? []"
+          :key="entry.scpName"
+          class="menu-locality-row"
+          :class="{ 'locality-row-current': syncLocality?.specified === entry.scpName }"
+          @click="chooseLocality(entry.scpName)"
+        >
+          <span
+            class="locality-bead"
+            :class="entry.status !== 'offline' ? 'locality-bead-live' : 'locality-bead-dim'"
+          ></span>
+          {{ entry.scpName }}
+        </button>
+      </div>
       <p v-if="hasStage && effectiveStage.prompt" class="menu-prompt">{{ effectiveStage.prompt }}</p>
       <span :class="['menu-status', anchorAlive ? 'menu-status-alive' : 'menu-status-waiting']">
         {{ statusText }}
@@ -1929,24 +2025,86 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   border-color: var(--color-yellow);
   color: var(--color-yellow);
 }
-/* D-AFS · the Anchor Focus TEASER chip (the toggle family's shape · disabled fixture —
-   the standard :disabled idiom per style.css .hifi-btn:disabled; the Local design holds
-   at RD-ANCHOR-FOCUS-LOCAL for re-entry). */
-.menu-anchorfocus-toggle {
+/* SL-5 · THE LOCALITY REGISTER (D-SL5-PEWTER-LOCALITY-RD · fulfills the D-AFS teaser —
+   its style seat inherited). The pewter frame holds; the color informs via the GLOW,
+   never a flooded fill: GREEN edge-glow = Local (grounded · the own citizen); FUCHSIA
+   edge-glow = Specified (the calibration color — measuring another's aspect); the glow
+   DIMS when the specified target is offline (the honest dark state). */
+.menu-locality-chip {
   margin-left: auto;
   margin-top: 0.25rem;
   padding: 0.2rem 0.6rem;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.35);
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.12);
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.menu-locality-chip:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+.menu-locality-chip.locality-specified {
+  border-color: rgba(232, 121, 249, 0.5);
+  box-shadow: 0 0 8px rgba(232, 121, 249, 0.22);
+  color: #e879f9;
+}
+.menu-locality-chip.locality-specified.locality-dark {
+  border-color: rgba(232, 121, 249, 0.22);
+  box-shadow: none;
+  color: rgba(232, 121, 249, 0.5);
+}
+/* The expansion — a compact D5 closed-box column; rows stay pewter, the bead is the glow. */
+.menu-locality-drop {
+  margin-left: auto;
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+}
+.menu-locality-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: left;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.menu-anchorfocus-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.menu-locality-row:hover {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.menu-locality-row.locality-row-current {
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.14);
+}
+.locality-bead {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.locality-bead-live {
+  background: #4ade80;
+  box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+}
+.locality-bead-dim {
+  background: rgba(255, 255, 255, 0.22);
 }
 </style>
