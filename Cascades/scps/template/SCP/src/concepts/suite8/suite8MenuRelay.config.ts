@@ -28,7 +28,7 @@ import { suite8SetMenuStageHuirthBase } from './qualities/suite8SetMenuStageHuir
 import { suite8SetDesignationMenuStage } from './qualities/suite8SetDesignationMenuStage.quality.client';
 import { suite8SetDesignationMenuStageHuirthBase } from './qualities/suite8SetDesignationMenuStageHuirthBase.quality.huirth';
 // SL-3 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
-import { resolveSyncLocality } from './model/suite8SyncLibrary.model';
+import { resolveSyncLocality } from '../../model/suite8SyncLibrary.model';
 
 // SCS root — mirrors the cadmium menu relay SCS_ROOT (the live Cascades/). The menu.json path
 // lands at Cascades/Extended/<Template Suite 8>/menu.json (the install Opus retargets the

@@ -54,7 +54,7 @@ import { KNOWN_SUITE8_ENTRIES } from '../model/suite8Registration.model';
 import {
   readSpecifiedKey,
   resolveSyncLibraryPath,
-} from '../model/suite8SyncLibrary.model';
+} from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8MenuWatchDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;

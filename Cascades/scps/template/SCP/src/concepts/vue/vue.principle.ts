@@ -132,6 +132,8 @@ const DEFAULT_LANDING_MUXONOMIC: MuxonomicConfig<'default'> = {
 };
 
 import { graphiteScribeMuxonomic } from '../graphiteScribe/graphiteScribe.muxonomy';
+// SL-3 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+import { resolveSyncLocality } from '../../model/suite8SyncLibrary.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -911,6 +913,25 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       designation.includes('..')
     ) {
       return null;
+    }
+    // SL-3 · THE CASCADE-MEMORY LEG — the Sync Library resolution seam consults FIRST: a
+    // Specified locality serves the TARGET SCP's Extended/<designation>/ (reads AND the
+    // doc-save write leg — working with a locality remotely lands the work at the target;
+    // the observer's own Local files stand untouched, the Truth Law). The target dir must
+    // EXIST — absent ⇒ the local two-roots walk stands (the guarded fall-through).
+    const syncLocality = resolveSyncLocality(designation);
+    if (syncLocality) {
+      const targetExtendedBase = path.resolve(syncLocality.root, 'Cascades', 'Extended');
+      const targetDir = path.resolve(targetExtendedBase, designation);
+      if (targetDir !== targetExtendedBase && targetDir.startsWith(targetExtendedBase + path.sep)) {
+        try {
+          if (fs.statSync(targetDir).isDirectory()) {
+            return { extendedBase: targetExtendedBase, dir: targetDir };
+          }
+        } catch {
+          /* target dir absent — fall through to the local walk (never dark: the seam sinks its own skips) */
+        }
+      }
     }
     const roots: string[] = [process.cwd()];
     let walk = process.cwd();

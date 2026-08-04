@@ -63,6 +63,10 @@ import {
   type CascadeFileEntry,
   type SuiteCascadeHuirthPrinciple,
 } from '../suiteCascade.type';
+// SL-3 · the Sync Library resolution seam — a SHARED-MODEL downward import (src/model/ ·
+// the shatteriteMenu/stcpComponentRelay stratum), NOT a suite8 import: the boundary
+// discipline above holds (suiteCascade remains the PRIOR base, standing alone).
+import { resolveSyncLocality } from '../../../model/suite8SyncLibrary.model';
 // DPASL-D1 · BOUNDARY DISCIPLINE — the watcher is the PURE CONSUMER. It imports NOTHING
 // from `../../suite8/` (suite8 is the EMERGENT base that muxifies suiteCascade; suiteCascade
 // is the PRIOR base, must stand alone). The watcher reads ONLY its OWN `k_.cascades` Record
@@ -89,8 +93,20 @@ import {
 const SCS_ROOT = path.resolve(process.cwd());
 
 // Resolve the absolute cascade ROOT for a repository-relative cascade directory.
-const resolveCascadeRoot = (cascadeDirectory: string): string =>
-  path.resolve(SCS_ROOT, cascadeDirectory);
+// SL-3 · THE CASCADE-MEMORY LEG (DIAMOND-SYNC-LIBRARY.md): an Extended registrant whose
+// designation carries a SPECIFIED locality resolves against the TARGET SCP's root — the
+// Sync Library's resolution seam, read fresh per call (the JSON is the truth). The General
+// cascade + a null resolution keep the local base byte-identical. NOTE (carded): a specified
+// flip re-points FRESH loads + the floor route immediately; the LIVE content-watch re-arm on
+// flip rides SL-5's set-specified motion (the menu leg's re-arm precedent).
+const resolveCascadeRoot = (cascadeDirectory: string): string => {
+  const name = deriveCascadeName(cascadeDirectory);
+  if (name !== GENERAL_CASCADE_NAME) {
+    const locality = resolveSyncLocality(name);
+    if (locality) return path.resolve(locality.root, cascadeDirectory);
+  }
+  return path.resolve(SCS_ROOT, cascadeDirectory);
+};
 
 // Resolve the absolute Cascade.json path for a repository-relative cascade directory.
 const resolveCascadeJsonPath = (cascadeDirectory: string): string =>
