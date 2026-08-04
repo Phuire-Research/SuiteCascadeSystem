@@ -247,6 +247,15 @@ export type Suite8HuirthState = {
   // a per-designation stage here via the keyed Base quality (Base-maintenance · Seam 2); the SMRP
   // relay reads this Record selector + broadcasts the keyed relay. Always {} at boot (KeyedSelector).
   shatteriteMenus: Record<string, MenuDocument>;
+  // U2 · THE USHER MODE RECORD (the Usher Reframe · DIAMOND-SYNC-LIBRARY.md) — per-designation
+  // Sync Library mode, hydrated from SyncLibrary.json by the Usher principle's library watcher.
+  // The setStage mode machine's stages selector-gate on this Record. Always {} (KeyedSelector).
+  syncModes: Record<string, 'local' | 'target'>;
+};
+// U2 · the Usher mode Base payload (Huirth-only · NOT in actionExchange · TQNI discipline).
+export type Suite8SetSyncModeHuirthBasePayload = {
+  designation: string;
+  mode: 'local' | 'target';
 };
 export type Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase: Quality<Suite8HuirthState, Suite8SetMenuStageHuirthBasePayload>;
@@ -255,6 +264,8 @@ export type Suite8HuirthQualities = {
     Suite8HuirthState,
     Suite8SetDesignationMenuStageHuirthBasePayload
   >;
+  // U2 · the Usher mode Base quality (the library watcher dispatches; the machine gates).
+  suite8SetSyncModeHuirthBase: Quality<Suite8HuirthState, Suite8SetSyncModeHuirthBasePayload>;
 };
 export type Suite8HuirthConcept = Concept<Suite8HuirthState, Suite8HuirthQualities>;
 

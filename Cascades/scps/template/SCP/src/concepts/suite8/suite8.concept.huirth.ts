@@ -29,12 +29,16 @@ import { suite8MenuWatchPrinciple } from './principles/suite8MenuWatch.principle
 // SL-1 · THE SYNC LIBRARY BOOT REGISTRATION — the Demometeric means' further plurality
 // (Cascades/Extended/<name>/SyncLibrary.json · localScp registered · Local = the source of truth).
 import { suite8SyncLibrarySeedPrinciple } from './principles/suite8SyncLibrarySeed.principle.huirth';
+// U2 · THE USHER STAGE PLANNER (the Usher Reframe · the setStage mode machine) + its mode quality.
+import { suite8SyncUsherPrinciple } from './principles/suite8SyncUsher.principle.huirth';
+import { suite8SetSyncModeHuirthBase } from './qualities/suite8SetSyncModeHuirthBase.quality.huirth';
 
 // Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base (both
 // Huirth-only · local reducers · neither in actionExchange).
 const suite8HuirthQualities: Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase,
   suite8SetDesignationMenuStageHuirthBase,
+  suite8SetSyncModeHuirthBase,
 };
 
 export const createSuite8HuirthConcept = () =>
@@ -44,5 +48,10 @@ export const createSuite8HuirthConcept = () =>
     suite8HuirthQualities,
     // The thin menu-watch dir-watch (arms the menu.json relay) + the SMRP+BOCR relay principle
     // (reads suite8.k.menuStage · broadcasts suite8SetMenuStage).
-    [suite8MenuWatchPrinciple, suite8MenuStcpRelayPrinciple, suite8SyncLibrarySeedPrinciple],
+    [
+      suite8MenuWatchPrinciple,
+      suite8MenuStcpRelayPrinciple,
+      suite8SyncLibrarySeedPrinciple,
+      suite8SyncUsherPrinciple,
+    ],
   );

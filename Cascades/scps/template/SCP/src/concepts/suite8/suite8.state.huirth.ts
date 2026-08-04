@@ -25,5 +25,9 @@ export function createSuite8HuirthState(): Suite8HuirthState {
     // dir-watch writes per-designation stages via suite8SetDesignationMenuStageHuirthBase; the SMRP
     // relay reads this Record + broadcasts the keyed relay.
     shatteriteMenus: {},
+
+    // U2 · THE USHER MODE RECORD — always {} at boot (KeyedSelector); the Usher principle's
+    // library watcher hydrates per-designation modes via suite8SetSyncModeHuirthBase.
+    syncModes: {},
   };
 }

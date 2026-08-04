@@ -643,3 +643,13 @@ export const replaceRegisteredFromTarget = (
   sinkSyncLibraryTelemetry('usher.replace-from-target', { designation, targetRoot, ...out });
   return out;
 };
+
+// U2 · THE KNOWN SURFACE REGISTRATIONS — per-designation watch targets beyond the three
+// base surfaces, applied additively at Usher boot (the Demometeric means: an aspect's
+// surfaces registered by designation). The Cadmium Researcher's frontier/ (the Topic
+// Bulletin's directory-class tree) is the first citizen — the C728 salvo's contention.
+export const KNOWN_SURFACE_REGISTRATIONS: Record<string, Record<string, string>> = {
+  'Cadmium Researcher': {
+    frontier: ['Cascades', 'Extended', 'Cadmium Researcher', 'frontier'].join('/'),
+  },
+};
