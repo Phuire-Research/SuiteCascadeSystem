@@ -993,7 +993,7 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // Body { specified: string | null }. The model refuses an unknown key with its reason (never a
   // dark write); the Truth Law holds (`local` untouched). The SL-3 library watcher re-arms the
   // menu on this write; the SL-4 fire resolution reads fresh — the page follows LIVE.
-  expressApp.post('/suite8-sync-locality/:designation', (req, res) => {
+  expressApp.post('/suite8-sync-locality/:designation', express.json(), (req, res) => {
     try {
       const designation = req.params.designation ?? '';
       const body = (req.body ?? {}) as { specified?: unknown };

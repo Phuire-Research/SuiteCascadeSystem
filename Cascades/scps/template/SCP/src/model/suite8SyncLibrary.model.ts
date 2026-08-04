@@ -198,8 +198,12 @@ export const normalizeSyncLibrary = (
 
 // SL-2 · THE BRIDGE KEY RING (the SCP-side read) — the per-SCP bridge.json the bridge
 // fans out carries `syncRing: [{ scpName, root, status }]` (the SCPs available through
-// the SCS-Bridge · archived excluded). Absent (a pre-SL-2 bridge) ⇒ [] — the library
-// stands Local-only, the honest degraded state.
+// the SCS-Bridge · archived excluded). U3 · THE PUBLISHED-BRIDGE FALLBACK (the field
+// Concluder: syncRing ABSENT under the published 0.944.1 bridge, which predates the
+// composer): when syncRing is absent, the ring DERIVES from `boundScps` — whose entries
+// carry `dir` (the MD-1 Sovereignty field) + `status` in every published bridge.json.
+// Installed-but-unbound SCPs carry no dir there — the honest reduced ring; the full ring
+// returns the moment a syncRing-aware bridge runs. Both absent ⇒ [] (Local-only).
 export type SyncRingEntry = {
   scpName: string;
   root: string;
@@ -212,16 +216,35 @@ export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
       path.resolve(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
       'utf8',
     );
-    const parsed = JSON.parse(raw) as { syncRing?: unknown };
-    if (!Array.isArray(parsed.syncRing)) return [];
-    return parsed.syncRing.filter(
-      (e): e is SyncRingEntry =>
-        isPlainObject(e) &&
-        typeof e.scpName === 'string' &&
-        e.scpName.length > 0 &&
-        typeof e.root === 'string' &&
-        e.root.length > 0,
-    );
+    const parsed = JSON.parse(raw) as { syncRing?: unknown; boundScps?: unknown };
+    if (Array.isArray(parsed.syncRing)) {
+      return parsed.syncRing.filter(
+        (e): e is SyncRingEntry =>
+          isPlainObject(e) &&
+          typeof e.scpName === 'string' &&
+          e.scpName.length > 0 &&
+          typeof e.root === 'string' &&
+          e.root.length > 0,
+      );
+    }
+    if (isPlainObject(parsed.boundScps)) {
+      const out: SyncRingEntry[] = [];
+      for (const [scpName, entry] of Object.entries(parsed.boundScps)) {
+        if (
+          isPlainObject(entry) &&
+          typeof entry.dir === 'string' &&
+          entry.dir.length > 0
+        ) {
+          out.push({
+            scpName,
+            root: entry.dir,
+            status: typeof entry.status === 'string' ? entry.status : 'offline',
+          });
+        }
+      }
+      return out;
+    }
+    return [];
   } catch {
     return [];
   }
