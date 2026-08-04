@@ -219,6 +219,82 @@ export const composeRingIntoPaths = (
   return { ...shape, paths };
 };
 
+// ════════════════════════════════════════════════════════════════════════════
+// SL-3 · LEG 1 · THE RESOLUTION SEAM (the single truth every consumer calls)
+// ════════════════════════════════════════════════════════════════════════════
+// resolveSyncLocality(designation): reads the designation's SyncLibrary.json FRESH per call
+// (the JSON is the truth — no state duplication · central registration). Returns:
+//   - null                      → the LOCAL flow stands, byte-identical to today
+//                                 (specified null · library absent · target key absent anor
+//                                 unreadable — the guarded fall-through, never dark).
+//   - SyncLocalityResolution    → the SPECIFIED representation: the target SCP's key + root
+//                                 + ABSOLUTE surface paths (menu · cascadeManifest · working)
+//                                 resolved against the TARGET's root.
+// THE TRUTH LAW holds structurally here: resolution switches READ PATHS only — no content
+// ever copies into the Local files.
+export type SyncLocalityResolution = {
+  targetScp: string;
+  root: string;
+  menuAbs: string;
+  cascadeManifestAbs: string;
+  workingAbs: string;
+};
+
+export const resolveSyncLocality = (designation: string): SyncLocalityResolution | null => {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(resolveSyncLibraryPath(designation), 'utf8'));
+  } catch {
+    return null; // library absent anor unreadable — Local stands (no library, no override).
+  }
+  if (!isPlainObject(raw)) return null;
+  const specified =
+    typeof raw.specified === 'string' && raw.specified.trim().length > 0
+      ? raw.specified.trim()
+      : null;
+  if (specified === null) return null; // the default — Local IS the locality.
+  const paths = isPlainObject(raw.paths) ? raw.paths : {};
+  const target = paths[specified];
+  if (
+    !isPlainObject(target) ||
+    typeof target.root !== 'string' ||
+    target.root.length === 0
+  ) {
+    sinkSyncLibraryTelemetry('resolve.skip', {
+      designation,
+      specified,
+      reason: 'specified-key-absent-anor-rootless',
+    });
+    return null; // guarded fall-through — Local stands, and the skip names itself.
+  }
+  const rel = (field: 'menu' | 'cascadeManifest' | 'working'): string => {
+    const v = target[field];
+    return typeof v === 'string' && v.length > 0
+      ? v
+      : defaultLocalPathsFor(designation)[field];
+  };
+  return {
+    targetScp: specified,
+    root: target.root,
+    menuAbs: path.resolve(target.root, rel('menu')),
+    cascadeManifestAbs: path.resolve(target.root, rel('cascadeManifest')),
+    workingAbs: path.resolve(target.root, rel('working')),
+  };
+};
+
+// The specified-key read alone (the re-arm comparator — cheap, no path resolution).
+export const readSpecifiedKey = (designation: string): string | null => {
+  try {
+    const raw = JSON.parse(readFileSync(resolveSyncLibraryPath(designation), 'utf8'));
+    if (!isPlainObject(raw)) return null;
+    return typeof raw.specified === 'string' && raw.specified.trim().length > 0
+      ? raw.specified.trim()
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 export type SyncLibrarySeedResult = {
   shape: SyncLibraryShape;
   wrote: boolean;

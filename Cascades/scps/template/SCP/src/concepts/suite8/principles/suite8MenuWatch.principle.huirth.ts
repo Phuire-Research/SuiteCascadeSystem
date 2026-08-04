@@ -50,6 +50,11 @@ import type {
 import { createStcpComponentRelay } from '../../../model/stcpComponentRelay.model';
 import { createSuite8DesignationRelayConfig } from '../suite8MenuRelay.config';
 import { KNOWN_SUITE8_ENTRIES } from '../model/suite8Registration.model';
+// SL-3 · LEG 3 · the re-arm comparator + the library path (the Specified subscription).
+import {
+  readSpecifiedKey,
+  resolveSyncLibraryPath,
+} from '../model/suite8SyncLibrary.model';
 
 export type Suite8MenuWatchDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;
@@ -110,6 +115,10 @@ export const suite8MenuWatchPrinciple: Suite8MenuWatchPrincipleType = ({ plan, n
   // WPS · one FSWatcher per registered designation, keyed by Name (NDEP). The Map is the teardown
   // ledger — the cleanup function closes EVERY handle (S4 Seam 4 · no-leak invariant).
   const watcherMap = new Map<string, FSWatcher>();
+  // SL-3 · LEG 3 · the Specified subscription: one SyncLibrary.json watcher per designation +
+  // the last-known specified key (the re-arm comparator). Both torn down in cleanup.
+  const libraryWatcherMap = new Map<string, FSWatcher>();
+  const lastSpecifiedByDesignation = new Map<string, string | null>();
   // IE-D4 · the live Extended dir-watch handle + its debounce timer (Principle-scope · closed in cleanup).
   let extendedDirWatcher: FSWatcher | null = null;
   let addDirDebounceTimer: NodeJS.Timeout | null = null;
@@ -131,6 +140,62 @@ export const suite8MenuWatchPrinciple: Suite8MenuWatchPrincipleType = ({ plan, n
         void menuRelay.readAndDispatchSbis(nextA); // FIRST-LOAD hydration for this designation.
         console.log('[Suite8 MenuWatch] armed designation ·', trimmed);
         sinkMenuWatchTelemetry('arm-designation', { designation: trimmed });
+      }
+      // SL-3 · LEG 3 · record the specified key the arm resolved under + subscribe to the
+      // designation's SyncLibrary.json — a `specified` change RE-ARMS through the seam
+      // (tear down → re-create the config → fresh watcher → re-hydrate). Idempotent: one
+      // library watcher per designation, held for teardown.
+      lastSpecifiedByDesignation.set(trimmed, readSpecifiedKey(trimmed));
+      if (!libraryWatcherMap.has(trimmed)) {
+        try {
+          const libraryWatcher = chokidarWatch(resolveSyncLibraryPath(trimmed), {
+            persistent: true,
+            ignoreInitial: true,
+            awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
+          });
+          const handleLibraryChange = (): void => {
+            const nowSpecified = readSpecifiedKey(trimmed);
+            const wasSpecified = lastSpecifiedByDesignation.get(trimmed) ?? null;
+            if (nowSpecified === wasSpecified) return; // paths edits without a locality change — no re-arm.
+            console.log(
+              '[Suite8 MenuWatch] sync-locality change ·',
+              trimmed,
+              '·',
+              wasSpecified ?? 'Local',
+              '→',
+              nowSpecified ?? 'Local',
+              '· re-arming',
+            );
+            sinkMenuWatchTelemetry('sync-locality.rearm', {
+              designation: trimmed,
+              from: wasSpecified ?? 'Local',
+              to: nowSpecified ?? 'Local',
+            });
+            lastSpecifiedByDesignation.set(trimmed, nowSpecified);
+            const oldWatcher = watcherMap.get(trimmed);
+            if (oldWatcher) {
+              try {
+                oldWatcher.close();
+              } catch {
+                /* already closed */
+              }
+              watcherMap.delete(trimmed);
+            }
+            armDesignation(trimmed); // re-enters through the seam · fresh config · re-hydrates.
+          };
+          libraryWatcher.on('change', handleLibraryChange);
+          libraryWatcher.on('add', handleLibraryChange);
+          libraryWatcher.on('error', () => {
+            /* the library watch must never harm the menu circuit */
+          });
+          libraryWatcherMap.set(trimmed, libraryWatcher);
+        } catch (err) {
+          sinkMenuWatchTelemetry('sync-locality.watch.skip', {
+            designation: trimmed,
+            reason: 'arm-failed',
+            error: String(err),
+          });
+        }
       }
     } catch (err) {
       console.log('[Suite8 MenuWatch] arm.skip · reason=arm-failed · designation=', trimmed, '·', err);
@@ -248,6 +313,16 @@ export const suite8MenuWatchPrinciple: Suite8MenuWatchPrincipleType = ({ plan, n
       }
     }
     watcherMap.clear();
+    // SL-3 · LEG 3 · the library subscription teardown (the no-leak invariant extends).
+    for (const watcher of libraryWatcherMap.values()) {
+      try {
+        watcher.close();
+      } catch {
+        /* already closed */
+      }
+    }
+    libraryWatcherMap.clear();
+    lastSpecifiedByDesignation.clear();
     menuWatchPlan.conclude();
   };
 };
