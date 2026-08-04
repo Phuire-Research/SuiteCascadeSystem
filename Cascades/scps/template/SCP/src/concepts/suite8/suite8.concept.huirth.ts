@@ -26,6 +26,9 @@ import { suite8SetMenuStageHuirthBase } from './qualities/suite8SetMenuStageHuir
 import { suite8SetDesignationMenuStageHuirthBase } from './qualities/suite8SetDesignationMenuStageHuirthBase.quality.huirth';
 import { suite8MenuStcpRelayPrinciple } from './principles/suite8MenuStcpRelay.principle.huirth';
 import { suite8MenuWatchPrinciple } from './principles/suite8MenuWatch.principle.huirth';
+// SL-1 · THE SYNC LIBRARY BOOT REGISTRATION — the Demometeric means' further plurality
+// (Cascades/Extended/<name>/SyncLibrary.json · localScp registered · Local = the source of truth).
+import { suite8SyncLibrarySeedPrinciple } from './principles/suite8SyncLibrarySeed.principle.huirth';
 
 // Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base (both
 // Huirth-only · local reducers · neither in actionExchange).
@@ -41,5 +44,5 @@ export const createSuite8HuirthConcept = () =>
     suite8HuirthQualities,
     // The thin menu-watch dir-watch (arms the menu.json relay) + the SMRP+BOCR relay principle
     // (reads suite8.k.menuStage · broadcasts suite8SetMenuStage).
-    [suite8MenuWatchPrinciple, suite8MenuStcpRelayPrinciple],
+    [suite8MenuWatchPrinciple, suite8MenuStcpRelayPrinciple, suite8SyncLibrarySeedPrinciple],
   );
