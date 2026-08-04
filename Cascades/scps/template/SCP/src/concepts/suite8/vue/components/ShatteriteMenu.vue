@@ -128,14 +128,20 @@ const originScpName = ref<string>('');
 // the full design holds at Cascades/Working/RD-ANCHOR-FOCUS-LOCAL.md for re-entry
 // (the server record fields + the ?scpName= proxy + listS8AnchorsByScp remain landed).
 // ============================================================
-// The focused citizen = the page's OWN citizen (originScpName · C880 — resolves via
-// /scp-config; '' pre-resolve → undefined = transitional designation-wide match).
-const focusedAnchorScpName = computed<string | undefined>(() => originScpName.value || undefined);
-// Own-citizen session matcher for the SOE/re-engage polls (spawn machinery is ALWAYS
-// own-citizen; a poll must never settle on another SCP's row).
+// U4B · THE LOCALITY INDUCTION (the user's ruling — supersedes the prior Anchor-Scope
+// hold): the focused citizen INDUCTS the CHOSEN LOCALITY when set (syncLocality.targetScp
+// — the Register's resolved target); otherwise it defaults to the page's OWN citizen
+// (originScpName · C880 — resolves via /scp-config; '' pre-resolve → undefined =
+// transitional designation-wide match). ALL the anchor means transfer over through this
+// one seat — the anchor computed · anchorAlive · re-engage · focus · the fire seats.
+const focusedAnchorScpName = computed<string | undefined>(
+  () => syncLocality.value?.targetScp || originScpName.value || undefined,
+);
+// The FOCUSED-citizen session matcher for the re-engage polls — follows the induction
+// (the poll watches the CHOSEN locality's citizen; under Local that is the own citizen).
 function matchesOwnCitizen(s: ScsBridgeSessionEntry): boolean {
-  const own = originScpName.value;
-  return own ? (s.scpName ?? null) === own : true;
+  const focused = focusedAnchorScpName.value;
+  return focused ? (s.scpName ?? null) === focused : true;
 }
 
 // PAOLR · the page's Anchor for this suite8Name — scoped to the FOCUSED citizen (D-AFS).
@@ -166,8 +172,17 @@ const autoModeEnabled = ref<boolean>(false);
 // OFF ('prompt'). `anchor` (NOT anchorAlive) is the gate: an allocated/offline anchor already owns
 // the page → no new spawn (the existing options stay inert until it relaunches). Once a live anchor
 // appears, anchor.value flips truthy → this falls false → the normal options render (no extra wiring).
+// U4B · SPAWN SUPPRESSION UNDER A SPECIFIED LOCALITY: spawning creates a NEW own-citizen
+// session (the bridge has no cross-SCP spawn routing) — under a specified locality that
+// would mint a MIS-ANCHORED origin citizen the target-scoped anchor can never see (the r4
+// hazard). The honest posture: no spawn while viewing another's locality; ENGAGE the
+// target's anchor (present anor re-engage) anor release to Local to spawn.
 const showSpawnOption = computed<boolean>(
-  () => isAnchorAuthority.value && !anchor.value && anchorSpawnMode.value === 'prompt',
+  () =>
+    isAnchorAuthority.value &&
+    !anchor.value &&
+    anchorSpawnMode.value === 'prompt' &&
+    !syncLocality.value?.targetScp,
 );
 
 // P1 RE-ENGAGE GATE · the ORPHAN-ANCHOR case: an anchor entry EXISTS (isAnchor=true) but is NOT
@@ -484,6 +499,12 @@ function autoDecideAnchor(): void {
       // (3) NO anchor after the FULL settle window → genuine first run. C470: the spawn fires
       // ONLY on 'auto' (the toggle); 'prompt' no-ops — the Spawn + Anchor button renders.
       resolveOnce(() => {
+        // U4B · the spawn suppression extends to the AUTO path — never mint an
+        // own-citizen session while a specified locality is in view.
+        if (syncLocality.value?.targetScp) {
+          console.log('[ShatteriteMenu U4B] NO anchor after settle · locality SPECIFIED · no auto-spawn · suite8Name=', props.suite8Name);
+          return;
+        }
         if (anchorSpawnMode.value === 'auto' && !spawning.value) {
           // C471 · THE SPAWN DOUBLE-CHECK — re-verify the SERVER truth at fire time (the ref may
           // be the localStorage seed): only a server-confirmed 'auto' spawns.
@@ -582,6 +603,9 @@ function refreshS8ModeFromDisk(): void {
       if (j) anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
     })
     .catch(() => { /* unreachable — the ref stands */ });
+  // U4B · the locality follows the same tab-in truth-refresh (a Register change in
+  // another window must re-filter this page's anchor on return).
+  void fetchSyncLocality();
   }
 // C486 · THE DESIGNATION-ARRIVAL RE-ARM (the Cadmium residue): pages whose designation
 // hydrates ASYNC over the relay (cadmiumDesignationName starts EMPTY) mount this menu before
@@ -937,51 +961,14 @@ const localityLabel = computed<string>(() => {
   return `Locality: Local${s.localScp ? ` · ${s.localScp}` : ''}`;
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// SL-4 · THE DISPATCH-ANCHOR RESOLUTION (the Vantage Law · DIAMOND-SYNC-LIBRARY.md)
-// ════════════════════════════════════════════════════════════════════════════
-// Fetched AT FIRE TIME (SRAFB — read-at-fire, no cache staleness): GET
-// /suite8-sync-locality/<designation>. `targetScp` non-null = a SPECIFIED locality is
-// RESOLVED — the dispatch targets THAT SCP's anchor session (found in the shared
-// sessionsList by (suite8Name, targetScp)); originScpName stays LOCAL inside
-// triggerSendMessage (the Firing-Vantage Name — the M7 cross-rail law; never conflated).
-// The ORIGIN `anchor` computed + ALL lifecycle machinery (spawn · re-engage · tombstone)
-// are NEVER touched by this resolution (the Anchor-Scope Law) — this resolves the
-// DISPATCH target only.
-//   - targetScp null (unspecified anor ghost key) → the local anchor, byte-identical.
-//   - targetScp resolved but its anchor ABSENT anor not launched → null + warn — the
-//     fire BLOCKS (never a silent local fire under a specified locality — the r4 hazard
-//     cure). The UI affordance (ring liveness) lands with SL-5.
-//   - the endpoint absent anor failing (an older server) → the local anchor (fail-open
-//     to the pre-SL-4 behavior).
-async function resolveDispatchAnchor(): Promise<ScsBridgeSessionEntry | null> {
-  try {
-    const abort = new AbortController();
-    const timeoutId = setTimeout(() => abort.abort(), 2000);
-    const res = await fetch(
-      `/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`,
-      { signal: abort.signal },
-    );
-    clearTimeout(timeoutId);
-    if (res.ok) {
-      const j = (await res.json()) as { targetScp?: string | null };
-      const targetScp = typeof j?.targetScp === 'string' && j.targetScp.length > 0 ? j.targetScp : null;
-      if (targetScp) {
-        const remote = resolveS8Anchor(sessionsList.value, props.suite8Name, targetScp);
-        if (remote && remote.status === 'launched') return remote;
-        console.warn(
-          '[ShatteriteMenu SL-4] specified locality has no alive anchor · targetScp=',
-          targetScp,
-          '· fire BLOCKED (never a silent local fire under a specified locality)',
-        );
-        return null;
-      }
-    }
-  } catch {
-    /* endpoint absent anor timed out — the Local anchor stands (pre-SL-4 behavior) */
-  }
-  return anchor.value ?? null;
-}
+// U4B · THE SL-4 PRUNE — resolveDispatchAnchor (the fire-time double-fetch) is RETIRED:
+// the LOCALITY INDUCTION at focusedAnchorScpName makes the `anchor` computed ITSELF the
+// resolved dispatch target (the specified citizen's anchor when a locality is chosen; the
+// own citizen's otherwise). The fire seats read `anchor.value` synchronously — no per-fire
+// fetch latency, no divergence between two resolutions. The honest block survives free:
+// a specified locality with no alive target anchor ⇒ anchor undefined ⇒ the seats' own
+// "no alive Anchor" warn + ok:false. originScpName stays LOCAL inside triggerSendMessage
+// (the Firing-Vantage Name — the M7 cross-rail law, unchanged).
 
 async function handleOption(option: MenuOption): Promise<void> {
   // SMUP: ANY option engagement means the user has noticed the menu — clear the ping.
@@ -989,8 +976,8 @@ async function handleOption(option: MenuOption): Promise<void> {
   if (!optionsEnabled.value || dispatchingLabel.value) return;
 
   const ctrl = controller.value;
-  // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
-  const target = await resolveDispatchAnchor();
+  // U4B · the anchor IS the resolved dispatch target (the locality induction).
+  const target = anchor.value;
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu SMSP] no alive Anchor for option · suite8Name=', props.suite8Name);
     emit('option-selected', { label: option.label, kind: option.kind, ok: false });
@@ -1194,8 +1181,8 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   const pairDirective = option.inputConfig?.pairDirective;
   if (typeof pairDirective === 'string' && pairDirective.length > 0) {
     const ctrl = controller.value;
-    // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
-    const target = await resolveDispatchAnchor();
+    // U4B · the anchor IS the resolved dispatch target (the locality induction).
+    const target = anchor.value;
     if (!ctrl || !target) {
       console.warn('[ShatteriteMenu TRP] no alive Anchor for pairing submit · suite8Name=', props.suite8Name);
       emit('option-selected', { label: option.label, kind: option.kind, ok: false });
@@ -1230,8 +1217,8 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   if (!categories) return; // nothing to submit
 
   const ctrl = controller.value;
-  // SL-4 · the dispatch target resolves through the Sync Locality (Specified anor Local).
-  const target = await resolveDispatchAnchor();
+  // U4B · the anchor IS the resolved dispatch target (the locality induction).
+  const target = anchor.value;
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu MOIS] no alive Anchor for submit · suite8Name=', props.suite8Name);
     emit('option-selected', { label: option.label, kind: option.kind, ok: false });
