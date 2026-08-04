@@ -122,6 +122,17 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
 
 // C880 ref hoisted above the D-AFS block — the focus watchers evaluate their source at registration (TDZ guard).
 const originScpName = ref<string>('');
+// U4B-fix · C880 CLASS — the SL-5 locality type + refs HOISTED above the induction
+// computed (focusedAnchorScpName reads syncLocality; anything evaluating that computed
+// at setup registration hits the TDZ — the field ReferenceError that killed the menu).
+type SyncLocalityInfo = {
+  localScp: string | null;
+  specified: string | null;
+  targetScp: string | null;
+  ring: { scpName: string; status: string }[];
+};
+const syncLocality = ref<SyncLocalityInfo | null>(null);
+const localityOpen = ref<boolean>(false);
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
 // half · ACTIVE). The LOCAL cross-citizen tabbing is PRUNED to a disabled teaser chip —
@@ -901,15 +912,8 @@ async function primeSend(
 // fire resolution reads fresh: the page follows LIVE, no reload. An offline target is
 // choosable (a registration, not a call) — the chip dims + the blocked-fire warn carries
 // the honesty until it comes live. Never touches anchor lifecycle (the Anchor-Scope Law).
-type SyncLocalityInfo = {
-  localScp: string | null;
-  specified: string | null;
-  targetScp: string | null;
-  ring: { scpName: string; status: string }[];
-};
-const syncLocality = ref<SyncLocalityInfo | null>(null);
-const localityOpen = ref<boolean>(false);
-
+// (the SyncLocalityInfo type + syncLocality/localityOpen refs are HOISTED above the
+// D-AFS induction — the C880 TDZ law; the machinery stays here.)
 async function fetchSyncLocality(): Promise<void> {
   try {
     const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`);

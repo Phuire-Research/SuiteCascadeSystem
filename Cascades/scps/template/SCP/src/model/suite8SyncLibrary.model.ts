@@ -317,6 +317,20 @@ export const resolveSyncLocality = (designation: string): SyncLocalityResolution
     });
     return null; // guarded fall-through — Local stands, and the skip names itself.
   }
+  // U5B · THE STALE-ROOT GUARD (the archived-SCP induction): a specified key whose root
+  // no longer stands on disk (the SCP archived anor moved) falls through to Local with its
+  // reason named — the ushers never target a ghost, the anchor never filters for a gone
+  // citizen, the page never wedges. Reinstate restores the root → the resolution returns.
+  try {
+    if (!statSync(target.root).isDirectory()) throw new Error('not-a-directory');
+  } catch {
+    sinkSyncLibraryTelemetry('resolve.skip', {
+      designation,
+      specified,
+      reason: 'target-root-absent-anor-archived',
+    });
+    return null;
+  }
   const rel = (field: 'menu' | 'cascadeManifest' | 'working'): string => {
     const v = target[field];
     return typeof v === 'string' && v.length > 0
