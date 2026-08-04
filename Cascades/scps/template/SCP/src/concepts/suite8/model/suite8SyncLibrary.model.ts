@@ -169,6 +169,56 @@ export const normalizeSyncLibrary = (
   };
 };
 
+// SL-2 · THE BRIDGE KEY RING (the SCP-side read) — the per-SCP bridge.json the bridge
+// fans out carries `syncRing: [{ scpName, root, status }]` (the SCPs available through
+// the SCS-Bridge · archived excluded). Absent (a pre-SL-2 bridge) ⇒ [] — the library
+// stands Local-only, the honest degraded state.
+export type SyncRingEntry = {
+  scpName: string;
+  root: string;
+  status: string;
+};
+
+export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
+  try {
+    const raw = readFileSync(
+      path.resolve(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
+      'utf8',
+    );
+    const parsed = JSON.parse(raw) as { syncRing?: unknown };
+    if (!Array.isArray(parsed.syncRing)) return [];
+    return parsed.syncRing.filter(
+      (e): e is SyncRingEntry =>
+        isPlainObject(e) &&
+        typeof e.scpName === 'string' &&
+        e.scpName.length > 0 &&
+        typeof e.root === 'string' &&
+        e.root.length > 0,
+    );
+  } catch {
+    return [];
+  }
+};
+
+// Compose the ring into a shape's `paths` — the bridge is AUTHORITATIVE for ring-derived
+// keys (roots move on reinstall); keys NOT in the ring (user-borne exotics) are PRESERVED
+// (the Additive Law); the library's OWN localScp is EXCLUDED (its vantage IS Local).
+export const composeRingIntoPaths = (
+  shape: SyncLibraryShape,
+  designation: string,
+  ring: SyncRingEntry[],
+): SyncLibraryShape => {
+  const paths: Record<string, SyncLibraryRemotePaths> = { ...shape.paths };
+  for (const entry of ring) {
+    if (entry.scpName === shape.localScp) continue;
+    paths[entry.scpName] = {
+      root: entry.root,
+      ...defaultLocalPathsFor(designation),
+    };
+  }
+  return { ...shape, paths };
+};
+
 export type SyncLibrarySeedResult = {
   shape: SyncLibraryShape;
   wrote: boolean;
@@ -192,7 +242,10 @@ export const seedSyncLibraryAdditive = (designation: string): SyncLibrarySeedRes
       sinkSyncLibraryTelemetry('seed.malformed', { designation, error: String(err) });
     }
   }
-  const shape = normalizeSyncLibrary(raw, designation, localScp);
+  const normalized = normalizeSyncLibrary(raw, designation, localScp);
+  // SL-2 · the ring fills the composable paths (bridge-authoritative for ring keys ·
+  // user-borne exotics preserved · the local key excluded).
+  const shape = composeRingIntoPaths(normalized, designation, readSyncRingFromBridgeJson());
   const canonical = JSON.stringify(shape, null, 2) + '\n';
   let existing: string | null = null;
   try {
