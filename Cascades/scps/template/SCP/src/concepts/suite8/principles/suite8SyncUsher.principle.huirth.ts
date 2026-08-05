@@ -35,9 +35,16 @@ import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
-import type { Suite8HuirthState, Suite8HuirthQualities } from '../suite8.type';
+import type { Suite8HuirthState, Suite8HuirthQualities, Suite8SyncLocalitySnapshot } from '../suite8.type';
 import { KNOWN_SUITE8_ENTRIES } from '../model/suite8Registration.model';
 import { suite8SetSyncModeHuirthBase } from '../qualities/suite8SetSyncModeHuirthBase.quality.huirth';
+// B-RLM-2 · THE LOCALITY SNAPSHOT DISPATCH — the same two boundary legs that dispatch the mode +
+// the grace ALSO compose + dispatch the per-designation locality snapshot (the relay ground).
+import { suite8SetLocalityHuirthBase } from '../qualities/suite8SetLocalityHuirthBase.quality.huirth';
+// B-RLM-1′ · THE GRACE-AS-STATE TRIAD — the bridge-json + boot dispatchers open/cancel graces
+// (the fuse rides muxiumTimeOut inside the begin quality; scheduleRevertCheck is RETIRED).
+import { suite8BeginClosureGraceHuirthBase } from '../qualities/suite8BeginClosureGraceHuirthBase.quality.huirth';
+import { suite8CancelClosureGraceHuirthBase } from '../qualities/suite8CancelClosureGraceHuirthBase.quality.huirth';
 import {
   seedSyncLibraryAdditive,
   registerSyncSurfacesAdditive,
@@ -48,11 +55,14 @@ import {
   restoreRegisteredFromVault,
   sinkSyncLibraryTelemetry,
   KNOWN_SURFACE_REGISTRATIONS,
-  revertSpecifiedIfTargetNotLive,
   isSpecifiedTargetLive,
+  readSyncRingFromBridgeJson,
   readVaultHoldMarker,
   writeVaultHoldMarker,
   clearVaultHoldMarker,
+  // B-RLM-2 · the pure reads that compose a locality snapshot (all boundary reads at the boundary).
+  readLocalScpName,
+  readSpecifiedKey,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -71,7 +81,13 @@ const USHER_ADDDIR_DEBOUNCE_MS = 250;
 
 type StagePlannerHandle = { conclude: () => void };
 
-export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, plan, nextA }) => {
+export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
+  d_,
+  k_,
+  plan,
+  nextA,
+  concepts_,
+}) => {
   console.log('[Suite8 SyncUsher] Principle started · the Usher Stage Planner (U2)');
   sinkSyncLibraryTelemetry('usher.principle-start', { extendedRoot: EXTENDED_ROOT_ABS });
 
@@ -88,36 +104,107 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
   // lifecycle truth the bridge rewrites on every SCP transition).
   let bridgeJsonWatcher: FSWatcher | null = null;
   let livenessDebounceTimer: NodeJS.Timeout | null = null;
-  // B2b · THE GRACE COUNTDOWN — a not-live reading STARTS a countdown; a live reading
-  // CANCELS it; only a SUSTAINED closure reverts (the turn-over persistence: a bridge
-  // turn over restarts every SCP together — a standing selection must survive it).
-  const pendingRevertTimers = new Map<string, NodeJS.Timeout>();
-  const REVERT_GRACE_MS = 30_000;
-  const scheduleRevertCheck = (designation: string): void => {
+
+  // B-RLM-1′ · THE GRACE-AS-STATE FOLD — scheduleRevertCheck + pendingRevertTimers + REVERT_GRACE_MS
+  // are RETIRED (no setTimeout between the boundary and the muxium). The bridge-json + boot legs
+  // are now PURE DISPATCHERS: they read the ring fresh at the boundary, classify (the Ring
+  // Discriminator: targeted 8s anor systemic 30s), and dispatch a state-setting grace action. The
+  // grace's EXISTENCE is state (closureGraces); the fuse rides muxiumTimeOut inside the begin
+  // quality; cancellation is a state clear + the fired strategy's fire-time re-check.
+  const REVERT_GRACE_TARGETED_MS = 8_000; // kept-me-lost-target — the local SCP stands, the target closed.
+  const REVERT_GRACE_SYSTEMIC_MS = 30_000; // turn-over/boot — the bridge restarted every SCP together.
+
+  // Read the standing grace for a designation from state (the getState Concluder · this principle
+  // is registered ON suite8, so k_ = suite8's BundledSelectors).
+  const graceStanding = (designation: string): boolean => {
+    const state = k_.getState(concepts_);
+    return !!state && state.closureGraces[designation] !== undefined;
+  };
+
+  // THE DISPATCHER (bridge-json + boot) — read the ring FRESH at the boundary (the Zero-Knowledge
+  // read), then:
+  //   - target LIVE anor specified null → a standing grace is now stale → dispatch cancel (target-live).
+  //   - target NOT live + NO grace standing → THE RING DISCRIMINATOR → dispatch begin (targeted anor
+  //     systemic). The `!graceStanding` gate IS the Case-4 has-guard, now as state.
+  //   - target NOT live + a grace already stands → no-op (never restart anor escalate).
+  // `boot` forces SYSTEMIC (never targeted at boot — the lifecycle truth is mid-transition).
+  const dispatchGraceDecision = (designation: string, leg: 'watcher' | 'boot'): void => {
     const { specified, live } = isSpecifiedTargetLive(designation);
     if (specified === null || live) {
-      const held = pendingRevertTimers.get(designation);
-      if (held) {
-        clearTimeout(held);
-        pendingRevertTimers.delete(designation);
-        sinkSyncLibraryTelemetry('usher.closure-grace.cancelled', { designation });
+      if (graceStanding(designation)) {
+        nextA(
+          suite8CancelClosureGraceHuirthBase.actionCreator({
+            designation,
+            reason: 'target-live',
+          }),
+        );
       }
       return;
     }
-    if (pendingRevertTimers.has(designation)) return; // the countdown already runs.
-    sinkSyncLibraryTelemetry('usher.closure-grace.start', {
-      designation,
-      specified,
-      graceMs: REVERT_GRACE_MS,
-    });
-    pendingRevertTimers.set(
-      designation,
-      setTimeout(() => {
-        pendingRevertTimers.delete(designation);
-        // The write re-checks at fire — a target returned within the grace SURVIVES.
-        revertSpecifiedIfTargetNotLive(designation);
-      }, REVERT_GRACE_MS),
+    // specified stands + target not live.
+    if (graceStanding(designation)) return; // the state gate — a grace already rides.
+    // THE RING DISCRIMINATOR — from the fresh ring at the boundary. Boot is always systemic.
+    let graceMs = REVERT_GRACE_SYSTEMIC_MS;
+    if (leg === 'watcher') {
+      const ring = readSyncRingFromBridgeJson();
+      const localScp = seedSyncLibraryAdditive(designation).shape.localScp;
+      const localEntry = ring.find((e) => e.scpName === localScp);
+      const localPresentAndLive = !!localEntry && localEntry.status !== 'offline';
+      // Kept-me-lost-target: the local SCP is present + live in the ring AND the specified target
+      // is NOT → the short targeted grace (the page swaps in ~8-9s). Otherwise the systemic grace.
+      graceMs = localPresentAndLive ? REVERT_GRACE_TARGETED_MS : REVERT_GRACE_SYSTEMIC_MS;
+    }
+    nextA(
+      suite8BeginClosureGraceHuirthBase.actionCreator({
+        designation,
+        specified,
+        leg,
+        graceMs,
+      }),
     );
+  };
+
+  // B-RLM-2 · COMPOSE THE LOCALITY SNAPSHOT — pure reads at the Zero-Knowledge boundary (the ring +
+  // the resolution + the specified key), assembled into the state shape the relay broadcasts. The
+  // ring EXCLUDES the local SCP (its row is the Local row · the GET endpoint's convention · shape
+  // parity). Scholar AMENDMENT: targetRoot/targetLive/localLive ride the snapshot (the machine's
+  // TARGET transition + the Grace Sentinel read them FROM STATE · retiring the closure Map + the
+  // per-leg re-reads). A resolution failure (Local · absent · archived) → the Local sentinel snapshot.
+  const composeLocalitySnapshot = (designation: string): Suite8SyncLocalitySnapshot => {
+    const localScp = readLocalScpName();
+    const ring = readSyncRingFromBridgeJson();
+    const resolution = resolveSyncLocality(designation);
+    const { specified, live } = isSpecifiedTargetLive(designation);
+    const localEntry = localScp ? ring.find((e) => e.scpName === localScp) : undefined;
+    const localLive = !!localEntry && localEntry.status !== 'offline';
+    return {
+      localScp,
+      specified: readSpecifiedKey(designation),
+      targetScp: resolution ? resolution.targetScp : null,
+      targetRoot: resolution ? resolution.root : null,
+      targetLive: specified !== null ? live : false,
+      localLive,
+      // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET parity).
+      ring: ring
+        .filter((e) => e.scpName !== localScp)
+        .map((e) => ({ scpName: e.scpName, status: e.status })),
+    };
+  };
+
+  // B-RLM-2 · THE LOCALITY DISPATCHER — compose + dispatch the snapshot (the reducer no-ops an
+  // identical recompose · the change-gate lives in the reducer, so this stays a pure dispatcher).
+  // Shared by the library-watcher leg, the bridge-json leg, and the boot leg.
+  const dispatchLocalityFromDisk = (designation: string): void => {
+    const snapshot = composeLocalitySnapshot(designation);
+    nextA(suite8SetLocalityHuirthBase.actionCreator({ designation, snapshot }));
+    sinkSyncLibraryTelemetry('usher.locality-dispatch', {
+      designation,
+      specified: snapshot.specified,
+      targetScp: snapshot.targetScp,
+      targetLive: snapshot.targetLive,
+      localLive: snapshot.localLive,
+      ringCount: snapshot.ring.length,
+    });
   };
 
   const debounced = (key: string, fn: () => void): void => {
@@ -298,7 +385,10 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
   };
 
   // Read the library's truth → dispatch the mode (the reducer no-ops identical modes, so
-  // the machine's selector fires ONLY on a real flip).
+  // the machine's selector fires ONLY on a real flip). B-RLM-2 · ALSO compose + dispatch the
+  // locality snapshot (the relay ground) — the same disk read that drives the mode drives the
+  // locality (specified changes, path changes). The reducer's change-gate honors the no-storm
+  // discipline (an identical snapshot no-ops).
   const dispatchModeFromDisk = (designation: string): void => {
     const locality = resolveSyncLocality(designation);
     if (locality) targetRootByDesignation.set(designation, locality.root);
@@ -308,6 +398,8 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
         mode: locality ? 'target' : 'local',
       }),
     );
+    // B-RLM-2 · the locality snapshot rides the same leg (dispatchModeAndLocalityFromDisk).
+    dispatchLocalityFromDisk(designation);
   };
 
   const armDesignation = (designation: string): void => {
@@ -320,11 +412,12 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
     if (known) registerSyncSurfacesAdditive(trimmed, known);
     else seedSyncLibraryAdditive(trimmed);
     armMachine(trimmed);
-    // B2b · THE CLOSURE REVERT (boot leg · GRACE-WINDOWED) — a bridge turn over restarts
-    // every SCP together; the lifecycle truth is mid-transition at boot. A not-live
-    // reading starts the countdown; the target coming back within the grace HOLDS the
-    // standing selection (the prior operational means persists across the turn over).
-    scheduleRevertCheck(trimmed);
+    // B-RLM-1′ · THE CLOSURE REVERT (boot leg · GRACE-AS-STATE) — a bridge turn over restarts
+    // every SCP together; the lifecycle truth is mid-transition at boot. The dispatcher opens a
+    // SYSTEMIC 30s grace on a not-live specified target (never targeted at boot); the target
+    // coming back within the grace HOLDS the standing selection (the fired strategy's re-check
+    // no-ops). The state gate absorbs any mid-relaunch re-dispatch.
+    dispatchGraceDecision(trimmed, 'boot');
     dispatchModeFromDisk(trimmed);
     // The library subscription — a `specified` change on disk re-dispatches the mode.
     try {
@@ -394,11 +487,21 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
               awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 30 },
             },
           );
+          // B-RLM-1′ · THE PURE DISPATCHER — a lifecycle rewrite re-reads the ring FRESH per armed
+          // designation (the Ring Discriminator: targeted 8s if the local SCP stands + the target
+          // closed, systemic 30s otherwise) and dispatches a state-setting grace action (begin anor
+          // cancel). NO scheduleRevertCheck, NO setTimeout fuse here — the fuse rides muxiumTimeOut
+          // inside the begin quality. The 400ms debounce is KEPT-AS-BOUNDARY (the coalescer for the
+          // bridge's burst rewrites · the r1 verdict).
           const handleLifecycle = (): void => {
             if (livenessDebounceTimer) clearTimeout(livenessDebounceTimer);
             livenessDebounceTimer = setTimeout(() => {
               for (const designation of [...armed]) {
-                scheduleRevertCheck(designation);
+                dispatchGraceDecision(designation, 'watcher');
+                // B-RLM-2 · a bridge.json change moves ring status (SCPs come/go online) — refresh
+                // EVERY armed designation's locality snapshot so the relay pushes the new ring to
+                // clients (no poll). The reducer no-ops any unchanged snapshot (the change-gate).
+                dispatchLocalityFromDisk(designation);
               }
             }, 400);
           };
@@ -433,9 +536,8 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
       }
       extendedDirWatcher = null;
     }
-    // B2b · the grace countdowns teardown.
-    for (const t of pendingRevertTimers.values()) clearTimeout(t);
-    pendingRevertTimers.clear();
+    // B-RLM-1′ · the grace countdowns are RETIRED — the fuse rides muxiumTimeOut (the Tail Whip),
+    // which the muxium owns; nothing to clear here (no principle-held setTimeout for the grace).
     // B2 · the liveness watch teardown (the no-leak invariant extends).
     if (livenessDebounceTimer) {
       clearTimeout(livenessDebounceTimer);

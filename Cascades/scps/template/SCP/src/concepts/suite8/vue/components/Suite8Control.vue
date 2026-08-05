@@ -26,11 +26,19 @@
  * precedent this re-homes).
  */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import type { Muxium } from 'stratimux';
 // B1b · DSP-2a · THE SCP MANAGEMENT ORGAN (extracted from the Session Manager) replaces this
 // component's interim SCP drawer WHOLESALE — the same /bridge-roster + /bridge-boot lanes, now the
 // full helm (Spawn/Focus/Exit/Multiply/Delete + the boot/multiply bars + ONLINE/OFFLINE grouping).
 // Mounted `compact` (no W1 footer · no "SCP MANAGEMENT →" nav button) behind the existing SCPs toggle.
 import ScpManagementPanel from '../../../scsBridge/vue/components/ScpManagementPanel.vue';
+// B-RLM-2 · THE LOCALITY RELAY (the poll retirement) — the page muxium (bound by the parent Landing
+// into the universal controller · GPIM) carries the suite8 client concept whose relay-fed `localities`
+// Record this component now subscribes to. getGlobalScsBridgeController().getCurrentMuxium() is the
+// same held reference every controller dispatch uses; a keyed stage-planner reads localities[suite8Name].
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
+import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
+import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
 
 const props = defineProps<{
   suite8Name: string;
@@ -47,48 +55,100 @@ const syncLocality = ref<SyncLocalityInfo | null>(null);
 const drawerOpen = ref<boolean>(false);
 const gateNote = ref<string>('');
 
-async function fetchLocality(): Promise<void> {
-  try {
-    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`);
-    if (r.ok) syncLocality.value = (await r.json()) as SyncLocalityInfo;
-  } catch {
-    /* the endpoint absent — the Local default renders */
-  }
+// B-RLM-2 · map the relay snapshot (which carries the extra Scholar fields) down to the exact
+// SyncLocalityInfo shape the Effective Locality Law computeds already consume (unchanged).
+function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
+  return {
+    localScp: snap.localScp,
+    specified: snap.specified,
+    targetScp: snap.targetScp,
+    ring: Array.isArray(snap.ring) ? snap.ring : [],
+  };
 }
 
-// B1b · DSP-2a · fetchRoster / roster / RosterShape REMOVED — the SCP roster is now owned by the
-// muxified ScpManagementPanel (its own /bridge-roster poll + lifecycle). Only the LOCALITY lane
-// (fetchLocality · the ring rows) remains this component's concern.
+// B-RLM-2 · ODCF — one-shot mount hydration (the CadmiumLanding two-phase pattern). The relay only
+// reaches WebSocket-connected clients; a fresh page load before any relay fire would see the empty
+// default. GET the current locality ONCE and dispatch it into the page muxium so the subscription
+// gets an initial value. B3b · dispatch even the Local/empty snapshot (empty is a state).
+function hydrateLocalityOnce(): void {
+  const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return;
+  void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data || typeof data !== 'object') return;
+      const j = data as SyncLocalityInfo;
+      // Compose the state-shape snapshot from the GET (the extra Scholar fields default at the
+      // client — they are relay-authoritative; the GET carries the four the component consumes).
+      const snapshot: Suite8SyncLocalitySnapshot = {
+        localScp: typeof j.localScp === 'string' ? j.localScp : null,
+        specified: typeof j.specified === 'string' ? j.specified : null,
+        targetScp: typeof j.targetScp === 'string' ? j.targetScp : null,
+        targetRoot: null,
+        targetLive: false,
+        localLive: false,
+        ring: Array.isArray(j.ring) ? j.ring : [],
+      };
+      muxium.dispatch(
+        muxium.deck.d.client.d.suite8.e.suite8SetSyncLocalityClient({
+          localities: { [props.suite8Name]: snapshot },
+          closureGraces: {},
+        }),
+      );
+    })
+    .catch(() => {
+      /* ODCF absent/unreachable → stay on null; the relay still delivers live snapshots */
+    });
+}
+
+// B-RLM-2 · THE RELAY SUBSCRIPTION (the 10s poll retirement) — a keyed stage-planner on the page
+// muxium's suite8 localities Record. The selector fires on any relay-fed change; we read THIS
+// component's designation key (props.suite8Name) into syncLocality. Concludes on unmount (mirror
+// CadmiumLanding's stagePlanner.conclude cleanup). NO Stratimux plan runs synchronously in the
+// template — this is the ONE plan this component holds, purely for the reactive read.
+let localityPlanner: { conclude: () => void } | null = null;
+function subscribeLocality(): void {
+  const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return;
+  localityPlanner = muxium.plan<ClientMuxiumDeck>(
+    'suite8ControlLocalitySubscription',
+    ({ staging, stage, d__ }) =>
+      staging(() => [
+        stage(
+          ({ d }) => {
+            const record = d.client.d.suite8.k.localities.select() as Record<
+              string,
+              Suite8SyncLocalitySnapshot
+            >;
+            const snap = record[props.suite8Name];
+            syncLocality.value = snap ? snapshotToInfo(snap) : null;
+          },
+          { selectors: [d__.client.d.suite8.k.localities] },
+        ),
+      ]),
+  );
+}
+
+// B-RLM-2 · focus/visibility resilience KEPT (cheap · calls the SAME ODCF setter) — a page that was
+// backgrounded when a relay fired re-hydrates on return; the relay otherwise keeps state live.
 function refreshAll(): void {
-  void fetchLocality();
-}
-
-// DSP-B2c · THE LOCALITY POLL — the server-side Closure Revert writes specified:null with no
-// client signal; mount/focus/tab-in reads alone left Section I frozen (the field: a green bead
-// + a specified label held past the revert while the helm's own poll showed OFFLINE). A 10s
-// idle poll (the ScpManagementPanel self-rescheduling idiom) keeps the ring truth and the
-// current-locality line following the disk without any fast-poll complexity.
-let localityPollTimer: ReturnType<typeof setTimeout> | null = null;
-function scheduleLocalityPoll(): void {
-  localityPollTimer = setTimeout(() => {
-    void fetchLocality().finally(() => scheduleLocalityPoll());
-  }, 10_000);
+  hydrateLocalityOnce();
 }
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
-  refreshAll();
+  subscribeLocality();
+  hydrateLocalityOnce();
   window.addEventListener('focus', refreshAll);
   document.addEventListener('visibilitychange', refreshAll);
-  scheduleLocalityPoll();
 });
 onBeforeUnmount(() => {
   if (typeof window === 'undefined') return;
   window.removeEventListener('focus', refreshAll);
   document.removeEventListener('visibilitychange', refreshAll);
-  if (localityPollTimer !== null) {
-    clearTimeout(localityPollTimer);
-    localityPollTimer = null;
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
   }
 });
 

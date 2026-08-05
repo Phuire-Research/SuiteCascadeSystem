@@ -22,3 +22,12 @@ export const S8_MENU_STAGE_RELAY_TYPE = 'Suite8 Set Menu Stage';
 
 /** The keyed per-designation menu-stage relay (the N-watcher SMRP broadcast). */
 export const S8_DESIGNATION_MENU_STAGE_RELAY_TYPE = 'Suite8 Set Designation Menu Stage';
+
+/**
+ * B-RLM-2 · THE LOCALITY RELAY (the Reactive Locality Manifold · suite8LocalityStcpRelay SMRP
+ * broadcast). Carries the FULL localities Record AND the closureGraces Record (the grace relay ·
+ * Scholar AMENDMENT 2) — the poll retirement's wire type. NEVER-COPIED (no rewrite-touchable token
+ * in the export name) so the Forge mint routes the SERVER dialect into a generated page's local
+ * quality. MUST byte-match suite8SetSyncLocalityClient.quality.client (TQNI).
+ */
+export const S8_SYNC_LOCALITY_RELAY_TYPE = 'Suite8 Set Sync Locality Client';

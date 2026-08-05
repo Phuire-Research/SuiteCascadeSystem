@@ -51,6 +51,13 @@
  * Citation: EPOCH-SR-S4-GREEN-SCULPT.md §H5 (NCEC nextA) + S6 anchor-alive guard
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import type { Muxium } from 'stratimux';
+// B-RLM-2 · THE LOCALITY RELAY (the poll retirement) — the page muxium (GPIM-bound into the
+// controller by the parent Landing) carries the suite8 client concept whose relay-fed `localities`
+// Record this menu subscribes to (keyed by props.suite8Name). getCurrentMuxium() is the same held
+// reference the controller's triggers dispatch through; a keyed stage-planner feeds syncLocality.
+import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
+import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
 
 // C473 · THE DOUBLE-ENGAGE GUARD (r7: two menu instances on one page fired engage twice within
 // 40ms on every restart). Module-scoped — shared by every ShatteriteMenu instance in the bundle:
@@ -445,11 +452,12 @@ onMounted(() => {
   document.addEventListener('visibilitychange', refreshS8ModeOnVisible);
   // D-AFS · resolve the own citizen early — the focused-anchor scope needs it at render.
   void ensureOriginScpName();
-  // SL-5 · THE LOCALITY REGISTER — hydrate the chip at mount (the ring + the choice).
-  void fetchSyncLocality();
-  // DSP-B2c · THE LOCALITY POLL — the mirror chip AND the focused-anchor scope both read
-  // syncLocality; a server-side Closure Revert otherwise never reaches them until a tab-in.
-  scheduleLocalitySyncPoll();
+  // B-RLM-2 · THE LOCALITY RELAY — subscribe the page muxium's suite8 localities Record (the poll
+  // retirement) + ODCF-hydrate the chip once at mount (the ring + the choice). The relay keeps the
+  // mirror chip AND the focused-anchor scope live thereafter — a server-side Closure Revert reaches
+  // them within a beat of the Huirth state change, no 10s poll, no tab-in dependency.
+  subscribeLocality();
+  hydrateLocalityOnce();
   void fetch(s8AnchorSpawnPath(props.suite8Name))
     .then((r) => (r.ok ? r.json() : { anchorSpawn: 'prompt' }))
     .then((j: { anchorSpawn?: string }) => {
@@ -618,20 +626,79 @@ onBeforeUnmount(() => {
     window.removeEventListener('focus', refreshS8ModeFromDisk);
     document.removeEventListener('visibilitychange', refreshS8ModeOnVisible);
   }
-  if (localitySyncPollTimer !== null) {
-    clearTimeout(localitySyncPollTimer);
-    localitySyncPollTimer = null;
+  // B-RLM-2 · conclude the locality subscription plan (mirror CadmiumLanding's stagePlanner cleanup ·
+  // the no-leak invariant — the plan holds a WebSocket-fed selector; it must not outlive the mount).
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
   }
 });
 
-// DSP-B2c · THE LOCALITY POLL — a 10s self-rescheduling idle poll (the ScpManagementPanel
-// idiom) so the server-side Closure Revert reaches the chip and the focused-anchor scope
-// without waiting on a tab-in. Locality is a low-frequency signal; no fast-poll case.
-let localitySyncPollTimer: ReturnType<typeof setTimeout> | null = null;
-function scheduleLocalitySyncPoll(): void {
-  localitySyncPollTimer = setTimeout(() => {
-    void fetchSyncLocality().finally(() => scheduleLocalitySyncPoll());
-  }, 10_000);
+// B-RLM-2 · THE LOCALITY RELAY SUBSCRIPTION (the 10s poll retirement) — a keyed stage-planner on
+// the page muxium's suite8 localities Record. The selector fires on any relay-fed change; we read
+// THIS menu's designation key (props.suite8Name) into syncLocality (the hoisted ref the Effective
+// Locality Law computeds already consume). Concludes on unmount (mirror CadmiumLanding cleanup).
+let localityPlanner: { conclude: () => void } | null = null;
+function subscribeLocality(): void {
+  const muxium = controller.value?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return;
+  localityPlanner = muxium.plan<ClientMuxiumDeck>(
+    'shatteriteMenuLocalitySubscription',
+    ({ staging, stage, d__ }) =>
+      staging(() => [
+        stage(
+          ({ d }) => {
+            const record = d.client.d.suite8.k.localities.select() as Record<
+              string,
+              Suite8SyncLocalitySnapshot
+            >;
+            const snap = record[props.suite8Name];
+            syncLocality.value = snap
+              ? {
+                  localScp: snap.localScp,
+                  specified: snap.specified,
+                  targetScp: snap.targetScp,
+                  ring: Array.isArray(snap.ring) ? snap.ring : [],
+                }
+              : null;
+          },
+          { selectors: [d__.client.d.suite8.k.localities] },
+        ),
+      ]),
+  );
+}
+
+// B-RLM-2 · ODCF — one-shot mount hydration (the two-phase pattern). The relay only reaches
+// connected clients; a cold mount before any relay fire sees the empty default. GET the current
+// locality ONCE and dispatch it (per-key merge · other designations untouched) so the subscription
+// gets an initial value. B3b · dispatch even the Local/empty snapshot (empty is a state).
+function hydrateLocalityOnce(): void {
+  const muxium = controller.value?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return;
+  void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data || typeof data !== 'object') return;
+      const j = data as SyncLocalityInfo;
+      const snapshot: Suite8SyncLocalitySnapshot = {
+        localScp: typeof j.localScp === 'string' ? j.localScp : null,
+        specified: typeof j.specified === 'string' ? j.specified : null,
+        targetScp: typeof j.targetScp === 'string' ? j.targetScp : null,
+        targetRoot: null,
+        targetLive: false,
+        localLive: false,
+        ring: Array.isArray(j.ring) ? j.ring : [],
+      };
+      muxium.dispatch(
+        muxium.deck.d.client.d.suite8.e.suite8SetSyncLocalityClient({
+          localities: { [props.suite8Name]: snapshot },
+          closureGraces: {},
+        }),
+      );
+    })
+    .catch(() => {
+      /* ODCF absent/unreachable → stay on null; the relay still delivers live snapshots */
+    });
 }
 
 // C482 · THE TAB-IN FOLLOW — re-read the S8 truth (S8.json mode via GET + the tombstone via
@@ -643,9 +710,10 @@ function refreshS8ModeFromDisk(): void {
       if (j) anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
     })
     .catch(() => { /* unreachable — the ref stands */ });
-  // U4B · the locality follows the same tab-in truth-refresh (a Register change in
-  // another window must re-filter this page's anchor on return).
-  void fetchSyncLocality();
+  // B-RLM-2 · the locality follows the same tab-in truth-refresh (cheap resilience · KEPT) — it
+  // re-hydrates via the relay slot (ODCF dispatch into the muxium · the subscription flows it). The
+  // relay otherwise keeps it live; this only covers a change that landed while the tab was hidden.
+  hydrateLocalityOnce();
   }
 // C486 · THE DESIGNATION-ARRIVAL RE-ARM (the Cadmium residue): pages whose designation
 // hydrates ASYNC over the relay (cadmiumDesignationName starts EMPTY) mount this menu before
@@ -943,24 +1011,11 @@ async function primeSend(
 // the honesty until it comes live. Never touches anchor lifecycle (the Anchor-Scope Law).
 // (the SyncLocalityInfo type + syncLocality/localityOpen refs are HOISTED above the
 // D-AFS induction — the C880 TDZ law; the machinery stays here.)
-async function fetchSyncLocality(): Promise<void> {
-  try {
-    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`);
-    if (r.ok) {
-      const j = (await r.json()) as SyncLocalityInfo;
-      syncLocality.value = {
-        localScp: typeof j?.localScp === 'string' ? j.localScp : null,
-        specified: typeof j?.specified === 'string' ? j.specified : null,
-        targetScp: typeof j?.targetScp === 'string' ? j.targetScp : null,
-        ring: Array.isArray(j?.ring)
-          ? j.ring.filter((e) => e && typeof e.scpName === 'string')
-          : [],
-      };
-    }
-  } catch {
-    /* the endpoint absent (an older server) — the chip renders its Local default */
-  }
-}
+// B-RLM-2 · fetchSyncLocality REMOVED — the 10s poll + tab-in fetch are RETIRED. syncLocality is
+// now FED BY the relay subscription (subscribeLocality · d.client.d.suite8.k.localities) + the ODCF
+// one-shot hydrate (hydrateLocalityOnce, above). The chip renders the same syncLocality ref, only
+// the feed changed (relay-pushed, not polled). chooseLocality's write still POSTs the endpoint; the
+// relay then delivers the resolved result — no local re-fetch needed.
 
 // DSP-B2d · the chip renders the EFFECTIVE locality (the fold lives hoisted with the refs —
 // localityDark + effectiveTargetScp). A dead specified never rests on the chip: the label

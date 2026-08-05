@@ -32,13 +32,28 @@ import { suite8SyncLibrarySeedPrinciple } from './principles/suite8SyncLibrarySe
 // U2 · THE USHER STAGE PLANNER (the Usher Reframe · the setStage mode machine) + its mode quality.
 import { suite8SyncUsherPrinciple } from './principles/suite8SyncUsher.principle.huirth';
 import { suite8SetSyncModeHuirthBase } from './qualities/suite8SetSyncModeHuirthBase.quality.huirth';
+// B-RLM-1′ · THE GRACE-AS-STATE TRIAD (the Grace-as-State Fold · the Agreement form) — the
+// bridge-json dispatcher opens/cancels graces; the revert strategy fires on the muxiumTimeOut
+// Tail Whip; all three Huirth-only, absent from actionExchange (TQNI).
+import { suite8BeginClosureGraceHuirthBase } from './qualities/suite8BeginClosureGraceHuirthBase.quality.huirth';
+import { suite8CancelClosureGraceHuirthBase } from './qualities/suite8CancelClosureGraceHuirthBase.quality.huirth';
+import { suite8GraceRevertCheckHuirthBase } from './qualities/suite8GraceRevertCheckHuirthBase.quality.huirth';
+// B-RLM-2 · THE LOCALITY BASE + THE LOCALITY RELAY — the keyed Base quality the Usher's two boundary
+// dispatchers write, and the SMRP+BOCR relay that broadcasts the localities + closureGraces slices.
+import { suite8SetLocalityHuirthBase } from './qualities/suite8SetLocalityHuirthBase.quality.huirth';
+import { suite8LocalityStcpRelayPrinciple } from './principles/suite8LocalityStcpRelay.principle.huirth';
 
-// Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base (both
-// Huirth-only · local reducers · neither in actionExchange).
+// Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base + the
+// B-RLM-1′ grace-as-state triad (all Huirth-only · local reducers · none in actionExchange).
 const suite8HuirthQualities: Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase,
   suite8SetDesignationMenuStageHuirthBase,
   suite8SetSyncModeHuirthBase,
+  suite8BeginClosureGraceHuirthBase,
+  suite8CancelClosureGraceHuirthBase,
+  suite8GraceRevertCheckHuirthBase,
+  // B-RLM-2 · the locality Base (the Usher's boundary dispatchers write it · the relay reads it).
+  suite8SetLocalityHuirthBase,
 };
 
 export const createSuite8HuirthConcept = () =>
@@ -53,5 +68,8 @@ export const createSuite8HuirthConcept = () =>
       suite8MenuStcpRelayPrinciple,
       suite8SyncLibrarySeedPrinciple,
       suite8SyncUsherPrinciple,
+      // B-RLM-2 · the locality relay (SMRP on d.suite8.k.localities + closureGraces · BOCR on the
+      // WebSocket pool) — registered the way the usher principle is (a flat member of the array).
+      suite8LocalityStcpRelayPrinciple,
     ],
   );

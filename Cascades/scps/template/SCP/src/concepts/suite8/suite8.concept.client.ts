@@ -30,6 +30,8 @@ import { suite8SetFileSystemSheet } from './qualities/setFileSystemSheet.quality
 import { suite8SetMenuStage } from './qualities/suite8SetMenuStage.quality.client';
 // PRE-EPOCH · BSSM keyed relay-reception quality (the N-watcher SMRP broadcasts this type).
 import { suite8SetDesignationMenuStage } from './qualities/suite8SetDesignationMenuStage.quality.client';
+// B-RLM-2 · the locality relay-reception quality (the suite8LocalityStcpRelay SMRP broadcasts this).
+import { suite8SetSyncLocalityClient } from './qualities/suite8SetSyncLocalityClient.quality.client';
 
 const suite8Qualities: Suite8ClientQualities = {
   suite8RegisterSuite8,
@@ -47,6 +49,9 @@ const suite8Qualities: Suite8ClientQualities = {
   // PRE-EPOCH · BSSM keyed MenuStage relay reception (the N-watcher broadcasts 'Suite8 Set
   // Designation Menu Stage').
   suite8SetDesignationMenuStage,
+  // B-RLM-2 · the locality relay reception (the locality relay broadcasts 'Suite8 Set Sync
+  // Locality Client' · carries both localities + closureGraces).
+  suite8SetSyncLocalityClient,
 };
 
 export const createSuite8ClientConcept = () => {

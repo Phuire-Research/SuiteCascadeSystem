@@ -141,6 +141,17 @@ export type Suite8ClientState = {
   // SMRP relay broadcasts the keyed relay; this page reads shatteriteMenus[suite8Name]. Always {}
   // at boot — never optional (KeyedSelector · BSSM-Type non-optional discipline).
   shatteriteMenus: Record<string, MenuDocument>;
+
+  // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one locality snapshot per designation.
+  // The suite8LocalityStcpRelay SMRP broadcasts suite8SetSyncLocalityClient; this page reads
+  // localities[suite8Name] into its syncLocality ref (the poll retirement). Always {} at boot
+  // (KeyedSelector). B3b — an empty snapshot (Local sentinel) is first-class, dispatched not guarded.
+  localities: Record<string, Suite8SyncLocalitySnapshot>;
+
+  // B-RLM-2/B-RLM-3 · THE CLOSURE GRACES RECORD (client · relay-fed · Scholar AMENDMENT 2) — the
+  // relay carries the grace slice TOO so the UI can render the revert countdown (B-RLM-3 renders it;
+  // this band relays it). Always {} at boot (KeyedSelector).
+  closureGraces: Record<string, Suite8ClosureGrace>;
 };
 
 // ============================================
@@ -210,6 +221,16 @@ export type Suite8SetDesignationMenuStageHuirthBasePayload = {
   menuStage: MenuDocument;
 };
 
+// B-RLM-2 · THE CLIENT LOCALITY RELAY PAYLOAD — the suite8LocalityStcpRelay broadcasts the FULL
+// localities Record AND the FULL closureGraces Record (Scholar AMENDMENT 2 · the grace relay). The
+// client reducer REPLACES both slices (the relay carries the authoritative snapshot · the server is
+// the single writer of both). Registered in actionExchange (the relay crosses the WebSocket seam).
+// B3b — empty Records ({}) are first-class: the relay broadcasts them, the reducer writes them.
+export type Suite8SetSyncLocalityClientPayload = {
+  localities: Record<string, Suite8SyncLocalitySnapshot>;
+  closureGraces: Record<string, Suite8ClosureGrace>;
+};
+
 // ============================================
 // QUALITY TYPE DEFINITIONS
 // ============================================
@@ -230,6 +251,9 @@ export type Suite8ClientQualities = {
   suite8SetMenuStage: Quality<Suite8ClientState, Suite8SetMenuStagePayload>;
   // PRE-EPOCH · BSSM keyed relay-reception quality (the N-watcher SMRP broadcasts this type).
   suite8SetDesignationMenuStage: Quality<Suite8ClientState, Suite8SetDesignationMenuStagePayload>;
+  // B-RLM-2 · the locality relay-reception quality (the suite8LocalityStcpRelay SMRP broadcasts this).
+  // Replaces both the localities + closureGraces client slices (the server is the single writer).
+  suite8SetSyncLocalityClient: Quality<Suite8ClientState, Suite8SetSyncLocalityClientPayload>;
 };
 
 // ============================================
@@ -241,6 +265,37 @@ export type Suite8ClientConcept = Concept<Suite8ClientState, Suite8ClientQualiti
 // ============================================================
 // GTMS8C · HUIRTH FACE (thin server-Base home for menuStage + the STCP relay)
 // ============================================================
+// B-RLM-1′ · THE GRACE AS STATE (the Grace-as-State Fold · the Agreement form). One standing
+// closure grace per designation — its EXISTENCE + character become state so the state gates the
+// Case-4 relaunch break (never restart anor escalate a standing grace) and the fire-time re-check
+// reads it. The temporal fuse itself rides muxiumTimeOut (the Tail Whip · not state). NO optional
+// props — KeyedSelector discipline; startedAtIso is Informative record only, NEVER beat-compared.
+// Citation: D-RLM-SCHOLAR-STATE-SIGNALS-MEANS.md §2 · DIAMOND-DIAMETRIC-SUITE8-PATTERN.md C750 ADDENDUM.
+export type Suite8ClosureGrace = {
+  specified: string; // what the grace protects — the specified target key.
+  leg: 'watcher' | 'boot'; // which dispatcher opened it (Informative · telemetry).
+  graceMs: number; // 8_000 (targeted · kept-me-lost-target) anor 30_000 (systemic · turn-over/boot).
+  startedAtIso: string; // Informative only — the grace's birth stamp; never a clock comparand.
+};
+
+// B-RLM-2 · THE LOCALITY SNAPSHOT (the Reactive Locality Manifold · relay-fed) — the per-designation
+// locality Demometer as state. Mirrors the /suite8-sync-locality GET response shape (localScp ·
+// specified · targetScp · ring) so the two poll consumers (Suite8Control · ShatteriteMenu) slot in
+// without new mapping logic. Scholar AMENDMENT (D-RLM-SCHOLAR-STATE-SIGNALS-MEANS.md §1): the snapshot
+// ALSO carries the discriminator's Informative face in STATE — targetRoot (retires the
+// targetRootByDesignation closure Map · the machine's TARGET transition reads this), targetLive +
+// localLive (kept-me/lost-me classification the Grace Sentinel reads FROM STATE). NO optional props —
+// KeyedSelector discipline; always seeded as {} at boot.
+export type Suite8SyncLocalitySnapshot = {
+  localScp: string | null;
+  specified: string | null;
+  targetScp: string | null;
+  targetRoot: string | null; // AMENDS r3 — the resolved TARGET root (retires targetRootByDesignation).
+  targetLive: boolean; // AMENDS r3 — is the specified target live in the ring (the discriminator's Informative face).
+  localLive: boolean; // AMENDS r3 — is the local SCP present + live in the ring (kept-me classification).
+  ring: { scpName: string; status: string }[];
+};
+
 export type Suite8HuirthState = {
   menuStage: MenuStage;
   // PRE-EPOCH · BSSM keyed Record mirror on the Huirth (Base) side. The N-watcher dir-watch writes
@@ -251,12 +306,59 @@ export type Suite8HuirthState = {
   // Sync Library mode, hydrated from SyncLibrary.json by the Usher principle's library watcher.
   // The setStage mode machine's stages selector-gate on this Record. Always {} (KeyedSelector).
   syncModes: Record<string, 'local' | 'target'>;
+  // B-RLM-1′ · THE CLOSURE GRACES RECORD — per-designation standing revert grace. Always {} at
+  // boot (KeyedSelector). The bridge-json dispatcher writes an entry via suite8BeginClosureGrace
+  // (which registers the muxiumTimeOut revert strategy); the fired strategy anor a returned target
+  // clears it via suite8CancelClosureGrace. The `!closureGraces[designation]` presence IS the
+  // Case-4 has-guard, now as state.
+  closureGraces: Record<string, Suite8ClosureGrace>;
+  // B-RLM-2 · THE LOCALITIES RECORD — per-designation locality snapshot (relay-fed ground). Always
+  // {} at boot (KeyedSelector). The Usher principle's TWO boundary dispatchers (the library watcher's
+  // dispatchModeAndLocalityFromDisk + the bridge-json watcher's handleLifecycle + the boot leg)
+  // compose a snapshot (pure reads via the model) and dispatch suite8SetLocalityHuirthBase; the
+  // suite8LocalityStcpRelay SMRP stage selector-gates on this Record + broadcasts to all clients.
+  localities: Record<string, Suite8SyncLocalitySnapshot>;
 };
 // U2 · the Usher mode Base payload (Huirth-only · NOT in actionExchange · TQNI discipline).
 export type Suite8SetSyncModeHuirthBasePayload = {
   designation: string;
   mode: 'local' | 'target';
 };
+
+// B-RLM-1′ · THE GRACE-AS-STATE PAYLOADS (Huirth-only · NOT in actionExchange · TQNI discipline).
+// suite8BeginClosureGrace — writes the grace entry (reducer · state gate) + registers the
+// muxiumTimeOut revert strategy (method · the Agreement form: strategy built ONCE with
+// agreement: graceMs + margin, the callback refreshes + fires).
+export type Suite8BeginClosureGraceHuirthBasePayload = {
+  designation: string;
+  specified: string;
+  leg: 'watcher' | 'boot';
+  graceMs: number;
+};
+// suite8CancelClosureGrace — clears the grace entry (reducer). The revert strategy's success +
+// failure nodes both route here so the clear is state-signaled; the bridge dispatcher also fires
+// it when a target returns live.
+export type Suite8CancelClosureGraceHuirthBasePayload = {
+  designation: string;
+  reason: string;
+};
+// suite8GraceRevertCheck — the revert strategy's CHECK+ACT initial node. The method re-reads
+// closureGraces (state) + isSpecifiedTargetLive (boundary Concluder) at FIRE time: grace absent
+// anor target returned → strategyFailed (the failure node cancels); target not live → the pure-model
+// revert write → strategySuccess (the success node cancels).
+export type Suite8GraceRevertCheckHuirthBasePayload = {
+  designation: string;
+};
+
+// B-RLM-2 · THE LOCALITY BASE PAYLOAD (Huirth-only · NOT in actionExchange · TQNI discipline).
+// suite8SetLocalityHuirthBase — writes one designation's locality snapshot into the localities
+// Record (keyed write · shortest-path reducer · no-op on identical JSON). The Usher's two boundary
+// dispatchers + the boot leg dispatch it.
+export type Suite8SetLocalityHuirthBasePayload = {
+  designation: string;
+  snapshot: Suite8SyncLocalitySnapshot;
+};
+
 export type Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase: Quality<Suite8HuirthState, Suite8SetMenuStageHuirthBasePayload>;
   // PRE-EPOCH · BSSM keyed Huirth Base quality (the N-watcher dispatches this FIRST · Base-maintenance).
@@ -266,6 +368,25 @@ export type Suite8HuirthQualities = {
   >;
   // U2 · the Usher mode Base quality (the library watcher dispatches; the machine gates).
   suite8SetSyncModeHuirthBase: Quality<Suite8HuirthState, Suite8SetSyncModeHuirthBasePayload>;
+  // B-RLM-1′ · THE GRACE-AS-STATE TRIAD (all Huirth-only · local · NOT in actionExchange).
+  suite8BeginClosureGraceHuirthBase: Quality<
+    Suite8HuirthState,
+    Suite8BeginClosureGraceHuirthBasePayload
+  >;
+  suite8CancelClosureGraceHuirthBase: Quality<
+    Suite8HuirthState,
+    Suite8CancelClosureGraceHuirthBasePayload
+  >;
+  suite8GraceRevertCheckHuirthBase: Quality<
+    Suite8HuirthState,
+    Suite8GraceRevertCheckHuirthBasePayload
+  >;
+  // B-RLM-2 · THE LOCALITY BASE (Huirth-only · local reducer · NOT in actionExchange · the two
+  // Usher boundary dispatchers + boot leg dispatch it; the locality relay reads localities + broadcasts).
+  suite8SetLocalityHuirthBase: Quality<
+    Suite8HuirthState,
+    Suite8SetLocalityHuirthBasePayload
+  >;
 };
 export type Suite8HuirthConcept = Concept<Suite8HuirthState, Suite8HuirthQualities>;
 

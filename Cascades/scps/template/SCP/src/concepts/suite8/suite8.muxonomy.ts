@@ -22,7 +22,7 @@ import {
 // observes the shared Record on the Suite8 Landing (without aggregation the muxified
 // suiteCascade's properties are not registered as non-synced filterKeys on the page base).
 import { suiteCascadeMuxonomic } from '../suiteCascade/suiteCascade.muxonomy';
-import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
+import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE, S8_SYNC_LOCALITY_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
 
 const suite8LandingPage: PageEntry = {
   path: '/suite8',
@@ -97,6 +97,10 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
     // PRE-EPOCH · BSSM keyed Record of per-designation Shatterite Menu stages (driven by the
     // N-watcher SMRP relay · 'Suite8 Set Designation Menu Stage').
     'shatteriteMenus',
+    // B-RLM-2 · the relay-fed locality + closure-grace Records (local-only · relay writes them,
+    // they never ascend to the server · driven by 'Suite8 Set Sync Locality Client').
+    'localities',
+    'closureGraces',
     // A-1 B-6 reconciliation · AGGREGATE the muxified suiteCascade's filterKeys
     // (`cascades`, `activeCascadeDirectory`, `activeSubPage`) so the Suite8 page base
     // observes the shared Tier-2 Record. Sourced from the canonical suiteCascade
@@ -198,6 +202,14 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
         location: DeploymentTarget.Client,
         diameter: false,
       },
+      // B-RLM-2 · the locality relay-reception quality (suite8LocalityStcpRelay SMRP broadcasts this).
+      {
+        name: 'suite8SetSyncLocalityClient',
+        type: 'Suite8 Set Sync Locality Client',  // = VERBOSE('SetSyncLocalityClient') · TQNI byte-match
+        filePath: 'qualities/suite8SetSyncLocalityClient.quality.client.ts',
+        location: DeploymentTarget.Client,
+        diameter: false,
+      },
     ],
     strategies: [],
     principles: [],
@@ -225,6 +237,14 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
       {
         qualityName: 'suite8SetDesignationMenuStage',
         actionType: S8_DESIGNATION_MENU_STAGE_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetDesignationMenuStage') · byte-match
+        direction: ExchangeDirection.ServerToClient,
+      },
+      // B-RLM-2 · the locality relay — the suite8LocalityStcpRelay SMRP broadcasts this type; the
+      // generated page's exchange routes the SERVER dialect into its OWN local quality (the never-copied
+      // wire type survives the mint rewrite · the BO-1 law). The HuirthBase is ABSENT here (Huirth-only).
+      {
+        qualityName: 'suite8SetSyncLocalityClient',
+        actionType: S8_SYNC_LOCALITY_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetSyncLocalityClient') · byte-match
         direction: ExchangeDirection.ServerToClient,
       },
     ],

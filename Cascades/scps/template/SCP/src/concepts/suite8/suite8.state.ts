@@ -42,6 +42,15 @@ export function createSuite8ClientState(): Suite8ClientState {
     // PRE-EPOCH · BSSM keyed Record — one MenuStage per designation. Always {} at boot
     // (KeyedSelector · the N-watcher SMRP relay populates per-designation keys at runtime).
     shatteriteMenus: {},
+
+    // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one snapshot per designation. Always
+    // {} at boot (KeyedSelector). suite8LocalityStcpRelay broadcasts suite8SetSyncLocalityClient;
+    // Suite8Control + ShatteriteMenu read localities[suite8Name] into their syncLocality ref.
+    localities: {},
+
+    // B-RLM-2/B-RLM-3 · THE CLOSURE GRACES RECORD (client · relay-fed) — the grace slice rides the
+    // same relay (Scholar AMENDMENT 2) for the future countdown render. Always {} at boot.
+    closureGraces: {},
   };
 }
 
@@ -64,4 +73,7 @@ export const SUITE8_FILTER_KEYS: string[] = [
   'menuStage',
   // PRE-EPOCH · BSSM keyed Record of per-designation Shatterite Menu stages.
   'shatteriteMenus',
+  // B-RLM-2 · the relay-fed locality + closure-grace Records (local-only · never ascend to server).
+  'localities',
+  'closureGraces',
 ];
