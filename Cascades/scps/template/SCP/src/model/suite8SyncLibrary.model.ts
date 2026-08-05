@@ -690,3 +690,35 @@ export const KNOWN_SURFACE_REGISTRATIONS: Record<string, Record<string, string>>
     frontier: ['Cascades', 'Extended', 'Cadmium Researcher', 'frontier'].join('/'),
   },
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// B2 · THE CLOSURE REVERT (the Live Locality Law · maintenance requires live)
+// ════════════════════════════════════════════════════════════════════════════
+// A locality is only ever LIVE. When the specified target's SCP closes (its ring status
+// leaves live — the per-SCP bridge.json is the lifecycle truth the bridge rewrites), the
+// library REVERTS to the holding SCP of the immediate page: specified → null, WRITTEN —
+// and everything downstream follows through the already-proven circuit (the library
+// watchers re-arm the menu · the usher machine winds down and restores the vault · the
+// anchor induction returns to the own citizen · the Register goes green). Called by the
+// Usher principle at boot AND on every bridge.json change. Pure + scratch-testable.
+export type ClosureRevertResult = {
+  reverted: boolean;
+  reason: string;
+};
+
+export const revertSpecifiedIfTargetNotLive = (designation: string): ClosureRevertResult => {
+  const specified = readSpecifiedKey(designation);
+  if (specified === null) return { reverted: false, reason: 'local' };
+  const entry = readSyncRingFromBridgeJson().find((e) => e.scpName === specified);
+  if (entry && entry.status !== 'offline') {
+    return { reverted: false, reason: 'target-live' };
+  }
+  const w = writeSpecifiedAdditive(designation, null);
+  sinkSyncLibraryTelemetry('usher.closure-revert', {
+    designation,
+    was: specified,
+    reason: entry ? 'target-offline' : 'target-left-ring',
+    wrote: w.ok,
+  });
+  return { reverted: w.ok, reason: entry ? 'target-offline' : 'target-left-ring' };
+};

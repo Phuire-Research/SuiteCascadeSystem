@@ -48,6 +48,7 @@ import {
   restoreRegisteredFromVault,
   sinkSyncLibraryTelemetry,
   KNOWN_SURFACE_REGISTRATIONS,
+  revertSpecifiedIfTargetNotLive,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -79,6 +80,10 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
   const debounceTimers = new Map<string, NodeJS.Timeout>();
   let extendedDirWatcher: FSWatcher | null = null;
   let addDirDebounceTimer: NodeJS.Timeout | null = null;
+  // B2 · THE CLOSURE REVERT — the liveness watch on the per-SCP bridge.json (the
+  // lifecycle truth the bridge rewrites on every SCP transition).
+  let bridgeJsonWatcher: FSWatcher | null = null;
+  let livenessDebounceTimer: NodeJS.Timeout | null = null;
 
   const debounced = (key: string, fn: () => void): void => {
     const held = debounceTimers.get(key);
@@ -245,6 +250,9 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
     if (known) registerSyncSurfacesAdditive(trimmed, known);
     else seedSyncLibraryAdditive(trimmed);
     armMachine(trimmed);
+    // B2 · THE CLOSURE REVERT (boot leg) — the target may have closed while THIS SCP was
+    // down; the check reverts specified→null BEFORE the mode dispatch reads the truth.
+    revertSpecifiedIfTargetNotLive(trimmed);
     dispatchModeFromDisk(trimmed);
     // The library subscription — a `specified` change on disk re-dispatches the mode.
     try {
@@ -300,6 +308,37 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
         } catch {
           sinkSyncLibraryTelemetry('usher.live-adddir.skip', { reason: 'arm-failed' });
         }
+        // B2 · THE CLOSURE REVERT (the live leg) — watch the per-SCP bridge.json; on any
+        // lifecycle rewrite, every armed designation's specified target is re-checked:
+        // not live → specified→null WRITTEN (the model check) → the library watcher fires
+        // → the mode re-dispatches → the machine winds down and restores through the
+        // proven circuit. Debounced (the bridge rewrites in bursts).
+        try {
+          bridgeJsonWatcher = chokidarWatch(
+            path.resolve(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
+            {
+              persistent: true,
+              ignoreInitial: true,
+              awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 30 },
+            },
+          );
+          const handleLifecycle = (): void => {
+            if (livenessDebounceTimer) clearTimeout(livenessDebounceTimer);
+            livenessDebounceTimer = setTimeout(() => {
+              for (const designation of [...armed]) {
+                revertSpecifiedIfTargetNotLive(designation);
+              }
+            }, 400);
+          };
+          bridgeJsonWatcher.on('change', handleLifecycle);
+          bridgeJsonWatcher.on('add', handleLifecycle);
+          bridgeJsonWatcher.on('error', () => {
+            /* never harm the SCP */
+          });
+          sinkSyncLibraryTelemetry('usher.liveness-watch.armed', {});
+        } catch {
+          sinkSyncLibraryTelemetry('usher.liveness-watch.arm-skip', { reason: 'arm-failed' });
+        }
         dispatch(d.muxium.e.muxiumKick(), { iterateStage: true });
       },
       { beat: 33 },
@@ -321,6 +360,19 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
         /* already closed */
       }
       extendedDirWatcher = null;
+    }
+    // B2 · the liveness watch teardown (the no-leak invariant extends).
+    if (livenessDebounceTimer) {
+      clearTimeout(livenessDebounceTimer);
+      livenessDebounceTimer = null;
+    }
+    if (bridgeJsonWatcher) {
+      try {
+        bridgeJsonWatcher.close();
+      } catch {
+        /* already closed */
+      }
+      bridgeJsonWatcher = null;
     }
     for (const t of debounceTimers.values()) clearTimeout(t);
     debounceTimers.clear();
