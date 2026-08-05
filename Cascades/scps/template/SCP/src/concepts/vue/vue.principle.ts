@@ -1001,6 +1001,20 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         typeof body.specified === 'string' && body.specified.trim().length > 0
           ? body.specified.trim()
           : null;
+      // DSP-1 · THE HARD LIVE GATE (the Live Locality Law · C738/C739): setting a locality
+      // REQUIRES the target SCP SPAWNED — the ring's status is the truth; absent anor
+      // offline → REFUSED with the reason (the client rows gate too; this is the second
+      // face — never a soft write). Release (null) always passes.
+      if (specified !== null) {
+        const ringEntry = readSyncRingFromBridgeJson().find((e) => e.scpName === specified);
+        if (!ringEntry || ringEntry.status === 'offline') {
+          res.status(409).json({
+            ok: false,
+            error: `locality target must be live (spawned) to set: ${specified}`,
+          });
+          return;
+        }
+      }
       const result = writeSpecifiedAdditive(designation, specified);
       if (!result.ok) {
         res.status(400).json({ ok: false, error: result.error });

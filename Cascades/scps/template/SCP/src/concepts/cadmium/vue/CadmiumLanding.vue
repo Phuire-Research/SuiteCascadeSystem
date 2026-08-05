@@ -37,6 +37,8 @@ import ScsBridgeSessionManagement from '../../scsBridge/vue/components/ScsBridge
 // Macro SU · STSC · importable Shatterite Tome Setup component (Setup zone · feeds the Anchor)
 // Macro SM · SMSP · importable Shatterite Menu (agent-authored stage progression · IAJW relay)
 import ShatteriteMenu from '../../suite8/vue/components/ShatteriteMenu.vue';
+// DSP-2 · THE SUITE 8 CONTROL — held under suite8, mounted DIRECTLY (the holding law).
+import Suite8Control from '../../suite8/vue/components/Suite8Control.vue';
 // MD-6 · D-BP-2 · the CARD subpage mounts the MD-5 Character-Forward Card for Cadmium.
 import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
 // Macro SU · Cadmium's SFSD instance (Research Topics) + page-usage overview
@@ -813,6 +815,11 @@ onUnmounted(() => {
            default) — component consistency with the generated Suite 8 pages. The C861
            wrapper tab + the working-docs extension are retired with it. -->
       <Suite8CascadeDocs designation="Cadmium Researcher" />
+
+      <!-- DSP-2 · THE SUITE 8 CONTROL (the Featured component · held under suite8, mounted
+           DIRECTLY here — the holding law). The Locality + the SCP drawer (the hard live
+           gate · spawn-if-absent via the shared Session Manager lanes). Purely additive. -->
+      <Suite8Control :suite8-name="cadmiumDesignationName" />
 
       <!-- Macro SM · SMSP · Shatterite Menu zone — FIRST aspect the user sees (ASDR · above
            the Research Frontier / Bulletin). The agent-authored guidance/onboarding leads.
