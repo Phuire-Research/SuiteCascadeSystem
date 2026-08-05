@@ -92,13 +92,22 @@ onBeforeUnmount(() => {
   }
 });
 
+// DSP-B2d · THE EFFECTIVE LOCALITY LAW (the user's ruling) — the current-locality line
+// renders the EFFECTIVE locality: specified-if-live, else the real composed-on SCP. The
+// disk keeps the grace-protected selection; the surface never rests on a dead locality
+// (preventative — no command may be aimed where it cannot arrive).
+const specifiedLive = computed<boolean>(() => {
+  const s = syncLocality.value;
+  if (!s?.specified) return false;
+  return s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+});
 const localityLabel = computed<string>(() => {
   const s = syncLocality.value;
   if (!s) return 'Local';
-  if (s.specified) return s.specified;
+  if (s.specified && specifiedLive.value) return s.specified;
   return `Local${s.localScp ? ` · ${s.localScp}` : ''}`;
 });
-const isSpecified = computed<boolean>(() => !!syncLocality.value?.specified);
+const isSpecified = computed<boolean>(() => !!syncLocality.value?.specified && specifiedLive.value);
 
 // THE HARD LIVE GATE (client face) — a ring row is choosable ONLY when live.
 function ringRowLive(entry: { status: string }): boolean {

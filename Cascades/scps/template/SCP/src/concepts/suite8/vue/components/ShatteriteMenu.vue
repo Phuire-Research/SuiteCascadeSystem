@@ -132,6 +132,19 @@ type SyncLocalityInfo = {
   ring: { scpName: string; status: string }[];
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
+// DSP-B2d · THE EFFECTIVE LOCALITY LAW (the user's ruling) — the DISK holds the selection
+// (grace-protected · survives a bridge turn-over); the SURFACES render and ROUTE by the
+// EFFECTIVE locality: specified-if-live, else the real SCP this Suite 8 is composed on.
+// Preventative — a command must never target a dead locality while the disk waits out the
+// grace. (Hoisted with the refs — the C880 TDZ law; the induction below reads these.)
+const localityDark = computed<boolean>(() => {
+  const s = syncLocality.value;
+  if (!s?.specified) return false;
+  return !s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+});
+const effectiveTargetScp = computed<string | null>(() =>
+  syncLocality.value?.targetScp && !localityDark.value ? syncLocality.value.targetScp : null,
+);
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
 // half · ACTIVE). The LOCAL cross-citizen tabbing is PRUNED to a disabled teaser chip —
@@ -145,7 +158,7 @@ const syncLocality = ref<SyncLocalityInfo | null>(null);
 // transitional designation-wide match). ALL the anchor means transfer over through this
 // one seat — the anchor computed · anchorAlive · re-engage · focus · the fire seats.
 const focusedAnchorScpName = computed<string | undefined>(
-  () => syncLocality.value?.targetScp || originScpName.value || undefined,
+  () => effectiveTargetScp.value || originScpName.value || undefined,
 );
 // The FOCUSED-citizen session matcher for the re-engage polls — follows the induction
 // (the poll watches the CHOSEN locality's citizen; under Local that is the own citizen).
@@ -192,7 +205,7 @@ const showSpawnOption = computed<boolean>(
     isAnchorAuthority.value &&
     !anchor.value &&
     anchorSpawnMode.value === 'prompt' &&
-    !syncLocality.value?.targetScp,
+    !effectiveTargetScp.value,
 );
 
 // P1 RE-ENGAGE GATE · the ORPHAN-ANCHOR case: an anchor entry EXISTS (isAnchor=true) but is NOT
@@ -514,7 +527,7 @@ function autoDecideAnchor(): void {
       resolveOnce(() => {
         // U4B · the spawn suppression extends to the AUTO path — never mint an
         // own-citizen session while a specified locality is in view.
-        if (syncLocality.value?.targetScp) {
+        if (effectiveTargetScp.value) {
           console.log('[ShatteriteMenu U4B] NO anchor after settle · locality SPECIFIED · no auto-spawn · suite8Name=', props.suite8Name);
           return;
         }
@@ -949,17 +962,14 @@ async function fetchSyncLocality(): Promise<void> {
   }
 }
 
-// The chip's dark test — a specified target whose ring status is offline (anor absent).
-const localityDark = computed<boolean>(() => {
-  const s = syncLocality.value;
-  if (!s?.specified) return false;
-  return !s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
-});
-
+// DSP-B2d · the chip renders the EFFECTIVE locality (the fold lives hoisted with the refs —
+// localityDark + effectiveTargetScp). A dead specified never rests on the chip: the label
+// falls back to the composed-on SCP the moment the ring reads not-live, while the disk holds
+// the selection through the grace (a returning target flips the chip back with no user act).
 const localityLabel = computed<string>(() => {
   const s = syncLocality.value;
   if (!s) return 'Locality: Local';
-  if (s.specified) return `Locality: ${s.specified}${localityDark.value ? ' · offline' : ''}`;
+  if (s.specified && !localityDark.value) return `Locality: ${s.specified}`;
   return `Locality: Local${s.localScp ? ` · ${s.localScp}` : ''}`;
 });
 
@@ -1305,7 +1315,7 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
         v-if="isAnchorAuthority"
         class="menu-locality-chip menu-locality-mirror"
         data-testid="menu-locality-chip"
-        :class="{ 'locality-specified': !!syncLocality?.specified, 'locality-dark': localityDark }"
+        :class="{ 'locality-specified': !!effectiveTargetScp, 'locality-dark': localityDark }"
         :title="syncLocality?.specified
           ? `This page pertains to ${syncLocality.specified}'s locality — managed in the Suite 8 Control`
           : 'This page pertains to its own Local aspect — the locality is managed in the Suite 8 Control'"
