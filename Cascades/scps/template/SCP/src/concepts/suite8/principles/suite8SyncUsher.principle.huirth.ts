@@ -50,6 +50,9 @@ import {
   KNOWN_SURFACE_REGISTRATIONS,
   revertSpecifiedIfTargetNotLive,
   isSpecifiedTargetLive,
+  readVaultHoldMarker,
+  writeVaultHoldMarker,
+  clearVaultHoldMarker,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -211,28 +214,43 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
     });
   };
 
-  // The per-designation MODE MACHINE — two exclusive setStage stages (REFERENCE:778).
+  // The per-designation MODE MACHINE — three exclusive setStage stages (REFERENCE:778 ·
+  // DSP-B3a: the user's Closure Stage ruling). LOCAL-WATCH ⇄ TARGETED with the CLOSURE
+  // stage as the ONE structural exit from target: switch the vault back in → close the
+  // delivery watcher → kick into the Local Watching stage. Deselect anor closure-revert
+  // take the SAME stage — one path, two triggers.
   const armMachine = (designation: string): void => {
     if (machinePlans.has(designation)) return;
     const machine = plan(`Suite8 Sync Usher Machine · ${designation}`, ({ stage }) => [
-      // Stage 0 · LOCAL — the preservation posture. The selector fires on any syncModes
-      // change (and the firstRun free pass engages the boot posture).
+      // Stage 0 · LOCAL-WATCH — the preservation posture. The selector fires on any
+      // syncModes change (and the firstRun free pass engages the boot posture).
       stage(
         ({ d, dispatch }) => {
           const mode = (d.suite8.k.syncModes.select() as Record<string, string>)[designation] ?? 'local';
           if (mode === 'local') {
+            closeWatchers(deliveryWatchers, designation); // entry guard — stale target watchers die here.
             armPreservation(designation); // idempotent — the boot posture + re-entry.
             return;
           }
-          // The flip → TARGET: wind down preservation FIRST (the vault freezes as the last
-          // local truth) → replace the watched locations → arm delivery → advance.
+          // The flip → TARGET: wind down preservation FIRST → freeze the vault ONLY when
+          // it is not already holding → replace the watched locations → arm delivery.
           const targetRoot = targetRootByDesignation.get(designation) ?? '';
           if (!targetRoot) {
             sinkSyncLibraryTelemetry('usher.machine.skip', { designation, reason: 'no-target-root' });
             return; // stay LOCAL — never advance blind (the Halting discipline).
           }
           closeWatchers(preservationWatchers, designation);
-          snapshotRegisteredToVault(designation); // the final freeze before target content lands.
+          // THE VAULT HOLD MARKER (the boot-poison guard): a boot-with-target-active
+          // re-runs this transition while the tree holds DELIVERED content — the field
+          // loss froze that content into the vault (snapshot copied:18 at boot) and the
+          // restore became a no-op. The marker makes the freeze once-per-hold: snapshot
+          // fires ONLY at the genuine select (marker absent → the tree is local truth).
+          if (readVaultHoldMarker(designation)) {
+            sinkSyncLibraryTelemetry('usher.snapshot.skip', { designation, reason: 'vault-already-held' });
+          } else {
+            snapshotRegisteredToVault(designation); // the final freeze before target content lands.
+            writeVaultHoldMarker(designation, targetRoot);
+          }
           replaceRegisteredFromTarget(designation, targetRoot);
           armDelivery(designation, targetRoot);
           sinkSyncLibraryTelemetry('usher.machine.advance', { designation, to: 'target', targetRoot });
@@ -240,20 +258,40 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
         },
         { selectors: [d_.suite8.k.syncModes], beat: 1 },
       ),
-      // Stage 1 · TARGETED — the delivery posture.
+      // Stage 1 · TARGETED — the delivery posture. The release routes to the CLOSURE
+      // stage; no teardown work happens here.
       stage(
         ({ d, dispatch }) => {
           const mode = (d.suite8.k.syncModes.select() as Record<string, string>)[designation] ?? 'local';
           if (mode === 'target') return; // holding the posture — the watchers carry the work.
-          // The release → LOCAL: wind down delivery FIRST → restore the vault's frozen
-          // truth → re-arm preservation → return.
+          sinkSyncLibraryTelemetry('usher.machine.advance', { designation, to: 'closure' });
+          dispatch(d.muxium.e.muxiumKick(), { setStage: 2, throttle: 0 });
+        },
+        { selectors: [d_.suite8.k.syncModes], beat: 1 },
+      ),
+      // Stage 2 · CLOSURE (the user's Single Stage) — the one structural exit from
+      // target: close the delivery watchers + drain any in-flight delivery debounce →
+      // switch the files from .syncLocal/ back into the SCP's directory → release the
+      // hold marker → re-arm the local watch → kick into LOCAL-WATCH. Selector-less:
+      // the routing kick fires it once; every operation is idempotent.
+      stage(
+        ({ d, dispatch }) => {
           closeWatchers(deliveryWatchers, designation);
-          restoreRegisteredFromVault(designation);
+          const heldDeliver = debounceTimers.get(`deliver:${designation}`);
+          if (heldDeliver) {
+            clearTimeout(heldDeliver);
+            debounceTimers.delete(`deliver:${designation}`);
+          }
+          sinkSyncLibraryTelemetry('usher.closure-stage.deliver-closed', { designation });
+          const restored = restoreRegisteredFromVault(designation);
+          clearVaultHoldMarker(designation);
+          sinkSyncLibraryTelemetry('usher.closure-stage.restored', { designation, ...restored });
           armPreservation(designation);
+          sinkSyncLibraryTelemetry('usher.closure-stage.preserve-rearmed', { designation });
           sinkSyncLibraryTelemetry('usher.machine.advance', { designation, to: 'local' });
           dispatch(d.muxium.e.muxiumKick(), { setStage: 0, throttle: 0 });
         },
-        { selectors: [d_.suite8.k.syncModes], beat: 1 },
+        { beat: 1 },
       ),
     ]);
     machinePlans.set(designation, machine);

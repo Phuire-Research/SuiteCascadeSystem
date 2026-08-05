@@ -663,6 +663,45 @@ export const restoreRegisteredFromVault = (designation: string): UsherCopyResult
   return out;
 };
 
+// THE VAULT HOLD MARKER (DSP-B3a · the boot-poison guard) — the field loss: a bridge
+// turn-over rebooted the principle while the tree held DELIVERED target content; the boot
+// leg re-ran the local→target transition and its snapshot froze that delivered content
+// into the vault as if it were local truth (usher.snapshot copied:18 at boot) — the
+// restore then compared poison to poison (copied:0) and the local files never switched
+// back. The marker persists ON DISK inside the vault: written at the GENUINE select (the
+// one moment the tree is known-local), cleared by the Closure Stage after the restore.
+// While the marker stands, snapshot NEVER runs — re-freezing is structurally impossible.
+const VAULT_HOLD_MARKER_NAME = '.vaultHold.json';
+const vaultHoldMarkerPath = (designation: string): string =>
+  path.join(resolveSyncLocalDirectory(designation), VAULT_HOLD_MARKER_NAME);
+export const readVaultHoldMarker = (designation: string): { heldFor: string } | null => {
+  try {
+    const j = JSON.parse(readFileSync(vaultHoldMarkerPath(designation), 'utf8')) as {
+      heldFor?: unknown;
+    };
+    return typeof j?.heldFor === 'string' ? { heldFor: j.heldFor } : null;
+  } catch {
+    return null;
+  }
+};
+export const writeVaultHoldMarker = (designation: string, heldFor: string): void => {
+  try {
+    mkdirSync(resolveSyncLocalDirectory(designation), { recursive: true });
+    writeFileSync(vaultHoldMarkerPath(designation), JSON.stringify({ heldFor }), 'utf8');
+    sinkSyncLibraryTelemetry('vault-hold.written', { designation, heldFor });
+  } catch {
+    sinkSyncLibraryTelemetry('vault-hold.write-failed', { designation, heldFor });
+  }
+};
+export const clearVaultHoldMarker = (designation: string): void => {
+  try {
+    rmSync(vaultHoldMarkerPath(designation), { force: true });
+    sinkSyncLibraryTelemetry('vault-hold.cleared', { designation });
+  } catch {
+    /* absent — already clear */
+  }
+};
+
 // TARGET MODE · the delivery motion — every registered surface at the TARGET's root
 // replaces the local watched location (mirror semantics · NEVER touches the vault).
 export const replaceRegisteredFromTarget = (
