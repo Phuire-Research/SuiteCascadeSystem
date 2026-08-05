@@ -26,6 +26,11 @@
  * precedent this re-homes).
  */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+// B1b · DSP-2a · THE SCP MANAGEMENT ORGAN (extracted from the Session Manager) replaces this
+// component's interim SCP drawer WHOLESALE — the same /bridge-roster + /bridge-boot lanes, now the
+// full helm (Spawn/Focus/Exit/Multiply/Delete + the boot/multiply bars + ONLINE/OFFLINE grouping).
+// Mounted `compact` (no W1 footer · no "SCP MANAGEMENT →" nav button) behind the existing SCPs toggle.
+import ScpManagementPanel from '../../../scsBridge/vue/components/ScpManagementPanel.vue';
 
 const props = defineProps<{
   suite8Name: string;
@@ -39,15 +44,7 @@ type SyncLocalityInfo = {
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
 
-type RosterShape = {
-  bridgeUp?: boolean;
-  installedScps?: string[];
-  boundScps?: Record<string, { status?: string }>;
-  scpStatuses?: Record<string, string>;
-};
-const roster = ref<RosterShape | null>(null);
 const drawerOpen = ref<boolean>(false);
-const busyScp = ref<string | null>(null);
 const gateNote = ref<string>('');
 
 async function fetchLocality(): Promise<void> {
@@ -59,18 +56,11 @@ async function fetchLocality(): Promise<void> {
   }
 }
 
-async function fetchRoster(): Promise<void> {
-  try {
-    const r = await fetch('/bridge-roster');
-    if (r.ok) roster.value = (await r.json()) as RosterShape;
-  } catch {
-    roster.value = null;
-  }
-}
-
+// B1b · DSP-2a · fetchRoster / roster / RosterShape REMOVED — the SCP roster is now owned by the
+// muxified ScpManagementPanel (its own /bridge-roster poll + lifecycle). Only the LOCALITY lane
+// (fetchLocality · the ring rows) remains this component's concern.
 function refreshAll(): void {
   void fetchLocality();
-  void fetchRoster();
 }
 
 onMounted(() => {
@@ -117,41 +107,8 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   }
 }
 
-// The drawer's rows — the roster truth (installed ∪ statuses); the SAME lane the Session
-// Manager reads. status resolution: scpStatuses[name] anor boundScps[name].status anor 'offline'.
-const drawerRows = computed<{ scpName: string; status: string; isLocal: boolean }[]>(() => {
-  const r = roster.value;
-  const local = syncLocality.value?.localScp ?? null;
-  if (!r) return [];
-  const names = [...new Set(r.installedScps ?? [])];
-  return names.map((scpName) => ({
-    scpName,
-    status:
-      r.scpStatuses?.[scpName] ?? r.boundScps?.[scpName]?.status ?? 'offline',
-    isLocal: scpName === local,
-  }));
-});
-
-async function spawnScp(scpName: string): Promise<void> {
-  if (busyScp.value) return;
-  busyScp.value = scpName;
-  try {
-    await fetch('/bridge-boot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scpName }),
-    });
-  } catch {
-    /* the boot lane unreachable — the roster refresh shows the truth */
-  } finally {
-    // The boot settles asynchronously — refresh now + once more after a settle beat.
-    refreshAll();
-    setTimeout(() => {
-      refreshAll();
-      busyScp.value = null;
-    }, 2500);
-  }
-}
+// B1b · DSP-2a · drawerRows / spawnScp / busyScp REMOVED — the interim per-row Spawn drawer is
+// replaced WHOLESALE by <ScpManagementPanel compact /> (the full helm off the same bridge lanes).
 </script>
 
 <template>
@@ -197,30 +154,16 @@ async function spawnScp(scpName: string): Promise<void> {
       <p v-if="gateNote" class="s8c-gate-note hifi-mono">{{ gateNote }}</p>
     </div>
 
-    <!-- SECTION II · THE SCP DRAWER (spawn-if-absent · the shared Session Manager lanes) -->
+    <!-- SECTION II · THE SCP DRAWER — B1b · DSP-2a. The interim roster+Spawn rows are REPLACED
+         WHOLESALE by the muxified ScpManagementPanel (compact mode: no W1 footer · no "SCP
+         MANAGEMENT →" nav button) behind the SAME expandable SCPs toggle. The panel owns its own
+         /bridge-roster poll + the full helm (Spawn/Focus/Exit/Multiply/Delete + the bars). -->
     <div class="s8c-section">
       <button class="s8c-drawer-toggle hifi-mono" @click="drawerOpen = !drawerOpen">
         {{ drawerOpen ? '▾' : '▸' }} SCPs
       </button>
       <div v-if="drawerOpen" class="s8c-drawer">
-        <div v-for="row in drawerRows" :key="row.scpName" class="s8c-drawer-row">
-          <span
-            class="s8c-bead"
-            :class="row.status !== 'offline' ? 's8c-bead-live' : 's8c-bead-dim'"
-          ></span>
-          <span class="s8c-drawer-name">{{ row.scpName }}{{ row.isLocal ? ' · this page' : '' }}</span>
-          <button
-            v-if="row.status === 'offline'"
-            class="s8c-spawn hifi-mono"
-            :disabled="busyScp !== null"
-            @click="spawnScp(row.scpName)"
-          >
-            {{ busyScp === row.scpName ? 'SPAWNING…' : 'SPAWN' }}
-          </button>
-        </div>
-        <p v-if="drawerRows.length === 0" class="s8c-gate-note hifi-mono">
-          (the bridge roster is unreachable)
-        </p>
+        <ScpManagementPanel compact />
       </div>
     </div>
 
