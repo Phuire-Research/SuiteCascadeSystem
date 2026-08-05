@@ -680,7 +680,10 @@ onMounted(() => {
     void fetch('/cadmium-research-bulletin')
       .then((r) => (r.ok ? r.json() : []))
       .then((bulletin) => {
-        if (Array.isArray(bulletin) && bulletin.length > 0) {
+        // DSP-B3b · dispatch ANY valid array INCLUDING [] — the length>0 guard froze the
+        // display on the pre-restore content after a Sync Usher clear (empty is a state,
+        // not an absence).
+        if (Array.isArray(bulletin)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetResearchBulletin({
               researchBulletin: bulletin as CadmiumArticle[],
@@ -710,7 +713,9 @@ onMounted(() => {
     void fetch('/cadmium-topic-bulletin')
       .then((r) => (r.ok ? r.json() : []))
       .then((bulletin) => {
-        if (Array.isArray(bulletin) && bulletin.length > 0) {
+        // DSP-B3b · empty is a state, not an absence — dispatch [] so a restored-clean
+        // bulletin actually clears the slot (the guard made even a hard refresh hold 5).
+        if (Array.isArray(bulletin)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetTopicBulletin({
               topicBulletin: bulletin as CadmiumArticle[],
@@ -737,7 +742,8 @@ onMounted(() => {
     void fetch('/cadmium-topics')
       .then((r) => (r.ok ? r.json() : []))
       .then((topics) => {
-        if (Array.isArray(topics) && topics.length > 0) {
+        // DSP-B3b · same class — dispatch [] so a cleared topics registry clears the view.
+        if (Array.isArray(topics)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetTopics({
               topics: topics as CadmiumTopic[],
