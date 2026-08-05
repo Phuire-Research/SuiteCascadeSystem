@@ -63,16 +63,33 @@ function refreshAll(): void {
   void fetchLocality();
 }
 
+// DSP-B2c · THE LOCALITY POLL — the server-side Closure Revert writes specified:null with no
+// client signal; mount/focus/tab-in reads alone left Section I frozen (the field: a green bead
+// + a specified label held past the revert while the helm's own poll showed OFFLINE). A 10s
+// idle poll (the ScpManagementPanel self-rescheduling idiom) keeps the ring truth and the
+// current-locality line following the disk without any fast-poll complexity.
+let localityPollTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleLocalityPoll(): void {
+  localityPollTimer = setTimeout(() => {
+    void fetchLocality().finally(() => scheduleLocalityPoll());
+  }, 10_000);
+}
+
 onMounted(() => {
   if (typeof window === 'undefined') return;
   refreshAll();
   window.addEventListener('focus', refreshAll);
   document.addEventListener('visibilitychange', refreshAll);
+  scheduleLocalityPoll();
 });
 onBeforeUnmount(() => {
   if (typeof window === 'undefined') return;
   window.removeEventListener('focus', refreshAll);
   document.removeEventListener('visibilitychange', refreshAll);
+  if (localityPollTimer !== null) {
+    clearTimeout(localityPollTimer);
+    localityPollTimer = null;
+  }
 });
 
 const localityLabel = computed<string>(() => {

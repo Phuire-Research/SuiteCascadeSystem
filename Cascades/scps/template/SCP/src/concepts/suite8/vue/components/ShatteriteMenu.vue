@@ -434,6 +434,9 @@ onMounted(() => {
   void ensureOriginScpName();
   // SL-5 · THE LOCALITY REGISTER — hydrate the chip at mount (the ring + the choice).
   void fetchSyncLocality();
+  // DSP-B2c · THE LOCALITY POLL — the mirror chip AND the focused-anchor scope both read
+  // syncLocality; a server-side Closure Revert otherwise never reaches them until a tab-in.
+  scheduleLocalitySyncPoll();
   void fetch(s8AnchorSpawnPath(props.suite8Name))
     .then((r) => (r.ok ? r.json() : { anchorSpawn: 'prompt' }))
     .then((j: { anchorSpawn?: string }) => {
@@ -602,7 +605,21 @@ onBeforeUnmount(() => {
     window.removeEventListener('focus', refreshS8ModeFromDisk);
     document.removeEventListener('visibilitychange', refreshS8ModeOnVisible);
   }
+  if (localitySyncPollTimer !== null) {
+    clearTimeout(localitySyncPollTimer);
+    localitySyncPollTimer = null;
+  }
 });
+
+// DSP-B2c · THE LOCALITY POLL — a 10s self-rescheduling idle poll (the ScpManagementPanel
+// idiom) so the server-side Closure Revert reaches the chip and the focused-anchor scope
+// without waiting on a tab-in. Locality is a low-frequency signal; no fast-poll case.
+let localitySyncPollTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleLocalitySyncPoll(): void {
+  localitySyncPollTimer = setTimeout(() => {
+    void fetchSyncLocality().finally(() => scheduleLocalitySyncPoll());
+  }, 10_000);
+}
 
 // C482 · THE TAB-IN FOLLOW — re-read the S8 truth (S8.json mode via GET + the tombstone via
 // localStorage) whenever this window returns to the user. The refs RENDER; the file DECIDES.
