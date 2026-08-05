@@ -132,7 +132,6 @@ type SyncLocalityInfo = {
   ring: { scpName: string; status: string }[];
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
-const localityOpen = ref<boolean>(false);
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
 // half · ACTIVE). The LOCAL cross-citizen tabbing is PRUNED to a disabled teaser chip —
@@ -933,24 +932,6 @@ async function fetchSyncLocality(): Promise<void> {
   }
 }
 
-async function chooseLocality(scpName: string | null): Promise<void> {
-  try {
-    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ specified: scpName }),
-    });
-    if (!r.ok) {
-      console.warn('[ShatteriteMenu SL-5] locality write refused ·', await r.text());
-    }
-  } catch (err) {
-    console.warn('[ShatteriteMenu SL-5] locality write failed ·', err);
-  } finally {
-    localityOpen.value = false;
-    void fetchSyncLocality();
-  }
-}
-
 // The chip's dark test — a specified target whose ring status is offline (anor absent).
 const localityDark = computed<boolean>(() => {
   const s = syncLocality.value;
@@ -1299,41 +1280,21 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       <!-- SL-5 · THE LOCALITY REGISTER (fulfills the D-AFS teaser · D-SL5-PEWTER-LOCALITY-RD).
            The chip shows the chosen locality; the expansion lists Local + the ring; choosing
            POSTs `specified` and the page follows LIVE (the SL-3 re-arm · the SL-4 resolution). -->
-      <button
+      <!-- B2b · THE MIRROR CHIP (the coupling law · one operational surface): the locality
+           SELECTION lives in the Suite 8 Control (DSP-2); this chip is a READ-ONLY mirror
+           of the same truth (the shared GET) — the two surfaces can never diverge on
+           operation because only ONE operates. -->
+      <span
         v-if="isAnchorAuthority"
-        class="menu-locality-chip"
+        class="menu-locality-chip menu-locality-mirror"
         data-testid="menu-locality-chip"
         :class="{ 'locality-specified': !!syncLocality?.specified, 'locality-dark': localityDark }"
         :title="syncLocality?.specified
-          ? `This page's Shatterite Menu + Cascade Memory pertain to ${syncLocality.specified}'s locality`
-          : 'This page pertains to its own Local aspect — press to register a different locality'"
-        @click="localityOpen = !localityOpen"
+          ? `This page pertains to ${syncLocality.specified}'s locality — managed in the Suite 8 Control`
+          : 'This page pertains to its own Local aspect — the locality is managed in the Suite 8 Control'"
       >
         {{ localityLabel }}
-      </button>
-      <div v-if="localityOpen" class="menu-locality-drop">
-        <button
-          class="menu-locality-row"
-          :class="{ 'locality-row-current': !syncLocality?.specified }"
-          @click="chooseLocality(null)"
-        >
-          <span class="locality-bead locality-bead-live"></span>
-          Local{{ syncLocality?.localScp ? ` · ${syncLocality.localScp}` : '' }}
-        </button>
-        <button
-          v-for="entry in syncLocality?.ring ?? []"
-          :key="entry.scpName"
-          class="menu-locality-row"
-          :class="{ 'locality-row-current': syncLocality?.specified === entry.scpName }"
-          @click="chooseLocality(entry.scpName)"
-        >
-          <span
-            class="locality-bead"
-            :class="entry.status !== 'offline' ? 'locality-bead-live' : 'locality-bead-dim'"
-          ></span>
-          {{ entry.scpName }}
-        </button>
-      </div>
+      </span>
       <p v-if="hasStage && effectiveStage.prompt" class="menu-prompt">{{ effectiveStage.prompt }}</p>
       <span :class="['menu-status', anchorAlive ? 'menu-status-alive' : 'menu-status-waiting']">
         {{ statusText }}

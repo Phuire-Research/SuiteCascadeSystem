@@ -722,3 +722,17 @@ export const revertSpecifiedIfTargetNotLive = (designation: string): ClosureReve
   });
   return { reverted: w.ok, reason: entry ? 'target-offline' : 'target-left-ring' };
 };
+
+// B2b · THE GRACE SPLIT (the turn-over persistence): the pure LIVENESS READ, separated
+// from the revert WRITE — the Usher schedules a GRACE COUNTDOWN on a not-live reading
+// (a bridge turn over restarts every SCP together; the lifecycle truth is mid-transition
+// at boot) and only a SUSTAINED closure reverts. A standing selection SURVIVES the
+// turn over — the prior operational means holds.
+export const isSpecifiedTargetLive = (
+  designation: string,
+): { specified: string | null; live: boolean } => {
+  const specified = readSpecifiedKey(designation);
+  if (specified === null) return { specified: null, live: true };
+  const entry = readSyncRingFromBridgeJson().find((e) => e.scpName === specified);
+  return { specified, live: !!entry && entry.status !== 'offline' };
+};

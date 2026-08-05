@@ -49,6 +49,7 @@ import {
   sinkSyncLibraryTelemetry,
   KNOWN_SURFACE_REGISTRATIONS,
   revertSpecifiedIfTargetNotLive,
+  isSpecifiedTargetLive,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -84,6 +85,37 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
   // lifecycle truth the bridge rewrites on every SCP transition).
   let bridgeJsonWatcher: FSWatcher | null = null;
   let livenessDebounceTimer: NodeJS.Timeout | null = null;
+  // B2b · THE GRACE COUNTDOWN — a not-live reading STARTS a countdown; a live reading
+  // CANCELS it; only a SUSTAINED closure reverts (the turn-over persistence: a bridge
+  // turn over restarts every SCP together — a standing selection must survive it).
+  const pendingRevertTimers = new Map<string, NodeJS.Timeout>();
+  const REVERT_GRACE_MS = 30_000;
+  const scheduleRevertCheck = (designation: string): void => {
+    const { specified, live } = isSpecifiedTargetLive(designation);
+    if (specified === null || live) {
+      const held = pendingRevertTimers.get(designation);
+      if (held) {
+        clearTimeout(held);
+        pendingRevertTimers.delete(designation);
+        sinkSyncLibraryTelemetry('usher.closure-grace.cancelled', { designation });
+      }
+      return;
+    }
+    if (pendingRevertTimers.has(designation)) return; // the countdown already runs.
+    sinkSyncLibraryTelemetry('usher.closure-grace.start', {
+      designation,
+      specified,
+      graceMs: REVERT_GRACE_MS,
+    });
+    pendingRevertTimers.set(
+      designation,
+      setTimeout(() => {
+        pendingRevertTimers.delete(designation);
+        // The write re-checks at fire — a target returned within the grace SURVIVES.
+        revertSpecifiedIfTargetNotLive(designation);
+      }, REVERT_GRACE_MS),
+    );
+  };
 
   const debounced = (key: string, fn: () => void): void => {
     const held = debounceTimers.get(key);
@@ -250,9 +282,11 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
     if (known) registerSyncSurfacesAdditive(trimmed, known);
     else seedSyncLibraryAdditive(trimmed);
     armMachine(trimmed);
-    // B2 · THE CLOSURE REVERT (boot leg) — the target may have closed while THIS SCP was
-    // down; the check reverts specified→null BEFORE the mode dispatch reads the truth.
-    revertSpecifiedIfTargetNotLive(trimmed);
+    // B2b · THE CLOSURE REVERT (boot leg · GRACE-WINDOWED) — a bridge turn over restarts
+    // every SCP together; the lifecycle truth is mid-transition at boot. A not-live
+    // reading starts the countdown; the target coming back within the grace HOLDS the
+    // standing selection (the prior operational means persists across the turn over).
+    scheduleRevertCheck(trimmed);
     dispatchModeFromDisk(trimmed);
     // The library subscription — a `specified` change on disk re-dispatches the mode.
     try {
@@ -326,7 +360,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
             if (livenessDebounceTimer) clearTimeout(livenessDebounceTimer);
             livenessDebounceTimer = setTimeout(() => {
               for (const designation of [...armed]) {
-                revertSpecifiedIfTargetNotLive(designation);
+                scheduleRevertCheck(designation);
               }
             }, 400);
           };
@@ -361,6 +395,9 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({ d_, pla
       }
       extendedDirWatcher = null;
     }
+    // B2b · the grace countdowns teardown.
+    for (const t of pendingRevertTimers.values()) clearTimeout(t);
+    pendingRevertTimers.clear();
     // B2 · the liveness watch teardown (the no-leak invariant extends).
     if (livenessDebounceTimer) {
       clearTimeout(livenessDebounceTimer);
