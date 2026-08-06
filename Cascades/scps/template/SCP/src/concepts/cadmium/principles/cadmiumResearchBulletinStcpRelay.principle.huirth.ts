@@ -71,10 +71,9 @@ export const cadmiumResearchBulletinStcpRelayPrinciple: CadmiumResearchBulletinS
     stage(
       ({ d, dispatch }) => {
         const current = d.cadmium.k.researchBulletin.select() as CadmiumArticle[];
-        if (current.length === 0) {
-          // Boot-skip · EMPTY_RESEARCH_BULLETIN · no Idle re-broadcast storm.
-          return;
-        }
+        // D-SLE-c · the EMPTY broadcast is first-class (the C748/B3b law — the second
+        // sibling boot-skip retired with the topics relay's; the selector gate already
+        // prevents any storm; a restore-to-empty must reach connected clients).
         // DTBP · { throttle: 0 } — selector-persistent low-beat plan must re-fire on every
         // researchBulletin change. Citation: feedback_stratimux_dispatch_throttle_discipline.md.
         const broadcast: StcpBroadcastFn = (payload) =>

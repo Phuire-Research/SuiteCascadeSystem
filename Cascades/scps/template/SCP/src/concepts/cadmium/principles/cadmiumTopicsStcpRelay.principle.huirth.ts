@@ -73,10 +73,10 @@ export const cadmiumTopicsStcpRelayPrinciple: CadmiumTopicsStcpRelayPrincipleTyp
     stage(
       ({ d, dispatch }) => {
         const current = d.cadmium.k.topics.select() as CadmiumTopic[];
-        if (current.length === 0) {
-          // Boot-skip · EMPTY_TOPICS · no Idle re-broadcast storm.
-          return;
-        }
+        // D-SLE-c · the EMPTY broadcast is first-class (the C748/B3b law — this relay's
+        // boot-skip was the SIBLING left standing): a Sync restore that clears topics.json
+        // to [] must REACH connected clients anor they hold the delivered target's topics
+        // forever (the field find). The selector gate already prevents any storm.
         // DTBP · { throttle: 0 } — selector-persistent low-beat plan must re-fire on every
         // topics change. Citation: feedback_stratimux_dispatch_throttle_discipline.md.
         const broadcast: StcpBroadcastFn = (payload) =>
