@@ -978,7 +978,7 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       // local key excluded (its row is the Local row, rendered from localScp).
       const ring = fullRing
         .filter((e) => e.scpName !== localScp)
-        .map((e) => ({ scpName: e.scpName, status: e.status }));
+        .map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null }));
       // D-TRL-c · THE SCHOLAR FIELDS RIDE THE GET — the ODCF snapshot defaulted
       // targetLive:false/targetRoot:null, so a page whose relay never fired computed the
       // effective locality as LOCAL and STAMPED THE WRONG CITIZEN on the research spawn
@@ -2758,6 +2758,21 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       res.status(500).send('Server Error');
     }
   };
+
+  // D-EF-PAGE-PING · HEAD ON A BASE PATH ANSWERS THE ISLAND TRUTH (the user's design:
+  // window.location's most base path + a HEAD fetch — the status code reveals whether
+  // THIS SCP carries the page). The SSR catch-all otherwise 200s every path, so HEAD
+  // becomes the honest probe: 200 = the island is registered here · 404 = it is not.
+  // The static CORS * already rides every response — the cross-origin status is readable.
+  const registeredPagePaths = new Set<string>();
+  for (const m of REGISTERED_MUXONOMICS) {
+    for (const p of m.navigation?.pages ?? []) {
+      if (typeof p.path === 'string' && p.path.length > 0) registeredPagePaths.add(p.path);
+    }
+  }
+  expressApp.head('/:seg', (req, res) => {
+    res.sendStatus(registeredPagePaths.has(`/${req.params.seg}`) ? 200 : 404);
+  });
 
   // Register routes
   expressApp.get('/', createHandler());

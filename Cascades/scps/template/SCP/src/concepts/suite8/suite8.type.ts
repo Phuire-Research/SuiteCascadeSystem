@@ -293,7 +293,8 @@ export type Suite8SyncLocalitySnapshot = {
   targetRoot: string | null; // AMENDS r3 — the resolved TARGET root (retires targetRootByDesignation).
   targetLive: boolean; // AMENDS r3 — is the specified target live in the ring (the discriminator's Informative face).
   localLive: boolean; // AMENDS r3 — is the local SCP present + live in the ring (kept-me classification).
-  ring: { scpName: string; status: string }[];
+  // D-EF-PAGE-PING · origin = the target's browser origin (the client HEAD-probe target).
+  ring: { scpName: string; status: string; origin?: string | null }[];
 };
 
 export type Suite8HuirthState = {

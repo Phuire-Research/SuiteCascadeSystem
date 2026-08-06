@@ -54,9 +54,42 @@ type SyncLocalityInfo = {
   localScp: string | null;
   specified: string | null;
   targetScp: string | null;
-  ring: { scpName: string; status: string }[];
+  ring: { scpName: string; status: string; origin?: string | null }[];
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
+
+// ============================================================
+// D-EF-PAGE-PING · THE PAGE-PRESENCE PROBE (the user's design — the Conference ruling):
+// window.location's MOST BASE PATH (`/<seg>`) is the page identity we already know; a
+// HEAD fetch against each LIVE ring target's <origin><basePath> reveals by STATUS CODE
+// whether that SCP carries THIS page (the server's HEAD island-truth answers 200 anor
+// 404; the CORS * makes the cross-origin status readable). CONFIRM-TO-ENABLE: a row is
+// selectable only once its target's page presence is CONFIRMED — the gate is a UI
+// limitation only (no server refusal face — per the ruling).
+// ============================================================
+const pagePresence = ref<Record<string, boolean>>({});
+function pageBasePath(): string {
+  if (typeof window === 'undefined') return '/';
+  const seg = window.location.pathname.split('/')[1] ?? '';
+  return `/${seg}`;
+}
+function probePagePresence(): void {
+  const entries = syncLocality.value?.ring ?? [];
+  const basePath = pageBasePath();
+  for (const entry of entries) {
+    if (entry.status === 'offline') continue;
+    if (!entry.origin) continue;
+    if (pagePresence.value[entry.scpName] !== undefined) continue; // confirmed once per page-life.
+    void fetch(`${entry.origin}${basePath}`, { method: 'HEAD' })
+      .then((r) => {
+        pagePresence.value = { ...pagePresence.value, [entry.scpName]: r.ok };
+      })
+      .catch(() => {
+        pagePresence.value = { ...pagePresence.value, [entry.scpName]: false };
+      });
+  }
+}
+watch(() => syncLocality.value?.ring, () => probePagePresence(), { deep: true });
 
 const drawerOpen = ref<boolean>(false);
 const gateNote = ref<string>('');
@@ -431,10 +464,14 @@ async function chooseLocality(scpName: string | null): Promise<void> {
           :key="entry.scpName"
           class="s8c-row"
           :class="{ 's8c-row-current': syncLocality?.specified === entry.scpName }"
-          :disabled="!ringRowLive(entry)"
-          :title="ringRowLive(entry)
-            ? `Set this page's locality to ${entry.scpName}`
-            : 'Spawn this SCP to enable its locality (the Live Locality Law)'"
+          :disabled="!ringRowLive(entry) || pagePresence[entry.scpName] !== true"
+          :title="!ringRowLive(entry)
+            ? 'Spawn this SCP to enable its locality (the Live Locality Law)'
+            : pagePresence[entry.scpName] === true
+              ? `Set this page's locality to ${entry.scpName}`
+              : pagePresence[entry.scpName] === false
+                ? 'This SCP does not carry this page'
+                : 'Confirming this SCP carries this page…'"
           @click="chooseLocality(entry.scpName)"
         >
           <span

@@ -189,7 +189,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET parity).
       ring: ring
         .filter((e) => e.scpName !== localScp)
-        .map((e) => ({ scpName: e.scpName, status: e.status })),
+        .map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null })),
     };
   };
 

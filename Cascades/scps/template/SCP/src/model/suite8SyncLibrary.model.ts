@@ -208,6 +208,10 @@ export type SyncRingEntry = {
   scpName: string;
   root: string;
   status: string;
+  // D-EF-PAGE-PING · the target SCP's browser origin (from the bridge's browserUrl anor
+  // port) — the client's HEAD probe pings <origin><basePath> to confirm the target
+  // carries THIS page before its locality row enables.
+  origin?: string | null;
 };
 
 export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
@@ -239,6 +243,18 @@ export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
             scpName,
             root: entry.dir,
             status: typeof entry.status === 'string' ? entry.status : 'offline',
+            origin:
+              typeof entry.browserUrl === 'string' && entry.browserUrl.length > 0
+                ? (() => {
+                    try {
+                      return new URL(entry.browserUrl).origin;
+                    } catch {
+                      return null;
+                    }
+                  })()
+                : typeof entry.port === 'number'
+                  ? `http://localhost:${entry.port}`
+                  : null,
           });
         }
       }
