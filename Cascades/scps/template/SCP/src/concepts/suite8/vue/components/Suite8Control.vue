@@ -310,22 +310,36 @@ onMounted(() => {
     }
   })();
 });
-const previousForgeConductions = computed(() => {
+// EF-3′d · THE PILL FILTER SYSTEM — the SCP-wide pool of OFFLINE Forge conductions renders
+// under target PILLS (one per distinct commissioned page + 'unlabeled' for pre-thread
+// legacy). AUTO-SELECTS this page's own pill; any prior remains referenceable from the same
+// page (user orientation with their own work). Every target read rides the HELD model
+// (EF-3′c — a twin's rename never touches the registry field).
+const conductionPool = computed(() => {
   const list = getGlobalScsBridgeController()?.sessionsList.value ?? [];
   const scp = resolvedScpName.value;
   return filterS8Sessions(list, 'Entourage Forge')
-    .filter((s) => (scp === null || s.scpName === scp) && s.status === 'offline')
-    // EF-3′c · the target read rides the HELD model (a twin's rename would otherwise turn
-    // the field access into a nonexistent property → every conduction passes everywhere).
-    .filter((s) => {
-      const target = readConductionTarget(s);
-      return target == null || target === props.suite8Name;
-    })
-    .slice(0, 3);
+    .filter((s) => (scp === null || s.scpName === scp) && s.status === 'offline');
 });
-function conductionTargetLabel(entry: unknown): string {
-  return readConductionTarget(entry) ?? 'unlabeled';
-}
+const selectedConductionTarget = ref<string>(props.suite8Name);
+watch(
+  () => props.suite8Name,
+  (v) => {
+    // the designation-arrival re-sync — the auto-select follows the page's own identity.
+    selectedConductionTarget.value = v;
+  },
+);
+const conductionTargets = computed(() => {
+  // the page's own pill leads (the auto-selected home); the rest in pool order.
+  const targets = new Set<string>([props.suite8Name]);
+  for (const s of conductionPool.value) targets.add(readConductionTarget(s) ?? 'unlabeled');
+  return [...targets];
+});
+const previousForgeConductions = computed(() =>
+  conductionPool.value
+    .filter((s) => (readConductionTarget(s) ?? 'unlabeled') === selectedConductionTarget.value)
+    .slice(0, 3),
+);
 function shortUlid(id: string): string {
   return id.length > 8 ? id.slice(-8) : id;
 }
@@ -749,23 +763,37 @@ async function chooseLocality(scpName: string | null): Promise<void> {
             </button>
             <p v-if="forgeSpawnNote" class="s8c-forge-note">{{ forgeSpawnNote }}</p>
 
-            <!-- EF-3′ · 3A · THE PREVIOUS-CONDUCTIONS ROW (target-aware · re-openable). -->
-            <div v-if="previousForgeConductions.length > 0" class="s8c-forge-previous-row">
-              <span class="s8c-forge-previous-label hifi-mono">Previous conductions:</span>
-              <button
-                v-for="c in previousForgeConductions"
-                :key="c.id"
-                type="button"
-                class="s8c-forge-previous-btn"
-                @click="reopenConduction(c.id)"
-              >
-                <span class="s8c-forge-previous-ulid hifi-mono">{{ shortUlid(c.id) }}</span>
-                <span class="s8c-forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
-                <!-- EF-3′b · THE TARGET FIELD — the S8 page this conduction was commissioned to
-                     formalize (the manifold proof surface). EF-3′c · the read rides the HELD
-                     model (rename-immune). 'unlabeled' = a pre-thread target-less conduction. -->
-                <span class="s8c-forge-previous-target hifi-mono">{{ conductionTargetLabel(c) }}</span>
-              </button>
+            <!-- EF-3′d · THE PILL FILTER SYSTEM — target pills over the SCP-wide conduction
+                 pool; the page's own pill AUTO-SELECTS (leads the row); any prior remains
+                 referenceable from the same page. The chips stay lean (ulid + model) — the
+                 active pill names the target. -->
+            <div v-if="conductionPool.length > 0" class="s8c-forge-previous-block">
+              <div class="s8c-forge-previous-pills">
+                <span class="s8c-forge-previous-label hifi-mono">Previous conductions:</span>
+                <button
+                  v-for="t in conductionTargets"
+                  :key="t"
+                  type="button"
+                  class="s8c-forge-pill hifi-mono"
+                  :class="{ 's8c-forge-pill--active': t === selectedConductionTarget }"
+                  @click="selectedConductionTarget = t"
+                >{{ t }}</button>
+              </div>
+              <div v-if="previousForgeConductions.length > 0" class="s8c-forge-previous-row">
+                <button
+                  v-for="c in previousForgeConductions"
+                  :key="c.id"
+                  type="button"
+                  class="s8c-forge-previous-btn"
+                  @click="reopenConduction(c.id)"
+                >
+                  <span class="s8c-forge-previous-ulid hifi-mono">{{ shortUlid(c.id) }}</span>
+                  <span class="s8c-forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
+                </button>
+              </div>
+              <p v-else class="s8c-forge-previous-empty">
+                No prior conductions for {{ selectedConductionTarget }}.
+              </p>
             </div>
           </template>
 
@@ -855,8 +883,40 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 .s8c-forge-previous-model {
   color: rgba(208, 218, 228, 0.68);
 }
-.s8c-forge-previous-target {
-  color: rgba(170, 220, 255, 0.88);
+/* EF-3′d · THE PILLS — the target filter row; the active pill carries the cool accent the
+   per-chip target span wore (the pill now names the target · the chips stay lean). */
+.s8c-forge-previous-block {
+  margin-top: 0.55rem;
+}
+.s8c-forge-previous-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.s8c-forge-pill {
+  padding: 0.14rem 0.55rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  color: rgba(208, 218, 228, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(10, 14, 18, 0.45);
+  cursor: pointer;
+}
+.s8c-forge-pill:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(236, 242, 248, 0.92);
+}
+.s8c-forge-pill--active {
+  color: rgba(170, 220, 255, 0.95);
+  border-color: rgba(170, 220, 255, 0.55);
+  background: rgba(40, 70, 100, 0.35);
+}
+.s8c-forge-previous-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: rgba(208, 218, 228, 0.55);
 }
 
 /* EF-2 · B1 · THE FLAIR EXCHANGE — the base Pewter frame rides ONLY the closed state so the swapped
