@@ -113,6 +113,19 @@ function probePagePresence(): void {
 }
 watch(() => syncLocality.value?.ring, () => probePagePresence(), { deep: true, immediate: true });
 
+// D-EF-PAGE-PING-c · THE VISIBLE FILTER (the user's ruling — S6·Fable's design): a ring
+// SCP whose HEAD says it does NOT carry this page does not APPEAR (presence===false →
+// PRUNED); an origin-less entry can NEVER confirm under confirm-to-enable (the template
+// class) → equally pruned — never a forever-'Confirming…' row; undefined-with-origin =
+// probe pending → rendered disabled 'Confirming…'; true → enabled.
+const visibleRing = computed(() =>
+  (syncLocality.value?.ring ?? []).filter((e) => {
+    if (pagePresence.value[e.scpName] === false) return false; // the HEAD answered: not carried.
+    if (!e.origin) return false; // structurally unconfirmable — never renders.
+    return true;
+  }),
+);
+
 const drawerOpen = ref<boolean>(false);
 const gateNote = ref<string>('');
 
@@ -485,7 +498,7 @@ async function chooseLocality(scpName: string | null): Promise<void> {
           Local{{ syncLocality?.localScp ? ` · ${syncLocality.localScp}` : '' }}
         </button>
         <button
-          v-for="entry in syncLocality?.ring ?? []"
+          v-for="entry in visibleRing"
           :key="entry.scpName"
           class="s8c-row"
           :class="{ 's8c-row-current': syncLocality?.specified === entry.scpName }"

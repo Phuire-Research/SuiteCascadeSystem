@@ -977,7 +977,7 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       // SL-5 · the ring rides the GET (the Locality Register's choosable rows) — the
       // local key excluded (its row is the Local row, rendered from localScp).
       const ring = fullRing
-        .filter((e) => e.scpName !== localScp)
+        .filter((e) => e.scpName !== localScp && e.scpName !== 'template')
         .map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null }));
       // D-TRL-c · THE SCHOLAR FIELDS RIDE THE GET — the ODCF snapshot defaulted
       // targetLive:false/targetRoot:null, so a page whose relay never fired computed the

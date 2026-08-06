@@ -65,6 +65,7 @@ import {
   readSpecifiedKey,
   // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
   writeContentOriginStamp,
+  readContentOriginStamp,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -186,9 +187,11 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       targetRoot: resolution ? resolution.root : null,
       targetLive: specified !== null ? live : false,
       localLive,
-      // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET parity).
+      // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET
+      // parity) AND the template PRUNED (the r7 invariant: the install substrate is never
+      // a locality target).
       ring: ring
-        .filter((e) => e.scpName !== localScp)
+        .filter((e) => e.scpName !== localScp && e.scpName !== 'template')
         .map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null })),
     };
   };
@@ -318,6 +321,28 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
           const mode = (d.suite8.k.syncModes.select() as Record<string, string>)[designation] ?? 'local';
           if (mode === 'local') {
             closeWatchers(deliveryWatchers, designation); // entry guard — stale target watchers die here.
+            // D-EF-ORPHANED-HOLD · THE BOOT-CLOSURE ARM (the r4 forensics — the field
+            // breach): a kill between Stage 1's setStage:2 and Stage 2 executing strands
+            // the machine mid-closure — the hold marker + a FOREIGN stamp persist while
+            // specified reads Local; without this arm the foreign tree is adopted as
+            // local FOREVER (the guard refuses the vault but nothing RESTORES). The
+            // partial-closure fingerprint: hold-present AND stamp-foreign at a local
+            // boot → run the closure motion inline, synchronously, before preservation.
+            if (
+              readVaultHoldMarker(designation) &&
+              readContentOriginStamp(designation) !== 'Local'
+            ) {
+              sinkSyncLibraryTelemetry('usher.boot-closure.detected', { designation });
+              const heldDeliver = debounceTimers.get(`deliver:${designation}`);
+              if (heldDeliver) {
+                clearTimeout(heldDeliver);
+                debounceTimers.delete(`deliver:${designation}`);
+              }
+              const restored = restoreRegisteredFromVault(designation);
+              clearVaultHoldMarker(designation);
+              writeContentOriginStamp(designation, 'Local');
+              sinkSyncLibraryTelemetry('usher.boot-closure.restored', { designation, ...restored });
+            }
             armPreservation(designation); // idempotent — the boot posture + re-entry.
             return;
           }

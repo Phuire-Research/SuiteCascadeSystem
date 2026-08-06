@@ -221,15 +221,40 @@ export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
       'utf8',
     );
     const parsed = JSON.parse(raw) as { syncRing?: unknown; boundScps?: unknown };
+    // D-EF-PAGE-PING-c · the ORIGIN COMPOSER (one helper, BOTH branches) — the S6·Fable
+    // determination: the field bridge DOES write syncRing (the U3 fallback assumption
+    // falsified), so the composer living only in the boundScps branch was dead code and
+    // every wire origin was null (the client's NO-ORIGIN permanent-disable).
+    const boundScps = isPlainObject(parsed.boundScps) ? parsed.boundScps : {};
+    const composeRingOrigin = (scpName: string): string | null => {
+      const entry = (boundScps as Record<string, unknown>)[scpName];
+      if (!isPlainObject(entry)) return null;
+      if (typeof entry.browserUrl === 'string' && entry.browserUrl.length > 0) {
+        try {
+          return new URL(entry.browserUrl).origin;
+        } catch {
+          /* fall through to port */
+        }
+      }
+      if (
+        typeof entry.port === 'number' ||
+        (typeof entry.port === 'string' && entry.port.length > 0)
+      ) {
+        return `http://localhost:${entry.port}`;
+      }
+      return null;
+    };
     if (Array.isArray(parsed.syncRing)) {
-      return parsed.syncRing.filter(
-        (e): e is SyncRingEntry =>
-          isPlainObject(e) &&
-          typeof e.scpName === 'string' &&
-          e.scpName.length > 0 &&
-          typeof e.root === 'string' &&
-          e.root.length > 0,
-      );
+      return parsed.syncRing
+        .filter(
+          (e): e is SyncRingEntry =>
+            isPlainObject(e) &&
+            typeof e.scpName === 'string' &&
+            e.scpName.length > 0 &&
+            typeof e.root === 'string' &&
+            e.root.length > 0,
+        )
+        .map((e) => ({ ...e, origin: e.origin ?? composeRingOrigin(e.scpName) }));
     }
     if (isPlainObject(parsed.boundScps)) {
       const out: SyncRingEntry[] = [];
@@ -243,19 +268,7 @@ export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
             scpName,
             root: entry.dir,
             status: typeof entry.status === 'string' ? entry.status : 'offline',
-            origin:
-              typeof entry.browserUrl === 'string' && entry.browserUrl.length > 0
-                ? (() => {
-                    try {
-                      return new URL(entry.browserUrl).origin;
-                    } catch {
-                      return null;
-                    }
-                  })()
-                : typeof entry.port === 'number' ||
-                    (typeof entry.port === 'string' && entry.port.length > 0)
-                  ? `http://localhost:${entry.port}`
-                  : null,
+            origin: composeRingOrigin(scpName),
           });
         }
       }
