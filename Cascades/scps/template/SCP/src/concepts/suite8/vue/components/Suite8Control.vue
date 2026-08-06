@@ -401,10 +401,11 @@ async function chooseLocality(scpName: string | null): Promise<void> {
        through so the inner prismatic Forge body reads as the featured surface); forge-closed restores
        the base `hifi-pane` Pewter frame. The inner menu carries the actual prismatic flair
        (.s8c-forge-flair · the ring + glow, extracted global from Suite8HomeLanding's forge zone). -->
-  <section
-    class="s8-control"
-    :class="forgeMenuOpen ? ['hifi-pane-transparent', 's8-control--forge-open'] : ['hifi-pane']"
-  >
+  <!-- D-EF-BREAKOUT · THE FUNCTIONAL BACKING LAW (Pewter conference): the root NO LONGER
+       exchanges — each chosen space wears the identity of the system whose functionality it
+       carries, BOUNDED to its zone (§II = the SCS-Bridge's cobalt glass · §IV = EF's
+       prismatic + transparent recede · §I = the Control's own Pewter voice). -->
+  <section class="s8-control hifi-pane">
     <header class="s8c-head">
       <span class="s8c-eyebrow hifi-mono">{{ props.suite8Name }}</span>
       <h3 class="s8c-title hifi-heading">SUITE 8 CONTROL</h3>
@@ -451,10 +452,18 @@ async function chooseLocality(scpName: string | null): Promise<void> {
          MANAGEMENT →" nav button) behind the SAME expandable SCPs toggle. The panel owns its own
          /bridge-roster poll + the full helm (Spawn/Focus/Exit/Multiply/Delete + the bars). -->
     <div class="s8c-section">
-      <button class="s8c-drawer-toggle hifi-mono" @click="drawerOpen = !drawerOpen">
+      <button
+        class="s8c-drawer-toggle hifi-mono"
+        :class="{ 's8c-drawer-toggle--scp-open': drawerOpen }"
+        @click="drawerOpen = !drawerOpen"
+      >
         {{ drawerOpen ? '▾' : '▸' }} SCPs
       </button>
-      <div v-if="drawerOpen" class="s8c-drawer">
+      <!-- D-EF-BREAKOUT · THE SCP BACKING — the drawer's functionality IS the Session
+           Manager's; the opened space wears the SCS-Bridge's identity (dark glass under a
+           cobalt working-light) AND relays the pewter text tokens the panel's chrome consumes
+           (the token-severed compact mount cured — the Law proven in CSS inheritance). -->
+      <div v-if="drawerOpen" class="s8c-drawer s8c-scp-backing">
         <ScpManagementPanel compact />
       </div>
     </div>
@@ -464,7 +473,10 @@ async function chooseLocality(scpName: string | null): Promise<void> {
          HiFi Transparent for the Forge's prismatic flair (bound reactively on the root <section>
          above · forgeMenuOpen); the model select + the ONE MOTION engage row + the five hard-coded
          RD rows (clipboard-prime · EF-3 will dispatch to the live anchor) render inside. -->
-    <div class="s8c-section s8c-forge-section">
+    <div
+      class="s8c-section s8c-forge-section"
+      :class="forgeMenuOpen ? ['hifi-pane-transparent', 's8c-forge-section--open'] : []"
+    >
       <button
         class="s8c-forge-toggle hifi-mono"
         :class="{ 's8c-forge-engaged': forgeLaunchEngaged }"
@@ -550,9 +562,15 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 /* EF-2 · B1 · THE FLAIR EXCHANGE — the base Pewter frame rides ONLY the closed state so the swapped
    pane treatment governs when open. Closed → this frame (over the base .hifi-pane); open → the
    .hifi-pane-transparent glass vessel shows through (its border/background take, uncontested). */
-.s8-control:not(.s8-control--forge-open) {
+.s8-control {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.28);
+}
+/* §IV zone recede — the transparent glass bounds the Forge's space when open
+   (hifi-pane-transparent supplies glass + embossed border; this trims the fit) */
+.s8c-forge-section--open {
+  border-radius: 10px;
+  padding: 0.45rem 0.5rem;
 }
 .s8c-head {
   display: flex;
@@ -658,15 +676,12 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   letter-spacing: 0.06em;
   cursor: pointer;
 }
+/* layout only — the ground belongs to the SCP BACKING (the Functional Backing Law) */
 .s8c-drawer {
   margin-top: 0.35rem;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding: 0.4rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.3);
 }
 .s8c-drawer-row {
   display: flex;

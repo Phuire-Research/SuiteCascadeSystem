@@ -1691,3 +1691,66 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
   .s8c-forge-flair--pulsing .s8c-forge-flair-glow { animation: none; opacity: 0.4; }
   .s8c-forge-flair--pulsing::before { animation: none; opacity: 0.9; }
 }
+
+/* ===================================================================
+   THE SCP BACKING (Suite 8 Control §II · the opened SCPs drawer)
+   The drawer's functionality is the Session Manager's — same roster,
+   same boot lane, same extracted panel — so the opened space wears the
+   Session Manager's visual identity: dark glass under a cobalt
+   working-light. The backing is a vessel: it carries the atmosphere
+   (the two text tokens the panel's own chrome consumes), the cobalt
+   state edge, the stilled boot-rail hairline, and the thin scrollbar.
+   It never restyles the panel's own chrome.
+   =================================================================== */
+.s8c-scp-backing {
+  /* the atmosphere relay — the Session Manager's brightness tokens,
+     defined here so the mounted panel's text glow + recede resolve */
+  --pewter-text-glow: 1px 1px 2px rgba(255, 255, 255, 0.45);
+  --pewter-text-recede: rgba(255, 255, 255, 0.42);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 2px solid var(--color-cobalt, #3b82f6);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.07) 0%, rgba(59, 130, 246, 0) 26%),
+    rgba(0, 0, 0, 0.3);
+  padding: 0.45rem 0.5rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* the boot rail — the cobalt sweep signature, stilled into a hairline */
+.s8c-scp-backing::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 32%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0) 0%,
+    var(--color-cobalt, #3b82f6) 45%,
+    rgba(59, 130, 246, 0) 100%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* the thin translucent scroll (the Session Manager column idiom) */
+.s8c-scp-backing::-webkit-scrollbar { width: 4px; }
+.s8c-scp-backing::-webkit-scrollbar-track { background: transparent; }
+.s8c-scp-backing::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.s8c-scp-backing::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* the SCPs toggle wears the Bridge's cobalt affordance while its space is open */
+.s8c-drawer-toggle.s8c-drawer-toggle--scp-open {
+  border-color: rgba(59, 130, 246, 0.45);
+  color: rgba(219, 234, 254, 0.92);
+}
