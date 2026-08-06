@@ -50,6 +50,9 @@ import type { ScsBridgeSessionEntry } from '../../scsBridge/scsBridge.type';
 // Cycle 159 D1 · IUPA · cadmium + suite8 muxified per-page (no longer base)
 import { createCadmiumClientConcept } from '../cadmium.concept.client';
 import { createSuite8ClientConcept } from '../../suite8/suite8.concept.client';
+// D-SLE · the locality snapshot type — the relay-fed suite8 localities slice the Effective
+// Locality Law reads to resolve the effective SCP for the research spawn stamp.
+import type { Suite8SyncLocalitySnapshot } from '../../suite8/suite8.type';
 import { cadmiumMuxonomic } from '../cadmium.muxonomy';
 import { suite8Muxonomic } from '../../suite8/suite8.muxonomy';
 // Cycle 159 D1 · GPIM · Vue-layer Muxium binding into universal scsBridge controller
@@ -107,6 +110,14 @@ const targetedMenuStage = ref<MenuStage>(EMPTY_MENU_STAGE);
 
 // S8RI · the cascades Record (muxified suiteCascade state · serverToClient relay lands here).
 const cascades = ref<Record<string, Cascade>>({});
+
+// D-SLE · THE EFFECTIVE LOCALITY STAMP — the SCP a research worker must spawn against so its
+// Extended writes land in the effective SCP's tree. Sourced from the relay-fed suite8
+// `localities` slice (the same slice ShatteriteMenu reads · no new fetch). Mirrors the
+// Effective Locality Law: the specified target counts ONLY when LIVE (snapshot.targetLive) —
+// then the resolved TARGET SCP; otherwise the own citizen (localScp). undefined = degrade
+// (the bridge spawns the own citizen as today via resolveScpName).
+const researchLocalityScp = ref<string | undefined>(undefined);
 // S8RI · zone-0 collapsible toggle for the Cadmium Diamond/Onyx pane (collapsed by default).
 
 // ============================================================
@@ -508,6 +519,9 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
       sessionId: '',
       suite8Name,
       text: `SCS:Vermillion\n${vermillion}`,
+      // D-SLE · stamp the EFFECTIVE LOCALITY (specified-live target ?? own citizen). Absent a
+      // resolved locality the field is omitted — the bridge spawns the own citizen as today.
+      ...(researchLocalityScp.value ? { scpName: researchLocalityScp.value } : {}),
     };
   });
   sweepIndex.value = sweepTopics.length;
@@ -607,6 +621,21 @@ onMounted(() => {
             targetedMenuStage.value = d.client.d.cadmium.k.targetedMenuStage.select();
             // S8RI · muxified suiteCascade cascades Record (Tier-2 DECK-K · serverToClient relay)
             cascades.value = d.client.d.suiteCascade.k.cascades.select();
+            // D-SLE · the effective locality read — resolve the research spawn stamp from the
+            // relay-fed suite8 localities Record (Effective Locality Law: specified counts only
+            // when targetLive → the resolved target; else the own citizen; else undefined).
+            {
+              const localities = d.client.d.suite8.k.localities.select() as Record<
+                string,
+                Suite8SyncLocalitySnapshot
+              >;
+              const snap = localities[cadmiumDesignationName.value || 'Cadmium Researcher'];
+              researchLocalityScp.value = snap
+                ? snap.specified && snap.targetLive
+                  ? snap.targetScp ?? snap.specified ?? undefined
+                  : snap.localScp ?? undefined
+                : undefined;
+            }
           },
           {
             selectors: [
@@ -627,6 +656,9 @@ onMounted(() => {
               d__.client.d.cadmium.k.targetedMenuStage,
               // S8RI · muxified suiteCascade cascades selector (Tier-2 muxified access)
               d__.client.d.suiteCascade.k.cascades,
+              // D-SLE · the suite8 localities selector — the effective locality drives the
+              // research spawn stamp (relay-fed · re-resolves on any locality change).
+              d__.client.d.suite8.k.localities,
             ],
           },
         ),

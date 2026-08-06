@@ -643,6 +643,9 @@ export type ScsBridgeRelaySpec = {
   suite8Name?: string; // spawn only · REQUIRED for spawn
   asWorker?: boolean;  // spawn only · defaults TRUE (anchors ride scsBridgeSpawnSuite8Session)
   model?: string;      // spawn only · per-instance model record (setSessionModel re-guards)
+  scpName?: string;    // D-SLE · spawn only · the EFFECTIVE LOCALITY stamp (specified-live
+                       // target ?? own citizen) — the batch builder forwards it to
+                       // ScsBridgeRelaySpawnPayload.scpName (preferred over the batch origin).
 };
 export type ScsBridgeEnqueueRelayBatchPayload = {
   specs: ScsBridgeRelaySpec[];

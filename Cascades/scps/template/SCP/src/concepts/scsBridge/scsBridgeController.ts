@@ -88,6 +88,9 @@ export type ScsBridgeRelaySpec = {
   suite8Name?: string; // spawn only
   asWorker?: boolean;  // spawn only · defaults TRUE bridge-side
   model?: string;      // spawn only
+  scpName?: string;    // D-SLE · spawn only · the EFFECTIVE LOCALITY stamp — rides to the
+                       // bridge spawn leg so the worker's Extended writes land in the
+                       // effective SCP's tree (specified-live target ?? own citizen).
 };
 
 // W6d · THE CONTROLLER SPAWN-PROGRESS STATE (SCM W6 · Spawn Window Focus + Simulated Loading Bar).

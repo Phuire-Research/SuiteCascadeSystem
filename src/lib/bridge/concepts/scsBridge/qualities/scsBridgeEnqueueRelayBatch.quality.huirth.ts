@@ -133,11 +133,22 @@ export const scsBridgeEnqueueRelayBatch = createQualityCardWithPayload<
                   suite8Name: spec.suite8Name,
                   text: typeof spec.text === 'string' && spec.text.length > 0 ? spec.text : undefined,
                   originScpName: typeof originScpName === 'string' && originScpName.length > 0 ? originScpName : undefined,
-                  // THE WORKER CITIZEN STAMP (the FrontierTest5 catch): the batch origin IS the
-                  // worker's citizen — thread it as scpName so createSession stamps the entry
-                  // and the citizen-scoped Onboard predicate SEES the own anchor (a stamp-less
-                  // worker read as a new citizen and received the anchor's seed).
-                  scpName: typeof originScpName === 'string' && originScpName.length > 0 ? originScpName : undefined,
+                  // THE WORKER CITIZEN STAMP (the FrontierTest5 catch): the worker's citizen —
+                  // threaded as scpName so createSession stamps the entry and the citizen-scoped
+                  // Onboard predicate SEES the own anchor (a stamp-less worker read as a new
+                  // citizen and received the anchor's seed).
+                  // D-SLE · THE EFFECTIVE LOCALITY STAMP takes precedence: the client stamps the
+                  // spec's own scpName from the Effective Locality Law (specified-live target ??
+                  // own citizen). Prefer the spec's per-spec stamp; fall back to the batch origin
+                  // (the FrontierTest5 own-citizen default) when the spec carries none. The prior
+                  // seat hard-coded originScpName and DISCARDED the spec's scpName — that stripping
+                  // is why a specified-live locality's worker still spawned against the own citizen.
+                  scpName:
+                    typeof spec.scpName === 'string' && spec.scpName.length > 0
+                      ? spec.scpName
+                      : typeof originScpName === 'string' && originScpName.length > 0
+                        ? originScpName
+                        : undefined,
                   asWorker: spec.asWorker,
                   model: spec.model,
                 }),

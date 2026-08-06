@@ -702,19 +702,118 @@ export const clearVaultHoldMarker = (designation: string): void => {
   }
 };
 
+// D-SLE · B · CLEAR A DIRECTORY-CLASS DEST (the absent-target mirror-with-empty motion) —
+// remove every non-vault child under destAbs, counting the removals. This is the removal arm
+// of usherMirrorTree run against an EMPTY src set: the dest's own children fall away, the
+// vault (.syncLocal) is untouched wherever encountered (the protection). Vault-safe by
+// design — TARGET MODE never touches the vault, and the vault's frozen local truth returns
+// through the Closure Stage restore when the locality closes, so clearing the watched
+// location here is safe: the local truth is already preserved in .syncLocal.
+const usherClearDirectory = (destAbs: string): UsherCopyResult => {
+  const out = emptyUsherResult();
+  let names: string[] = [];
+  try {
+    names = readdirSync(destAbs);
+  } catch {
+    return out; // dest absent — nothing to clear (the empty form already stands).
+  }
+  for (const name of names) {
+    if (name === SYNC_LOCAL_DIRECTORY_NAME) continue;
+    const gone = path.join(destAbs, name);
+    if (!gone.startsWith(destAbs + path.sep)) continue;
+    try {
+      rmSync(gone, { recursive: true, force: true });
+      out.removed += 1;
+    } catch {
+      /* raced away — skip */
+    }
+  }
+  return out;
+};
+
 // TARGET MODE · the delivery motion — every registered surface at the TARGET's root
 // replaces the local watched location (mirror semantics · NEVER touches the vault).
+// D-SLE · B · THE ABSENT-TARGET CASE: when a registered surface's TARGET src is genuinely
+// absent, the local watched location must present the TARGET's truth (nothing yet), not
+// masquerade with the local content. Per surface class: a file-class surface with a known
+// empty form writes that form (identity-guarded — skip if already the empty form); a
+// dir-class absent surface clears its non-vault children (mirror-with-empty); a file-class
+// surface with NO known empty form is left in place (telemetry only). The vault restore
+// (the Closure Stage) already protects the local truth — clearing is safe BY DESIGN.
 export const replaceRegisteredFromTarget = (
   designation: string,
   targetRoot: string,
 ): UsherCopyResult => {
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
-  for (const rel of Object.values(shape.registered)) {
-    out = addResults(
-      out,
-      usherSurface(path.resolve(targetRoot, rel), path.resolve(process.cwd(), rel)),
-    );
+  for (const [key, rel] of Object.entries(shape.registered)) {
+    const srcAbs = path.resolve(targetRoot, rel);
+    const destAbs = path.resolve(process.cwd(), rel);
+    let srcExists = false;
+    try {
+      statSync(srcAbs);
+      srcExists = true;
+    } catch {
+      /* the target surface is genuinely absent */
+    }
+    if (srcExists) {
+      out = addResults(out, usherSurface(srcAbs, destAbs));
+      continue;
+    }
+    // Absent target surface — present the empty form (the target's truth: nothing yet).
+    const emptyForm = KNOWN_SURFACE_EMPTY_FORMS[key];
+    if (typeof emptyForm === 'string') {
+      // File-class registered surface with a known empty form — write it (identity-guarded).
+      let already = false;
+      try {
+        already = readFileSync(destAbs, 'utf8') === emptyForm;
+      } catch {
+        already = false;
+      }
+      if (!already) {
+        try {
+          mkdirSync(path.dirname(destAbs), { recursive: true });
+          writeFileSync(destAbs, emptyForm, 'utf8');
+          out.copied += 1;
+        } catch (err) {
+          sinkSyncLibraryTelemetry('usher.replace.empty-form-write-failed', {
+            designation,
+            key,
+            error: String(err).slice(0, 160),
+          });
+        }
+      } else {
+        out.skipped += 1;
+      }
+      sinkSyncLibraryTelemetry('usher.replace.target-surface-absent', {
+        designation,
+        key,
+        presented: 'empty-form',
+      });
+    } else {
+      // No known empty form. Dir-class → mirror-with-empty (clear non-vault children);
+      // file-class → leave in place, telemetry only.
+      let destIsDir = false;
+      try {
+        destIsDir = statSync(destAbs).isDirectory();
+      } catch {
+        destIsDir = false;
+      }
+      if (destIsDir) {
+        out = addResults(out, usherClearDirectory(destAbs));
+        sinkSyncLibraryTelemetry('usher.replace.target-surface-absent', {
+          designation,
+          key,
+          presented: 'empty-dir',
+        });
+      } else {
+        sinkSyncLibraryTelemetry('usher.replace.target-surface-absent', {
+          designation,
+          key,
+          presented: 'left-in-place',
+        });
+      }
+    }
   }
   sinkSyncLibraryTelemetry('usher.replace-from-target', { designation, targetRoot, ...out });
   return out;
@@ -727,7 +826,22 @@ export const replaceRegisteredFromTarget = (
 export const KNOWN_SURFACE_REGISTRATIONS: Record<string, Record<string, string>> = {
   'Cadmium Researcher': {
     frontier: ['Cascades', 'Extended', 'Cadmium Researcher', 'frontier'].join('/'),
+    topics: ['Cascades', 'Extended', 'Cadmium Researcher', 'topics.json'].join('/'),
   },
+};
+
+// D-SLE · B · THE KNOWN SURFACE EMPTY FORMS — the honest empty representation of a
+// file-class surface, keyed by surface key. When TARGET MODE replaces from a target whose
+// surface is genuinely ABSENT, the local watched location should present the TARGET's truth
+// (nothing yet) — not masquerade as the target with the local content left in place. A
+// file-class surface writes its empty form (topics.json → '[]', which parseCadmiumTopics
+// returns as [] → the STCP relay broadcasts EMPTY_TOPICS → the Research Frontier clears).
+// A surface with NO known empty form + file-class is left untouched (telemetry only); a
+// dir-class absent surface clears its non-vault children (mirror-with-empty semantics).
+// topicBulletin.json lives INSIDE the frontier/ directory-class, so the dir-class clear
+// already covers it — only topics.json needs a file-class empty form here.
+export const KNOWN_SURFACE_EMPTY_FORMS: Record<string, string> = {
+  topics: '[]',
 };
 
 // ════════════════════════════════════════════════════════════════════════════
