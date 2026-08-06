@@ -636,6 +636,14 @@ const vaultPathFor = (designation: string, key: string, rel: string): string => 
 
 // LOCAL MODE · the preservation motion — every registered surface ushers INTO the vault.
 export const snapshotRegisteredToVault = (designation: string): UsherCopyResult => {
+  // D-LSG · THE USHER GUARD — the tree's occupying content must be the SCP's OWN locality
+  // anor the vault REFUSES wholesale (the race class dies here: preservation firing while
+  // foreign content sits in the tree can no longer poison the local truth).
+  const origin = readContentOriginStamp(designation);
+  if (origin !== 'Local') {
+    sinkSyncLibraryTelemetry('usher.snapshot.refused', { designation, origin });
+    return emptyUsherResult();
+  }
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
   for (const [key, rel] of Object.entries(shape.registered)) {
@@ -763,6 +771,42 @@ export const clearVaultHoldMarker = (designation: string): void => {
     sinkSyncLibraryTelemetry('vault-hold.cleared', { designation });
   } catch {
     /* absent — already clear */
+  }
+};
+
+// THE CONTENT-ORIGIN STAMP (D-LSG · the user's Critical Notion) — the disk-persisted
+// declaration of WHOSE content currently occupies the watched tree. THE LAW: a locality
+// that is not the SCP's own is NEVER ushered into .syncLocal/ — the vault holds ONLY the
+// local truth. THE FAIL-SAFE ORDERING: the machine stamps FOREIGN *before* any replace
+// begins and stamps 'Local' only *after* the restore completes — any crash anor race
+// inside the window leaves the stamp foreign, and every vault write REFUSES. This guards
+// the whole class the Vault Hold Marker guards at select-time (boot re-snapshots · mode
+// thrash · turn-over races) at EVERY vault write, preservation included. Absent = 'Local'
+// (fresh installs must vault).
+const CONTENT_ORIGIN_STAMP_NAME = '.contentOrigin.json';
+const contentOriginStampPath = (designation: string): string =>
+  path.join(resolveSyncLocalDirectory(designation), CONTENT_ORIGIN_STAMP_NAME);
+export const readContentOriginStamp = (designation: string): string => {
+  try {
+    const j = JSON.parse(readFileSync(contentOriginStampPath(designation), 'utf8')) as {
+      origin?: unknown;
+    };
+    return typeof j?.origin === 'string' && j.origin.length > 0 ? j.origin : 'Local';
+  } catch {
+    return 'Local';
+  }
+};
+export const writeContentOriginStamp = (designation: string, origin: string): void => {
+  try {
+    mkdirSync(resolveSyncLocalDirectory(designation), { recursive: true });
+    writeFileSync(
+      contentOriginStampPath(designation),
+      JSON.stringify({ origin, stampedAtIso: new Date().toISOString() }),
+      'utf8',
+    );
+    sinkSyncLibraryTelemetry('content-origin.stamped', { designation, origin });
+  } catch {
+    sinkSyncLibraryTelemetry('content-origin.stamp-failed', { designation, origin });
   }
 };
 

@@ -63,6 +63,8 @@ import {
   // B-RLM-2 · the pure reads that compose a locality snapshot (all boundary reads at the boundary).
   readLocalScpName,
   readSpecifiedKey,
+  // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
+  writeContentOriginStamp,
 } from '../../../model/suite8SyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -338,6 +340,10 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
             snapshotRegisteredToVault(designation); // the final freeze before target content lands.
             writeVaultHoldMarker(designation, targetRoot);
           }
+          // D-LSG · STAMP-THEN-REPLACE (the fail-safe direction): the tree is about to hold
+          // FOREIGN content — the stamp declares it BEFORE the first byte lands; any crash
+          // anor race inside the window leaves the vault REFUSING every snapshot.
+          writeContentOriginStamp(designation, readSpecifiedKey(designation) ?? targetRoot);
           replaceRegisteredFromTarget(designation, targetRoot);
           armDelivery(designation, targetRoot);
           sinkSyncLibraryTelemetry('usher.machine.advance', { designation, to: 'target', targetRoot });
@@ -372,6 +378,9 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
           sinkSyncLibraryTelemetry('usher.closure-stage.deliver-closed', { designation });
           const restored = restoreRegisteredFromVault(designation);
           clearVaultHoldMarker(designation);
+          // D-LSG · RESTORE-THEN-STAMP: 'Local' declares ONLY after the switch-back landed —
+          // preservation re-arms against a tree the stamp vouches for.
+          writeContentOriginStamp(designation, 'Local');
           sinkSyncLibraryTelemetry('usher.closure-stage.restored', { designation, ...restored });
           armPreservation(designation);
           sinkSyncLibraryTelemetry('usher.closure-stage.preserve-rearmed', { designation });
