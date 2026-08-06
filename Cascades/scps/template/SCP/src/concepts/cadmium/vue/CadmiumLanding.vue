@@ -118,6 +118,20 @@ const cascades = ref<Record<string, Cascade>>({});
 // then the resolved TARGET SCP; otherwise the own citizen (localScp). undefined = degrade
 // (the bridge spawns the own citizen as today via resolveScpName).
 const researchLocalityScp = ref<string | undefined>(undefined);
+// D-TRL · THE TARGET-ROOT SNAPSHOT — the resolved TARGET SCP root (snap.targetRoot) when a live
+// target is specified, else null. Fed by the SAME D-SLE seat that resolves researchLocalityScp (the
+// relay-fed localities snapshot ALREADY carries targetRoot · Scholar fields · D-SLE landed). When
+// non-null AND the effective SCP differs from the own citizen, runResearchSweep roots the RI read at
+// this ABSOLUTE target root (never the caller's same-origin /scp-config).
+const researchLocalityRoot = ref<string | null>(null);
+// D-TRL · THE OWN-CITIZEN NAME (snap.localScp) — the page's own SCP, distinct from the RESOLVED
+// effective (researchLocalityScp, which for a targeted page = the target). The effectiveResearchScp
+// filter falls back to this when no target is live; the riBase target-branch compares against it.
+const researchLocalScpName = ref<string | undefined>(undefined);
+// D-TRL · THE SWEEP-LAUNCH SCP SNAPSHOT — the effective SCP captured at sweep fire time. The
+// page-local sweep progress text renders ONLY while this === the current effective SCP (a swap-back
+// hides the progress on a page whose target the sweep no longer matches · r6 doc §B).
+const sweepTargetScp = ref<string | undefined>(undefined);
 // S8RI · zone-0 collapsible toggle for the Cadmium Diamond/Onyx pane (collapsed by default).
 
 // ============================================================
@@ -331,7 +345,17 @@ const workerSessions = computed(() => {
   const designation = cadmiumDesignationName.value;
   if (!designation) return [];
   const sessions = getGlobalScsBridgeController()?.sessionsList.value ?? [];
-  return sessions.filter((s) => s.suite8Name === designation && s.isAnchor !== true);
+  // D-TRL · SCP-FILTERED DISPATCH — the roster is keyed on the page's EFFECTIVE SCP (the resolved
+  // target when a live target is specified, else the own citizen), so a page never surfaces workers
+  // targeting a different citizen. effectiveResearchScp = researchLocalityScp ?? own citizen ?? null.
+  // Null-tolerance (r6 doc · the degenerate single-SCP case): when BOTH the session's scpName AND the
+  // effective are null (pre-stamp sessions before the D-SLE stamp landed), the pair MATCHES — a
+  // single-SCP workspace must not hide its own unstamped workers.
+  const effectiveResearchScp = researchLocalityScp.value ?? researchLocalScpName.value ?? null;
+  return sessions.filter((s) => {
+    if (s.suite8Name !== designation || s.isAnchor === true) return false;
+    return (s.scpName ?? null) === effectiveResearchScp;
+  });
 });
 
 // First-sight upsert — ONLY a worker observed ALIVE enters the ledger (C464 · user refinement:
@@ -401,6 +425,43 @@ const sweepStatusText = computed<string>(() => {
   }
 });
 
+// D-TRL · THE FIRING-PAGE GUARD — the page-local sweep progress text (running/scanning) belongs to
+// the page that FIRED the sweep, and only while its snapshotted target still matches the current
+// effective SCP. A swap-back (effective SCP shifts off the launch target) hides the local progress —
+// the worker is no longer this view's (r6 doc §B · sweepIsForThisScp).
+const sweepIsForThisScp = computed<boolean>(
+  () => sweepPhase.value !== 'idle'
+    && sweepTargetScp.value === (researchLocalityScp.value ?? researchLocalScpName.value ?? undefined),
+);
+
+// D-TRL · THE DERIVED-FIRST PHASE — the label corresponds to the DISPATCH, not the firing page (the
+// user's ruling). It renders on ANY page whose effective SCP owns workers: an active (SCP-filtered)
+// dispatchRoster drives 'running'/'done' EVEN when this page never fired the sweep (IE's page shows
+// its own sweep this way). The page-local sweepPhase only lifts the label when the sweep is BOTH
+// running AND for this SCP (the firing page's live progress). Child's v-if="sweepPhase !== 'idle'"
+// consumes this derived value.
+const sweepPhaseDerived = computed<SweepPhase>(() => {
+  const roster = dispatchRoster.value;
+  if (roster.length > 0) return roster.every((r) => r.closed) ? 'done' : 'running';
+  return sweepIsForThisScp.value ? sweepPhase.value : 'idle';
+});
+
+// D-TRL · THE DERIVED-FIRST LABEL — dispatch activity is the FIRST source of truth. With workers in
+// the (SCP-filtered) roster the label reads the dispatch ('Research sweep · N in dispatch' anor
+// 'complete · N dispatched' when all closed); the firing-page progress text (sweepStatusText) shows
+// through ONLY when this page fired the sweep AND its target still matches (sweepIsForThisScp) — a
+// swap-back falls back to the derived dispatch label. Idle everywhere else.
+const sweepStatusTextDerived = computed<string>(() => {
+  const roster = dispatchRoster.value;
+  if (roster.length > 0) {
+    const open = roster.filter((r) => !r.closed).length;
+    return open > 0
+      ? `Research sweep · ${open} in dispatch`
+      : `Research sweep complete · ${roster.length} dispatched`;
+  }
+  return sweepIsForThisScp.value ? sweepStatusText.value : '';
+});
+
 // FKIS stagger helper (mirror STSC's wait).
 function sweepWait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -468,6 +529,10 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
     return;
   }
 
+  // D-TRL · snapshot the effective SCP at fire time — the firing-page progress guard (sweepIsForThisScp)
+  // compares the CURRENT effective SCP against this launch-time value; a later swap-back hides the
+  // page-local progress text (the derived dispatch label still surfaces where the workers actually run).
+  sweepTargetScp.value = researchLocalityScp.value ?? researchLocalScpName.value ?? undefined;
   sweepPhase.value = 'running';
   sweepTotal.value = sweepTopics.length;
   sweepIndex.value = 0;
@@ -493,17 +558,33 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
   // {{SCS_WORKER_ULID}}: the worker's OWN ULID is born inside the relay body — the
   // bridge substitutes the placeholder at prime time (the CWDC self-dissipate leg).
   sweepStatusDetail.value = 'building the stepped batch';
-  // C466 · the SERVER-declared absolute Extended base (the browser has no process.cwd()).
-  // Fetched fresh per sweep — one GET against the same-origin /scp-config (AFPR: absent field
-  // → undefined → the Vermillion falls back to the legacy relative path).
+  // D-TRL · THE TARGET-ROOTED riBase — when this page targets a DIFFERENT citizen (effective SCP ≠
+  // own) AND the relay-fed snapshot carried the target's root, the RI read roots at the TARGET's tree
+  // (target-rooted ABSOLUTE) — never the caller's same-origin /scp-config (workers spawn at the
+  // WORKSPACE root, not an SCP root · r7 field finding · so cwd-relative would be wrong). The
+  // extendedRoot the server serves = <scpRoot>/Cascades/Extended (vue.principle scpExtendedRoot);
+  // the target equivalent is <targetRoot>/Cascades/Extended (POSIX join · strip trailing slashes).
+  // Otherwise (the local case · own citizen) the existing /scp-config fetch stands.
+  const effectiveResearchScpAtFire = researchLocalityScp.value ?? researchLocalScpName.value ?? null;
+  const targetsForeignCitizen =
+    researchLocalityScp.value !== undefined
+    && researchLocalityScp.value !== researchLocalScpName.value
+    && researchLocalityRoot.value !== null;
   let riBase: string | undefined;
-  try {
-    const cfg = (await (await fetch('/scp-config')).json()) as { extendedRoot?: string };
-    if (typeof cfg.extendedRoot === 'string' && cfg.extendedRoot.length > 0) {
-      riBase = cfg.extendedRoot;
+  if (targetsForeignCitizen && researchLocalityRoot.value) {
+    riBase = `${researchLocalityRoot.value.replace(/\/+$/, '')}/Cascades/Extended`;
+  } else {
+    // C466 · the SERVER-declared absolute Extended base (the browser has no process.cwd()).
+    // Fetched fresh per sweep — one GET against the same-origin /scp-config (AFPR: absent field
+    // → undefined → the Vermillion falls back to the legacy relative path).
+    try {
+      const cfg = (await (await fetch('/scp-config')).json()) as { extendedRoot?: string };
+      if (typeof cfg.extendedRoot === 'string' && cfg.extendedRoot.length > 0) {
+        riBase = cfg.extendedRoot;
+      }
+    } catch {
+      /* unreachable /scp-config — legacy relative fallback */
     }
-  } catch {
-    /* unreachable /scp-config — legacy relative fallback */
   }
   const specs: ScsBridgeRelaySpec[] = sweepTopics.map((topic) => {
     const topicSlug = topic.id || deriveResearchSlug(topic.label);
@@ -511,6 +592,10 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
       topic: topic.query || topic.label,
       suite8Name,
       riBase,
+      // D-TRL · the diagnostic label — the TARGET SCP name when this sweep targets a foreign citizen
+      // (the Vermillion header renders it beside the RI Path so the worker's operator can diagnose the
+      // cross-SCP dispatch). NO path-logic change — riBase already carries the right root above.
+      targetScpName: effectiveResearchScpAtFire ?? undefined,
       outputSubdir: `${CADMIUM_FRONTIER_SUBDIR_BASENAME}/${topicSlug}`,
       workerSessionId: '{{SCS_WORKER_ULID}}',
     });
@@ -635,6 +720,15 @@ onMounted(() => {
                   ? snap.targetScp ?? snap.specified ?? undefined
                   : snap.localScp ?? undefined
                 : undefined;
+              // D-TRL · the target root + own-citizen name ride the SAME snapshot. targetRoot counts
+              // ONLY when a live target is specified (else null → runResearchSweep uses same-origin
+              // /scp-config); localScp is the own citizen (the effective-SCP filter fallback).
+              researchLocalityRoot.value = snap
+                ? snap.specified && snap.targetLive
+                  ? snap.targetRoot ?? null
+                  : null
+                : null;
+              researchLocalScpName.value = snap ? snap.localScp ?? undefined : undefined;
             }
           },
           {
@@ -875,8 +969,8 @@ onUnmounted(() => {
       <CadmiumResearchFrontier
         :topics="topics"
         :topic-bulletin="topicBulletin"
-        :sweep-phase="sweepPhase"
-        :sweep-status-text="sweepStatusText"
+        :sweep-phase="sweepPhaseDerived"
+        :sweep-status-text="sweepStatusTextDerived"
         :dispatch-roster="dispatchRoster"
         @focus-worker="handleFocusWorker"
         @research-topic="handleResearchTopic"

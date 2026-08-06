@@ -92,6 +92,13 @@ export type BuildResearchVermillionInput = {
   // model is BROWSER-SHARED (the sweep builds the batch client-side — no process/node:path here);
   // the caller threads the base in. Absent → the legacy relative path (worker-cwd-dependent).
   riBase?: string;
+  // D-TRL · SCP-FILTERED DISPATCH · the TARGET SCP name for this worker. When set, the Vermillion's
+  // header renders it beside the RI Path as a diagnostic label so the worker's operator can confirm
+  // the cross-SCP dispatch (the worker is already spawned ON the target citizen · the label makes it
+  // explicit). It does NOT change the path logic — `riBase` is already parameterized with the
+  // target-rooted absolute by the caller; `targetScpName` is the label. Threaded from the caller's
+  // effective locality (researchLocalityScp.value).
+  targetScpName?: string;
   // W4 · Topics/frontier redirect. When set (e.g. `frontier/<topic-slug>`), the Output Stem becomes
   // `Cascades/Extended/<suite8Name>/<outputSubdir>/<slug>-<ts>` so the worker writes into the
   // frontier folder-tree the Topic Bulletin watcher aggregates. The JSON it writes MUST be the
@@ -152,7 +159,7 @@ const DEPTH_GUIDANCE: Record<ResearchVermillionDepth, string> = {
 // which wraps it as the body of an `SCS:Vermillion` SORD message to the worker.
 
 export function buildResearchVermillion(input: BuildResearchVermillionInput): string {
-  const { topic, suite8Name, outputSubdir, workerSessionId, riBase } = input;
+  const { topic, suite8Name, outputSubdir, workerSessionId, riBase, targetScpName } = input;
   const depth: ResearchVermillionDepth = input.depth ?? 'macro';
   // C465/C466 · THE EXTENDED RELOCATION — workers run at the WORKSPACE cwd, so a bare relative
   // riPath wrote into the workspace Cascades/Extended (the July off-package article). Extended
@@ -221,6 +228,12 @@ Step 4c (NOTE for the Anchor — not the worker): After this worker dissipates, 
   //     port (writeSpawnSettings · bridge.json); the worker confirms it in its bridge contract.
   //   - TARGETED/anchor path (workerSessionId absent): keep the prior DSST step — call
   //     scs_dissipate_session directly. Only the frontier/worker path actuates close-wait-dissipate.
+  // D-TRL · the diagnostic Target-SCP line — rendered in the header beside the RI Path ONLY when the
+  // caller supplied a targetScpName (the cross-SCP dispatch case). Pure label; the RI Path itself is
+  // already rooted at the target via riBase — this makes the target explicit for the operator.
+  const targetScpLine = typeof targetScpName === 'string' && targetScpName.length > 0
+    ? `\nTarget SCP: ${targetScpName} (this worker's Extended writes land in this citizen's tree)`
+    : '';
   const isWorker = typeof workerSessionId === 'string' && workerSessionId.length > 0;
   const dissipateStep = isWorker
     ? `Step 5 (Simple Prompt) — Close + Dissipate yourself (CWDC · the terminal step · ACTUATE — do NOT just print):
@@ -255,7 +268,7 @@ curl -sS -X POST http://127.0.0.1:7111/mcp -H 'Content-Type: application/json' -
 
 Research Topic: ${topic}
 Personalization (TPRI): Topic + RI — read the RI at research time, do NOT assume inline content.
-RI Path: ${riPath}
+RI Path: ${riPath}${targetScpLine}
 Research Depth (Diamond Scale): ${depth} — ${depthGuidance}
 Output Stem: ${outputStem}   (worker stamps <ts> = ISO 8601 at write time)
 
