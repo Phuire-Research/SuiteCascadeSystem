@@ -38,7 +38,7 @@ import type {
 } from '../scsBridge.types';
 import { createSession, hasResumableIdentity } from '../../../manager';
 import { spawnElectronSessionForUlid } from '../../../electronSessionSpawn';
-import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective, setSessionSuppressOnboard } from '../../../registry';
+import { setSessionSuite8Name, claimAnchorIfUnclaimed, setSessionAnchor, listSessions, setSessionWorker, setSessionStandBy, setSessionModel, setSessionInitialDirective, setSessionSuppressOnboard, setSessionTargetSuite8Name } from '../../../registry';
 // DF1 · THE S8 SESSION BINDING · the durable-mirror READ leg. THE DF1 BINDING LAW: S8.json =
 // the S8's durable session memory. The ABSENT-anchor spawn path consults readSuite8BoundSession
 // to RESUME a page's prior session (a fresh SCP install / wiped registry lost the operational
@@ -352,6 +352,23 @@ export const scsBridgeSpawnSuite8Session = createQualityCardWithPayload<
               log('scsbridge.spawn-suite8.initial-directive-failed', {
                 sessionId,
                 error: directiveErr instanceof Error ? directiveErr.message.slice(0, 200) : String(directiveErr),
+              });
+            }
+          }
+          // EF-3′ · THE TARGET S8 THREAD · persist the commissioned page (the initialDirective
+          // rail exactly) — the field-agnostic relay carries it FREE to every client; the
+          // Previous Conductions row filters per page. NEVER block the spawn on a hiccup.
+          const targetSuite8Name =
+            typeof payload.targetSuite8Name === 'string' && payload.targetSuite8Name.trim().length > 0
+              ? payload.targetSuite8Name
+              : undefined;
+          if (targetSuite8Name !== undefined) {
+            try {
+              await setSessionTargetSuite8Name(sessionId, targetSuite8Name);
+            } catch (targetErr) {
+              log('scsbridge.spawn-suite8.target-suite8-failed', {
+                sessionId,
+                error: targetErr instanceof Error ? targetErr.message.slice(0, 200) : String(targetErr),
               });
             }
           }

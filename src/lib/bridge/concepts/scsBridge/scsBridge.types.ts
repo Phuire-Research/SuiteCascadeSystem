@@ -276,6 +276,11 @@ export type ScsBridgeSpawnSuite8SessionPayload = {
   // marker). The Session Manager's default Suite 8 spawn is this lane (anchor:false +
   // onboard:false) — anchoring belongs to the Shatterite Menu system first.
   anchor?: boolean;
+  // EF-3′ · THE TARGET S8 THREAD · the Suite 8 PAGE this spawn is commissioned to formalize
+  // (the engaging page's own designation). Persisted onto the registry entry
+  // (setSessionTargetSuite8Name · the initialDirective rail) — the field-agnostic relay
+  // carries it to clients for the per-page Previous Conductions filter.
+  targetSuite8Name?: string;
   callerSessionUlid?: string;
 };
 

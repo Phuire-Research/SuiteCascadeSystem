@@ -25,7 +25,7 @@
  * (the Live Locality Law · the C739 recursion) · D-SL5-PEWTER-LOCALITY-RD.md (the Register
  * precedent this re-homes).
  */
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import type { Muxium } from 'stratimux';
 // EF-2 · THE ENTOURAGE FORGE FOLD (§IV) — the engagement machinery ported from Suite8HomeLanding's
 // forge zone (RD-E §I). The model catalog (offscreen-safe ScsDropdown feed) + the rename-proof anchor
@@ -42,7 +42,17 @@ import ScpManagementPanel from '../../../scsBridge/vue/components/ScpManagementP
 // into the universal controller · GPIM) carries the suite8 client concept whose relay-fed `localities`
 // Record this component now subscribes to. getGlobalScsBridgeController().getCurrentMuxium() is the
 // same held reference every controller dispatch uses; a keyed stage-planner reads localities[suite8Name].
-import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
+import { getGlobalScsBridgeController, SCS_BRIDGE_CONTROLLER_KEY } from '../../../scsBridge/scsBridgeController';
+// EF-3′ · THE TWO-STATE DOOR (ported from Suite8HomeLanding W2) — the branch-aware Turn-Over
+// leg: forging modifies this Suite's ground, so on a NON-working branch the door is the TURN
+// OVER request (the D-BN canonical roles.b identity), on a working (B) branch the Engage.
+import { getGlobalGitmController, GITM_CONTROLLER_KEY } from '../../../gitm/gitmController';
+import { isWorkingBranchPer } from '../../../gitm/gitm.type';
+import {
+  writeGitmTurnoverProgress,
+  GITM_TURNOVER_DEADLINE_MS,
+} from '../../../../model/gitmTurnover.model';
+import { showBridgeStandby } from '../../../webSocketClient/model/bridgeStandbyOverlay.model';
 import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
 import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
 // D-MINT-SURFACE · THE HELD LOCALITY ACCESS — every suite8-tokened locality access (the
@@ -57,6 +67,13 @@ import {
 
 const props = defineProps<{
   suite8Name: string;
+  // EF-3′ · 2A · THE FRESH-ANOR-WORKED CONTROL — REQUIRED (the boolean-prop trap law: an
+  // absent optional boolean coerces to false, so requiring it forces every mount to declare).
+  // false = a FRESH page: the Entourage Forge section boots OPEN (the minted-page Lambda).
+  // true = a WORKED page: boots collapsed (the standard toggle). THE SIGN-OFF: when the
+  // Entourage deems the page sufficiently developed, it flips the page's hard-coded
+  // :worked="false" mount to :worked="true" — that one edit IS the sign-off.
+  worked: boolean;
 }>();
 
 type SyncLocalityInfo = {
@@ -194,7 +211,9 @@ const ENTOURAGE_FORGE_CONFIG = {
 // prismatic PULSE on first hover/utilization (session-only · no storage). forgeSpawning guards the
 // ONE MOTION engage; selectedModel persists to the controller (setSpawnModel) so the NEXT spawn pins.
 // ============================================================
-const forgeMenuOpen = ref<boolean>(false);
+// EF-3′ · 2A · a FRESH page (worked=false) boots the Forge section OPEN — the Entourage
+// Forge greets every minted page; a WORKED page boots collapsed (user-toggled thereafter).
+const forgeMenuOpen = ref<boolean>(!props.worked);
 const forgeLaunchEngaged = ref<boolean>(false);
 const forgeSpawning = ref<boolean>(false);
 const forgeSpawnNote = ref<string>('');
@@ -249,13 +268,111 @@ async function engageEntourageForge(): Promise<void> {
       return;
     }
     // ELSE — a fresh anchor spawn (fresh:true · the bridge re-claims THIS page's anchor).
-    ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true);
+    // EF-3′ · 1A · THE TARGET S8 THREAD + THE LEADING VERMILLION ASPECT — the conduction is
+    // COMMISSIONED to formalize THIS page: the target rides the registry entry (the Previous
+    // Conductions per-page filter) AND leads the spawn Vermillion as the initial directive.
+    // (In a minted twin the rename converts the mount name below to the twin's own — correct.)
+    const forgeDirective = [
+      `THE ENTOURAGE FORGE COMMISSION · target Suite 8 page: "${props.suite8Name}".`,
+      `This conduction formalizes the "${props.suite8Name}" page — research its domain, build out the page, and hand the Suite back ready.`,
+      'THE SIGN-OFF: when the page is sufficiently developed, flip the page\'s hard-coded <Suite8Control :worked="false" /> mount to :worked="true" — the Entourage Forge section then boots collapsed (the page stands signed off as Worked).',
+    ].join('\n');
+    ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true, false, forgeDirective, true, true, props.suite8Name);
     forgeSpawnNote.value = 'Entourage Forge engaged. It will research and build out this Suite.';
   } catch {
     forgeSpawnNote.value = 'Could not engage the Entourage Forge — is the Bridge running?';
   } finally {
     setTimeout(() => {
       forgeSpawning.value = false;
+    }, 1200);
+  }
+}
+
+// ============================================================
+// EF-3′ · 3A · THE PREVIOUS-CONDUCTIONS ROW (ported from Suite8HomeLanding W3 · C386) —
+// this SCP's OFFLINE Entourage Forge sessions, TARGET-AWARE: a conduction shows on the page
+// it was commissioned to formalize (targetSuite8Name === suite8Name) anor on every page when
+// target-less (legacy). Up to 3 · re-openable (triggerEngageSession · the resume leg).
+// ============================================================
+const resolvedScpName = ref<string | null>(null);
+onMounted(() => {
+  void (async () => {
+    try {
+      const ctrl = getGlobalScsBridgeController();
+      if (!ctrl) return;
+      resolvedScpName.value = (await Promise.race([
+        ctrl.getScpName(),
+        new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+      ])) ?? null;
+    } catch {
+      /* best-effort · null matches by suite8Name alone */
+    }
+  })();
+});
+const previousForgeConductions = computed(() => {
+  const list = getGlobalScsBridgeController()?.sessionsList.value ?? [];
+  const scp = resolvedScpName.value;
+  return filterS8Sessions(list, 'Entourage Forge')
+    .filter((s) => (scp === null || s.scpName === scp) && s.status === 'offline')
+    .filter((s) => s.targetSuite8Name == null || s.targetSuite8Name === props.suite8Name)
+    .slice(0, 3);
+});
+function shortUlid(id: string): string {
+  return id.length > 8 ? id.slice(-8) : id;
+}
+function conductionModelLabel(model: string | undefined): string {
+  return model ? scsModelLabel(model) ?? model : 'default model';
+}
+function reopenConduction(id: string): void {
+  console.log('[Forge Previous · Control] re-opening conduction · ulid=', id);
+  getGlobalScsBridgeController()?.triggerEngageSession(id);
+}
+
+// ============================================================
+// EF-3′ · THE TWO-STATE DOOR (ported from Suite8HomeLanding W2 VERBATIM · branch-aware) —
+// on a NON-working branch (the A side · the safe default when the branch read is absent)
+// the door is the TURN OVER request; on a working (B) branch it is the Engage.
+// ============================================================
+const gitmControllerForDoor = inject(GITM_CONTROLLER_KEY) ?? getGlobalGitmController();
+const scsBridgeControllerForDoor =
+  inject(SCS_BRIDGE_CONTROLLER_KEY) ?? getGlobalScsBridgeController();
+const currentBranch = computed<string>(
+  () => gitmControllerForDoor?.gitmJson.value?.currentBranch ?? '',
+);
+const onWorkingB = computed<boolean>(() =>
+  isWorkingBranchPer(currentBranch.value, gitmControllerForDoor?.gitmJson.value),
+);
+const showTurnOverDoor = computed<boolean>(() => !onWorkingB.value);
+const turnOverSpawning = ref<boolean>(false);
+const turnOverNote = ref<string>('');
+async function requestTurnOverToB(): Promise<void> {
+  const sb = scsBridgeControllerForDoor;
+  if (!sb || turnOverSpawning.value) return;
+  settleForgeLaunchPulse();
+  turnOverSpawning.value = true;
+  turnOverNote.value = '';
+  try {
+    const fromBranch = currentBranch.value.length > 0 ? currentBranch.value : 'a';
+    // D-BN · THE CANONICAL MINT — `b/<fromBranch>-<uuid>`, fromBranch VERBATIM.
+    const newBranch = `b/${fromBranch}-${crypto.randomUUID()}`;
+    showBridgeStandby('sword-b');
+    writeGitmTurnoverProgress({
+      source: 'B',
+      overlayVariant: 'sword-b',
+      turnClass: 'sword',
+      deadline: Date.now() + GITM_TURNOVER_DEADLINE_MS,
+      stableA: fromBranch,
+      bridgeEndpoint: sb.bridgeJson.value?.endpoint ?? '',
+      scpName: (await sb.getScpName()) ?? undefined,
+    });
+    // ONE dispatch — git switch -c carries the dirty tree onto B; nodemon restarts on B.
+    sb.triggerHardTurnOver('B', newBranch, true);
+    turnOverNote.value = 'Turning over to B — the SCP restarts on your working branch…';
+  } catch {
+    turnOverNote.value = 'Could not turn over to B — is the Bridge running?';
+  } finally {
+    setTimeout(() => {
+      turnOverSpawning.value = false;
     }, 1200);
   }
 }
@@ -590,20 +707,54 @@ async function chooseLocality(scpName: string | null): Promise<void> {
             />
           </div>
 
-          <!-- THE ENGAGE ROW — THE ONE MOTION LAW (live → focus · else fresh spawn). The Turn-Over
-               leg (branch-aware) is the EF-3 remainder; the engage-only button lands here. -->
-          <button
-            type="button"
-            class="s8c-forge-btn"
-            :disabled="forgeSpawning"
-            @click="engageEntourageForge"
-          >
-            <i class="fa-solid fa-hammer" aria-hidden="true"></i>
-            <span>{{
-              forgeSpawning ? 'Engaging…' : `Engage Entourage Forge · ${selectedModelLabel}`
-            }}</span>
-          </button>
-          <p v-if="forgeSpawnNote" class="s8c-forge-note">{{ forgeSpawnNote }}</p>
+          <!-- EF-3′ · THE TWO-STATE DOOR (ported from Suite8HomeLanding W2 · branch-aware): on a
+               NON-working branch the TURN OVER request (forging modifies this Suite's ground);
+               on a working (B) branch the ONE MOTION engage + the Previous Conductions row. -->
+          <template v-if="showTurnOverDoor">
+            <p class="s8c-forge-intro">
+              Forging works on a fresh working branch — turn over first, so nothing on your main
+              line is touched. You can keep the branch or revert it.
+            </p>
+            <button
+              type="button"
+              class="s8c-forge-btn s8c-forge-btn--sword-b"
+              :disabled="turnOverSpawning"
+              @click="requestTurnOverToB"
+            >
+              <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+              <span>{{ turnOverSpawning ? 'Turning over…' : 'Turn Over · Forge on B' }}</span>
+            </button>
+            <p v-if="turnOverNote" class="s8c-forge-note">{{ turnOverNote }}</p>
+          </template>
+          <template v-else>
+            <button
+              type="button"
+              class="s8c-forge-btn"
+              :disabled="forgeSpawning"
+              @click="engageEntourageForge"
+            >
+              <i class="fa-solid fa-hammer" aria-hidden="true"></i>
+              <span>{{
+                forgeSpawning ? 'Engaging…' : `Engage Entourage Forge · ${selectedModelLabel}`
+              }}</span>
+            </button>
+            <p v-if="forgeSpawnNote" class="s8c-forge-note">{{ forgeSpawnNote }}</p>
+
+            <!-- EF-3′ · 3A · THE PREVIOUS-CONDUCTIONS ROW (target-aware · re-openable). -->
+            <div v-if="previousForgeConductions.length > 0" class="s8c-forge-previous-row">
+              <span class="s8c-forge-previous-label hifi-mono">Previous conductions:</span>
+              <button
+                v-for="c in previousForgeConductions"
+                :key="c.id"
+                type="button"
+                class="s8c-forge-previous-btn"
+                @click="reopenConduction(c.id)"
+              >
+                <span class="s8c-forge-previous-ulid hifi-mono">{{ shortUlid(c.id) }}</span>
+                <span class="s8c-forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
+              </button>
+            </div>
+          </template>
 
           <!-- THE RD MENU — the five hard-coded rows (label + one-liner · the Shatterite option-row
                idiom). FIRE: clipboard-prime the adaptation shape (EF-2). Live-anchor dispatch = EF-3. -->
@@ -640,6 +791,51 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   padding: 0.9rem 1.1rem;
   border-radius: 12px;
 }
+/* EF-3′ · THE DOOR + PREVIOUS-CONDUCTIONS styling (the s8c idiom · muted, no ceremony). */
+.s8c-forge-intro {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+.s8c-forge-btn--sword-b {
+  border-color: rgba(120, 160, 255, 0.45);
+  background: rgba(60, 90, 180, 0.18);
+}
+.s8c-forge-btn--sword-b:hover {
+  background: rgba(60, 90, 180, 0.3);
+}
+.s8c-forge-previous-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  opacity: 0.85;
+}
+.s8c-forge-previous-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+.s8c-forge-previous-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+.s8c-forge-previous-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.s8c-forge-previous-model {
+  opacity: 0.65;
+}
+
 /* EF-2 · B1 · THE FLAIR EXCHANGE — the base Pewter frame rides ONLY the closed state so the swapped
    pane treatment governs when open. Closed → this frame (over the base .hifi-pane); open → the
    .hifi-pane-transparent glass vessel shows through (its border/background take, uncontested). */

@@ -208,7 +208,7 @@ export type ScsBridgeController = {
   // THE SOVEREIGN SPAWN BINDING · scpName omitted/null → the controller resolves the OWN
   // citizen (/scp-config · cached) before threading — the C857 first-found probe never fires
   // from a page-side spawn.
-  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean) => void;
+  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
   // C373 · THE RENAME-PROOF ALIAS · same signature as triggerSpawnSuite8Session; ONE implementation,
   // two names. The `suite8:page` pipeline recursively find-replaces `Suite8`→`{Domain}` /
   // `suite8`→`{domainLower}` across EVERY .ts/.vue in the copied concept dir (suite8PageCreate.ts
@@ -218,7 +218,7 @@ export type ScsBridgeController = {
   // has no `Suite8`/`suite8` substring → SURVIVES the rename intact (the proven /s8/ URL-alias idiom).
   // Copied suite8-concept call sites MUST call THIS name; shared surfaces keep triggerSpawnSuite8Session.
   // C386 · fresh (4th arg) rides the same signature — the Forge's Engage passes fresh:true.
-  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean) => void;
+  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
   // MD-9 · D-MC-3 · Per-Instance Model Control · set the model the NEXT spawn (general anor S8)
   // pins. Persistent selection the Session Management dropdown owns; both spawn principles read
   // pendingSpawnModel FRESH at fire-time. undefined = clear the pin (spawn → global default).
@@ -601,7 +601,7 @@ export function createScsBridgeController(): ScsBridgeController {
   // is reserved for a future SCP-bound spawn lane (C1 spawns Template SCP default).
   // D-UP · manualMode (5th param) = fresh-worker spawn WITHOUT the auto-permission marker —
   // approval gate intact + the Stand By overlay on the primed session (the Gitm Resolver's flag).
-  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true): void => {
+  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true, targetSuite8Name?: string): void => {
     console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode, '· initialDirectiveChars=', initialDirective?.length ?? 0, '· onboard=', onboard, '· anchor=', anchor);
     // C375 · THE ENGAGE AWAIT HARDENING · the S4 prescription — one loud line naming the Muxium state
     // BEFORE the try, so the relay pins whether the Engage reached a LIVE controller or a detached one.
@@ -644,6 +644,9 @@ export function createScsBridgeController(): ScsBridgeController {
           // THE PLAIN-SPAWN LANE · thread ONLY the explicit false (default true = omit → the
           // anchor lane, unchanged — the page/Shatterite Menu door).
           ...(anchor === false ? { anchor: false } : {}),
+          // EF-3′ · THE TARGET S8 THREAD · thread ONLY when supplied (→ the InvokeSpawnSuite8
+          // principle → MCP targetSuite8Name → the bridge persists it on the registry entry).
+          ...(targetSuite8Name ? { targetSuite8Name } : {}),
         });
         mux.dispatch(action);
         console.log('[ScsBridgeController] triggerSpawnSuite8Session dispatched · trigger field set · asWorker=', asWorker, '· scpName=', sovereignScpName, '· fresh=', fresh, '· anchor=', anchor);

@@ -183,6 +183,12 @@ export type ScsBridgeClientState = {
   // THE PLAIN-SPAWN LANE · companion read at fire time. undefined = default (anchor lane);
   // false = plain instance (threaded as MCP anchor:false). Cleared (TFCD).
   pendingSpawnSuite8Anchor: boolean | undefined;
+  // EF-3′ · THE TARGET S8 THREAD · companion read at fire time. The Suite 8 PAGE the spawned
+  // Forge is commissioned to formalize (the engaging page's OWN designation — distinct from
+  // suite8Name='Entourage Forge', the Suite being spawned). Threaded into the MCP args as
+  // targetSuite8Name → the bridge persists it on the registry entry → the Previous Conductions
+  // row filters per page. Cleared alongside the name (TFCD).
+  pendingSpawnSuite8TargetName: string | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -374,6 +380,11 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // MCP anchor:false): the bridge skips the whole anchor machinery. The Session Manager's
   // default Suite 8 spawn is this lane (anchor:false + onboard:false).
   anchor?: boolean;
+  // EF-3′ · THE TARGET S8 THREAD · optional companion. The Suite 8 PAGE the Forge is
+  // commissioned to formalize (→ pendingSpawnSuite8TargetName → the InvokeSpawnSuite8
+  // principle → MCP targetSuite8Name arg → the bridge persists it on the registry entry).
+  // Omitted = a target-less conduction (legacy · matches every page's row).
+  targetSuite8Name?: string;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue
@@ -796,6 +807,11 @@ export type ScsBridgeSessionEntry = {
   // the whole sessions.json entry — no explicit mapping). Rendered small/muted on the
   // session row via scsModelLabel when present. Undefined ⇒ the session rode the global.
   model?: string;
+  // EF-3′ · THE TARGET S8 THREAD mirror (of RegistryEntry.targetSuite8Name). The Suite 8
+  // PAGE this conduction was commissioned to formalize (recorded at spawn). Carried FREE by
+  // the field-agnostic full-entry relay. Drives the per-page Previous Conductions filter.
+  // Undefined ⇒ a target-less conduction (legacy · matches every page's row).
+  targetSuite8Name?: string;
   // D3C readiness · SSRT tier · populated by JTCH hook in Diamond 3C
   finalTurnIndex?: number;       // D3C · live · index of last JSONL turn
   finalTurnTimestamp?: string;   // D3C · live · ISO timestamp

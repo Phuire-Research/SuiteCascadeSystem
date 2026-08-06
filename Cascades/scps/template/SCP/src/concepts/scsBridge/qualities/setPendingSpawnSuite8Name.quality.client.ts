@@ -59,6 +59,8 @@ export const scsBridgeSetPendingSpawnSuite8Name = createQualityCardWithPayload<
       pendingSpawnSuite8InitialDirective: action.payload.initialDirective,
       pendingSpawnSuite8Onboard: action.payload.onboard,
       pendingSpawnSuite8Anchor: action.payload.anchor,
+      // EF-3′ · the target S8 page rides the same lane (TFCD clears together).
+      pendingSpawnSuite8TargetName: action.payload.targetSuite8Name,
     };
   },
   methodCreator: defaultMethodCreator,

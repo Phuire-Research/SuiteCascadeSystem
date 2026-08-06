@@ -971,7 +971,7 @@ onUnmounted(() => {
       <!-- DSP-2 · THE SUITE 8 CONTROL (the Featured component · held under suite8, mounted
            DIRECTLY here — the holding law). The Locality + the SCP drawer (the hard live
            gate · spawn-if-absent via the shared Session Manager lanes). Purely additive. -->
-      <Suite8Control :suite8-name="cadmiumDesignationName" />
+      <Suite8Control :suite8-name="cadmiumDesignationName" :worked="true" />
 
       <!-- Macro SM · SMSP · Shatterite Menu zone — FIRST aspect the user sees (ASDR · above
            the Research Frontier / Bulletin). The agent-authored guidance/onboarding leads.
