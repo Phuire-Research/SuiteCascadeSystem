@@ -418,6 +418,7 @@ async function requestTurnOverToB(): Promise<void> {
 // DISSIPATING RD-B worker (asWorker · fresh · onboard:false · anchor:false · target=page).
 // ============================================================
 const installMenuOpen = ref<boolean>(false);
+const concernsOpen = ref<boolean>(false);
 const installRequirements = ref<InstallRequirementsShape | null>(null);
 const requirementsPresent = computed(() => installRequirements.value !== null);
 const mapperDispatching = ref<boolean>(false);
@@ -1050,6 +1051,19 @@ async function chooseLocality(scpName: string | null): Promise<void> {
                 {{ p.name }}@{{ p.version }}<span v-if="!p.inTemplateBaseline"> · page-added</span>
               </li>
             </ul>
+            <!-- C794 · THE CONCERNS (user discretion's evidence — the Mapper's install
+                 intelligence; advisory, never a lock). -->
+            <button
+              v-if="(installRequirements?.concernNotes?.length ?? 0) > 0"
+              type="button"
+              class="s8c-install-btn"
+              @click="concernsOpen = !concernsOpen"
+            >
+              {{ concernsOpen ? 'Hide' : 'Show' }} concerns ({{ installRequirements?.concernNotes?.length }})
+            </button>
+            <ul v-if="concernsOpen" class="s8c-install-concerns">
+              <li v-for="(n, i) in installRequirements?.concernNotes" :key="i">{{ n }}</li>
+            </ul>
           </template>
           <p v-else class="s8c-install-line s8c-install-line--muted">
             No gate file — generate the Install Requirements to unlock the final gate.
@@ -1076,10 +1090,13 @@ async function chooseLocality(scpName: string | null): Promise<void> {
         <!-- STATION 3 · THE FINAL GATE (the Install Entourage · turn-over → focus → dissipate) -->
         <div class="s8c-install-station">
           <span class="s8c-install-eyebrow hifi-mono">The Final Gate</span>
+          <!-- C794 · THE PRESENCE-UNLOCKS LAW (the user's ruling): the gate unlocks on the
+               requirements being HELD (the file present) + a target — the verdict and the
+               generation date INFORM user discretion, they never re-lock the gate. -->
           <button
             type="button"
             class="s8c-install-btn s8c-install-btn--gate"
-            :disabled="installDispatching || !requirementsPresent || installRequirements?.installReady !== true || selectedInstallTarget.length === 0"
+            :disabled="installDispatching || !requirementsPresent || selectedInstallTarget.length === 0"
             @click="dispatchInstallEntourage"
           >
             <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
@@ -1248,6 +1265,15 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   margin: 0;
   font-size: 0.7rem;
   color: rgba(170, 220, 255, 0.8);
+}
+.s8c-install-concerns {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: rgba(208, 218, 228, 0.65);
 }
 
 /* EF-3′d · THE PILLS — the target filter row; the active pill carries the cool accent the
