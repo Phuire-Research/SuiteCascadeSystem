@@ -452,8 +452,9 @@ async function chooseLocality(scpName: string | null): Promise<void> {
          MANAGEMENT →" nav button) behind the SAME expandable SCPs toggle. The panel owns its own
          /bridge-roster poll + the full helm (Spawn/Focus/Exit/Multiply/Delete + the bars). -->
     <div class="s8c-section">
+      <!-- D-EF-BREAKOUT-b · TOTAL STYLE: the button wears the Bridge's cobalt AT REST. -->
       <button
-        class="s8c-drawer-toggle hifi-mono"
+        class="s8c-drawer-toggle s8c-scp-backing-btn hifi-mono"
         :class="{ 's8c-drawer-toggle--scp-open': drawerOpen }"
         @click="drawerOpen = !drawerOpen"
       >
@@ -477,8 +478,9 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       class="s8c-section s8c-forge-section"
       :class="forgeMenuOpen ? ['hifi-pane-transparent', 's8c-forge-section--open'] : []"
     >
+      <!-- D-EF-BREAKOUT-b · TOTAL STYLE: the button wears EF's prismatic AT REST. -->
       <button
-        class="s8c-forge-toggle hifi-mono"
+        class="s8c-forge-toggle s8c-forge-flair-btn hifi-mono"
         :class="{ 's8c-forge-engaged': forgeLaunchEngaged }"
         @click="forgeMenuOpen = !forgeMenuOpen"
         @mouseenter="settleForgeLaunchPulse"
