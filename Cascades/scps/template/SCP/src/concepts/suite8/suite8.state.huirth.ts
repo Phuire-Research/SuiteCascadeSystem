@@ -26,6 +26,11 @@ export function createSuite8HuirthState(): Suite8HuirthState {
     // relay reads this Record + broadcasts the keyed relay.
     shatteriteMenus: {},
 
+    // EF-5 · THE INSTALL REQUIREMENTS RECORD (Base mirror). Always {} at boot (KeyedSelector). The
+    // install-watcher dir-watch writes per-designation payloads via suite8SetInstallRequirementsHuirthBase;
+    // the STCP SMRP relay reads this Record + broadcasts the keyed relay ('Suite8 Set Install Requirements').
+    installRequirementsMap: {},
+
     // U2 · THE USHER MODE RECORD — always {} at boot (KeyedSelector); the Usher principle's
     // library watcher hydrates per-designation modes via suite8SetSyncModeHuirthBase.
     syncModes: {},

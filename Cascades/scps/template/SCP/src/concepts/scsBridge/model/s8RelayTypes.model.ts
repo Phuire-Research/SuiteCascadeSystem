@@ -31,3 +31,11 @@ export const S8_DESIGNATION_MENU_STAGE_RELAY_TYPE = 'Suite8 Set Designation Menu
  * quality. MUST byte-match suite8SetSyncLocalityClient.quality.client (TQNI).
  */
 export const S8_SYNC_LOCALITY_RELAY_TYPE = 'Suite8 Set Sync Locality Client';
+
+/**
+ * EF-5 · THE INSTALL REQUIREMENTS RELAY (the Install Circuit · suite8InstallRequirementsStcpRelay SMRP
+ * broadcast). Carries the per-designation install-requirements gate-file snapshot ({ present, requirements }).
+ * NEVER-COPIED (no rewrite-touchable token in the export name) so the Forge mint routes the SERVER dialect
+ * into a generated page's local quality. MUST byte-match suite8SetInstallRequirements.quality.client (TQNI).
+ */
+export const S8_INSTALL_REQUIREMENTS_RELAY_TYPE = 'Suite8 Set Install Requirements';

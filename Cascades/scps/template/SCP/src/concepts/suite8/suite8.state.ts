@@ -43,6 +43,11 @@ export function createSuite8ClientState(): Suite8ClientState {
     // (KeyedSelector · the N-watcher SMRP relay populates per-designation keys at runtime).
     shatteriteMenus: {},
 
+    // EF-5 · THE INSTALL REQUIREMENTS RECORD (client · relay-fed) — one gate-file snapshot per
+    // designation. Always {} at boot (KeyedSelector · the install-watcher SMRP relay populates
+    // per-designation keys at runtime; the Suite8 Control's dual-write also seeds keys).
+    installRequirementsMap: {},
+
     // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one snapshot per designation. Always
     // {} at boot (KeyedSelector). suite8LocalityStcpRelay broadcasts suite8SetSyncLocalityClient;
     // Suite8Control + ShatteriteMenu read localities[suite8Name] into their syncLocality ref.
@@ -73,6 +78,8 @@ export const SUITE8_FILTER_KEYS: string[] = [
   'menuStage',
   // PRE-EPOCH · BSSM keyed Record of per-designation Shatterite Menu stages.
   'shatteriteMenus',
+  // EF-5 · keyed Record of per-designation install-requirements gate-file snapshots (relay-fed).
+  'installRequirementsMap',
   // B-RLM-2 · the relay-fed locality + closure-grace Records (local-only · never ascend to server).
   'localities',
   'closureGraces',

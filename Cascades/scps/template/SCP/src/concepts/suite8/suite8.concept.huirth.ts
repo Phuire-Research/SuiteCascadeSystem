@@ -26,6 +26,11 @@ import { suite8SetMenuStageHuirthBase } from './qualities/suite8SetMenuStageHuir
 import { suite8SetDesignationMenuStageHuirthBase } from './qualities/suite8SetDesignationMenuStageHuirthBase.quality.huirth';
 import { suite8MenuStcpRelayPrinciple } from './principles/suite8MenuStcpRelay.principle.huirth';
 import { suite8MenuWatchPrinciple } from './principles/suite8MenuWatch.principle.huirth';
+// EF-5 · THE INSTALL CIRCUIT · the install-requirements keyed Huirth Base quality (the install-watcher
+// dispatches this FIRST · Base-maintenance) + the install-watcher dir-watch + the SMRP+BOCR relay.
+import { suite8SetInstallRequirementsHuirthBase } from './qualities/suite8SetInstallRequirementsHuirthBase.quality.huirth';
+import { suite8InstallRequirementsWatchPrinciple } from './principles/suite8InstallRequirementsWatch.principle.huirth';
+import { suite8InstallRequirementsStcpRelayPrinciple } from './principles/suite8InstallRequirementsStcpRelay.principle.huirth';
 // SL-1 · THE SYNC LIBRARY BOOT REGISTRATION — the Demometeric means' further plurality
 // (Cascades/Extended/<name>/SyncLibrary.json · localScp registered · Local = the source of truth).
 import { suite8SyncLibrarySeedPrinciple } from './principles/suite8SyncLibrarySeed.principle.huirth';
@@ -48,6 +53,8 @@ import { suite8LocalityStcpRelayPrinciple } from './principles/suite8LocalityStc
 const suite8HuirthQualities: Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase,
   suite8SetDesignationMenuStageHuirthBase,
+  // EF-5 · the install-requirements keyed Base (the install-watcher dispatches it FIRST · Huirth-only).
+  suite8SetInstallRequirementsHuirthBase,
   suite8SetSyncModeHuirthBase,
   suite8BeginClosureGraceHuirthBase,
   suite8CancelClosureGraceHuirthBase,
@@ -66,6 +73,11 @@ export const createSuite8HuirthConcept = () =>
     [
       suite8MenuWatchPrinciple,
       suite8MenuStcpRelayPrinciple,
+      // EF-5 · the install-requirements dir-watch (arms the gate-file relay) BEFORE the SMRP+BOCR relay
+      // (reads suite8.k.installRequirementsMap · broadcasts suite8SetInstallRequirements) — same order
+      // class as the menu pair (watch before relay).
+      suite8InstallRequirementsWatchPrinciple,
+      suite8InstallRequirementsStcpRelayPrinciple,
       suite8SyncLibrarySeedPrinciple,
       suite8SyncUsherPrinciple,
       // B-RLM-2 · the locality relay (SMRP on d.suite8.k.localities + closureGraces · BOCR on the

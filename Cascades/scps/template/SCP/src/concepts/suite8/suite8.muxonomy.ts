@@ -22,7 +22,7 @@ import {
 // observes the shared Record on the Suite8 Landing (without aggregation the muxified
 // suiteCascade's properties are not registered as non-synced filterKeys on the page base).
 import { suiteCascadeMuxonomic } from '../suiteCascade/suiteCascade.muxonomy';
-import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE, S8_SYNC_LOCALITY_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
+import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE, S8_SYNC_LOCALITY_RELAY_TYPE, S8_INSTALL_REQUIREMENTS_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
 
 const suite8LandingPage: PageEntry = {
   path: '/suite8',
@@ -97,6 +97,9 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
     // PRE-EPOCH · BSSM keyed Record of per-designation Shatterite Menu stages (driven by the
     // N-watcher SMRP relay · 'Suite8 Set Designation Menu Stage').
     'shatteriteMenus',
+    // EF-5 · keyed Record of per-designation install-requirements gate-file snapshots (driven by the
+    // install-watcher SMRP relay · 'Suite8 Set Install Requirements').
+    'installRequirementsMap',
     // B-RLM-2 · the relay-fed locality + closure-grace Records (local-only · relay writes them,
     // they never ascend to the server · driven by 'Suite8 Set Sync Locality Client').
     'localities',
@@ -202,6 +205,14 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
         location: DeploymentTarget.Client,
         diameter: false,
       },
+      // EF-5 · the install-requirements relay-reception quality (the install-watcher SMRP broadcasts this).
+      {
+        name: 'suite8SetInstallRequirements',
+        type: 'Suite8 Set Install Requirements',  // = VERBOSE('SetInstallRequirements') · TQNI byte-match
+        filePath: 'qualities/suite8SetInstallRequirements.quality.client.ts',
+        location: DeploymentTarget.Client,
+        diameter: false,
+      },
       // B-RLM-2 · the locality relay-reception quality (suite8LocalityStcpRelay SMRP broadcasts this).
       {
         name: 'suite8SetSyncLocalityClient',
@@ -237,6 +248,15 @@ export const suite8Muxonomic: MuxonomicConfig<'suite8'> = {
       {
         qualityName: 'suite8SetDesignationMenuStage',
         actionType: S8_DESIGNATION_MENU_STAGE_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetDesignationMenuStage') · byte-match
+        direction: ExchangeDirection.ServerToClient,
+      },
+      // EF-5 · the install-requirements relay — the suite8InstallRequirementsStcpRelay SMRP broadcasts this
+      // type; the generated page's exchange routes the SERVER dialect into its OWN local quality (the
+      // never-copied wire type survives the mint rewrite · the BO-1 law). The HuirthBase ('Suite8 Set
+      // Install Requirements Huirth Base') is ABSENT here (Huirth-only · the Base-maintenance law · Seam 2).
+      {
+        qualityName: 'suite8SetInstallRequirements',
+        actionType: S8_INSTALL_REQUIREMENTS_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetInstallRequirements') · byte-match
         direction: ExchangeDirection.ServerToClient,
       },
       // B-RLM-2 · the locality relay — the suite8LocalityStcpRelay SMRP broadcasts this type; the

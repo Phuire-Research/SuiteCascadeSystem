@@ -54,7 +54,7 @@ import {
 } from '../../../../model/gitmTurnover.model';
 import { showBridgeStandby } from '../../../webSocketClient/model/bridgeStandbyOverlay.model';
 import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
-import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
+import type { Suite8SyncLocalitySnapshot, InstallRequirementsPayload } from '../../suite8.type';
 // D-MINT-SURFACE · THE HELD LOCALITY ACCESS — every suite8-tokened locality access (the
 // concept path · the endpoint · the dispatch target) routes through the held model so a
 // minted twin's token-renamed copy keeps reading the ONE true slice + the ONE true endpoint.
@@ -425,34 +425,94 @@ const installDispatching = ref<boolean>(false);
 const updateDispatching = ref<boolean>(false);
 const installNote = ref<string>('');
 const selectedInstallTarget = ref<string>('');
+// C792 · THE ROSTER FEED (the salvo's Band-2 verdict) — the controller's bridgeJson ref is
+// ALREADY reactive + relay-driven (boundScps ∪ installedScps + scpStatuses): zero fetch,
+// zero poll, LOCALITY-INDEPENDENT (the ring feed starved any designation without a sync
+// registration — the field find).
 const installTargetOptions = computed(() => {
-  const ring = syncLocality.value?.ring ?? [];
-  const local = syncLocality.value?.localScp ?? null;
-  return ring
-    .filter((r) => r.scpName !== local && r.scpName !== 'template')
-    .map((r) => ({ value: r.scpName, label: r.scpName, hint: r.status }));
+  const ctrl = getGlobalScsBridgeController();
+  const bj = ctrl?.bridgeJson.value;
+  if (!bj) return [];
+  // self-identity: the locality snapshot when registered, else the resolved SCP name (a
+  // fresh twin has NO sync registration — localScp null would leave self in the list).
+  const local = syncLocality.value?.localScp ?? resolvedScpName.value;
+  const statuses = (bj.scpStatuses ?? {}) as Record<string, string>;
+  const names = new Set<string>([
+    ...(bj.installedScps ?? []),
+    ...Object.keys(bj.boundScps ?? {}),
+  ]);
+  return [...names]
+    .filter((name) => name !== local && name !== 'template')
+    .map((name) => ({
+      value: name,
+      label: name,
+      hint: name in (bj.boundScps ?? {}) ? 'live' : statuses[name] ?? 'offline',
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 });
+// C792 · THE REQUIREMENTS SUBSCRIPTION (the relay lane · the 90s heuristic RETIRED) — the
+// keyed client-state subscription (the locality-subscription idiom · DIRECT concept path:
+// this lane is PER-CONCEPT, so a twin's rename points at the twin's OWN slice — correct).
+let installReqPlanner: { conclude: () => void } | null = null;
+let installReqSettleTimer: ReturnType<typeof setTimeout> | null = null;
+let installReqSettleTries = 0;
+function ensureInstallReqSubscription(): boolean {
+  if (installReqPlanner) return true;
+  const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return false;
+  installReqPlanner = muxium.plan<ClientMuxiumDeck>(
+    'suite8ControlInstallRequirementsSubscription',
+    ({ staging, stage, d__ }) =>
+      staging(() => [
+        stage(
+          ({ d }) => {
+            const record = d.client.d.suite8.k.installRequirementsMap.select() as Record<
+              string,
+              InstallRequirementsPayload
+            >;
+            const snap = record[props.suite8Name];
+            // absence-is-not-emptiness: no key = not-yet-relayed (keep the ODCF truth);
+            // a REAL payload assigns — {present:false} honestly clears the station.
+            if (snap) installRequirements.value = snap.present ? snap.requirements : null;
+          },
+          { selectors: [d__.client.d.suite8.k.installRequirementsMap] },
+        ),
+      ]),
+  );
+  return true;
+}
+function settleInstallReqSubscription(): void {
+  if (ensureInstallReqSubscription()) return;
+  if (installReqSettleTries >= 40) return;
+  installReqSettleTries += 1;
+  installReqSettleTimer = setTimeout(settleInstallReqSubscription, 250);
+}
 async function fetchInstallRequirements(): Promise<void> {
   if (!props.suite8Name) return;
   try {
     const r = await fetch(installRequirementsEndpoint(props.suite8Name));
     const j = (await r.json()) as { present: boolean; requirements?: InstallRequirementsShape };
-    installRequirements.value = j.present && j.requirements ? j.requirements : null;
+    const requirements = j.present && j.requirements ? j.requirements : null;
+    installRequirements.value = requirements;
+    ensureInstallReqSubscription();
+    // the dual write — the ODCF snapshot lands in the concept state too (shared truth).
+    const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+    if (muxium) {
+      muxium.dispatch(
+        muxium.deck.d.client.d.suite8.e.suite8SetInstallRequirements({
+          designation: props.suite8Name,
+          payload: { present: !!j.present, requirements },
+        }),
+      );
+    }
   } catch {
     /* absent-is-a-state — the GENERATE station renders */
   }
 }
 onMounted(() => {
   void fetchInstallRequirements();
+  settleInstallReqSubscription();
 });
-// the mapper-closure refetch — while a scan is in flight, any session-registry change
-// re-reads the gate (the Mapper's write + dissipation both ripple the registry).
-watch(
-  () => getGlobalScsBridgeController()?.sessionsList.value,
-  () => {
-    if (mapperDispatching.value) void fetchInstallRequirements();
-  },
-);
 async function dispatchRequirementsMapper(): Promise<void> {
   const ctrl = getGlobalScsBridgeController();
   if (!ctrl || mapperDispatching.value) return;
@@ -470,11 +530,11 @@ async function dispatchRequirementsMapper(): Promise<void> {
   } catch {
     installNote.value = 'Could not dispatch the Mapper — is the Bridge running?';
   } finally {
-    // the scan window — the watch above refetches on every registry ripple meanwhile.
+    // C792 · the relay lane carries the result LIVE (the watcher fires on the gate-file
+    // write) — this is only the double-click guard, not a scan window.
     setTimeout(() => {
       mapperDispatching.value = false;
-      void fetchInstallRequirements();
-    }, 90_000);
+    }, 5000);
   }
 }
 async function dispatchInstallEntourage(): Promise<void> {
@@ -699,6 +759,14 @@ onBeforeUnmount(() => {
   if (localitySubSettleTimer !== null) {
     clearTimeout(localitySubSettleTimer);
     localitySubSettleTimer = null;
+  }
+  if (installReqPlanner) {
+    installReqPlanner.conclude();
+    installReqPlanner = null;
+  }
+  if (installReqSettleTimer !== null) {
+    clearTimeout(installReqSettleTimer);
+    installReqSettleTimer = null;
   }
 });
 

@@ -59,6 +59,7 @@
     "@types/cors": "^2.8.19",
     "@vue/compiler-sfc": "^3.5.26",
     "@vue/server-renderer": "^3.5.26",
+    "chokidar": "^3.6.0",
     "codemirror": "^6.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",

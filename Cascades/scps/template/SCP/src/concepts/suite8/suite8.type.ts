@@ -22,6 +22,10 @@ import type { Concept, Quality, PrincipleFunction, MuxiumDeck, AnyAction } from 
 import type { SuiteCascadeState, SuiteCascadeQualities } from '../suiteCascade/suiteCascade.type';
 // GTMS8C · the shared Shatterite Menu stage contract (W1 · model/shatteriteMenu.model.ts).
 import type { MenuStage, MenuDocument } from '../../model/shatteriteMenu.model';
+// EF-5 · THE INSTALL CIRCUIT · the gate-file content shape (held · token-free · client-safe).
+// Imported from the never-copied install-circuit model so the Suite 8 Control (the mint copy
+// surface) and this concept share ONE contract that survives every twin's token-rename.
+import type { InstallRequirementsShape } from '../../model/scpS8InstallCircuit.model';
 
 // ============================================================
 // GTMS8C · THE CASCADING CONSTANT (TQNI-RT single edit site)
@@ -142,6 +146,12 @@ export type Suite8ClientState = {
   // at boot — never optional (KeyedSelector · BSSM-Type non-optional discipline).
   shatteriteMenus: Record<string, MenuDocument>;
 
+  // EF-5 · THE INSTALL REQUIREMENTS RECORD (client · relay-fed) — one gate-file snapshot per
+  // designation (keyed by NDEP Name). The install watcher (WPS) writes a per-designation payload via
+  // the keyed Base quality; the STCP SMRP relay broadcasts suite8SetInstallRequirements; the Suite8
+  // Control reads installRequirementsMap[suite8Name]. Always {} at boot (KeyedSelector · never optional).
+  installRequirementsMap: Record<string, InstallRequirementsPayload>;
+
   // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one locality snapshot per designation.
   // The suite8LocalityStcpRelay SMRP broadcasts suite8SetSyncLocalityClient; this page reads
   // localities[suite8Name] into its syncLocality ref (the poll retirement). Always {} at boot
@@ -221,6 +231,21 @@ export type Suite8SetDesignationMenuStageHuirthBasePayload = {
   menuStage: MenuDocument;
 };
 
+// EF-5 · THE INSTALL REQUIREMENTS RELAY LANE (RD-C class · the install-circuit gate-file feed).
+// THE WRAPPER — present carries the existence bit (absence-is-a-state · JDIS Idle = {present:false}).
+// The Suite8 Control reads installRequirementsMap[suite8Name].present ? .requirements : null. The
+// STCP helper's emptyPayload (the Idle sentinel dispatched on unlink) is { present:false, requirements:null }.
+export type InstallRequirementsPayload = {
+  present: boolean;
+  requirements: InstallRequirementsShape | null;
+};
+// EF-5 · the keyed relay/Base action payload (ONE shared shape for BOTH qualities · client relay-reception
+// + Huirth Base-maintenance). The install watcher's SBIS dispatches this with { designation, payload }.
+export type Suite8SetInstallRequirementsPayload = {
+  designation: string;
+  payload: InstallRequirementsPayload;
+};
+
 // B-RLM-2 · THE CLIENT LOCALITY RELAY PAYLOAD — the suite8LocalityStcpRelay broadcasts the FULL
 // localities Record AND the FULL closureGraces Record (Scholar AMENDMENT 2 · the grace relay). The
 // client reducer REPLACES both slices (the relay carries the authoritative snapshot · the server is
@@ -251,6 +276,8 @@ export type Suite8ClientQualities = {
   suite8SetMenuStage: Quality<Suite8ClientState, Suite8SetMenuStagePayload>;
   // PRE-EPOCH · BSSM keyed relay-reception quality (the N-watcher SMRP broadcasts this type).
   suite8SetDesignationMenuStage: Quality<Suite8ClientState, Suite8SetDesignationMenuStagePayload>;
+  // EF-5 · the install-requirements relay-reception quality (the install-watcher SMRP broadcasts this).
+  suite8SetInstallRequirements: Quality<Suite8ClientState, Suite8SetInstallRequirementsPayload>;
   // B-RLM-2 · the locality relay-reception quality (the suite8LocalityStcpRelay SMRP broadcasts this).
   // Replaces both the localities + closureGraces client slices (the server is the single writer).
   suite8SetSyncLocalityClient: Quality<Suite8ClientState, Suite8SetSyncLocalityClientPayload>;
@@ -303,6 +330,11 @@ export type Suite8HuirthState = {
   // a per-designation stage here via the keyed Base quality (Base-maintenance · Seam 2); the SMRP
   // relay reads this Record selector + broadcasts the keyed relay. Always {} at boot (KeyedSelector).
   shatteriteMenus: Record<string, MenuDocument>;
+  // EF-5 · THE INSTALL REQUIREMENTS RECORD (Base mirror). The install watcher's dir-watch writes a
+  // per-designation payload here via suite8SetInstallRequirementsHuirthBase (Base-maintenance · Seam 2);
+  // the STCP SMRP relay reads this Record selector + broadcasts the keyed relay. Always {} at boot
+  // (KeyedSelector · never optional).
+  installRequirementsMap: Record<string, InstallRequirementsPayload>;
   // U2 · THE USHER MODE RECORD (the Usher Reframe · DIAMOND-SYNC-LIBRARY.md) — per-designation
   // Sync Library mode, hydrated from SyncLibrary.json by the Usher principle's library watcher.
   // The setStage mode machine's stages selector-gate on this Record. Always {} (KeyedSelector).
@@ -366,6 +398,12 @@ export type Suite8HuirthQualities = {
   suite8SetDesignationMenuStageHuirthBase: Quality<
     Suite8HuirthState,
     Suite8SetDesignationMenuStageHuirthBasePayload
+  >;
+  // EF-5 · the install-requirements keyed Huirth Base quality (the install-watcher dispatches this
+  // FIRST · Base-maintenance · Huirth-only · NOT in actionExchange · TQNI). ONE shared payload type.
+  suite8SetInstallRequirementsHuirthBase: Quality<
+    Suite8HuirthState,
+    Suite8SetInstallRequirementsPayload
   >;
   // U2 · the Usher mode Base quality (the library watcher dispatches; the machine gates).
   suite8SetSyncModeHuirthBase: Quality<Suite8HuirthState, Suite8SetSyncModeHuirthBasePayload>;
