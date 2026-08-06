@@ -71,8 +71,6 @@ function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
 // default. GET the current locality ONCE and dispatch it into the page muxium so the subscription
 // gets an initial value. B3b · dispatch even the Local/empty snapshot (empty is a state).
 function hydrateLocalityOnce(): void {
-  const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
-  if (!muxium) return;
   void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
@@ -89,6 +87,13 @@ function hydrateLocalityOnce(): void {
         localLive: false,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
+      // B-RLM-2b · THE DUAL WRITE — the ref sets DIRECTLY (the panel-grade resilient path: the
+      // component owns its truth even muxium-less), AND the snapshot dispatches into the muxium
+      // when bound (the shared state + every other subscriber). The subscription re-arms here too.
+      syncLocality.value = snapshotToInfo(snapshot);
+      ensureLocalitySubscription();
+      const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+      if (!muxium) return;
       muxium.dispatch(
         muxium.deck.d.client.d.suite8.e.suite8SetSyncLocalityClient({
           localities: { [props.suite8Name]: snapshot },
@@ -107,9 +112,17 @@ function hydrateLocalityOnce(): void {
 // CadmiumLanding's stagePlanner.conclude cleanup). NO Stratimux plan runs synchronously in the
 // template — this is the ONE plan this component holds, purely for the reactive read.
 let localityPlanner: { conclude: () => void } | null = null;
-function subscribeLocality(): void {
+// B-RLM-2b · ARM-ON-BIND — Vue mounts children BEFORE the parent Landing's onMounted binds the
+// muxium (setMuxium), so a mount-time arm finds null and MUST retry: a bounded 250ms settle (the
+// SOE boot-coalescer class · stops the beat it arms · ~10s cap) covers the binding window, and
+// every hydrate re-attempts opportunistically. Without this the subscription silently never arms
+// and Section I goes uncontrollable (the field find).
+let localitySubSettleTimer: ReturnType<typeof setTimeout> | null = null;
+let localitySubSettleTries = 0;
+function ensureLocalitySubscription(): boolean {
+  if (localityPlanner) return true;
   const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
-  if (!muxium) return;
+  if (!muxium) return false;
   localityPlanner = muxium.plan<ClientMuxiumDeck>(
     'suite8ControlLocalitySubscription',
     ({ staging, stage, d__ }) =>
@@ -127,6 +140,13 @@ function subscribeLocality(): void {
         ),
       ]),
   );
+  return true;
+}
+function settleLocalitySubscription(): void {
+  if (ensureLocalitySubscription()) return;
+  if (localitySubSettleTries >= 40) return;
+  localitySubSettleTries += 1;
+  localitySubSettleTimer = setTimeout(settleLocalitySubscription, 250);
 }
 
 // B-RLM-2 · focus/visibility resilience KEPT (cheap · calls the SAME ODCF setter) — a page that was
@@ -137,7 +157,7 @@ function refreshAll(): void {
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
-  subscribeLocality();
+  settleLocalitySubscription();
   hydrateLocalityOnce();
   window.addEventListener('focus', refreshAll);
   document.addEventListener('visibilitychange', refreshAll);
@@ -149,6 +169,10 @@ onBeforeUnmount(() => {
   if (localityPlanner) {
     localityPlanner.conclude();
     localityPlanner = null;
+  }
+  if (localitySubSettleTimer !== null) {
+    clearTimeout(localitySubSettleTimer);
+    localitySubSettleTimer = null;
   }
 });
 
