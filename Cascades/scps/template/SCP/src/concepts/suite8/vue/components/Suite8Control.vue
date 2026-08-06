@@ -542,7 +542,9 @@ async function dispatchInstallEntourage(): Promise<void> {
   const ctrl = getGlobalScsBridgeController();
   const target = selectedInstallTarget.value;
   if (!ctrl || installDispatching.value || target.length === 0) return;
-  if (!requirementsPresent.value || installRequirements.value?.installReady !== true) {
+  // C794b · THE PAIR-ARM SWEEP — the handler's twin of the button guard: PRESENCE unlocks
+  // (the user's ruling); the verdict + date inform discretion, never lock.
+  if (!requirementsPresent.value) {
     installNote.value = 'The gate stands — generate the Install Requirements first.';
     return;
   }
