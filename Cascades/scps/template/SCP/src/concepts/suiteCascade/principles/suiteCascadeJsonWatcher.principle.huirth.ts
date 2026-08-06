@@ -66,7 +66,7 @@ import {
 // SL-3 · the Sync Library resolution seam — a SHARED-MODEL downward import (src/model/ ·
 // the shatteriteMenu/stcpComponentRelay stratum), NOT a suite8 import: the boundary
 // discipline above holds (suiteCascade remains the PRIOR base, standing alone).
-import { resolveSyncLocality } from '../../../model/suite8SyncLibrary.model';
+import { resolveSyncLocality } from '../../../model/scpSyncLibrary.model';
 // DPASL-D1 · BOUNDARY DISCIPLINE — the watcher is the PURE CONSUMER. It imports NOTHING
 // from `../../suite8/` (suite8 is the EMERGENT base that muxifies suiteCascade; suiteCascade
 // is the PRIOR base, must stand alone). The watcher reads ONLY its OWN `k_.cascades` Record

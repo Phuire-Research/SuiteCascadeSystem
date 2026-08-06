@@ -27,7 +27,7 @@ import { KNOWN_SUITE8_ENTRIES } from '../model/suite8Registration.model';
 import {
   seedSyncLibraryAdditive,
   sinkSyncLibraryTelemetry,
-} from '../../../model/suite8SyncLibrary.model';
+} from '../../../model/scpSyncLibrary.model';
 
 export type Suite8SyncLibrarySeedDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;

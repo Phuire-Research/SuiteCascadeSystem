@@ -29,7 +29,7 @@ import type {
   Suite8HuirthState,
   Suite8CancelClosureGraceHuirthBasePayload,
 } from '../suite8.type';
-import { sinkSyncLibraryTelemetry } from '../../../model/suite8SyncLibrary.model';
+import { sinkSyncLibraryTelemetry } from '../../../model/scpSyncLibrary.model';
 
 export type { Suite8CancelClosureGraceHuirthBasePayload };
 

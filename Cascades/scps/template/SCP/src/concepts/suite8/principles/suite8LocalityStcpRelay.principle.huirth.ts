@@ -52,7 +52,7 @@ import type {
   WebSocketServerQualities,
 } from '../../webSocketServer/webSocketServer.concept';
 import { suite8SetSyncLocalityClient } from '../qualities/suite8SetSyncLocalityClient.quality.client';
-import { sinkSyncLibraryTelemetry } from '../../../model/suite8SyncLibrary.model';
+import { sinkSyncLibraryTelemetry } from '../../../model/scpSyncLibrary.model';
 
 export type Suite8LocalityStcpRelayDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;

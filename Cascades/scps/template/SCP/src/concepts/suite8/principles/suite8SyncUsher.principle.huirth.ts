@@ -66,7 +66,7 @@ import {
   // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
   writeContentOriginStamp,
   readContentOriginStamp,
-} from '../../../model/suite8SyncLibrary.model';
+} from '../../../model/scpSyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;

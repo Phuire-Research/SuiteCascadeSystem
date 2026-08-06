@@ -1,5 +1,10 @@
 /**
- * suite8SyncLibrary.model.ts — SL-1 · THE SYNC LIBRARY GROUND (pure model · no Stratimux imports)
+ * scpSyncLibrary.model.ts — SL-1 · THE SYNC LIBRARY GROUND (pure model · no Stratimux imports)
+ *
+ * D-MINT-SURFACE (C782) · THE TOKEN-FREE NAME LAW: this SHARED model is imported from
+ * inside the suite8 concept — the mint engine's rename tokens (SUITE8_ · Suite8 · suite8)
+ * must NEVER appear in its import specifier anor the minted concept's imports break
+ * (the L1a failure). Shared-stratum files reachable from the copy surface carry NO tokens.
  *
  * THE SYNC LIBRARY: a given Suite 8 Concept, in its Muxified Whole, manages a Sync Library
  * for a given Suite 8 — the on-disk record of the RELATIVE FILE PATHS of each JSON as it

@@ -56,7 +56,7 @@ import type {
   Suite8BeginClosureGraceHuirthBasePayload,
 } from '../suite8.type';
 import type { Suite8SyncUsherDeck } from '../principles/suite8SyncUsher.principle.huirth';
-import { sinkSyncLibraryTelemetry } from '../../../model/suite8SyncLibrary.model';
+import { sinkSyncLibraryTelemetry } from '../../../model/scpSyncLibrary.model';
 
 export type { Suite8BeginClosureGraceHuirthBasePayload };
 

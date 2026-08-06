@@ -139,7 +139,7 @@ import {
   readLocalScpName,
   readSyncRingFromBridgeJson,
   writeSpecifiedAdditive,
-} from '../../model/suite8SyncLibrary.model';
+} from '../../model/scpSyncLibrary.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,

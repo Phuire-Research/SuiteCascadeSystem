@@ -43,7 +43,7 @@ import {
   isSpecifiedTargetLive,
   revertSpecifiedIfTargetNotLive,
   sinkSyncLibraryTelemetry,
-} from '../../../model/suite8SyncLibrary.model';
+} from '../../../model/scpSyncLibrary.model';
 
 export type { Suite8GraceRevertCheckHuirthBasePayload };
 
