@@ -63,6 +63,7 @@ import {
   readClientSyncLocalities,
   clientSyncLocalitiesSelector,
   dispatchClientSyncLocalitySnapshot,
+  readConductionTarget,
 } from '../../../../model/scpLocalityClientAccess.model';
 
 const props = defineProps<{
@@ -314,9 +315,17 @@ const previousForgeConductions = computed(() => {
   const scp = resolvedScpName.value;
   return filterS8Sessions(list, 'Entourage Forge')
     .filter((s) => (scp === null || s.scpName === scp) && s.status === 'offline')
-    .filter((s) => s.targetSuite8Name == null || s.targetSuite8Name === props.suite8Name)
+    // EF-3′c · the target read rides the HELD model (a twin's rename would otherwise turn
+    // the field access into a nonexistent property → every conduction passes everywhere).
+    .filter((s) => {
+      const target = readConductionTarget(s);
+      return target == null || target === props.suite8Name;
+    })
     .slice(0, 3);
 });
+function conductionTargetLabel(entry: unknown): string {
+  return readConductionTarget(entry) ?? 'unlabeled';
+}
 function shortUlid(id: string): string {
   return id.length > 8 ? id.slice(-8) : id;
 }
@@ -753,9 +762,9 @@ async function chooseLocality(scpName: string | null): Promise<void> {
                 <span class="s8c-forge-previous-ulid hifi-mono">{{ shortUlid(c.id) }}</span>
                 <span class="s8c-forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
                 <!-- EF-3′b · THE TARGET FIELD — the S8 page this conduction was commissioned to
-                     formalize (sessions.json targetSuite8Name · the manifold proof surface).
-                     'unlabeled' = a pre-thread conduction (target-less legacy). -->
-                <span class="s8c-forge-previous-target hifi-mono">{{ c.targetSuite8Name ?? 'unlabeled' }}</span>
+                     formalize (the manifold proof surface). EF-3′c · the read rides the HELD
+                     model (rename-immune). 'unlabeled' = a pre-thread target-less conduction. -->
+                <span class="s8c-forge-previous-target hifi-mono">{{ conductionTargetLabel(c) }}</span>
               </button>
             </div>
           </template>

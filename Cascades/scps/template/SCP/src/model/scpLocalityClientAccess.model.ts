@@ -28,6 +28,16 @@ export const readClientSyncLocalities = (d: any): Record<string, unknown> =>
 export const clientSyncLocalitiesSelector = (d__: any): any =>
   d__.client.d.suite8.k.localities;
 
+// EF-3′c · THE CONDUCTION TARGET READ — the registry FIELD name (targetSuite8Name) is a
+// shared-stratum key on every relayed session entry; a copied component's token-rename
+// would convert a direct `entry.targetSuite8Name` access into a nonexistent property
+// (the C786 field find: every twin chip read 'unlabeled' while the registry held the
+// target). The access lives HERE (held · never renamed) so twins read the ONE true field.
+export const readConductionTarget = (entry: unknown): string | undefined => {
+  const t = (entry as Record<string, unknown>)['targetSuite8Name'];
+  return typeof t === 'string' && t.length > 0 ? t : undefined;
+};
+
 export const dispatchClientSyncLocalitySnapshot = (
   muxium: { dispatch: (action: any) => void; deck: any },
   designation: string,
