@@ -1750,7 +1750,7 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
 }
 
 /* the SCPs toggle wears the Bridge's cobalt affordance while its space is open */
-.s8c-drawer-toggle.s8c-drawer-toggle--scp-open {
+.s8-control .s8c-drawer-toggle.s8c-drawer-toggle--scp-open {
   border-color: rgba(59, 130, 246, 0.45);
   color: rgba(219, 234, 254, 0.92);
 }
@@ -1762,7 +1762,7 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
    selectors out-rank the scoped base rules by design.
    =================================================================== */
 /* the ENTOURAGE FORGE toggle — the prismatic ring at button scale */
-.s8c-forge-toggle.s8c-forge-flair-btn {
+.s8-control .s8c-forge-toggle.s8c-forge-flair-btn {
   border: 1px solid transparent;
   background:
     linear-gradient(rgba(18, 12, 6, 0.88), rgba(18, 12, 6, 0.88)) padding-box,
@@ -1779,13 +1779,13 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
     ) border-box;
   color: rgba(255, 255, 255, 0.88);
 }
-.s8c-forge-toggle.s8c-forge-flair-btn:hover {
+.s8-control .s8c-forge-toggle.s8c-forge-flair-btn:hover {
   color: #fff;
   filter: brightness(1.15);
 }
 
 /* the SCPs toggle — the Bridge's cobalt working-light at button scale */
-.s8c-drawer-toggle.s8c-scp-backing-btn {
+.s8-control .s8c-drawer-toggle.s8c-scp-backing-btn {
   border: 1px solid rgba(59, 130, 246, 0.35);
   border-left: 2px solid var(--color-cobalt, #3b82f6);
   background:
@@ -1793,7 +1793,7 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
     rgba(0, 0, 0, 0.35);
   color: rgba(219, 234, 254, 0.85);
 }
-.s8c-drawer-toggle.s8c-scp-backing-btn:hover {
+.s8-control .s8c-drawer-toggle.s8c-scp-backing-btn:hover {
   border-color: rgba(59, 130, 246, 0.6);
   color: rgba(239, 246, 255, 0.98);
 }
