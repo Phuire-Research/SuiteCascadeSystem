@@ -654,10 +654,74 @@ export const restoreRegisteredFromVault = (designation: string): UsherCopyResult
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
   for (const [key, rel] of Object.entries(shape.registered)) {
-    out = addResults(
-      out,
-      usherSurface(vaultPathFor(designation, key, rel), path.resolve(process.cwd(), rel)),
-    );
+    const vaultAbs = vaultPathFor(designation, key, rel);
+    const destAbs = path.resolve(process.cwd(), rel);
+    let vaultExists = false;
+    try {
+      statSync(vaultAbs);
+      vaultExists = true;
+    } catch {
+      /* no vault entry — the LOCAL truth at snapshot-time was ABSENCE */
+    }
+    if (vaultExists) {
+      out = addResults(out, usherSurface(vaultAbs, destAbs));
+      continue;
+    }
+    // D-SLE-b · THE ABSENT-VAULT ARM (the exact mirror of the replace's absent-target arm) —
+    // a local surface that did not exist at snapshot-time vaulted NOTHING; without this arm
+    // the restore skips silently and DELIVERED target content survives the closure as local
+    // (the field find: IE's topics overrode AL's deliberate blank). Restoring absence =
+    // presenting the empty form (file-class) anor clearing the delivered children (dir-class).
+    const emptyForm = KNOWN_SURFACE_EMPTY_FORMS[key];
+    if (typeof emptyForm === 'string') {
+      let already = false;
+      try {
+        already = readFileSync(destAbs, 'utf8') === emptyForm;
+      } catch {
+        already = true; // dest also absent — absence restored by absence.
+      }
+      if (!already) {
+        try {
+          mkdirSync(path.dirname(destAbs), { recursive: true });
+          writeFileSync(destAbs, emptyForm, 'utf8');
+          out.copied += 1;
+        } catch (err) {
+          sinkSyncLibraryTelemetry('usher.restore.empty-form-write-failed', {
+            designation,
+            key,
+            error: String(err).slice(0, 160),
+          });
+        }
+      } else {
+        out.skipped += 1;
+      }
+      sinkSyncLibraryTelemetry('usher.restore.vault-surface-absent', {
+        designation,
+        key,
+        presented: 'empty-form',
+      });
+    } else {
+      let destIsDir = false;
+      try {
+        destIsDir = statSync(destAbs).isDirectory();
+      } catch {
+        /* dest absent too — nothing survived; nothing to clear */
+      }
+      if (destIsDir) {
+        out = addResults(out, usherClearDirectory(destAbs));
+        sinkSyncLibraryTelemetry('usher.restore.vault-surface-absent', {
+          designation,
+          key,
+          presented: 'empty-dir',
+        });
+      } else {
+        sinkSyncLibraryTelemetry('usher.restore.vault-surface-absent', {
+          designation,
+          key,
+          presented: 'left-in-place',
+        });
+      }
+    }
   }
   sinkSyncLibraryTelemetry('usher.restore', { designation, ...out });
   return out;
