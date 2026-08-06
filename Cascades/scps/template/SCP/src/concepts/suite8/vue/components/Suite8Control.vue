@@ -79,13 +79,16 @@ function hydrateLocalityOnce(): void {
       const j = data as SyncLocalityInfo;
       // Compose the state-shape snapshot from the GET (the extra Scholar fields default at the
       // client — they are relay-authoritative; the GET carries the four the component consumes).
+      // D-TRL-c · the GET now carries the Scholar fields — map them (the prior defaults
+      // poisoned the effective-locality computation on relay-silent pages).
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown };
       const snapshot: Suite8SyncLocalitySnapshot = {
         localScp: typeof j.localScp === 'string' ? j.localScp : null,
         specified: typeof j.specified === 'string' ? j.specified : null,
         targetScp: typeof j.targetScp === 'string' ? j.targetScp : null,
-        targetRoot: null,
-        targetLive: false,
-        localLive: false,
+        targetRoot: typeof jx.targetRoot === 'string' ? jx.targetRoot : null,
+        targetLive: jx.targetLive === true,
+        localLive: jx.localLive === true,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
       // B-RLM-2b · THE DUAL WRITE — the ref sets DIRECTLY (the panel-grade resilient path: the

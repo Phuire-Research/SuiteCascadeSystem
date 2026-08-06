@@ -972,20 +972,41 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       const designation = req.params.designation ?? '';
       const resolution = resolveSyncLocality(designation);
       const localScp = readLocalScpName();
+      const specifiedKey = readSpecifiedKey(designation);
+      const fullRing = readSyncRingFromBridgeJson();
       // SL-5 · the ring rides the GET (the Locality Register's choosable rows) — the
       // local key excluded (its row is the Local row, rendered from localScp).
-      const ring = readSyncRingFromBridgeJson()
+      const ring = fullRing
         .filter((e) => e.scpName !== localScp)
         .map((e) => ({ scpName: e.scpName, status: e.status }));
+      // D-TRL-c · THE SCHOLAR FIELDS RIDE THE GET — the ODCF snapshot defaulted
+      // targetLive:false/targetRoot:null, so a page whose relay never fired computed the
+      // effective locality as LOCAL and STAMPED THE WRONG CITIZEN on the research spawn
+      // (the field find: workers labeled the caller under a live specified target). The
+      // GET now carries the same truths the relay composes — hydration parity.
+      const targetEntry = specifiedKey ? fullRing.find((e) => e.scpName === specifiedKey) : undefined;
+      const localEntry = localScp ? fullRing.find((e) => e.scpName === localScp) : undefined;
       res.json({
         ok: true,
         localScp,
-        specified: readSpecifiedKey(designation),
+        specified: specifiedKey,
         targetScp: resolution ? resolution.targetScp : null,
+        targetRoot: resolution ? resolution.root : null,
+        targetLive: !!targetEntry && targetEntry.status !== 'offline',
+        localLive: !!localEntry && localEntry.status !== 'offline',
         ring,
       });
     } catch {
-      res.json({ ok: true, localScp: null, specified: null, targetScp: null, ring: [] });
+      res.json({
+        ok: true,
+        localScp: null,
+        specified: null,
+        targetScp: null,
+        targetRoot: null,
+        targetLive: false,
+        localLive: false,
+        ring: [],
+      });
     }
   });
 

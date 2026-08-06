@@ -365,14 +365,17 @@ watch(workerSessions, (workers) => {
   let grew = false;
   for (const w of workers) {
     if (w.status === 'offline' || w.status === 'archived') continue;
-    // D-TRL-b · the entry gate: ATTRIBUTED to this view's effective SCP anor FIRED during this
-    // page's running sweep (the firing page tracks its own regardless of the label the bridge
-    // stamped — the mislabel case stays visible WHERE IT WAS FIRED).
-    const attributed = (w.scpName ?? null) === effectiveResearchScp.value;
-    const firingHere = sweepPhase.value === 'running';
-    if (!attributed && !firingHere) continue;
+    // D-TRL-c · ADMISSION BY BREADTH, RENDER BY LOCALITY (the r0 Summation's 0-D — the
+    // prior mechanism restored at the LEDGER): any alive designation worker is admitted
+    // on first sight (the pre-C760 pickup IE relied on); the dispatchRoster's render
+    // filter (attributed anor fired-here) is the SOLE locality discriminator. A page
+    // arriving mid-flight admits then renders by attribution — cross-page persistence
+    // through the session record, honesty at the view.
     if (!dispatchLedger.value.has(w.id)) {
-      dispatchLedger.value.set(w.id, { firstSeen: Date.now(), firedHere: firingHere });
+      dispatchLedger.value.set(w.id, {
+        firstSeen: Date.now(),
+        firedHere: sweepPhase.value === 'running',
+      });
       grew = true;
     }
   }

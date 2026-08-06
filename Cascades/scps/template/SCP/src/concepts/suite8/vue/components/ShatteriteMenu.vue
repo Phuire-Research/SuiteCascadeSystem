@@ -702,13 +702,15 @@ function hydrateLocalityOnce(): void {
     .then((data) => {
       if (!data || typeof data !== 'object') return;
       const j = data as SyncLocalityInfo;
+      // D-TRL-c · the GET now carries the Scholar fields — map them (hydration parity).
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown };
       const snapshot: Suite8SyncLocalitySnapshot = {
         localScp: typeof j.localScp === 'string' ? j.localScp : null,
         specified: typeof j.specified === 'string' ? j.specified : null,
         targetScp: typeof j.targetScp === 'string' ? j.targetScp : null,
-        targetRoot: null,
-        targetLive: false,
-        localLive: false,
+        targetRoot: typeof jx.targetRoot === 'string' ? jx.targetRoot : null,
+        targetLive: jx.targetLive === true,
+        localLive: jx.localLive === true,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
       syncLocality.value = {
