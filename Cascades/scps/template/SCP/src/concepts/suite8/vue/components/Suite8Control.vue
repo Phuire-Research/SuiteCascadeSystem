@@ -65,6 +65,16 @@ import {
   dispatchClientSyncLocalitySnapshot,
   readConductionTarget,
 } from '../../../../model/scpLocalityClientAccess.model';
+// EF-5 · THE INSTALL CIRCUIT (held · token-free — survives every twin's rename): the gate-file
+// schema + the three dissipating Vermillion builders (Mapper · Install Entourage · Update Circuit).
+import {
+  installRequirementsEndpoint,
+  buildRequirementsMapperVermillion,
+  buildInstallEntourageVermillion,
+  buildUpdateCircuitVermillion,
+  type InstallRequirementsShape,
+  type UpdateCircuitDirection,
+} from '../../../../model/scpS8InstallCircuit.model';
 
 const props = defineProps<{
   suite8Name: string;
@@ -397,6 +407,133 @@ async function requestTurnOverToB(): Promise<void> {
     setTimeout(() => {
       turnOverSpawning.value = false;
     }, 1200);
+  }
+}
+
+// ============================================================
+// EF-5 · SECTION V · THE INSTALL CIRCUIT (the Approach · C790) — Requirements LOADED anor
+// GENERATED (REGENERATE past a cleared gate) → the target-SCP dropdown → the Final Gate
+// (the Install Entourage: honors the gate · turn-over request · focus · dissipate) → the
+// Update Circuit (Origin→Informative anor Base←Informative). Every dispatch is a
+// DISSIPATING RD-B worker (asWorker · fresh · onboard:false · anchor:false · target=page).
+// ============================================================
+const installMenuOpen = ref<boolean>(false);
+const installRequirements = ref<InstallRequirementsShape | null>(null);
+const requirementsPresent = computed(() => installRequirements.value !== null);
+const mapperDispatching = ref<boolean>(false);
+const installDispatching = ref<boolean>(false);
+const updateDispatching = ref<boolean>(false);
+const installNote = ref<string>('');
+const selectedInstallTarget = ref<string>('');
+const installTargetOptions = computed(() => {
+  const ring = syncLocality.value?.ring ?? [];
+  const local = syncLocality.value?.localScp ?? null;
+  return ring
+    .filter((r) => r.scpName !== local && r.scpName !== 'template')
+    .map((r) => ({ value: r.scpName, label: r.scpName, hint: r.status }));
+});
+async function fetchInstallRequirements(): Promise<void> {
+  if (!props.suite8Name) return;
+  try {
+    const r = await fetch(installRequirementsEndpoint(props.suite8Name));
+    const j = (await r.json()) as { present: boolean; requirements?: InstallRequirementsShape };
+    installRequirements.value = j.present && j.requirements ? j.requirements : null;
+  } catch {
+    /* absent-is-a-state — the GENERATE station renders */
+  }
+}
+onMounted(() => {
+  void fetchInstallRequirements();
+});
+// the mapper-closure refetch — while a scan is in flight, any session-registry change
+// re-reads the gate (the Mapper's write + dissipation both ripple the registry).
+watch(
+  () => getGlobalScsBridgeController()?.sessionsList.value,
+  () => {
+    if (mapperDispatching.value) void fetchInstallRequirements();
+  },
+);
+async function dispatchRequirementsMapper(): Promise<void> {
+  const ctrl = getGlobalScsBridgeController();
+  if (!ctrl || mapperDispatching.value) return;
+  mapperDispatching.value = true;
+  installNote.value = 'The Requirements Mapper is scanning — the gate file lands on completion…';
+  try {
+    const scpName = (await Promise.race([
+      ctrl.getScpName(),
+      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+    ])) ?? undefined;
+    ctrl.triggerSpawnS8Session(
+      'Entourage Forge', scpName, true, true, false,
+      buildRequirementsMapperVermillion(props.suite8Name), false, false, props.suite8Name,
+    );
+  } catch {
+    installNote.value = 'Could not dispatch the Mapper — is the Bridge running?';
+  } finally {
+    // the scan window — the watch above refetches on every registry ripple meanwhile.
+    setTimeout(() => {
+      mapperDispatching.value = false;
+      void fetchInstallRequirements();
+    }, 90_000);
+  }
+}
+async function dispatchInstallEntourage(): Promise<void> {
+  const ctrl = getGlobalScsBridgeController();
+  const target = selectedInstallTarget.value;
+  if (!ctrl || installDispatching.value || target.length === 0) return;
+  if (!requirementsPresent.value || installRequirements.value?.installReady !== true) {
+    installNote.value = 'The gate stands — generate the Install Requirements first.';
+    return;
+  }
+  installDispatching.value = true;
+  installNote.value = `The Install Entourage engages · ${props.suite8Name} → ${target}…`;
+  try {
+    const scpName = (await Promise.race([
+      ctrl.getScpName(),
+      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+    ])) ?? undefined;
+    ctrl.triggerSpawnS8Session(
+      'Entourage Forge', scpName, true, true, false,
+      buildInstallEntourageVermillion(
+        props.suite8Name, syncLocality.value?.localScp ?? scpName ?? 'this SCP', target,
+      ),
+      false, false, props.suite8Name,
+    );
+  } catch {
+    installNote.value = 'Could not dispatch the Install Entourage — is the Bridge running?';
+  } finally {
+    setTimeout(() => {
+      installDispatching.value = false;
+    }, 5000);
+  }
+}
+async function dispatchUpdateCircuit(direction: UpdateCircuitDirection): Promise<void> {
+  const ctrl = getGlobalScsBridgeController();
+  const target = selectedInstallTarget.value;
+  if (!ctrl || updateDispatching.value || target.length === 0) return;
+  updateDispatching.value = true;
+  installNote.value =
+    direction === 'origin-to-informative'
+      ? `The Update Circuit engages · Origin → ${target}…`
+      : `The Update Circuit engages · Base ← ${target}…`;
+  try {
+    const scpName = (await Promise.race([
+      ctrl.getScpName(),
+      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+    ])) ?? undefined;
+    ctrl.triggerSpawnS8Session(
+      'Entourage Forge', scpName, true, true, false,
+      buildUpdateCircuitVermillion(
+        props.suite8Name, direction, syncLocality.value?.localScp ?? scpName ?? 'this SCP', target,
+      ),
+      false, false, props.suite8Name,
+    );
+  } catch {
+    installNote.value = 'Could not dispatch the Update Circuit — is the Bridge running?';
+  } finally {
+    setTimeout(() => {
+      updateDispatching.value = false;
+    }, 5000);
   }
 }
 
@@ -821,6 +958,88 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       </div>
     </div>
 
+    <!-- SECTION V · THE INSTALL CIRCUIT (EF-5 · the Approach C790) — Requirements →
+         Target → the Final Gate (the Install Entourage) → the Update Circuit. -->
+    <div class="s8c-section s8c-install-section">
+      <button class="s8c-install-toggle hifi-mono" @click="installMenuOpen = !installMenuOpen">
+        {{ installMenuOpen ? '▾' : '▸' }} S8 INSTALL
+      </button>
+      <div v-if="installMenuOpen" class="s8c-install-body">
+        <!-- STATION 1 · REQUIREMENTS (LOADED anor GENERATED · REGENERATE past a cleared gate) -->
+        <div class="s8c-install-station">
+          <span class="s8c-install-eyebrow hifi-mono">Requirements</span>
+          <template v-if="requirementsPresent">
+            <p class="s8c-install-line">
+              Gate {{ installRequirements?.installReady ? 'CLEARED' : 'HELD' }} ·
+              {{ installRequirements?.npmRequirements?.length ?? 0 }} npm requirement(s) ·
+              scanned {{ new Date(installRequirements?.scannedAt ?? 0).toLocaleString() }}
+            </p>
+            <ul
+              v-if="(installRequirements?.npmRequirements?.length ?? 0) > 0"
+              class="s8c-install-reqs"
+            >
+              <li v-for="p in installRequirements?.npmRequirements" :key="p.name" class="hifi-mono">
+                {{ p.name }}@{{ p.version }}<span v-if="!p.inTemplateBaseline"> · page-added</span>
+              </li>
+            </ul>
+          </template>
+          <p v-else class="s8c-install-line s8c-install-line--muted">
+            No gate file — generate the Install Requirements to unlock the final gate.
+          </p>
+          <button
+            type="button"
+            class="s8c-install-btn"
+            :disabled="mapperDispatching"
+            @click="dispatchRequirementsMapper"
+          >
+            {{ mapperDispatching ? 'Scanning…' : requirementsPresent ? 'Regenerate Requirements' : 'Generate Requirements' }}
+          </button>
+        </div>
+        <!-- STATION 2 · THE TARGET (ring-fed dropdown · the SCP to move this Suite 8 onto) -->
+        <div class="s8c-install-station">
+          <span class="s8c-install-eyebrow hifi-mono">Target SCP</span>
+          <ScsDropdown
+            :options="installTargetOptions"
+            :model-value="selectedInstallTarget"
+            class="s8c-install-dropdown"
+            @update:model-value="(v) => { selectedInstallTarget = v ?? ''; }"
+          />
+        </div>
+        <!-- STATION 3 · THE FINAL GATE (the Install Entourage · turn-over → focus → dissipate) -->
+        <div class="s8c-install-station">
+          <span class="s8c-install-eyebrow hifi-mono">The Final Gate</span>
+          <button
+            type="button"
+            class="s8c-install-btn s8c-install-btn--gate"
+            :disabled="installDispatching || !requirementsPresent || installRequirements?.installReady !== true || selectedInstallTarget.length === 0"
+            @click="dispatchInstallEntourage"
+          >
+            <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+            <span>{{ installDispatching ? 'Engaging…' : `Install onto ${selectedInstallTarget || '…'}` }}</span>
+          </button>
+        </div>
+        <!-- STATION 4 · THE UPDATE CIRCUIT (EF-5d · the epoch's last refinement) -->
+        <div class="s8c-install-station">
+          <span class="s8c-install-eyebrow hifi-mono">The Update Circuit</span>
+          <div class="s8c-install-update-row">
+            <button
+              type="button"
+              class="s8c-install-btn"
+              :disabled="updateDispatching || selectedInstallTarget.length === 0"
+              @click="dispatchUpdateCircuit('origin-to-informative')"
+            >Update {{ selectedInstallTarget || 'Informative' }} from Origin</button>
+            <button
+              type="button"
+              class="s8c-install-btn"
+              :disabled="updateDispatching || selectedInstallTarget.length === 0"
+              @click="dispatchUpdateCircuit('informative-to-base')"
+            >Update Base from {{ selectedInstallTarget || 'Informative' }}</button>
+          </div>
+        </div>
+        <p v-if="installNote" class="s8c-install-note">{{ installNote }}</p>
+      </div>
+    </div>
+
     <!-- SECTION III · THE DOCUMENTATION (the B3 fold seat · reserved — §IV is the Forge's) -->
   </section>
 </template>
@@ -883,6 +1102,86 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 .s8c-forge-previous-model {
   color: rgba(208, 218, 228, 0.68);
 }
+/* EF-5 · SECTION V · THE INSTALL CIRCUIT — the station workflow (the s8c pewter idiom). */
+.s8c-install-toggle {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: rgba(232, 238, 244, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(10, 14, 18, 0.5);
+  cursor: pointer;
+}
+.s8c-install-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.s8c-install-body {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.s8c-install-station {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.s8c-install-eyebrow {
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(170, 220, 255, 0.75);
+}
+.s8c-install-line {
+  margin: 0;
+  font-size: 0.74rem;
+  color: rgba(232, 238, 244, 0.85);
+}
+.s8c-install-line--muted {
+  color: rgba(208, 218, 228, 0.55);
+}
+.s8c-install-reqs {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.7rem;
+  color: rgba(236, 242, 248, 0.8);
+}
+.s8c-install-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.72rem;
+  color: rgba(236, 242, 248, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(10, 14, 18, 0.55);
+  cursor: pointer;
+}
+.s8c-install-btn:hover:not(:disabled) {
+  background: rgba(30, 38, 46, 0.75);
+}
+.s8c-install-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.s8c-install-btn--gate {
+  border-color: rgba(170, 220, 255, 0.5);
+  background: rgba(40, 70, 100, 0.3);
+}
+.s8c-install-update-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.s8c-install-note {
+  margin: 0;
+  font-size: 0.7rem;
+  color: rgba(170, 220, 255, 0.8);
+}
+
 /* EF-3′d · THE PILLS — the target filter row; the active pill carries the cool accent the
    per-chip target span wore (the pill now names the target · the chips stay lean). */
 .s8c-forge-previous-block {

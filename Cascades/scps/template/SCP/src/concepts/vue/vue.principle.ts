@@ -1400,6 +1400,31 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
   };
 
+  // EF-5a · THE GATE FILE READ — the Install Requirements for a designation (the Requirements
+  // Mapper's durable artifact · Cascades/8_SUITES/<designation>/Install.Requirements.json).
+  // READ-ONLY · AFPR → 200 { present:false } (absence is a STATE — the workflow renders the
+  // GENERATE station). The route carries the token-free `s8` prefix (the C373 rename law).
+  expressApp.get('/s8-install-requirements/:designation', (req, res) => {
+    try {
+      const designation = String(req.params.designation ?? '').trim();
+      if (designation.length === 0) {
+        res.json({ present: false });
+        return;
+      }
+      const gatePath = path.resolve(
+        process.cwd(), 'Cascades', '8_SUITES', designation, 'Install.Requirements.json',
+      );
+      if (!fs.existsSync(gatePath)) {
+        res.json({ present: false });
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(gatePath, 'utf-8')) as Record<string, unknown>;
+      res.json({ present: true, requirements: parsed });
+    } catch {
+      res.json({ present: false });
+    }
+  });
+
   // The roster — installed (SCPs.json-registered, broadcast on bridge.json) + active
   // (boundScps · the live spawnsByScp projection). READ-ONLY · AFPR → 200 null shape.
   expressApp.get('/bridge-roster', (_req, res) => {
