@@ -665,14 +665,17 @@ function ensureLocalitySubscription(): boolean {
               Suite8SyncLocalitySnapshot
             >;
             const snap = record[props.suite8Name];
-            syncLocality.value = snap
-              ? {
-                  localScp: snap.localScp,
-                  specified: snap.specified,
-                  targetScp: snap.targetScp,
-                  ring: Array.isArray(snap.ring) ? snap.ring : [],
-                }
-              : null;
+            // B-RLM-2c · ABSENCE IS NOT EMPTINESS — no key = not-yet-relayed; writing null
+            // clobbers the ODCF dual-write (the chip + the anchor scope would blank until a
+            // POST round-trips). Only a real snapshot assigns.
+            if (snap) {
+              syncLocality.value = {
+                localScp: snap.localScp,
+                specified: snap.specified,
+                targetScp: snap.targetScp,
+                ring: Array.isArray(snap.ring) ? snap.ring : [],
+              };
+            }
           },
           { selectors: [d__.client.d.suite8.k.localities] },
         ),

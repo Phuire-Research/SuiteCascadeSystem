@@ -134,7 +134,12 @@ function ensureLocalitySubscription(): boolean {
               Suite8SyncLocalitySnapshot
             >;
             const snap = record[props.suite8Name];
-            syncLocality.value = snap ? snapshotToInfo(snap) : null;
+            // B-RLM-2c · ABSENCE IS NOT EMPTINESS — an un-relayed record (fresh connect ·
+            // BOCR dormant) has NO key for this designation; writing null here CLOBBERS the
+            // ODCF dual-write and blanks the rows until a POST round-trips (the field find:
+            // nothing visible until 'Local' was selected). Only a REAL snapshot assigns —
+            // the true 'no locality' is a snapshot with specified:null, which IS a snapshot.
+            if (snap) syncLocality.value = snapshotToInfo(snap);
           },
           { selectors: [d__.client.d.suite8.k.localities] },
         ),
