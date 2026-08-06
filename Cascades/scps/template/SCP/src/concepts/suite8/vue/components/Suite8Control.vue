@@ -752,6 +752,10 @@ async function chooseLocality(scpName: string | null): Promise<void> {
               >
                 <span class="s8c-forge-previous-ulid hifi-mono">{{ shortUlid(c.id) }}</span>
                 <span class="s8c-forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
+                <!-- EF-3′b · THE TARGET FIELD — the S8 page this conduction was commissioned to
+                     formalize (sessions.json targetSuite8Name · the manifold proof surface).
+                     'unlabeled' = a pre-thread conduction (target-less legacy). -->
+                <span class="s8c-forge-previous-target hifi-mono">{{ c.targetSuite8Name ?? 'unlabeled' }}</span>
               </button>
             </div>
           </template>
@@ -813,10 +817,12 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   margin-top: 0.55rem;
   opacity: 0.85;
 }
+/* EF-3′b · DARK-BACKGROUND HIFI COLORING — explicit light text (the chips sat on the dark
+   ground with inherited dark text · the field find); the target field carries a cool accent. */
 .s8c-forge-previous-label {
   font-size: 0.68rem;
   letter-spacing: 0.04em;
-  opacity: 0.7;
+  color: rgba(232, 238, 244, 0.72);
 }
 .s8c-forge-previous-btn {
   display: inline-flex;
@@ -824,16 +830,24 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   gap: 0.35rem;
   padding: 0.18rem 0.5rem;
   font-size: 0.68rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(236, 242, 248, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(10, 14, 18, 0.55);
   cursor: pointer;
 }
 .s8c-forge-previous-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(30, 38, 46, 0.75);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.s8c-forge-previous-ulid {
+  color: rgba(240, 246, 252, 0.95);
 }
 .s8c-forge-previous-model {
-  opacity: 0.65;
+  color: rgba(208, 218, 228, 0.68);
+}
+.s8c-forge-previous-target {
+  color: rgba(170, 220, 255, 0.88);
 }
 
 /* EF-2 · B1 · THE FLAIR EXCHANGE — the base Pewter frame rides ONLY the closed state so the swapped
