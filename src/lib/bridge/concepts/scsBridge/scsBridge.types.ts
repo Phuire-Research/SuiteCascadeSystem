@@ -469,6 +469,23 @@ export type ScsBridgeSuite8PageCreatePayload = {
   force?: boolean;      // S8ERI re-run override (default false)
 };
 
+// EF-5 · THE EXACT-MEANS TRANSFER · scsBridgeSuite8PageTransfer payload. MCP tool
+// 'suite8_page_transfer' — the sibling of suite8_page_create. Installs an EXISTING Suite 8
+// page from a SOURCE SCP onto a TARGET SCP: runs the page-creation engine (runSuite8PageCreate)
+// against the TARGET (scaffold + token-rename + the 3 AIME wirings + its own gates), then
+// OVERLAYS the source SCP's real concept body over the freshly-minted scaffold, copies
+// Cascades/8_SUITES/<designation>/ from source to target, and runs the target tsc gate. The
+// engine untouched — this is a compose-on-top of it. `designation` = the Suite 8 page's
+// PascalCase Suite8Name (create's `name`); sourceScpName/targetScpName = the SCP names (both
+// must be installed in Cascades/SCPs.json). projectRoot resolves server-side to userCwd (the
+// workspace root). Returns the changed-file manifest.
+export type ScsBridgeSuite8PageTransferPayload = {
+  designation: string;      // the EXISTING Suite 8 page's PascalCase Suite8Name
+  sourceScpName: string;    // the SCP the page currently lives on (validated · SCPs.json)
+  targetScpName: string;    // the SCP to install the page onto (validated · SCPs.json)
+  callerSessionUlid?: string; // optional · diagnostics
+};
+
 // SCSER intake Quality payload · SAWSR-D2.B Cycle 153
 // Bridge-side intake for SCP-side SCSER Strategy HTTP callback.
 // Debounced Method (createMethodDebounceWithConcepts · 500ms per user-author
@@ -828,6 +845,14 @@ export type ScsBridgeBindCallerSessionToScp =
 // strategyData_muxifyData out through the SCP manifold tail. Reducer {} · no state mutation.
 export type ScsBridgeSuite8PageCreate =
   Quality<ScsBridgeState, ScsBridgeSuite8PageCreatePayload>;
+
+// EF-5 · scsBridgeSuite8PageTransfer · suite8_page_transfer MCP tool. Quality runs the SAME
+// runSuite8PageCreate engine against the TARGET root, then overlays the SOURCE concept body +
+// copies the source 8_SUITES/<designation>/ + runs the target tsc gate; on nonzero exit it
+// reverts (restore scaffold from temp · remove copied 8_SUITES). The structured result rides
+// strategyData_muxifyData out through the SCP manifold tail. Reducer {} · no state mutation.
+export type ScsBridgeSuite8PageTransfer =
+  Quality<ScsBridgeState, ScsBridgeSuite8PageTransferPayload>;
 
 // PP-D2 · PPLD · stateless Pong handler · nullReducer + bridge.json write
 export type ScsBridgePingPong =

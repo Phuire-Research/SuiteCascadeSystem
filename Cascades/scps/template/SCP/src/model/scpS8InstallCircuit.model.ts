@@ -68,6 +68,10 @@ export const buildRequirementsMapperVermillion = (designation: string): string =
   ].join('\n');
 
 // EF-5c · THE INSTALL ENTOURAGE VERMILLION — the final gate's dissipating installer.
+// C796 · THE BEST BETWEEN (the user's ruling): the deterministic transfer rides ONE named
+// tool (suite8_page_transfer — the exact means); the Entourage keeps the JUDGMENT (npm ·
+// concerns · the report · the closing motion). The Vermillion is ERROR-CORRECTING by design —
+// deviation on live evidence is the pattern working, and every correction lands in the report.
 export const buildInstallEntourageVermillion = (
   designation: string,
   sourceScpName: string,
@@ -75,21 +79,27 @@ export const buildInstallEntourageVermillion = (
 ): string =>
   [
     `SCS:Vermillion · THE INSTALL ENTOURAGE · Suite 8 "${designation}" · ${sourceScpName} → ${targetScpName}.`,
-    'You are a DISSIPATING Entourage session (the RD-B worker class). You facilitate ONE install, then teardown.',
+    'You are a DISSIPATING Entourage session (the RD-B worker class). ONE install, then teardown. This Vermillion is ERROR-CORRECTING: where reality diverges from it, verify against the LIVE target and correct course — record every correction in the install report.',
+    '',
+    'THE NAMED TOOLING (the exact means · no hunting): read Cascades/Bridge/bridge.json (this SCP root anor the workspace ancestor) → `port` → every tool below is POST http://127.0.0.1:<port>/mcp (jsonrpc tools/call):',
+    '- `suite8_page_transfer` — the deterministic transfer: the page-creation engine scaffolds into the target (+ the 3 AIME wirings + its own gates), the source\'s REAL concept body overlays the scaffold, Cascades/8_SUITES/<designation>/ copies across, the target tsc gates with honest revert. Returns the changed-file manifest.',
+    '- `scp_alert_turn_over` · `scp_focus_suite8_page` — the closing motion (the bridge routes the focus navigation presenter-aware; you need no window knowledge).',
+    '- your teardown: `scs_dissipate_session` anor `scs_close_wait_dissipate`.',
     '',
     'THE GATE (refuse-first · THE PRESENCE-UNLOCKS LAW):',
-    `1. Read ${installRequirementsRelPath(designation)} in THIS (the source) SCP root. ABSENT → write nothing, report the refusal in one line, and dissipate — PRESENCE is the gate. The user's discretion authorized this fire: installReady anor the scan date never re-lock it. The concernNotes are YOUR install intelligence — blockers named there are yours to resolve during the install (out-of-dir modules to copy · routes to port · wiring edits), and an unresolvable one is reported honestly, never silently skipped.`,
+    `1. Read ${installRequirementsRelPath(designation)} in THIS (the source) SCP root. ABSENT → write nothing, report the refusal in one line, and dissipate — PRESENCE is the gate. The user's discretion authorized this fire: installReady anor the scan date never re-lock it.`,
+    'THE VERIFY-AGAINST-TARGET LAW: the gate file was scanned against a reference surface — re-verify each concernNote against the ACTUAL target before acting on it; concerns often DISSOLVE there (routes · modules · pins may all pre-exist — the field precedent).',
     '',
-    'THE INSTALL (the engine IS the installer):',
-    `2. Resolve the target SCP "${targetScpName}" root from the workspace bridge ring (the workspace Cascades/Bridge/bridge.json boundScps entry's dir).`,
-    `3. In the target root, run the Suite 8 page-creation engine for "${designation}" (the same suite8:page lane this page was minted through — the engine's own tsc/build gates + revert protect the target).`,
-    `4. Copy Cascades/8_SUITES/${designation}/ from the source into the target (the gate file rides the copy).`,
-    '5. Honor npmRequirements: for each entry absent from the target\'s package.json, npm install it in the target root (pin the recorded version).',
+    'THE INSTALL (the teeth land FIRST):',
+    `2. Fire suite8_page_transfer { designation: "${designation}", sourceScpName: "${sourceScpName}", targetScpName: "${targetScpName}" } EARLY. Read its manifest honestly — ok/reverted/tscErrors are yours to report, never to hide.`,
+    '3. YOUR JUDGMENT · npm: check each npmRequirement against the TARGET package.json (dependencies anor devDependencies); npm install in the target root ONLY what is genuinely absent, pinning the recorded versions.',
+    `4. YOUR JUDGMENT · the residue: resolve what the transfer does not carry — designation-spelling-split identity docs reconciled toward the CORRECT spelling · Installed-in corrected to "${targetScpName}" (Home SCP is NEVER re-homed) · any concern the manifest leaves standing. NEVER fabricate Diamond/Onyx Cascade Memory for the target — operation-born docs belong to its own anchor.`,
+    `5. THE INSTALL REPORT — the durable artifact: write the TARGET's Cascades/Working/S8-INSTALL-${designation.replace(/\s+/g, '-')}.md (mkdir -p): verified-vs-dissolved concerns · the manifest's changed files · npm actions · held items. The report is the Muxistration; the transcript is not.`,
     '',
-    'THE CLOSING MOTION (the Topic-Researcher idiom · just prior to the step):',
-    `6. Utilize the SCP turn-over tool to REQUEST the target SCP "${targetScpName}" be turned over (the gitm turn-over lane — the target restarts carrying the install).`,
-    `7. FOCUS the target SCP "${targetScpName}" via the scs focus tool — the turn-over occurs before the user's eyes.`,
-    '8. THEN dissipate this session via the scs dissipate tool for your OWN session (DSST).',
+    'THE CLOSING MOTION (the Topic-Researcher idiom):',
+    `6. scp_alert_turn_over for "${targetScpName}". THE ACK LAW: read the DISCRIMINATED result — { dropped, reason } means NOT landed: verify via scp_query_holdings, re-fire ONCE; still dropped → record it in the report and proceed. Never loop.`,
+    `7. scp_focus_suite8_page for "${targetScpName}" — the turn-over lands before the user's eyes.`,
+    '8. THEN dissipate. No artifacts beyond the install + the report.',
   ].join('\n');
 
 // EF-5d · THE UPDATE CIRCUIT VERMILLION — the Managing Vermillion (the epoch's last refinement).

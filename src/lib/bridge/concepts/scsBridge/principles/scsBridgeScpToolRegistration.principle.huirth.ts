@@ -884,6 +884,53 @@ const buildToolRoster = (): {
     relatedActionables: ['scs_spawn_suite8_session'],
   };
 
+  // EF-5 · suite8_page_transfer · the EXACT-MEANS TRANSFER · sibling of suite8_page_create.
+  // Runs the SAME runSuite8PageCreate engine against the TARGET (scaffold + token-rename + the
+  // 3 AIME wirings + gates), then OVERLAYS the SOURCE SCP's real concept body over the scaffold,
+  // copies Cascades/8_SUITES/<designation>/ source→target, and runs the target tsc gate. On a
+  // nonzero tsc exit it reverts (restore scaffold from temp · remove the copied 8_SUITES).
+  // TQNI invariant: qualityName 'scsBridgeSuite8PageTransfer' byte-matches the scsBridge.e key.
+  // handlerType 'quality' → createSCPQualityManifold; the structured result rides
+  // strategyData_muxifyData out through the SCP manifold tail (mirrors suite8_page_create).
+  const suite8PageTransferMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeSuite8PageTransfer',  // ← TQNI byte-identity with scsBridge.e key
+    toolName: 'suite8_page_transfer',
+    description:
+      'EF-5 · THE EXACT-MEANS TRANSFER · Installs an EXISTING Suite 8 page from a source SCP onto ' +
+      'a target SCP: runs the page-creation engine against the TARGET (scaffold + token-rename + ' +
+      'the 3 AIME wirings + its own gates), then OVERLAYS the source SCP\'s real concept body over ' +
+      'the scaffold, copies Cascades/8_SUITES/<designation>/ from source to target, and runs the ' +
+      'target tsc gate. Returns the changed-file manifest. npm installs, concern judgment, the ' +
+      'install report and the closing motion remain the CALLER\'s (the Entourage\'s).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        designation: {
+          type: 'string',
+          description: 'The EXISTING Suite 8 page\'s PascalCase Suite8Name (e.g. FrontierDiametric).',
+        },
+        sourceScpName: {
+          type: 'string',
+          description: 'The SCP the page currently lives on (validated against Cascades/SCPs.json).',
+        },
+        targetScpName: {
+          type: 'string',
+          description: 'The SCP to install the page onto (validated against Cascades/SCPs.json).',
+        },
+        callerSessionUlid: {
+          type: 'string',
+          description: 'Caller agent session ULID (optional · diagnostics).',
+        },
+      },
+      required: ['designation', 'sourceScpName', 'targetScpName'],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',        // ← routes through createSCPQualityManifold (quality path)
+    strategyName: '',
+    relatedActionables: ['suite8_page_create', 'scp_alert_turn_over'],
+  };
+
   // PPLD QMTR · Cycle 160 · Ping-Pong-Liveness-Diameter
   // TQNI invariant: qualityName MUST match scsBridge.e key exactly.
   // handlerType 'quality' → createSCPQualityManifold path in scpExpressTransport.
@@ -2391,6 +2438,7 @@ const buildToolRoster = (): {
     deliverVermillionMetadata,  // VS · VSDT · scs_deliver_vermillion · SCS:Vermillion directive
     scserBindMetadata,
     suite8PageCreateMetadata,   // S8P-SCP-TOOL · suite8_page_create · runSuite8PageCreate for the calling SCP
+    suite8PageTransferMetadata, // EF-5 · suite8_page_transfer · the exact-means transfer (engine + overlay + gate) source→target
     pingPongMetadata,
     persistLastTurnMetadata,    // DIAGNOSTIC-REENGAGED R2 · TSPK · scs_persist_last_turn · batch
     focusUrlWindowMetadata,     // ASDR · BWRF · scs_focus_bridge_window · anchor refocuses SCS-Bridge UI

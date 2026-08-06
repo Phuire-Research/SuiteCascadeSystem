@@ -21,9 +21,16 @@
  * D-BN-2 turnOver stamp lands NEWER than requestedAt — the user performed the Turn Over. The
  * agent's stand-by outcome poll reads the SAME signal (turnOver.at > turnOverAlert.requestedAt).
  *
- * Form-α side-effect-only (the FS8P sibling posture). TQNI: 'Scs Bridge Alert Turn Over'
- * camelCases to the scsBridge.e key 'scsBridgeAlertTurnOver'.
- * Citation: scsBridgeFocusSuite8Page.quality.huirth.ts (the mirror source).
+ * DISCRIMINATED RETURN (C785+ · the sibling suite8_page_create DATA-returning posture, NOT
+ * the old Form-α side-effect-only silence): the resolve + not-advancing guard + gitm write run
+ * SYNCHRONOUSLY and carry a SHAPED result out via strategyData_muxifyData ({ alertTurnOver })
+ * — { ok:true, requestedAt } on a write, { dropped:true, reason:'at-equals-baseline', at } when
+ * the guard drops (the requestedAt cannot advance past the last turnOver/pending-alert baseline),
+ * { ok:false, error } on any honest failure. The caller can no longer mis-read a bare {} as
+ * success. The window focus stays a fire-and-forget async tail (it does not gate the result).
+ * TQNI: 'Scs Bridge Alert Turn Over' camelCases to the scsBridge.e key 'scsBridgeAlertTurnOver'.
+ * Citation: scsBridgeSuite8PageCreate.quality.huirth.ts (the carry(result) envelope mirror) ·
+ * scsBridgeFocusSuite8Page.quality.huirth.ts (the focus mirror source).
  */
 
 import {
@@ -32,10 +39,12 @@ import {
   selectPayload,
   muxiumConclude,
   strategySuccess,
+  strategyData_muxifyData,
 } from 'stratimux';
 import type { ScsBridgeState, ScsBridgeAlertTurnOverPayload } from '../scsBridge.types';
 import { spawnFocusWindowById } from '../../../electronWindowSpawn';
-import { readBridgeMetadata, bridgeMetadataPathPerProject } from '../../../bridgeMetadata';
+import { bridgeMetadataPathPerProject } from '../../../bridgeMetadata';
+import type { BridgeMetadata } from '../../../bridgeMetadata';
 import { lookupScpWindowId } from '../../../scpSessionRegistry';
 import { log } from '../../../debugLog';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -53,69 +62,132 @@ export const scsBridgeAlertTurnOver = createQualityCardWithPayload<
   methodCreator: () =>
     createMethodWithConcepts(({ action }) => {
       const { scpName, purpose } = selectPayload<ScsBridgeAlertTurnOverPayload>(action);
-      void (async (): Promise<void> => {
-        if (typeof scpName !== 'string' || scpName.trim().length === 0) {
-          log('scsbridge.alertTurnOver.skip', { reason: 'empty-scpName' });
-          return;
+
+      // C785+ · THE DISCRIMINATED RETURN (field: first fire returned a bare {} with NO
+      // write — the not-advancing guard silently dropped it; the re-fire only landed because
+      // the baseline had advanced between). The tool now carries a SHAPED result out through
+      // the SCP manifold tail (scpExtractAndSendResponse renders strategy.data as the JSON-RPC
+      // content) — mirroring the sibling scsBridgeSuite8PageCreate.quality `carry(result)`
+      // envelope so the caller can distinguish dropped / needless / unreachable from a write.
+      const carry = (result: unknown) =>
+        action.strategy
+          ? strategySuccess(
+              action.strategy,
+              strategyData_muxifyData(action.strategy, { alertTurnOver: result }),
+            )
+          : muxiumConclude();
+
+      if (typeof scpName !== 'string' || scpName.trim().length === 0) {
+        log('scsbridge.alertTurnOver.skip', { reason: 'empty-scpName' });
+        return carry({ ok: false, error: 'scpName is required.' });
+      }
+
+      // ── SYNCHRONOUS resolve + guard + write (the sibling's DATA-returning posture) ──
+      // The window focus stays a fire-and-forget async tail (it does not gate the result);
+      // the gitm read/guard/write is synchronous so the discriminated result rides out cleanly.
+      try {
+        const scsRoot = process.env.SCS_BRIDGE_ROOT_OVERRIDE
+          ? process.env.SCS_BRIDGE_ROOT_OVERRIDE
+          : process.cwd();
+        const metadataPath = bridgeMetadataPathPerProject(scsRoot);
+        if (!existsSync(metadataPath)) {
+          log('scsbridge.alertTurnOver.skip', { reason: 'no-metadata' });
+          return carry({ ok: false, error: `bridge.json not found at ${metadataPath}.` });
         }
+        let metadata: BridgeMetadata | null = null;
         try {
-          const scsRoot = process.env.SCS_BRIDGE_ROOT_OVERRIDE
-            ? process.env.SCS_BRIDGE_ROOT_OVERRIDE
-            : process.cwd();
-          const metadata = await readBridgeMetadata(bridgeMetadataPathPerProject(scsRoot));
-          if (!metadata || !metadata.boundScps) {
-            log('scsbridge.alertTurnOver.skip', { reason: 'no-metadata' });
-            return;
+          metadata = JSON.parse(readFileSync(metadataPath, 'utf8')) as BridgeMetadata;
+        } catch (e) {
+          log('scsbridge.alertTurnOver.skip', { reason: 'metadata-parse-fail' });
+          return carry({
+            ok: false,
+            error: `bridge.json parse failed: ${e instanceof Error ? e.message : String(e)}`,
+          });
+        }
+        if (!metadata || !metadata.boundScps) {
+          log('scsbridge.alertTurnOver.skip', { reason: 'no-metadata' });
+          return carry({ ok: false, error: 'bridge.json has no boundScps.' });
+        }
+        // Routed by NAME — exact key first, case-insensitive fallback.
+        let dir: string | null = null;
+        let resolvedName: string | null = null;
+        for (const [name, entry] of Object.entries(metadata.boundScps)) {
+          if (name === scpName || name.toLowerCase() === scpName.trim().toLowerCase()) {
+            dir = (entry as { dir?: string }).dir ?? null;
+            resolvedName = name;
+            break;
           }
-          // Routed by NAME — exact key first, case-insensitive fallback.
-          let dir: string | null = null;
-          let resolvedName: string | null = null;
-          for (const [name, entry] of Object.entries(metadata.boundScps)) {
-            if (name === scpName || name.toLowerCase() === scpName.trim().toLowerCase()) {
-              dir = (entry as { dir?: string }).dir ?? null;
-              resolvedName = name;
-              break;
-            }
-          }
-          if (!dir || !resolvedName) {
-            log('scsbridge.alertTurnOver.skip', { reason: 'scp-unresolved', scpName });
-            return;
-          }
-          const gitmPath = join(dir, 'Cascades', 'Bridge', 'gitm.json');
-          if (!existsSync(gitmPath)) {
-            log('scsbridge.alertTurnOver.skip', { reason: 'no-gitm-json', gitmPath });
-            return;
-          }
-          const parsed = JSON.parse(readFileSync(gitmPath, 'utf8')) as Record<string, unknown>;
-          // C872 · THE ACTIVE-SIDE INTELLIGENCE: signal the user's CURRENT tactical branch —
-          // the side depends on the stage of their utilization (turnedOverTo 'B' anor the
-          // current branch riding the working branch = they stand on B; else A). A fixed 'A'
-          // mis-directed a user mid-B (the Foundry field evidence: turnedOverTo:'B').
-          const turnedOverTo = typeof parsed.turnedOverTo === 'string' ? parsed.turnedOverTo : '';
-          const currentBranch = typeof parsed.currentBranch === 'string' ? parsed.currentBranch : '';
-          const workingBranch = typeof parsed.workingBranch === 'string' ? parsed.workingBranch : '';
-          // C877 · THE FIRST-INIT CONDITION: a freshly initialized SCP is BORN on its b/
-          // tactical branch BEFORE any A→B turn-over registers turnedOverTo anor workingBranch
-          // (both empty on a virgin gitm.json) — the majority new-project case. The b/ prefix
-          // IS the tactical-branch convention (gitmBranchRoot.model resolveStableRoot), so a
-          // current branch under b/ signals B even with the registers unset.
-          const activeSide =
-            turnedOverTo === 'B'
-            || (currentBranch.length > 0 && currentBranch === workingBranch)
-            || currentBranch.startsWith('b/')
-              ? 'B'
-              : 'A';
-          parsed.turnOverAlert = {
-            requestedAt: Date.now(),
-            source: activeSide,
-            purpose:
-              typeof purpose === 'string' && purpose.trim().length > 0
-                ? purpose.trim()
-                : DEFAULT_PURPOSE,
-          };
-          writeFileSync(gitmPath, JSON.stringify(parsed, null, 2), 'utf8');
-          log('scsbridge.alertTurnOver.written', { scpName: resolvedName, gitmPath });
-          const windowId = await lookupScpWindowId(resolvedName).catch(() => null);
+        }
+        if (!dir || !resolvedName) {
+          log('scsbridge.alertTurnOver.skip', { reason: 'scp-unresolved', scpName });
+          return carry({
+            ok: false,
+            error: `SCP "${scpName}" not found in bridge.json boundScps.`,
+          });
+        }
+        const gitmPath = join(dir, 'Cascades', 'Bridge', 'gitm.json');
+        if (!existsSync(gitmPath)) {
+          log('scsbridge.alertTurnOver.skip', { reason: 'no-gitm-json', gitmPath });
+          return carry({ ok: false, error: `gitm.json not found at ${gitmPath}.` });
+        }
+        const parsed = JSON.parse(readFileSync(gitmPath, 'utf8')) as Record<string, unknown>;
+
+        // ── THE NOT-ADVANCING GUARD (discriminated) ──
+        // The baseline = the last turnOver stamp anor the pending alert's own requestedAt (the
+        // ALERT HOLD self-retires only when turnOver.at EXCEEDS the alert's requestedAt). If the
+        // computed requestedAt cannot ADVANCE past that baseline, a re-write is needless — the
+        // pending alert already holds. Drop with a NAMED result (never a bare {}), so the caller
+        // reads dropped:true and knows the alert is already live rather than mis-reading silence.
+        const requestedAt = Date.now();
+        const turnOverAt =
+          typeof (parsed.turnOver as { at?: unknown } | undefined)?.at === 'number'
+            ? (parsed.turnOver as { at: number }).at
+            : 0;
+        const priorAlert = parsed.turnOverAlert as { requestedAt?: unknown } | null | undefined;
+        const priorAlertAt =
+          priorAlert && typeof priorAlert.requestedAt === 'number' ? priorAlert.requestedAt : 0;
+        const baseline = Math.max(turnOverAt, priorAlertAt);
+        if (requestedAt <= baseline) {
+          log('scsbridge.alertTurnOver.dropped', {
+            scpName: resolvedName,
+            reason: 'at-equals-baseline',
+            at: baseline,
+          });
+          return carry({ dropped: true, reason: 'at-equals-baseline', at: baseline });
+        }
+
+        // C872 · THE ACTIVE-SIDE INTELLIGENCE: signal the user's CURRENT tactical branch —
+        // the side depends on the stage of their utilization (turnedOverTo 'B' anor the
+        // current branch riding the working branch = they stand on B; else A). A fixed 'A'
+        // mis-directed a user mid-B (the Foundry field evidence: turnedOverTo:'B').
+        const turnedOverTo = typeof parsed.turnedOverTo === 'string' ? parsed.turnedOverTo : '';
+        const currentBranch = typeof parsed.currentBranch === 'string' ? parsed.currentBranch : '';
+        const workingBranch = typeof parsed.workingBranch === 'string' ? parsed.workingBranch : '';
+        // C877 · THE FIRST-INIT CONDITION: a freshly initialized SCP is BORN on its b/
+        // tactical branch BEFORE any A→B turn-over registers turnedOverTo anor workingBranch
+        // (both empty on a virgin gitm.json) — the majority new-project case. The b/ prefix
+        // IS the tactical-branch convention (gitmBranchRoot.model resolveStableRoot), so a
+        // current branch under b/ signals B even with the registers unset.
+        const activeSide =
+          turnedOverTo === 'B'
+          || (currentBranch.length > 0 && currentBranch === workingBranch)
+          || currentBranch.startsWith('b/')
+            ? 'B'
+            : 'A';
+        parsed.turnOverAlert = {
+          requestedAt,
+          source: activeSide,
+          purpose:
+            typeof purpose === 'string' && purpose.trim().length > 0
+              ? purpose.trim()
+              : DEFAULT_PURPOSE,
+        };
+        writeFileSync(gitmPath, JSON.stringify(parsed, null, 2), 'utf8');
+        log('scsbridge.alertTurnOver.written', { scpName: resolvedName, gitmPath, requestedAt });
+
+        // ── the window focus · fire-and-forget async tail (does NOT gate the result) ──
+        void (async (): Promise<void> => {
+          const windowId = await lookupScpWindowId(resolvedName!).catch(() => null);
           if (typeof windowId === 'number' && windowId > 0) {
             spawnFocusWindowById(windowId, {
               onError: (err) =>
@@ -127,13 +199,18 @@ export const scsBridgeAlertTurnOver = createQualityCardWithPayload<
           } else {
             log('scsbridge.alertTurnOver.no-window', { scpName: resolvedName });
           }
-        } catch (err) {
-          log('scsbridge.alertTurnOver.error', {
-            scpName,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      })();
-      return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
+        })();
+
+        return carry({ ok: true, requestedAt });
+      } catch (err) {
+        log('scsbridge.alertTurnOver.error', {
+          scpName,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return carry({
+          ok: false,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }),
 });

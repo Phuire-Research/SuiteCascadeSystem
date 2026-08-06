@@ -72,6 +72,8 @@ import { scsBridgeSendMessage } from './qualities/scsBridgeSendMessage.quality.h
 import { scsBridgeBindCallerSessionToScp } from './qualities/scsBridgeBindCallerSessionToScp.quality.huirth';
 // S8P-SCP-TOOL · suite8_page_create MCP tool · runSuite8PageCreate SVLF model for the calling SCP
 import { scsBridgeSuite8PageCreate } from './qualities/scsBridgeSuite8PageCreate.quality.huirth';
+// EF-5 · suite8_page_transfer MCP tool · the exact-means transfer (engine + overlay + gate) source→target
+import { scsBridgeSuite8PageTransfer } from './qualities/scsBridgeSuite8PageTransfer.quality.huirth';
 // PP-D2 · PPLD · Cycle 160 · MCP Pong handler · stateless · bridge.json write (Option β)
 import { scsBridgePingPong } from './qualities/bridgePingPong.quality.huirth';
 // DIAGNOSTIC-REENGAGED R2 · TSPK · scs_persist_last_turn MCP tool · Single-Writer batch persist
@@ -161,6 +163,8 @@ export const createScsBridgeConcept = (options: CreateScsBridgeConceptOptions) =
       scsBridgeBindCallerSessionToScp,
       // S8P-SCP-TOOL · TQNI key matches `type:` 'Scs Bridge Suite8 Page Create'
       scsBridgeSuite8PageCreate,
+      // EF-5 · TQNI key matches `type:` 'Scs Bridge Suite8 Page Transfer'
+      scsBridgeSuite8PageTransfer,
       scsBridgePingPong,
       scsBridgePersistLastTurn,
       scsBridgeFocusUrlWindow,

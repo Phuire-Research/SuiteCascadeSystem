@@ -52,6 +52,23 @@ export function getVisibleScpWindowId(winId: number): number {
   return p && !p.isDestroyed() ? p.id : winId;
 }
 
+// C795 · THE PRESENTER-BLIND loadURL CURE · the reverse of getVisibleScpWindowId. The
+// scpPresenterByWinId map keys the OSR SOURCE id → its VISIBLE presenter (the value). A
+// caller that resolved the VISIBLE window (e.g. focus-suite8-page's url-window fallback,
+// which returns the presenter) must NEVER loadURL against it — that REPLACES presenter.html
+// and kills the shader while the offscreen source keeps painting unacked. Given a window id,
+// if it IS a presenter (scan the map VALUES for .id === id) return the matching KEY (the OSR
+// SOURCE id whose webContents actually renders the SCP); else null (not a presenter · nav it
+// directly). The presenter is FOCUSED/SHOWN, the source is NAVIGATED — the two-window split law.
+export function getOsrSourceIdForPresenter(presenterId: number): number | null {
+  for (const [sourceId, presenter] of scpPresenterByWinId) {
+    if (presenter.id === presenterId && !presenter.isDestroyed()) {
+      return sourceId;
+    }
+  }
+  return null;
+}
+
 // SWRM · D5-extended · Fuchsia Trifurcation diagnosis (3 instrument reads · pids 59341/65167/74404):
 // SCS_SHADER_WRAP read "1" on EVERY pass (it is shell-profile-exported · always present) while
 // SCS_SCP_SHADER_WRAP read "(unset)" on every pass — the two-flag dance is the LOSSY branch (a
