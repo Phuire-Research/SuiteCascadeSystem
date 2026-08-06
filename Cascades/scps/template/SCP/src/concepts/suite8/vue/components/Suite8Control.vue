@@ -73,23 +73,45 @@ function pageBasePath(): string {
   const seg = window.location.pathname.split('/')[1] ?? '';
   return `/${seg}`;
 }
+// D-EF-PAGE-PING-b · THE DETERMINATION READOUT (the user's ask) — every probe decision
+// logs: the base path, the ring as received (origin presence is the known kill: an
+// origin-less entry can NEVER confirm under confirm-to-enable), each HEAD's status, and
+// every skip with its reason. Read the console during the determination.
 function probePagePresence(): void {
   const entries = syncLocality.value?.ring ?? [];
   const basePath = pageBasePath();
+  console.log(
+    '[Suite8Control PAGE-PING] determination · basePath=', basePath,
+    '· ring=', entries.map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null })),
+    '· presence=', { ...pagePresence.value },
+  );
   for (const entry of entries) {
-    if (entry.status === 'offline') continue;
-    if (!entry.origin) continue;
-    if (pagePresence.value[entry.scpName] !== undefined) continue; // confirmed once per page-life.
-    void fetch(`${entry.origin}${basePath}`, { method: 'HEAD' })
+    if (entry.status === 'offline') {
+      console.log('[Suite8Control PAGE-PING] skip', entry.scpName, '· reason=offline');
+      continue;
+    }
+    if (!entry.origin) {
+      console.log('[Suite8Control PAGE-PING] skip', entry.scpName, '· reason=NO-ORIGIN (the ring entry carries no browser origin — the row can never confirm; the server GET/relay must supply it)');
+      continue;
+    }
+    if (pagePresence.value[entry.scpName] !== undefined) {
+      console.log('[Suite8Control PAGE-PING] skip', entry.scpName, '· reason=already-determined →', pagePresence.value[entry.scpName]);
+      continue;
+    }
+    const url = `${entry.origin}${basePath}`;
+    console.log('[Suite8Control PAGE-PING] HEAD', url, 'for', entry.scpName);
+    void fetch(url, { method: 'HEAD' })
       .then((r) => {
+        console.log('[Suite8Control PAGE-PING] result', entry.scpName, '·', r.status, '· ok=', r.ok);
         pagePresence.value = { ...pagePresence.value, [entry.scpName]: r.ok };
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log('[Suite8Control PAGE-PING] FETCH-REJECTED', entry.scpName, '·', String(err), '(cross-origin block anor network — marked not-carrying)');
         pagePresence.value = { ...pagePresence.value, [entry.scpName]: false };
       });
   }
 }
-watch(() => syncLocality.value?.ring, () => probePagePresence(), { deep: true });
+watch(() => syncLocality.value?.ring, () => probePagePresence(), { deep: true, immediate: true });
 
 const drawerOpen = ref<boolean>(false);
 const gateNote = ref<string>('');
@@ -344,6 +366,9 @@ function settleLocalitySubscription(): void {
 // B-RLM-2 · focus/visibility resilience KEPT (cheap · calls the SAME ODCF setter) — a page that was
 // backgrounded when a relay fired re-hydrates on return; the relay otherwise keeps state live.
 function refreshAll(): void {
+  // D-EF-PAGE-PING-b · the focus refresh is the RE-PROBE lane: clear the determinations so
+  // a target's turn-over (its island truth changing) re-reads on the next tab-in.
+  pagePresence.value = {};
   hydrateLocalityOnce();
 }
 

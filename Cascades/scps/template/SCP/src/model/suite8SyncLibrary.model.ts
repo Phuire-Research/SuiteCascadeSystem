@@ -252,7 +252,8 @@ export const readSyncRingFromBridgeJson = (): SyncRingEntry[] => {
                       return null;
                     }
                   })()
-                : typeof entry.port === 'number'
+                : typeof entry.port === 'number' ||
+                    (typeof entry.port === 'string' && entry.port.length > 0)
                   ? `http://localhost:${entry.port}`
                   : null,
           });
