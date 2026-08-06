@@ -339,24 +339,23 @@ const sweepRunning = computed<boolean>(() => sweepPhase.value === 'running');
 // shallowRef — no principle, no poll; the display principle's sync() drives reactivity.
 // Citation: DIAMOND-CADMIUM-FORGE.md §MD-CF-3 · s8Anchor.model (the lookup idiom inverted).
 // ============================================================
-const dispatchLedger = ref<Map<string, { firstSeen: number }>>(new Map());
+const dispatchLedger = ref<Map<string, { firstSeen: number; firedHere?: boolean }>>(new Map());
 
+// D-TRL-b · THE VISIBILITY LAW (the user's ruling — losing sight of an in-flight worker is
+// CRITICAL): the designation set stays BROAD (suite8 + non-anchor); ATTRIBUTION filters at the
+// ROSTER, and the page that FIRED a worker keeps sight of it ALWAYS (firedHere) — the strict
+// D-TRL filter met the 0.944.1 bridge's scpName strip and a mislabeled worker went invisible
+// on EVERY page (the field find). Attribution drives the cross-page view; firedHere is the
+// firing page's inalienable record.
 const workerSessions = computed(() => {
   const designation = cadmiumDesignationName.value;
   if (!designation) return [];
   const sessions = getGlobalScsBridgeController()?.sessionsList.value ?? [];
-  // D-TRL · SCP-FILTERED DISPATCH — the roster is keyed on the page's EFFECTIVE SCP (the resolved
-  // target when a live target is specified, else the own citizen), so a page never surfaces workers
-  // targeting a different citizen. effectiveResearchScp = researchLocalityScp ?? own citizen ?? null.
-  // Null-tolerance (r6 doc · the degenerate single-SCP case): when BOTH the session's scpName AND the
-  // effective are null (pre-stamp sessions before the D-SLE stamp landed), the pair MATCHES — a
-  // single-SCP workspace must not hide its own unstamped workers.
-  const effectiveResearchScp = researchLocalityScp.value ?? researchLocalScpName.value ?? null;
-  return sessions.filter((s) => {
-    if (s.suite8Name !== designation || s.isAnchor === true) return false;
-    return (s.scpName ?? null) === effectiveResearchScp;
-  });
+  return sessions.filter((s) => s.suite8Name === designation && s.isAnchor !== true);
 });
+const effectiveResearchScp = computed<string | null>(
+  () => researchLocalityScp.value ?? researchLocalScpName.value ?? null,
+);
 
 // First-sight upsert — ONLY a worker observed ALIVE enters the ledger (C464 · user refinement:
 // after a bridge turn-over sessions.json still lists old OFFLINE researchers — those are history,
@@ -366,8 +365,14 @@ watch(workerSessions, (workers) => {
   let grew = false;
   for (const w of workers) {
     if (w.status === 'offline' || w.status === 'archived') continue;
+    // D-TRL-b · the entry gate: ATTRIBUTED to this view's effective SCP anor FIRED during this
+    // page's running sweep (the firing page tracks its own regardless of the label the bridge
+    // stamped — the mislabel case stays visible WHERE IT WAS FIRED).
+    const attributed = (w.scpName ?? null) === effectiveResearchScp.value;
+    const firingHere = sweepPhase.value === 'running';
+    if (!attributed && !firingHere) continue;
     if (!dispatchLedger.value.has(w.id)) {
-      dispatchLedger.value.set(w.id, { firstSeen: Date.now() });
+      dispatchLedger.value.set(w.id, { firstSeen: Date.now(), firedHere: firingHere });
       grew = true;
     }
   }
@@ -376,11 +381,20 @@ watch(workerSessions, (workers) => {
 
 const dispatchRoster = computed<Array<{ id: string; closed: boolean; status: string }>>(() => {
   const sessions = getGlobalScsBridgeController()?.sessionsList.value ?? [];
-  return Array.from(dispatchLedger.value.keys()).map((id) => {
-    const live = sessions.find((s) => s.id === id);
-    const closed = !live || live.status === 'offline' || live.status === 'archived';
-    return { id, closed, status: live?.status ?? 'gone' };
-  });
+  const effective = effectiveResearchScp.value;
+  // D-TRL-b · the RENDER filter: attributed-to-effective anor fired-here — never invisible
+  // everywhere; the cross-page view stays attribution-honest.
+  return Array.from(dispatchLedger.value.entries())
+    .filter(([id, rec]) => {
+      if (rec.firedHere === true) return true;
+      const live = sessions.find((s) => s.id === id);
+      return (live?.scpName ?? null) === effective;
+    })
+    .map(([id]) => {
+      const live = sessions.find((s) => s.id === id);
+      const closed = !live || live.status === 'offline' || live.status === 'archived';
+      return { id, closed, status: live?.status ?? 'gone' };
+    });
 });
 
 // THE ALL CLEAR (C463 · user refinement) — when EVERY dispatched agent has closed, the roster
@@ -454,9 +468,12 @@ const sweepPhaseDerived = computed<SweepPhase>(() => {
 const sweepStatusTextDerived = computed<string>(() => {
   const roster = dispatchRoster.value;
   if (roster.length > 0) {
-    const open = roster.filter((r) => !r.closed).length;
-    return open > 0
-      ? `Research sweep · ${open} in dispatch`
+    // D-TRL-b · the user's format ruling: the label corresponds to the LIST — completed
+    // versus in-process, where CLOSED IS COMPLETED.
+    const completed = roster.filter((r) => r.closed).length;
+    const inProcess = roster.length - completed;
+    return inProcess > 0
+      ? `Research sweep · ${inProcess} in process · ${completed} completed`
       : `Research sweep complete · ${roster.length} dispatched`;
   }
   return sweepIsForThisScp.value ? sweepStatusText.value : '';
