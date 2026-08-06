@@ -25,7 +25,7 @@
  * (the Live Locality Law · the C739 recursion) · D-SL5-PEWTER-LOCALITY-RD.md (the Register
  * precedent this re-homes).
  */
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { Muxium } from 'stratimux';
 // B1b · DSP-2a · THE SCP MANAGEMENT ORGAN (extracted from the Session Manager) replaces this
 // component's interim SCP drawer WHOLESALE — the same /bridge-roster + /bridge-boot lanes, now the
@@ -71,6 +71,7 @@ function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
 // default. GET the current locality ONCE and dispatch it into the page muxium so the subscription
 // gets an initial value. B3b · dispatch even the Local/empty snapshot (empty is a state).
 function hydrateLocalityOnce(): void {
+  if (!props.suite8Name) return; // pre-designation mount — the arrival watch re-fires this.
   void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
@@ -159,6 +160,21 @@ function settleLocalitySubscription(): void {
 function refreshAll(): void {
   hydrateLocalityOnce();
 }
+
+// B-RLM-2d · THE DESIGNATION-ARRIVAL RE-HYDRATE (the C486 class, ported) — pages whose
+// designation hydrates ASYNC (CadmiumLanding's cadmiumDesignationName starts EMPTY) mount
+// this Control BEFORE the name exists: the mount ODCF fires against '' and lands nothing,
+// and NOTHING retried — the bare 'Local' render that teaches no mechanism (the field find).
+// The ShatteriteMenu carries this watch (C486); the Control now does too: the moment the
+// real designation lands, the ODCF re-fires and the default render teaches — the current
+// real Locale selected (Local · <localScp>) with every possible SCP standing beside it.
+watch(
+  () => props.suite8Name,
+  (name, prior) => {
+    if (!name || name === prior) return;
+    hydrateLocalityOnce();
+  },
+);
 
 onMounted(() => {
   if (typeof window === 'undefined') return;

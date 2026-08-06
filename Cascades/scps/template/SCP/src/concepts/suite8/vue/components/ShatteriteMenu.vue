@@ -696,6 +696,7 @@ function settleLocalitySubscription(): void {
 // truth even muxium-less), AND the snapshot dispatches into the muxium when bound (the shared
 // state + every other subscriber). B3b · even the Local/empty snapshot lands (empty is a state).
 function hydrateLocalityOnce(): void {
+  if (!props.suite8Name) return; // pre-designation mount — the C486 arrival watch re-fires this.
   void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
