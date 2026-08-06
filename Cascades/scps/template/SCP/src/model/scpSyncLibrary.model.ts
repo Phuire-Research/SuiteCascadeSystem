@@ -44,6 +44,15 @@ import path from 'node:path';
 export const SYNC_LIBRARY_SCHEMA_VERSION = 1;
 export const SYNC_LIBRARY_FILE_NAME = 'SyncLibrary.json';
 
+// D-MINT-SURFACE · THE HELD SENTINEL — the ONE concept that owns the shared sync
+// infrastructure (the usher · the seed · the locality relay). This model lives OUTSIDE
+// the mint copy surface (src/concepts/suite8/), so this value is NEVER token-renamed.
+// A minted twin's principles compare their own (renamed) concept-name literal against
+// this sentinel and STAND DOWN on mismatch — see the Twin Stand-Down Guard in each of
+// the three principles. Typed `string` deliberately: a literal-vs-literal comparison
+// with no overlap would fail tsc IN THE TWIN.
+export const SYNC_USHER_CONCEPT_HOLDER: string = 'suite8';
+
 // The Local path group — the three surfaces the library records for a designation, RELATIVE
 // to the owning SCP's package root (the same root every Extended path resolves against).
 export type SyncLibraryLocalPaths = {

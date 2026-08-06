@@ -58,6 +58,15 @@ import type { Muxium } from 'stratimux';
 // reference the controller's triggers dispatch through; a keyed stage-planner feeds syncLocality.
 import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
 import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
+// D-MINT-SURFACE · THE HELD LOCALITY ACCESS — every suite8-tokened locality access (the
+// concept path · the endpoint · the dispatch target) routes through the held model so a
+// minted twin's token-renamed copy keeps reading the ONE true slice + the ONE true endpoint.
+import {
+  syncLocalityEndpoint,
+  readClientSyncLocalities,
+  clientSyncLocalitiesSelector,
+  dispatchClientSyncLocalitySnapshot,
+} from '../../../../model/scpLocalityClientAccess.model';
 
 // C473 · THE DOUBLE-ENGAGE GUARD (r7: two menu instances on one page fired engage twice within
 // 40ms on every restart). Module-scoped — shared by every ShatteriteMenu instance in the bundle:
@@ -660,7 +669,7 @@ function ensureLocalitySubscription(): boolean {
       staging(() => [
         stage(
           ({ d }) => {
-            const record = d.client.d.suite8.k.localities.select() as Record<
+            const record = readClientSyncLocalities(d) as Record<
               string,
               Suite8SyncLocalitySnapshot
             >;
@@ -677,7 +686,7 @@ function ensureLocalitySubscription(): boolean {
               };
             }
           },
-          { selectors: [d__.client.d.suite8.k.localities] },
+          { selectors: [clientSyncLocalitiesSelector(d__)] },
         ),
       ]),
   );
@@ -697,7 +706,7 @@ function settleLocalitySubscription(): void {
 // state + every other subscriber). B3b · even the Local/empty snapshot lands (empty is a state).
 function hydrateLocalityOnce(): void {
   if (!props.suite8Name) return; // pre-designation mount — the C486 arrival watch re-fires this.
-  void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
+  void fetch(syncLocalityEndpoint(props.suite8Name))
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (!data || typeof data !== 'object') return;
@@ -722,12 +731,7 @@ function hydrateLocalityOnce(): void {
       ensureLocalitySubscription();
       const muxium = controller.value?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
       if (!muxium) return;
-      muxium.dispatch(
-        muxium.deck.d.client.d.suite8.e.suite8SetSyncLocalityClient({
-          localities: { [props.suite8Name]: snapshot },
-          closureGraces: {},
-        }),
-      );
+      dispatchClientSyncLocalitySnapshot(muxium, props.suite8Name, snapshot);
     })
     .catch(() => {
       /* ODCF absent/unreachable → stay on null; the relay still delivers live snapshots */

@@ -66,6 +66,8 @@ import {
   // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
   writeContentOriginStamp,
   readContentOriginStamp,
+  // D-MINT-SURFACE · the Twin Stand-Down sentinel (held model · never token-renamed).
+  SYNC_USHER_CONCEPT_HOLDER,
 } from '../../../model/scpSyncLibrary.model';
 
 export type Suite8SyncUsherDeck = MuxiumDeck & {
@@ -91,6 +93,19 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
   nextA,
   concepts_,
 }) => {
+  // D-MINT-SURFACE · THE TWIN STAND-DOWN GUARD — this principle operates SHARED suite8-owned
+  // sync infrastructure (the usher machine · the vault · the workspace ring). The mint engine
+  // token-renames every 'suite8' in a copied twin, so the literal below is INTENTIONAL: in a
+  // minted twin it becomes the twin's domain name, while the sentinel — imported from the HELD
+  // model outside the copy surface — always reads the canonical holder. Mismatch = this is a
+  // minted twin: stand down before any watcher or plan arms (the twin's renamed selector
+  // `d_.<domain>.k.syncModes` is an undefined key = RUNAWAY stage firing).
+  const ownConceptName: string = 'suite8';
+  if (ownConceptName !== SYNC_USHER_CONCEPT_HOLDER) {
+    console.log(`[${ownConceptName} SyncUsher] TWIN STAND-DOWN · the sync usher is held by '${SYNC_USHER_CONCEPT_HOLDER}' — no-op`);
+    sinkSyncLibraryTelemetry('usher.twin-stand-down.skip', { ownConceptName, holder: SYNC_USHER_CONCEPT_HOLDER });
+    return () => {};
+  }
   console.log('[Suite8 SyncUsher] Principle started · the Usher Stage Planner (U2)');
   sinkSyncLibraryTelemetry('usher.principle-start', { extendedRoot: EXTENDED_ROOT_ABS });
 

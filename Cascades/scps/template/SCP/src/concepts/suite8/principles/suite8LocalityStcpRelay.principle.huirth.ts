@@ -52,7 +52,11 @@ import type {
   WebSocketServerQualities,
 } from '../../webSocketServer/webSocketServer.concept';
 import { suite8SetSyncLocalityClient } from '../qualities/suite8SetSyncLocalityClient.quality.client';
-import { sinkSyncLibraryTelemetry } from '../../../model/scpSyncLibrary.model';
+import {
+  sinkSyncLibraryTelemetry,
+  // D-MINT-SURFACE · the Twin Stand-Down sentinel (held model · never token-renamed).
+  SYNC_USHER_CONCEPT_HOLDER,
+} from '../../../model/scpSyncLibrary.model';
 
 export type Suite8LocalityStcpRelayDeck = MuxiumDeck & {
   suite8: Concept<Suite8HuirthState, Suite8HuirthQualities>;
@@ -66,6 +70,17 @@ export type Suite8LocalityStcpRelayPrincipleType = PrincipleFunction<
 >;
 
 export const suite8LocalityStcpRelayPrinciple: Suite8LocalityStcpRelayPrincipleType = ({ d_, plan }) => {
+  // D-MINT-SURFACE · THE TWIN STAND-DOWN GUARD — the relay broadcasts the suite8-owned
+  // locality slices over STCP (shared infrastructure). The literal below is INTENTIONAL:
+  // the mint engine renames it in a copied twin while the sentinel (held model · outside
+  // the copy surface) always reads the canonical holder. Mismatch = minted twin → stand
+  // down (a running twin would broadcast garbage slices + double-fire BOCR).
+  const ownConceptName: string = 'suite8';
+  if (ownConceptName !== SYNC_USHER_CONCEPT_HOLDER) {
+    console.log(`[${ownConceptName} Locality STCP Relay] TWIN STAND-DOWN · the relay is held by '${SYNC_USHER_CONCEPT_HOLDER}' — no-op`);
+    sinkSyncLibraryTelemetry('locality-relay.twin-stand-down.skip', { ownConceptName, holder: SYNC_USHER_CONCEPT_HOLDER });
+    return () => {};
+  }
   console.log('[Suite8 Locality STCP Relay] Principle started · SMRP + BOCR (Huirth)');
 
   // BOCR closure var — last observed WebSocket pool count (mirrors the cadmiumTopicBulletin relay).

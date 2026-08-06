@@ -45,6 +45,15 @@ import ScpManagementPanel from '../../../scsBridge/vue/components/ScpManagementP
 import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
 import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
+// D-MINT-SURFACE · THE HELD LOCALITY ACCESS — every suite8-tokened locality access (the
+// concept path · the endpoint · the dispatch target) routes through the held model so a
+// minted twin's token-renamed copy keeps reading the ONE true slice + the ONE true endpoint.
+import {
+  syncLocalityEndpoint,
+  readClientSyncLocalities,
+  clientSyncLocalitiesSelector,
+  dispatchClientSyncLocalitySnapshot,
+} from '../../../../model/scpLocalityClientAccess.model';
 
 const props = defineProps<{
   suite8Name: string;
@@ -290,7 +299,7 @@ function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
 // gets an initial value. B3b · dispatch even the Local/empty snapshot (empty is a state).
 function hydrateLocalityOnce(): void {
   if (!props.suite8Name) return; // pre-designation mount — the arrival watch re-fires this.
-  void fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`)
+  void fetch(syncLocalityEndpoint(props.suite8Name))
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (!data || typeof data !== 'object') return;
@@ -316,12 +325,7 @@ function hydrateLocalityOnce(): void {
       ensureLocalitySubscription();
       const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
       if (!muxium) return;
-      muxium.dispatch(
-        muxium.deck.d.client.d.suite8.e.suite8SetSyncLocalityClient({
-          localities: { [props.suite8Name]: snapshot },
-          closureGraces: {},
-        }),
-      );
+      dispatchClientSyncLocalitySnapshot(muxium, props.suite8Name, snapshot);
     })
     .catch(() => {
       /* ODCF absent/unreachable → stay on null; the relay still delivers live snapshots */
@@ -351,7 +355,7 @@ function ensureLocalitySubscription(): boolean {
       staging(() => [
         stage(
           ({ d }) => {
-            const record = d.client.d.suite8.k.localities.select() as Record<
+            const record = readClientSyncLocalities(d) as Record<
               string,
               Suite8SyncLocalitySnapshot
             >;
@@ -363,7 +367,7 @@ function ensureLocalitySubscription(): boolean {
             // the true 'no locality' is a snapshot with specified:null, which IS a snapshot.
             if (snap) syncLocality.value = snapshotToInfo(snap);
           },
-          { selectors: [d__.client.d.suite8.k.localities] },
+          { selectors: [clientSyncLocalitiesSelector(d__)] },
         ),
       ]),
   );
@@ -446,7 +450,7 @@ function ringRowLive(entry: { status: string }): boolean {
 async function chooseLocality(scpName: string | null): Promise<void> {
   gateNote.value = '';
   try {
-    const r = await fetch(`/suite8-sync-locality/${encodeURIComponent(props.suite8Name)}`, {
+    const r = await fetch(syncLocalityEndpoint(props.suite8Name), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ specified: scpName }),

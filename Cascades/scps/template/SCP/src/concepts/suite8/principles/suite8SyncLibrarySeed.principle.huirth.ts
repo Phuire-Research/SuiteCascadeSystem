@@ -27,6 +27,8 @@ import { KNOWN_SUITE8_ENTRIES } from '../model/suite8Registration.model';
 import {
   seedSyncLibraryAdditive,
   sinkSyncLibraryTelemetry,
+  // D-MINT-SURFACE · the Twin Stand-Down sentinel (held model · never token-renamed).
+  SYNC_USHER_CONCEPT_HOLDER,
 } from '../../../model/scpSyncLibrary.model';
 
 export type Suite8SyncLibrarySeedDeck = MuxiumDeck & {
@@ -43,6 +45,17 @@ const EXTENDED_ROOT_ABS = path.resolve(process.cwd(), 'Cascades', 'Extended');
 const SEED_ADDDIR_DEBOUNCE_MS = 250;
 
 export const suite8SyncLibrarySeedPrinciple: Suite8SyncLibrarySeedPrincipleType = ({ plan }) => {
+  // D-MINT-SURFACE · THE TWIN STAND-DOWN GUARD — the seed arms the workspace-wide Extended
+  // watcher (shared infrastructure). The literal below is INTENTIONAL: the mint engine renames
+  // it in a copied twin while the sentinel (held model · outside the copy surface) always reads
+  // the canonical holder. Mismatch = minted twin → stand down (a running twin would double-arm
+  // the Extended watchers).
+  const ownConceptName: string = 'suite8';
+  if (ownConceptName !== SYNC_USHER_CONCEPT_HOLDER) {
+    console.log(`[${ownConceptName} SyncLibrary] TWIN STAND-DOWN · the seed is held by '${SYNC_USHER_CONCEPT_HOLDER}' — no-op`);
+    sinkSyncLibraryTelemetry('seed.twin-stand-down.skip', { ownConceptName, holder: SYNC_USHER_CONCEPT_HOLDER });
+    return () => {};
+  }
   console.log('[Suite8 SyncLibrary] Principle started · the boot registration (SL-1)');
   sinkSyncLibraryTelemetry('principle-start', { extendedRoot: EXTENDED_ROOT_ABS });
 
