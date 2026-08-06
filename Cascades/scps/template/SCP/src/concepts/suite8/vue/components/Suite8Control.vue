@@ -27,6 +27,12 @@
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { Muxium } from 'stratimux';
+// EF-2 · THE ENTOURAGE FORGE FOLD (§IV) — the engagement machinery ported from Suite8HomeLanding's
+// forge zone (RD-E §I). The model catalog (offscreen-safe ScsDropdown feed) + the rename-proof anchor
+// contract (findLiveS8Session / filterS8Sessions · the ONE MOTION law) + the model catalog labels.
+import { SCS_AVAILABLE_MODELS, SCS_DEFAULT_MODEL, scsModelLabel } from '../../../scsBridge/model/scsModelCatalog.model';
+import { findLiveS8Session, filterS8Sessions } from '../../../scsBridge/model/s8Anchor.model';
+import ScsDropdown from '../../../vue/components/ScsDropdown.vue';
 // B1b · DSP-2a · THE SCP MANAGEMENT ORGAN (extracted from the Session Manager) replaces this
 // component's interim SCP drawer WHOLESALE — the same /bridge-roster + /bridge-boot lanes, now the
 // full helm (Spawn/Focus/Exit/Multiply/Delete + the boot/multiply bars + ONLINE/OFFLINE grouping).
@@ -54,6 +60,150 @@ const syncLocality = ref<SyncLocalityInfo | null>(null);
 
 const drawerOpen = ref<boolean>(false);
 const gateNote = ref<string>('');
+
+// ============================================================
+// EF-2 · SECTION IV · THE ENTOURAGE FORGE — THE HARD-CODED CONFIG
+// The user's ruling: 'managed ourselves internal to the component'. This object is the
+// component-owned, self-managed source of truth for the Forge fold — NO external registry, NO
+// server round-trip. `blankSlateLaunch` is the EF-4 launch-option governance SEAT (the WIRING is
+// EF-4's band — Cadmium prunes it OFF · the Template toggles it ON; the seat exists NOW, unread).
+// `menu` is the five hard-coded RD entries drawn from the EF-RD-CORPUS Menu Entry sections (RD-A..E) —
+// each { label · line · rdKey · shape } where `shape` is the adaptation-shape string the row primes.
+const ENTOURAGE_FORGE_CONFIG = {
+  // EF-4 · the launch-option governance seat. Cadmium prunes · Template toggles ON. Unread at EF-2.
+  blankSlateLaunch: false,
+  menu: [
+    {
+      rdKey: 'RD-A',
+      label: 'Topics Registry + Live Article Bulletin',
+      line: 'A user-curated topic list synced to a live folder-tree of research articles, merged and relayed to the client in real-time.',
+      shape:
+        'Topics Registry-Driven Content Tree with Live Folder-Tree Relay — 2 relay configs + 4 qualities (2 Huirth-base, 2 client) + muxonomy wiring + the Frontier component + 1 Sync registration.',
+    },
+    {
+      rdKey: 'RD-B',
+      label: 'Research Dispatch + Workers',
+      line: 'Single or full-salvo fleet dispatch of ephemeral researchers; the bridge serializes the fleet, the page observes via the session registry.',
+      shape:
+        'A pure Vermillion builder feeding ONE batch enqueue — AUTHOR ONLY the Vermillion builder + output contract; spec stamping, batch, observatory, locality resolution ALL inherited.',
+    },
+    {
+      rdKey: 'RD-C',
+      label: 'The Relay Lanes',
+      line: 'The reactive spine every surface rides: file → watcher → Huirth state → SMRP → client state → subscription → ref.',
+      shape:
+        'The Relay Lane Class — the 6-step registration checklist (model config · Huirth Base quality · Relay quality · muxonomy · Huirth principles · Landing subscription+ODCF) under THE FOUR LAWS (empty-is-a-state · absence-is-not-emptiness · unlinkDir coverage · no boot-skips).',
+    },
+    {
+      rdKey: 'RD-D',
+      label: 'Sync Library + Locality',
+      line: 'The diametric capability: view or operate another live SCP’s Cascade content from your Suite 8 page.',
+      shape:
+        'The vault + the 3-stage usher machine + the three guards + the locality relay — ONE entry in KNOWN_SURFACE_REGISTRATIONS (+ optional empty form); everything else inherited at zero cost. Hard Live Gate: the target must be spawned + online.',
+    },
+    {
+      rdKey: 'RD-E',
+      label: 'The Forge + Actualization',
+      line: 'The Suite 8 creation system: the forge predicate + the 4-step create pipeline + the 6-band creation Vermillion.',
+      shape:
+        'THE GROUND FOR EF-2..4 — the fold seat (Suite8Control §IV) · the flair exchange (transparent ↔ the Forge’s prismatic) · the launch toggle seats · THE NAMED BIAS attach seat (Band 4.5 — page-creation guidance).',
+    },
+  ],
+} as const;
+
+// ============================================================
+// EF-2 · SECTION IV · THE FORGE ENGAGEMENT STATE (ported from Suite8HomeLanding RD-E §I)
+// The toggle governs §IV visibility (the §II SCPs-drawer idiom). forgeLaunchEngaged drops the
+// prismatic PULSE on first hover/utilization (session-only · no storage). forgeSpawning guards the
+// ONE MOTION engage; selectedModel persists to the controller (setSpawnModel) so the NEXT spawn pins.
+// ============================================================
+const forgeMenuOpen = ref<boolean>(false);
+const forgeLaunchEngaged = ref<boolean>(false);
+const forgeSpawning = ref<boolean>(false);
+const forgeSpawnNote = ref<string>('');
+const selectedModel = ref<string>(SCS_DEFAULT_MODEL);
+const selectedModelLabel = computed<string>(
+  () => scsModelLabel(selectedModel.value) ?? selectedModel.value,
+);
+// EF-2 · the RD-menu clipboard-prime note (the fire decision · see below).
+const forgeMenuNote = ref<string>('');
+
+// EF-2 · the offscreen-safe ScsDropdown feed (the Suite8HomeLanding modelDropdownOptions idiom).
+const modelDropdownOptions = computed(() =>
+  SCS_AVAILABLE_MODELS.map((m) => ({ value: m.id, label: m.label, hint: m.tier, title: m.blurb })),
+);
+
+// W1 · THE PULSE — drops on first hover/utilization (session ref · no storage).
+function settleForgeLaunchPulse(): void {
+  if (!forgeLaunchEngaged.value) forgeLaunchEngaged.value = true;
+}
+
+// MD-9 · D-MC-3 · persist the model choice to the controller (→ pendingSpawnModel · read at spawn).
+function handleForgeModelChange(): void {
+  getGlobalScsBridgeController()?.setSpawnModel(selectedModel.value);
+}
+
+// ============================================================
+// EF-2 · THE FORGE ENGAGEMENT ROW — THE ONE MOTION LAW (ported VERBATIM from Suite8HomeLanding's
+// engageEntourageForge · RD-E §I ¶2). A LIVE Entourage Forge session for this suite8Name is FOCUSED,
+// never duplicated; ELSE a fresh anchor spawn (fresh:true). The controller triggers are REUSED EXACTLY
+// (getGlobalScsBridgeController lanes) — findLiveS8Session → triggerFocusSession · else
+// triggerSpawnS8Session. The Turn-Over leg is NAMED as an EF-3 remainder (needs the gitm branch read).
+// ============================================================
+async function engageEntourageForge(): Promise<void> {
+  console.log('[Forge Engage · Control] clicked');
+  const ctrl = getGlobalScsBridgeController();
+  if (!ctrl || forgeSpawning.value) return;
+  settleForgeLaunchPulse();
+  forgeSpawning.value = true;
+  forgeSpawnNote.value = '';
+  try {
+    // THE TIMEOUT RACE (C375) — a never-settling getScpName must never hang the dispatch.
+    const scpName = (await Promise.race([
+      ctrl.getScpName(),
+      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+    ])) ?? undefined;
+    // THE ONE MOTION — a live Forge conduction for THIS SCP is FOCUSED, never duplicated.
+    const liveForge = findLiveS8Session(ctrl.sessionsList.value ?? [], 'Entourage Forge', scpName);
+    if (liveForge) {
+      console.log('[Forge Engage · Control] ONE MOTION · live Forge found · focusing · ulid=', liveForge.id);
+      ctrl.triggerFocusSession(liveForge.id);
+      forgeSpawnNote.value = 'Focused the running Forge.';
+      return;
+    }
+    // ELSE — a fresh anchor spawn (fresh:true · the bridge re-claims THIS page's anchor).
+    ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true);
+    forgeSpawnNote.value = 'Entourage Forge engaged. It will research and build out this Suite.';
+  } catch {
+    forgeSpawnNote.value = 'Could not engage the Entourage Forge — is the Bridge running?';
+  } finally {
+    setTimeout(() => {
+      forgeSpawning.value = false;
+    }, 1200);
+  }
+}
+
+// ============================================================
+// EF-2 · THE RD MENU FIRE — CLIPBOARD-PRIME (the fire decision · read the fire lane).
+// DECISION: the ShatteriteMenu option-fire lane (handleOption + primeSend) is HEAVY dispatch
+// machinery — /suite8-skill-prime fetch → SORD envelope → triggerSendMessage to a LIVE anchor, gated
+// on anchorAlive/optionsEnabled. That extraction is EF-3-class (live-anchor dispatch of the adaptation
+// shape). At EF-2 the five rows PRIME CHEAPLY: copy the row's adaptation-shape string to the clipboard.
+// EF-3 REMAINDER: dispatch the shape to the live Forge anchor via the ShatteriteMenu fire lane.
+async function primeForgeMenuEntry(entry: { rdKey: string; label: string; shape: string }): Promise<void> {
+  settleForgeLaunchPulse();
+  const text = `${entry.rdKey} · ${entry.label}\n\n${entry.shape}`;
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      forgeMenuNote.value = `${entry.rdKey} adaptation shape copied to clipboard.`;
+    } else {
+      forgeMenuNote.value = `${entry.rdKey}: clipboard unavailable in this context.`;
+    }
+  } catch {
+    forgeMenuNote.value = `${entry.rdKey}: could not copy to clipboard.`;
+  }
+}
 
 // B-RLM-2 · map the relay snapshot (which carries the extra Scholar fields) down to the exact
 // SyncLocalityInfo shape the Effective Locality Law computeds already consume (unchanged).
@@ -246,7 +396,15 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 </script>
 
 <template>
-  <section class="s8-control hifi-pane">
+  <!-- EF-2 · B1 · THE FLAIR EXCHANGE (root pane · reactive) — forge-open trades the base Pewter
+       vessel for the transparent glass treatment (RD-E §V · the Suite 8 vessel · the ground shows
+       through so the inner prismatic Forge body reads as the featured surface); forge-closed restores
+       the base `hifi-pane` Pewter frame. The inner menu carries the actual prismatic flair
+       (.s8c-forge-flair · the ring + glow, extracted global from Suite8HomeLanding's forge zone). -->
+  <section
+    class="s8-control"
+    :class="forgeMenuOpen ? ['hifi-pane-transparent', 's8-control--forge-open'] : ['hifi-pane']"
+  >
     <header class="s8c-head">
       <span class="s8c-eyebrow hifi-mono">{{ props.suite8Name }}</span>
       <h3 class="s8c-title hifi-heading">SUITE 8 CONTROL</h3>
@@ -301,7 +459,84 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       </div>
     </div>
 
-    <!-- SECTION III · THE DOCUMENTATION (the B3 fold seat · reserved) -->
+    <!-- SECTION IV · THE ENTOURAGE FORGE (EF-2 · the hard-coded Forge Shatterite Menu + the flair
+         exchange). The §II SCPs-drawer toggle idiom (▸/▾). When OPEN: the ROOT pane exchanges the
+         HiFi Transparent for the Forge's prismatic flair (bound reactively on the root <section>
+         above · forgeMenuOpen); the model select + the ONE MOTION engage row + the five hard-coded
+         RD rows (clipboard-prime · EF-3 will dispatch to the live anchor) render inside. -->
+    <div class="s8c-section s8c-forge-section">
+      <button
+        class="s8c-forge-toggle hifi-mono"
+        :class="{ 's8c-forge-engaged': forgeLaunchEngaged }"
+        @click="forgeMenuOpen = !forgeMenuOpen"
+        @mouseenter="settleForgeLaunchPulse"
+      >
+        {{ forgeMenuOpen ? '▾' : '▸' }} ENTOURAGE FORGE
+      </button>
+
+      <div
+        v-if="forgeMenuOpen"
+        :class="[
+          's8c-forge-flair',
+          { 's8c-forge-flair--pulsing': !forgeLaunchEngaged },
+        ]"
+        @mouseenter="settleForgeLaunchPulse"
+      >
+        <div class="s8c-forge-flair-glow" aria-hidden="true"></div>
+        <div class="s8c-forge-flair-body">
+          <h4 class="s8c-forge-heading spectrum-text">Forge this Suite</h4>
+
+          <!-- THE MODEL SELECT (MD-9 · D-MC-3 · offscreen-safe ScsDropdown · setSpawnModel persist) -->
+          <div class="s8c-forge-model-row">
+            <label class="s8c-forge-model-label hifi-mono">Model</label>
+            <ScsDropdown
+              :options="modelDropdownOptions"
+              :model-value="selectedModel"
+              class="s8c-forge-model-dropdown"
+              @update:model-value="(v) => { selectedModel = v ?? SCS_DEFAULT_MODEL; handleForgeModelChange(); }"
+            />
+          </div>
+
+          <!-- THE ENGAGE ROW — THE ONE MOTION LAW (live → focus · else fresh spawn). The Turn-Over
+               leg (branch-aware) is the EF-3 remainder; the engage-only button lands here. -->
+          <button
+            type="button"
+            class="s8c-forge-btn"
+            :disabled="forgeSpawning"
+            @click="engageEntourageForge"
+          >
+            <i class="fa-solid fa-hammer" aria-hidden="true"></i>
+            <span>{{
+              forgeSpawning ? 'Engaging…' : `Engage Entourage Forge · ${selectedModelLabel}`
+            }}</span>
+          </button>
+          <p v-if="forgeSpawnNote" class="s8c-forge-note">{{ forgeSpawnNote }}</p>
+
+          <!-- THE RD MENU — the five hard-coded rows (label + one-liner · the Shatterite option-row
+               idiom). FIRE: clipboard-prime the adaptation shape (EF-2). Live-anchor dispatch = EF-3. -->
+          <div class="s8c-forge-rd-list">
+            <span class="s8c-forge-rd-eyebrow hifi-mono">Cascade this into your Suite 8</span>
+            <button
+              v-for="entry in ENTOURAGE_FORGE_CONFIG.menu"
+              :key="entry.rdKey"
+              type="button"
+              class="s8c-forge-rd-row"
+              :title="entry.shape"
+              @click="primeForgeMenuEntry(entry)"
+            >
+              <span class="s8c-forge-rd-key hifi-mono">{{ entry.rdKey }}</span>
+              <span class="s8c-forge-rd-text">
+                <span class="s8c-forge-rd-label">{{ entry.label }}</span>
+                <span class="s8c-forge-rd-line">{{ entry.line }}</span>
+              </span>
+            </button>
+          </div>
+          <p v-if="forgeMenuNote" class="s8c-forge-note s8c-forge-note--menu">{{ forgeMenuNote }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION III · THE DOCUMENTATION (the B3 fold seat · reserved — §IV is the Forge's) -->
   </section>
 </template>
 
@@ -311,6 +546,11 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 .s8-control {
   padding: 0.9rem 1.1rem;
   border-radius: 12px;
+}
+/* EF-2 · B1 · THE FLAIR EXCHANGE — the base Pewter frame rides ONLY the closed state so the swapped
+   pane treatment governs when open. Closed → this frame (over the base .hifi-pane); open → the
+   .hifi-pane-transparent glass vessel shows through (its border/background take, uncontested). */
+.s8-control:not(.s8-control--forge-open) {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.28);
 }
@@ -452,5 +692,154 @@ async function chooseLocality(scpName: string | null): Promise<void> {
 .s8c-spawn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ============================================================
+   EF-2 · SECTION IV · THE ENTOURAGE FORGE — the fold styling (the s8c-* idiom). The prismatic flair
+   itself (.s8c-forge-flair · ring + glow + body) is GLOBAL (src/style.css · extracted from
+   Suite8HomeLanding) so it reaches this scoped component; only the row chrome is scoped here.
+   ============================================================ */
+.s8c-forge-toggle {
+  padding: 0.2rem 0.55rem;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.s8c-forge-toggle:hover {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+/* the toggle picks up a faint spectrum hint once the pane has been engaged (pulse settled) */
+.s8c-forge-toggle.s8c-forge-engaged {
+  border-color: rgba(168, 85, 247, 0.4);
+  color: rgba(232, 226, 248, 0.9);
+}
+.s8c-forge-flair {
+  margin-top: 0.4rem;
+}
+.s8c-forge-heading {
+  font-family: var(--font-heading, 'Orbitron', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 0.15rem;
+}
+.s8c-forge-model-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative; /* anchor for the ScsDropdown's absolutely-positioned in-DOM drawer */
+}
+.s8c-forge-model-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-pewter, rgba(255, 255, 255, 0.55));
+}
+.s8c-forge-model-dropdown {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.s8c-forge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.45rem 1rem;
+  border-radius: 4px;
+  font-family: var(--font-heading, 'Orbitron', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #1c1812;
+  background: #d8c79a;
+  border-top: 1px solid #efe2bb;
+  border-right: 1px solid #efe2bb;
+  border-bottom: 1px solid #a8975e;
+  border-left: 1px solid #a8975e;
+  box-shadow: -1px 1px 3px rgba(168, 151, 94, 0.5);
+  transition: filter 0.15s ease;
+}
+.s8c-forge-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.s8c-forge-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.s8c-forge-note {
+  color: rgba(216, 199, 154, 0.85);
+  font-size: 0.68rem;
+  margin: 0;
+}
+.s8c-forge-note--menu {
+  color: rgba(147, 197, 253, 0.85);
+}
+/* THE RD MENU — the five hard-coded rows (the Shatterite option-row idiom · clipboard-prime). */
+.s8c-forge-rd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.s8c-forge-rd-eyebrow {
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(206, 202, 194, 0.55);
+  margin-bottom: 0.1rem;
+}
+.s8c-forge-rd-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(230, 226, 216, 0.85);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.s8c-forge-rd-row:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(0, 0, 0, 0.45);
+}
+.s8c-forge-rd-key {
+  flex: 0 0 auto;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(147, 197, 253, 0.9);
+  padding-top: 0.05rem;
+}
+.s8c-forge-rd-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.s8c-forge-rd-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: rgba(239, 226, 187, 0.95);
+}
+.s8c-forge-rd-line {
+  font-size: 0.6rem;
+  line-height: 1.35;
+  color: rgba(206, 202, 194, 0.68);
 }
 </style>

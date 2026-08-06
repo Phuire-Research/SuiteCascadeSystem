@@ -1588,3 +1588,106 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
   letter-spacing: normal;
   margin-left: -0.06em;
 }
+
+
+
+/* ===================================================================
+   EF-2 · THE ENTOURAGE FORGE FLAIR (EXTRACTED · global-reachable)
+   The prismatic Forge flair, lifted VERBATIM (geometry unchanged) from
+   Suite8HomeLanding.vue's scoped `.forge-launch-*` family into the shared
+   stylesheet so Suite8Control.vue can reach it (the flair exchange — the
+   Control's root pane trades .hifi-pane-transparent for this on forge-open).
+   The prismatic conic ring + spectrum glow are the REAL Forge flair (NOT
+   .hifi-pane-mux-ego · RD-E's pseudocode guessed that). Prefixed `s8c-forge-flair`
+   to live in the Control's namespace; the source scoped family stays intact.
+   =================================================================== */
+.s8c-forge-flair {
+  position: relative;
+  border-radius: 8px;
+  padding: 2px; /* the prismatic ring thickness (the ::before spectrum fills this frame) */
+  box-shadow: -3px 3px 0 rgba(91, 83, 71, 0.4);
+  isolation: isolate;
+}
+
+/* THE PRISMATIC RING — a full-spectrum conic gradient painted into the 2px padding frame. */
+.s8c-forge-flair::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none; /* decorative — never takes the pointer (the C375 pointer-trap fix) */
+  background: conic-gradient(
+    from 210deg,
+    var(--color-red),
+    var(--color-orange),
+    var(--color-yellow),
+    var(--color-green),
+    var(--color-blue),
+    var(--color-purple),
+    var(--color-fuchsia),
+    var(--color-red)
+  );
+  opacity: 0.85;
+}
+
+/* THE SPECTRUM GLOW — a soft blurred spectrum halo behind the pane (animated when pulsing). */
+.s8c-forge-flair-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  z-index: -1;
+  background: conic-gradient(
+    from 210deg,
+    var(--color-red),
+    var(--color-orange),
+    var(--color-yellow),
+    var(--color-green),
+    var(--color-blue),
+    var(--color-purple),
+    var(--color-fuchsia),
+    var(--color-red)
+  );
+  filter: blur(14px);
+  opacity: 0.28;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* THE PANE FIELD — the dark Pewter body inside the prismatic frame. */
+.s8c-forge-flair-body {
+  position: relative;
+  z-index: 1;
+  background: #14110c;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* THE PULSE — a soft spectrum-glow breathe, LOOPING until first hover/utilization settles it. */
+.s8c-forge-flair--pulsing .s8c-forge-flair-glow {
+  animation: s8c-forge-flair-glow-pulse 2.2s ease-in-out infinite both;
+}
+.s8c-forge-flair--pulsing::before {
+  animation: s8c-forge-flair-ring-pulse 2.2s ease-in-out infinite both;
+}
+
+@keyframes s8c-forge-flair-glow-pulse {
+  0%   { opacity: 0.22; filter: blur(12px); }
+  50%  { opacity: 0.5;  filter: blur(18px); }
+  100% { opacity: 0.22; filter: blur(12px); }
+}
+
+@keyframes s8c-forge-flair-ring-pulse {
+  0%   { opacity: 0.72; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.72; }
+}
+
+/* Accessibility — reduced-motion keeps the prismatic ring + a steady glow, drops the breathe. */
+@media (prefers-reduced-motion: reduce) {
+  .s8c-forge-flair--pulsing .s8c-forge-flair-glow { animation: none; opacity: 0.4; }
+  .s8c-forge-flair--pulsing::before { animation: none; opacity: 0.9; }
+}
