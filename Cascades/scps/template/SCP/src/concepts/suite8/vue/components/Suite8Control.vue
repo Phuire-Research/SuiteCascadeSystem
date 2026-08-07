@@ -420,6 +420,27 @@ async function requestTurnOverToB(): Promise<void> {
 const installMenuOpen = ref<boolean>(false);
 const concernsOpen = ref<boolean>(false);
 const installRequirements = ref<InstallRequirementsShape | null>(null);
+// C798 · THE STORED BASE — Maintainer.md's Sovereignty Boundary (Home SCP) served by the
+// endpoint. Home == self → this page IS the Base; else this page is the Informative and
+// the Base is NAMED. The Update Circuit renders the CONCRETE relation, never the
+// arbitrary labels: `Base:Name -> Informative:Name` anor `Base:Name <- Informative:Name`.
+const homeScpName = ref<string | null>(null);
+const selfScpName = computed(() => syncLocality.value?.localScp ?? resolvedScpName.value);
+const selfIsBase = computed(
+  () => homeScpName.value == null || homeScpName.value === selfScpName.value,
+);
+const baseScpName = computed(() => (selfIsBase.value ? selfScpName.value : homeScpName.value));
+// on the Base page the Informative is the SELECTED target; on an Informative page the
+// pair is STORED — self is the Informative and no target selection is needed.
+const informativeScpName = computed(() =>
+  selfIsBase.value ? (selectedInstallTarget.value.length > 0 ? selectedInstallTarget.value : null) : selfScpName.value,
+);
+const updateForwardLabel = computed(
+  () => `Base:${baseScpName.value ?? '…'} -> Informative:${informativeScpName.value ?? '…'}`,
+);
+const updateBackwardLabel = computed(
+  () => `Base:${baseScpName.value ?? '…'} <- Informative:${informativeScpName.value ?? '…'}`,
+);
 const requirementsPresent = computed(() => installRequirements.value !== null);
 const mapperDispatching = ref<boolean>(false);
 const installDispatching = ref<boolean>(false);
@@ -492,9 +513,16 @@ async function fetchInstallRequirements(): Promise<void> {
   if (!props.suite8Name) return;
   try {
     const r = await fetch(installRequirementsEndpoint(props.suite8Name));
-    const j = (await r.json()) as { present: boolean; requirements?: InstallRequirementsShape };
+    const j = (await r.json()) as {
+      present: boolean;
+      requirements?: InstallRequirementsShape;
+      homeScp?: string | null;
+      installedIn?: string | null;
+    };
     const requirements = j.present && j.requirements ? j.requirements : null;
     installRequirements.value = requirements;
+    // C798 · the stored Base rides the same read (Maintainer.md's Home SCP).
+    homeScpName.value = typeof j.homeScp === 'string' && j.homeScp.length > 0 ? j.homeScp : null;
     ensureInstallReqSubscription();
     // the dual write — the ODCF snapshot lands in the concept state too (shared truth).
     const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
@@ -572,13 +600,17 @@ async function dispatchInstallEntourage(): Promise<void> {
 }
 async function dispatchUpdateCircuit(direction: UpdateCircuitDirection): Promise<void> {
   const ctrl = getGlobalScsBridgeController();
-  const target = selectedInstallTarget.value;
-  if (!ctrl || updateDispatching.value || target.length === 0) return;
+  // C798 · THE ROLE-CORRECT DISPATCH — the stored Base composes the pair (on an
+  // Informative page the Base is the NAMED Home; the prior local/target composition
+  // wrongly cast every page as the Base).
+  const base = baseScpName.value;
+  const informative = informativeScpName.value;
+  if (!ctrl || updateDispatching.value || !base || !informative) return;
   updateDispatching.value = true;
   installNote.value =
     direction === 'origin-to-informative'
-      ? `The Update Circuit engages · Origin → ${target}…`
-      : `The Update Circuit engages · Base ← ${target}…`;
+      ? `The Update Circuit engages · Base:${base} -> Informative:${informative}…`
+      : `The Update Circuit engages · Base:${base} <- Informative:${informative}…`;
   try {
     const scpName = (await Promise.race([
       ctrl.getScpName(),
@@ -586,9 +618,7 @@ async function dispatchUpdateCircuit(direction: UpdateCircuitDirection): Promise
     ])) ?? undefined;
     ctrl.triggerSpawnS8Session(
       'Entourage Forge', scpName, true, true, false,
-      buildUpdateCircuitVermillion(
-        props.suite8Name, direction, syncLocality.value?.localScp ?? scpName ?? 'this SCP', target,
-      ),
+      buildUpdateCircuitVermillion(props.suite8Name, direction, base, informative),
       false, false, props.suite8Name,
     );
   } catch {
@@ -1108,19 +1138,22 @@ async function chooseLocality(scpName: string | null): Promise<void> {
         <!-- STATION 4 · THE UPDATE CIRCUIT (EF-5d · the epoch's last refinement) -->
         <div class="s8c-install-station">
           <span class="s8c-install-eyebrow hifi-mono">The Update Circuit</span>
+          <!-- C798 · THE CONCRETE RELATION (the stored Base renders · never arbitrary
+               labels): on the Base page the Informative is the selected target; on an
+               Informative page the pair is STORED — no selection needed. -->
           <div class="s8c-install-update-row">
             <button
               type="button"
               class="s8c-install-btn"
-              :disabled="updateDispatching || selectedInstallTarget.length === 0"
+              :disabled="updateDispatching || !baseScpName || !informativeScpName"
               @click="dispatchUpdateCircuit('origin-to-informative')"
-            >Update {{ selectedInstallTarget || 'Informative' }} from Origin</button>
+            >{{ updateForwardLabel }}</button>
             <button
               type="button"
               class="s8c-install-btn"
-              :disabled="updateDispatching || selectedInstallTarget.length === 0"
+              :disabled="updateDispatching || !baseScpName || !informativeScpName"
               @click="dispatchUpdateCircuit('informative-to-base')"
-            >Update Base from {{ selectedInstallTarget || 'Informative' }}</button>
+            >{{ updateBackwardLabel }}</button>
           </div>
         </div>
         <p v-if="installNote" class="s8c-install-note">{{ installNote }}</p>

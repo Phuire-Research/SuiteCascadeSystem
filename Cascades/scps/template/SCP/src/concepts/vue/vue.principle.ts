@@ -1408,20 +1408,31 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     try {
       const designation = String(req.params.designation ?? '').trim();
       if (designation.length === 0) {
-        res.json({ present: false });
+        res.json({ present: false, homeScp: null, installedIn: null });
         return;
       }
-      const gatePath = path.resolve(
-        process.cwd(), 'Cascades', '8_SUITES', designation, 'Install.Requirements.json',
-      );
+      const suiteDir = path.resolve(process.cwd(), 'Cascades', '8_SUITES', designation);
+      // C798 · THE SOVEREIGNTY READ — the Base IS stored (Maintainer.md's Sovereignty
+      // Boundary · the Entourage maintains it through installs): Home SCP names the Base;
+      // each page derives its own role (Home == self → Base · else → Informative).
+      let homeScp: string | null = null;
+      let installedIn: string | null = null;
+      try {
+        const maintainer = fs.readFileSync(path.join(suiteDir, 'Maintainer.md'), 'utf-8');
+        homeScp = maintainer.match(/\*\*Home SCP\*\*:\s*(.+)/)?.[1]?.trim() ?? null;
+        installedIn = maintainer.match(/\*\*Installed-in\*\*:\s*(.+)/)?.[1]?.trim() ?? null;
+      } catch {
+        /* absent Maintainer → nulls (self stands as Base) */
+      }
+      const gatePath = path.join(suiteDir, 'Install.Requirements.json');
       if (!fs.existsSync(gatePath)) {
-        res.json({ present: false });
+        res.json({ present: false, homeScp, installedIn });
         return;
       }
       const parsed = JSON.parse(fs.readFileSync(gatePath, 'utf-8')) as Record<string, unknown>;
-      res.json({ present: true, requirements: parsed });
+      res.json({ present: true, requirements: parsed, homeScp, installedIn });
     } catch {
-      res.json({ present: false });
+      res.json({ present: false, homeScp: null, installedIn: null });
     }
   });
 
