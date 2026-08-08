@@ -467,6 +467,17 @@ onMounted(() => {
   // them within a beat of the Huirth state change, no 10s poll, no tab-in dependency.
   settleLocalitySubscription();
   hydrateLocalityOnce();
+  // V-4d · THE FACE-CHANGE RE-HYDRATE — the slice subscription only feeds where the suite8
+  // concept composes (a twin island's Record is a dead read); the Control PUSHES the shared
+  // controller face after every locality change, so a face change here re-runs the token-free
+  // HTTP hydration and this menu's chip + focused-anchor scope follow on ANY island.
+  watch(
+    () => controller.value?.currentS8Locality.value,
+    (face, prior) => {
+      if (face === prior) return;
+      hydrateLocalityOnce();
+    },
+  );
   void fetch(s8AnchorSpawnPath(props.suite8Name))
     .then((r) => (r.ok ? r.json() : { anchorSpawn: 'prompt' }))
     .then((j: { anchorSpawn?: string }) => {

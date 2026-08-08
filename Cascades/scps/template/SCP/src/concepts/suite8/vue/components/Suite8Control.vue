@@ -895,13 +895,19 @@ async function chooseLocality(scpName: string | null): Promise<void> {
         <span class="s8c-value">{{ localityLabel }}</span>
       </div>
       <div class="s8c-rows">
+        <!-- V-4d · THE BASE ROW — Local is the ALWAYS-GIVEN Base (never an option the user
+             must earn): it renders as the standing ground; clicking it REVERTS a specified
+             locality back to the Base. -->
         <button
-          class="s8c-row"
+          class="s8c-row s8c-row-base"
           :class="{ 's8c-row-current': !syncLocality?.specified }"
+          :title="syncLocality?.specified
+            ? `Revert to the Base — this page composes on ${syncLocality?.localScp ?? 'its own SCP'}`
+            : 'The Base locality — always given (this page composes here)'"
           @click="chooseLocality(null)"
         >
           <span class="s8c-bead s8c-bead-live"></span>
-          Local{{ syncLocality?.localScp ? ` · ${syncLocality.localScp}` : '' }}
+          Base · Local{{ syncLocality?.localScp ? ` · ${syncLocality.localScp}` : '' }}
         </button>
         <button
           v-for="entry in visibleRing"
