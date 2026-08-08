@@ -39,6 +39,8 @@
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { S8Entry } from '../../../model/s8Shared.model';
+// C807 · the page-version badge source (the V-2 registration seat · own-page match only).
+import { getGlobalScsBridgeController } from '../../scsBridge/scsBridgeController';
 import {
   deriveSuiteFromDomain,
   suitePaneClass,
@@ -57,6 +59,13 @@ const props = withDefaults(
   }>(),
   { domain: '', snippet: '', compact: false },
 );
+
+// C807 · THE VERSION BADGE — the S8 Page Version renders when determinable: the mounted
+// page's own registration (V-2's currentS8Page seat) matching THIS entry; undefined → '-'.
+const pageVersionLabel = computed<string>(() => {
+  const reg = getGlobalScsBridgeController()?.currentS8Page.value;
+  return reg && reg.designation === props.entry.name ? reg.version : '-';
+});
 
 // W3 · the 'collapse' emit is pruned with the Close card button — the Card tab owns closing now.
 const emit = defineEmits<{
@@ -727,6 +736,7 @@ onBeforeUnmount(() => {
       </div>
       <div :class="['card-head', textShadowClass]">
         <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+          <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
         <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
         <p v-if="displaySnippet" class="card-snippet">{{ displaySnippet }}</p>
       </div>
@@ -798,6 +808,7 @@ onBeforeUnmount(() => {
         <!-- RIGHT · THE CO-PANEL (identity content · the Definitions idiom · no share controls) -->
         <aside :class="['co-panel', textShadowClass]">
           <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+          <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
           <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
           <p v-if="protocolLine" class="identity-content">{{ protocolLine }}</p>
           <p v-if="displaySnippet" class="identity-content identity-snippet">{{ displaySnippet }}</p>
@@ -1040,6 +1051,13 @@ onBeforeUnmount(() => {
   max-width: 62%;
 }
 
+.card-version {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: rgba(220, 228, 236, 0.55);
+}
 .card-name {
   font-size: 1.05rem;
   margin: 0 0 0.15rem;
