@@ -817,6 +817,25 @@ const specifiedLive = computed<boolean>(() => {
   if (!s?.specified) return false;
   return s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
 });
+// V-4c · THE FACE PUSH — this Control owns the live locality truth (its HTTP lanes work on
+// ANY island); push the face-grade snapshot to the shared controller so the held toolbar
+// face reflects it without assuming a concept slice. Null push = fall back to the seed.
+watch(
+  syncLocality,
+  (s) => {
+    getGlobalScsBridgeController()?.setCurrentS8Locality(
+      s
+        ? {
+          localScp: s.localScp ?? null,
+          specified: s.specified ?? null,
+          ring: (s.ring ?? []).map((e) => ({ scpName: e.scpName, status: e.status })),
+        }
+        : null,
+    );
+  },
+  { immediate: true },
+);
+
 const localityLabel = computed<string>(() => {
   const s = syncLocality.value;
   if (!s) return 'Local';

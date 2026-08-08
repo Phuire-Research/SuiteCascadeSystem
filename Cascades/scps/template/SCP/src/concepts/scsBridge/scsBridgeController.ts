@@ -17,6 +17,14 @@
  * Citation: notificationController.ts (Global Vue Component Pattern · ZKHB sibling)
  */
 import { shallowRef, computed, type Component, type ShallowRef, type ComputedRef, type InjectionKey } from 'vue';
+
+// V-4c · the face-grade locality snapshot the toolbar S8 button renders (pushed by the
+// page-owned Control anor seeded over the token-free HTTP endpoint — never a slice read).
+export type S8LocalityFace = {
+  localScp: string | null;
+  specified: string | null;
+  ring: { scpName: string; status: string }[];
+};
 import type { AnyAction, Muxium } from 'stratimux';
 import type {
   AnchorConfig,
@@ -126,6 +134,10 @@ export type ScsBridgeController = {
   currentS8Page: ShallowRef<{ designation: string; version: string; drawer: Component | null } | null>;
   registerCurrentS8Page: (designation: string, version: string, drawer?: Component) => void;
   clearCurrentS8Page: () => void;
+  // V-4c · the current page's locality FACE — pushed by the page-owned Control (whose HTTP
+  // lanes work on ANY island); the held toolbar face reads THIS, never a concept slice.
+  currentS8Locality: ShallowRef<S8LocalityFace | null>;
+  setCurrentS8Locality: (face: S8LocalityFace | null) => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (mirrors sessionsList shape)
@@ -415,6 +427,11 @@ export function createScsBridgeController(): ScsBridgeController {
   };
   const clearCurrentS8Page = (): void => {
     currentS8Page.value = null;
+    currentS8Locality.value = null;
+  };
+  const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
+  const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
+    currentS8Locality.value = face;
   };
   const bridgeStatus = shallowRef<string>('');
   const sessionsList = shallowRef<ScsBridgeSessionEntry[]>([]);
@@ -2006,6 +2023,8 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page,
     registerCurrentS8Page,
     clearCurrentS8Page,
+    currentS8Locality,
+    setCurrentS8Locality,
     bridgeStatus,
     sessionsList,
     archiveManifest,

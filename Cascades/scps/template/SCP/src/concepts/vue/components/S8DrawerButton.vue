@@ -39,6 +39,7 @@ import type { ClientMuxiumDeck } from '../../client/client.muxonomy';
 import {
   readClientSyncLocalities,
   clientSyncLocalitiesSelector,
+  syncLocalityEndpoint,
 } from '../../../model/scpLocalityClientAccess.model';
 
 interface Props {
@@ -59,6 +60,11 @@ type LocalityFaceInfo = {
   ring: { scpName: string; status: string }[];
 };
 const syncLocality = ref<LocalityFaceInfo | null>(null);
+// V-4c · the controller-pushed face (the page-owned Control's truth — works on ANY island)
+// takes precedence; the local snapshot (subscription anor HTTP seed) is the fallback.
+const effectiveFace = computed<LocalityFaceInfo | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value ?? syncLocality.value,
+);
 
 // The page identity — currentS8Page is the shared controller seat the Landing registers in
 // onMounted (null → not a Suite 8 page; the parent filters this button out entirely then).
@@ -69,12 +75,12 @@ const currentDesignation = computed<string>(
 // THE EFFECTIVE LOCALITY (ported from Suite8Control.localityLabel) — specified-if-live, else the
 // real composed-on SCP, else the designation intake face. The surface never rests on a dead locality.
 const specifiedLive = computed<boolean>(() => {
-  const s = syncLocality.value;
+  const s = effectiveFace.value;
   if (!s?.specified) return false;
   return s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
 });
 const localityFaceLabel = computed<string>(() => {
-  const s = syncLocality.value;
+  const s = effectiveFace.value;
   const designation = currentDesignation.value;
   // 'S8: <specified>' when a live specified locality stands.
   if (s?.specified && specifiedLive.value) return `S8: ${s.specified}`;
@@ -127,6 +133,21 @@ function ensureLocalitySubscription(): boolean {
   );
   return true;
 }
+// V-4c · THE HTTP SEED (token-free endpoint · answers for ANY designation) — the muxium
+// subscription only feeds where the suite8 slice composes; a twin island's face would
+// otherwise rest on the designation fallback until the drawer's Control pushes.
+function hydrateFaceOnce(): void {
+  const designation = currentDesignation.value;
+  if (!designation) return;
+  void fetch(syncLocalityEndpoint(designation))
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data || typeof data !== 'object') return;
+      syncLocality.value = snapshotToInfo(data as Record<string, unknown>);
+    })
+    .catch(() => undefined);
+}
+
 function settleLocalitySubscription(): void {
   if (ensureLocalitySubscription()) return;
   if (localitySubSettleTries >= 40) return;
@@ -140,6 +161,7 @@ watch(currentDesignation, (name, prior) => {
   if (name === prior) return;
   syncLocality.value = null;
   localitySubSettleTries = 0;
+  hydrateFaceOnce();
   settleLocalitySubscription();
 });
 
@@ -149,6 +171,7 @@ function handleClick() {
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
+  hydrateFaceOnce();
   settleLocalitySubscription();
 });
 onBeforeUnmount(() => {
