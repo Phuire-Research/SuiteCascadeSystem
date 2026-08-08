@@ -173,10 +173,10 @@ onBeforeUnmount(() => {
       <i class="fa-solid fa-diagram-project taskbar-btn-icon" aria-hidden="true"></i>
       <span class="s8-drawer-btn-label hifi-mono">{{ localityFaceLabel }}</span>
     </button>
-    <span class="btn-tip" role="tooltip">
-      <span class="btn-tip-title">Suite 8 Control</span>
-      <span class="btn-tip-body">This page's locality + the Suite 8 helm. Click to open the control drawer.</span>
-    </span>
+    <!-- C811 · NO HINT (the user's ruling) — the face's label IS the information
+         (S8: Local <SCP>); the unstyled tip was flowing INLINE and shoving the MVP
+         controls off-screen (the scoped-style boundary — TaskBar's .btn-tip rules
+         cannot reach a child component's internals). -->
   </span>
 </template>
 
