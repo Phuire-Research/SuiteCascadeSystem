@@ -50,7 +50,7 @@ import {
 } from '../../../../model/gitmTurnover.model';
 import { showBridgeStandby } from '../../../webSocketClient/model/bridgeStandbyOverlay.model';
 import ShatteriteMenu from './ShatteriteMenu.vue';
-import Suite8Card from './Suite8Card.vue';
+import Suite8Card from '../../../vue/components/S8Card.vue';
 // IE-D4e · THE FOUNDED-BUT-INVISIBLE FIX — the LIVE D-O pair (Suite8CascadeDocs) mounted BENEATH the
 // Forge CTA so a FOUNDED but not-yet-forged Suite 8's Diamond/Onyx pair is visible BEFORE build-out.
 // The user's flow: work the Suite until proven on branch B → the proven Lambda then moves into the

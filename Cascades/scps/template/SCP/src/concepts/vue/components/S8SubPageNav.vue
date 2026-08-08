@@ -13,21 +13,20 @@
  * Citation: suiteCascade/vue/components/SuiteCascadeSubPageNav.vue (structural bearing · B-6).
  * Citation: suite8.subPageRegistry.ts (SUITE8_SUB_PAGE_OPTIONS source).
  */
-import type { Suite8SubPage } from '../../suite8.type';
-import type { Suite8SubPageOption } from '../../suite8.subPageRegistry';
+import type { S8SubPage, S8SubPageOption } from '../../../model/s8Shared.model';
 
 interface Props {
-  options: Suite8SubPageOption[];
-  activeSubPage: Suite8SubPage;
+  options: S8SubPageOption[];
+  activeSubPage: S8SubPage;
 }
 
 defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: 'subPageSelected', value: Suite8SubPage): void;
+  (event: 'subPageSelected', value: S8SubPage): void;
 }>();
 
-function handleClick(option: Suite8SubPageOption) {
+function handleClick(option: S8SubPageOption) {
   if (option.deferred) return;
   emit('subPageSelected', option.value);
 }

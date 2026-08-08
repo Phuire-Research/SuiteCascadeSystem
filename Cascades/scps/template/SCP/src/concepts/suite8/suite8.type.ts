@@ -16,6 +16,7 @@
  * Citation: CLAUDE.md C5 Renewable Intelligence (D-O Muxified Read)
  */
 import type { Concept, Quality, PrincipleFunction, MuxiumDeck, AnyAction } from 'stratimux';
+import type { S8Entry, S8SubPage } from '../../model/s8Shared.model';
 // A-1 SCBM · Tier-2 muxified member types — Suite8 muxifies SuiteCascade, so the
 // Deck carries `d.suiteCascade` (the ONE shared instance · Scholar §1/§2). Type-only
 // import — the runtime muxification lives in suite8.concept.client.ts.
@@ -76,12 +77,9 @@ export type Suite8Designation = {
 // `Cascades/8_SUITES/<Name>/` directory entry). NO optional props — KeyedSelector
 // requirement (S13 §4). The minimal identity+routing surface; A-2 MPRF registers
 // entries from the directory substrate, A-6 HCD renders the roster.
-export type Suite8Entry = {
-  name: string;            // NDEP — directory-entry Name; uniquely resolves Instance.md
-  directoryPath: string;   // Cascades/8_SUITES/<Name>/
-  description: string;     // never optional (KeyedSelector)
-  color: string;           // never optional (KeyedSelector)
-};
+// V-1 · THE LENT SHAPE — the truth lives in the held s8Shared.model (token-free); this
+// ALIAS keeps every concept-local (and twin-renamed) import resolving unchanged.
+export type Suite8Entry = S8Entry;
 
 export type Suite8Tab = 'info' | 'doviewer' | 'settings';
 
@@ -96,7 +94,7 @@ export type Suite8Tab = 'info' | 'doviewer' | 'settings';
 //
 // Citation: suiteCascade.type.ts SuiteCascadeSubPage union (DIRECT bearing · B-6).
 // Citation: MASTER-DIAMOND-SUITE8-CONCEPT-ASPIRANT.md §3 (HCD SubPage triad).
-export type Suite8SubPage = 'home' | 'component' | 'documentation';
+export type Suite8SubPage = S8SubPage;
 
 // ============================================
 // STATE DEFINITION (Client-Side · InductionState included)

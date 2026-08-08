@@ -51,7 +51,7 @@ import ShatteriteMenu from '../../suite8/vue/components/ShatteriteMenu.vue';
 import SuiteColorSelection from '../../scsBridge/vue/components/SuiteColorSelection.vue';
 import SuitePatternSelection from '../../scsBridge/vue/components/SuitePatternSelection.vue';
 // MD-6 · D-BP-3 · the CARD subpage mounts the MD-5 Character-Forward Card for Pewter.
-import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 import Suite8CascadeDocs from '../../suite8/vue/components/Suite8CascadeDocs.vue';
 
 // The page's Suite 8 designation — the literal Cascades/8_SUITES/<name>/ key the

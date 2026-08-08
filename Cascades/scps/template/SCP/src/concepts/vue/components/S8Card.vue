@@ -38,16 +38,16 @@
  * Citation: deriveSuiteFromDomain.model.ts (the D9 derivation → `var(--color-{suite})` accent).
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import type { Suite8Entry } from '../../suite8.type';
+import type { S8Entry } from '../../../model/s8Shared.model';
 import {
   deriveSuiteFromDomain,
   suitePaneClass,
   type SpectrumSuite,
-} from '../../../../model/deriveSuiteFromDomain.model';
+} from '../../../model/deriveSuiteFromDomain.model';
 
 const props = withDefaults(
   defineProps<{
-    entry: Suite8Entry;
+    entry: S8Entry;
     /** Optional domain word (the meaning source · overrides entry.description when meaningful). */
     domain?: string;
     /** Optional snippet carried from the roster (the first meaningful Instance.md line). */

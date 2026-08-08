@@ -50,7 +50,7 @@ import Suite8CascadeDocs from './components/Suite8CascadeDocs.vue';
 import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
-import Suite8Card from './components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 // EF-3' · 4A · THE PANE PRUNE — the inline Forge pane folded into Suite8Control SIV
 // (the door · the model select · the previous conductions · the engage all live THERE now).
 

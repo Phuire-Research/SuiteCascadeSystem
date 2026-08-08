@@ -40,7 +40,7 @@ import ShatteriteMenu from '../../suite8/vue/components/ShatteriteMenu.vue';
 // DSP-2 · THE SUITE 8 CONTROL — held under suite8, mounted DIRECTLY (the holding law).
 import Suite8Control from '../../suite8/vue/components/Suite8Control.vue';
 // MD-6 · D-BP-2 · the CARD subpage mounts the MD-5 Character-Forward Card for Cadmium.
-import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 // Macro SU · Cadmium's SFSD instance (Research Topics) + page-usage overview
 // Macro TR · RP · the TPRI Vermillion-per-topic GENERATOR (pure string builder · object input).
 // deriveResearchSlug · slugify a topic label when the topic has no kebab id (frontier subdir fallback).
