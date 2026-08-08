@@ -1199,9 +1199,15 @@ defineExpose({
 .dock-readout {
   position: fixed;
   z-index: 2000;
-  max-width: 320px;
+  /* C814 · THE WRAP CURE (image 183 — nowrap inside a max-width ran the text past the
+     border): the pill WRAPS within its clamp; the measure-then-clamp still reads the
+     wrapped box's real width. */
+  max-width: min(380px, 80vw);
   padding: 4px 8px;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  line-height: 1.4;
   font-family: 'Courier New', monospace;
   font-size: 0.62rem;
   font-weight: 700;

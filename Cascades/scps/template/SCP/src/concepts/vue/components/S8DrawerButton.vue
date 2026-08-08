@@ -167,6 +167,7 @@ onBeforeUnmount(() => {
   <span class="taskbar-btn-wrap s8-drawer-btn-wrap" :style="{ '--btn-neon': 'var(--color-viridian)' }">
     <button
       :class="['taskbar-btn', 'btn-base', 's8-drawer-btn', { active: drawerOpen }]"
+      data-readout="Suite 8 Control · This page's locality + the Suite 8 helm. Click to open the control drawer."
       aria-label="Suite 8 Control"
       @click="handleClick"
     >
