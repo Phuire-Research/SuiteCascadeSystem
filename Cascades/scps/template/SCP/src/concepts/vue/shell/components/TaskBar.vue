@@ -212,6 +212,17 @@ const FALLBACK_TIP_CONTENT: Record<string, { title: string; body: string }> = {
     title: 'Working Branch (B)',
     body: 'Branches a new working version from A and checks it out — develop on B while A stays safe.',
   },
+  // V-3 · THE TOOLBAR BREAKOUT — the two new drawer buttons' hover tips (the S8 face carries its
+  // own tip inside S8DrawerButton.vue; this covers the plain 'scp-drawer' fallback + a safety tip
+  // for 's8-drawer' should it ever render as a fallback).
+  's8-drawer': {
+    title: 'Suite 8 Control',
+    body: "This page's locality + the Suite 8 helm. Opens the Suite 8 Control drawer.",
+  },
+  'scp-drawer': {
+    title: 'SCP Management',
+    body: 'The full SCP helm — Spawn, Focus, Multiply, and manage every installed SCP. Opens the SCP Management drawer.',
+  },
   'merge-b-a': {
     title: 'Merge B → A · Land the Proven Work',
     body: 'Merges proven working Branch B into the guarded stable A. Available after you confirm B successful. A fresh B is auto-forked on the next bind — you stay on B, always working ahead of stable.',
@@ -318,38 +329,45 @@ function handleTurnOverTriggered(): void {
         <!-- WAVE 4: future expansion (Sessions button center-mount) -->
       </div>
 
+      <!-- V-3 · THE TOOLBAR BREAKOUT · R2 THE PREEMPTIVE X-SCROLL — ONLY the right BUTTON ROW
+           scrolls (the inner row no longer owns overflow, so the SCP identity label in the LEFT
+           zone stays fixed / never clips). The scroll region carries overflow-x:auto preemptively
+           with a thin/hidden scrollbar so an overflow never clips a button; its flex children
+           (taskbar-btn-wrap) carry flex-shrink:0 so the scroll ENGAGES instead of squashing. -->
       <div class="taskbar-zone taskbar-zone--right">
-        <template v-for="btn in rightButtons" :key="btn.id">
-          <component
-            :is="resolveComponent(btn)"
-            v-if="resolveComponent(btn)"
-            v-bind="componentPropsFor(btn)"
-            :disabled="!btn.enabled"
-            @turn-over-triggered="handleTurnOverTriggered"
-            @click="$emit('buttonClicked', btn.id)"
-          />
-          <span
-            v-else
-            class="taskbar-btn-wrap"
-            :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
-          >
-            <button
-              :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
+        <div class="taskbar-right-scroll">
+          <template v-for="btn in rightButtons" :key="btn.id">
+            <component
+              :is="resolveComponent(btn)"
+              v-if="resolveComponent(btn)"
+              v-bind="componentPropsFor(btn)"
               :disabled="!btn.enabled"
-              :aria-label="btn.label"
-              @click="handleFallbackClick(btn)"
+              @turn-over-triggered="handleTurnOverTriggered"
+              @click="$emit('buttonClicked', btn.id)"
+            />
+            <span
+              v-else
+              class="taskbar-btn-wrap"
+              :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
             >
-              <i :class="['taskbar-btn-icon', btn.icon]"></i>
-              <span v-if="btn.badgeCount && btn.badgeCount > 0" class="taskbar-btn-badge">
-                {{ btn.badgeCount }}
+              <button
+                :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
+                :disabled="!btn.enabled"
+                :aria-label="btn.label"
+                @click="handleFallbackClick(btn)"
+              >
+                <i :class="['taskbar-btn-icon', btn.icon]"></i>
+                <span v-if="btn.badgeCount && btn.badgeCount > 0" class="taskbar-btn-badge">
+                  {{ btn.badgeCount }}
+                </span>
+              </button>
+              <span class="btn-tip" role="tooltip">
+                <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
+                <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
               </span>
-            </button>
-            <span class="btn-tip" role="tooltip">
-              <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
-              <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
             </span>
-          </span>
-        </template>
+          </template>
+        </div>
       </div>
 
     </div>
@@ -382,15 +400,12 @@ function handleTurnOverTriggered(): void {
   padding: 0 0.5rem;
   gap: 0.5rem;
   /* BO-5 (C454) · THE X-SCROLL CURE: the inner row overflowed the viewport (1280 vs 1200)
-     and pushed the PAGE wide. The taskbar governs its own overflow — the page never scrolls
-     horizontally for it. min-width:0 lets flex children shrink instead of summing past. */
+     and pushed the PAGE wide. min-width:0 lets flex children shrink instead of summing past.
+     V-3 · R2 THE PREEMPTIVE X-SCROLL: the overflow moved DOWN to .taskbar-right-scroll (only
+     the right BUTTON ROW scrolls) so the SCP identity label in the left zone stays FIXED and
+     never clips. The inner itself no longer scrolls — it clips to guard the page width. */
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-}
-.taskbar-inner::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 /* The bottom spectrum band — the INVERSE of the top bar's order (pink → red), 8px. */
@@ -462,9 +477,47 @@ function handleTurnOverTriggered(): void {
 }
 
 .taskbar-zone--right {
+  /* V-3 · R2 — the right zone takes the remaining width and lets its scroll child clip+scroll
+     (min-width:0 is the flex law that lets a flex child shrink below its content size so the
+     inner overflow ENGAGES instead of pushing the page wide). */
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+/* V-3 · R2 · THE PREEMPTIVE X-SCROLL REGION — ONLY the right button row scrolls. overflow-x:auto
+   is preemptive so an overflow never clips a button; the button wraps carry flex-shrink:0 so the
+   scroll engages instead of squashing them. The 4px thin/hidden scrollbar recipe (the codebase
+   precedent · ScsBridgeSessionsPopup body) keeps the bar clean. */
+.taskbar-right-scroll {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.taskbar-right-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.taskbar-right-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.taskbar-right-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.taskbar-right-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+/* THE FLEX-CHILD MIN-WIDTH GUARD — the button wraps must NOT shrink; the scroll engages instead. */
+.taskbar-right-scroll > .taskbar-btn-wrap,
+.taskbar-right-scroll > * {
   flex-shrink: 0;
 }
 

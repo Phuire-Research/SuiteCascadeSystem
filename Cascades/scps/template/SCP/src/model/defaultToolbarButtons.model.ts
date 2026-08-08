@@ -58,6 +58,46 @@ export const TOOLBAR_BUTTON_BRIDGE_SESSIONS: ToolbarButtonRegistration = {
 };
 
 /**
+ * V-3 · THE TOOLBAR BREAKOUT · Suite 8 Control drawer button ('s8-drawer').
+ *
+ * The LOCALITY FACE (R3): rendered by the custom S8DrawerButton.vue component (componentMap
+ * key 's8-drawer'), NOT the plain fallback button — the face reads the current page's locality
+ * ('S8: <specified>' anor 'S8: Local <localScp>' anor 'S8: <designation>'). Present ONLY when
+ * the current page is a Suite 8 page (IslandWrapper filters it out when currentS8Page === null).
+ * Single click toggles the Suite8ControlDrawer (viridian voice · same DUPP recipe as Sessions).
+ * R1 THE ORDER: leads the toolbar (index-0 among the reserved buttons · left-most on render).
+ */
+export const TOOLBAR_BUTTON_S8_DRAWER: ToolbarButtonRegistration = {
+  id: 's8-drawer',
+  label: 'Suite 8 Control',
+  icon: 'fa-solid fa-diagram-project',
+  kind: 'static',
+  suiteColor: 'viridian',
+  actionQualityName: 'Scs Bridge Open S8 Drawer',
+  enabled: true,
+  position: 'right',
+};
+
+/**
+ * V-3 · THE TOOLBAR BREAKOUT · SCP Management drawer button ('scp-drawer').
+ *
+ * Opens the ScsBridgeScpDrawer (cobalt voice · same DUPP recipe) hosting <ScpManagementPanel
+ * compact /> — the full SCP helm surfaced as a quick-access drawer beside the Sessions popup.
+ * Plain fallback button (no componentName · resolves by id): the click routes through
+ * handleTaskBarButtonClicked in IslandWrapper. R1 THE ORDER: sits directly before Sessions.
+ */
+export const TOOLBAR_BUTTON_SCP_DRAWER: ToolbarButtonRegistration = {
+  id: 'scp-drawer',
+  label: 'SCP Management',
+  icon: 'fa-solid fa-cube',
+  kind: 'static',
+  suiteColor: 'cobalt',
+  actionQualityName: 'Scs Bridge Open Scp Drawer',
+  enabled: true,
+  position: 'right',
+};
+
+/**
  * Install SCP button — AJMI Main Menu mirror anchor (Conference-side it's
  * shown via deriveMainMenuMirrorEntry; bridge-side it's a permanent toolbar
  * presence).
@@ -250,6 +290,11 @@ export const DEFAULT_TOOLBAR_BUTTONS: readonly ToolbarButtonRegistration[] = [
   TOOLBAR_BUTTON_SEND_MESSAGE,
   TOOLBAR_BUTTON_INSTALL_SCP,
   TOOLBAR_BUTTON_LOG_DUMP,
+  // V-3 · THE TOOLBAR BREAKOUT · R1 THE ORDER — S8 Control then SCP Management lead the breakout
+  // group, inserted DIRECTLY BEFORE Session Management (sortToolbarButtonsForRender re-sorts by
+  // RESERVED_TOOLBAR_BUTTON_IDS index anyway; this array order mirrors that render order).
+  TOOLBAR_BUTTON_S8_DRAWER,
+  TOOLBAR_BUTTON_SCP_DRAWER,
   // Session Management onto the Bridge Dock — the Session Manager now LEADS the FINAL DOCK
   // GROUP (Sessions | Shield · Turn-Over A · Sword · Turn-Over B · Merge), riding beside the
   // SCS-Bridge (GitM) controls. The array order IS the render order within a zone.

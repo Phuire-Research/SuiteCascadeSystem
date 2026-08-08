@@ -389,6 +389,12 @@ function logForgeClickPath(e: MouseEvent): void {
 onMounted(() => {
   if (typeof window === 'undefined') return;
 
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — register this page as the current
+  // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
+  // locality (mirrors Suite8HomeLanding). GraphiteScribe has NO version constant of its own, so
+  // we register with the assumed '0.0.0' (the frozen pageVersion field the S8 face does not display).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(graphiteScribeName.value, '0.0.0');
+
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
   console.log('[GraphiteScribeHomeLanding] mounted · build=C376-pointerfix-clickprobe');
 
@@ -478,6 +484,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
+  // the toolbar's S8 face + drawer fall away when leaving this page (mirrors Suite8HomeLanding).
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium (mirror CadmiumLanding onUnmounted).
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);

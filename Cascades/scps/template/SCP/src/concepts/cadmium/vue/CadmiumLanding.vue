@@ -674,6 +674,14 @@ function handleResearchAll(): void {
 onMounted(() => {
   if (typeof window === 'undefined') return;
 
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — register this page as the current
+  // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
+  // locality. Cadmium is NOT the suite8 concept and has NO version constant of its own, so we
+  // register with the assumed '0.0.0' (the field is a frozen pageVersion the S8 face does not
+  // display; the V-5 update detection · not in scope here · would read it). The designation ref
+  // (cadmiumDesignationName) hydrates async — the S8 face's designation-arrival re-arm follows it.
+  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0');
+
   // MD-6 · D-BP-2 · seed the name-filtered Cascade Documents list (the SCP-local read).
   void loadCadmiumWorkingDocs();
 
@@ -911,6 +919,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
+  // the toolbar's S8 face + drawer fall away when leaving Cadmium (mirrors Suite8HomeLanding).
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);

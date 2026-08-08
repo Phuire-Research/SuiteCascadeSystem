@@ -85,6 +85,12 @@ const props = defineProps<{
   // Entourage deems the page sufficiently developed, it flips the page's hard-coded
   // :worked="false" mount to :worked="true" — that one edit IS the sign-off.
   worked: boolean;
+  // V-3 · THE TOOLBAR BREAKOUT · noScpSection — the OPT-OUT NEGATIVE (the boolean-prop trap
+  // law: an ABSENT optional boolean coerces to false, so every existing mount renders §II as
+  // today; only an explicit :no-scp-section="true" suppresses it). The Suite8ControlDrawer
+  // passes true — the toolbar already carries the dedicated SCP Management drawer, so the
+  // Control drawer omits its own §II SCPs drawer to avoid a duplicate SCP helm.
+  noScpSection?: boolean;
 }>();
 
 type SyncLocalityInfo = {
@@ -907,8 +913,11 @@ async function chooseLocality(scpName: string | null): Promise<void> {
     <!-- SECTION II · THE SCP DRAWER — B1b · DSP-2a. The interim roster+Spawn rows are REPLACED
          WHOLESALE by the muxified ScpManagementPanel (compact mode: no W1 footer · no "SCP
          MANAGEMENT →" nav button) behind the SAME expandable SCPs toggle. The panel owns its own
-         /bridge-roster poll + the full helm (Spawn/Focus/Exit/Multiply/Delete + the bars). -->
-    <div class="s8c-section">
+         /bridge-roster poll + the full helm (Spawn/Focus/Exit/Multiply/Delete + the bars).
+         V-3 · THE TOOLBAR BREAKOUT — v-if="!noScpSection": the Suite8ControlDrawer suppresses §II
+         (:no-scp-section="true") since the toolbar carries the dedicated SCP Management drawer; an
+         absent prop coerces false, so every existing mount renders §II exactly as today. -->
+    <div v-if="!noScpSection" class="s8c-section">
       <!-- D-EF-BREAKOUT-b · TOTAL STYLE: the button wears the Bridge's cobalt AT REST. -->
       <button
         class="s8c-drawer-toggle s8c-scp-backing-btn hifi-mono"
