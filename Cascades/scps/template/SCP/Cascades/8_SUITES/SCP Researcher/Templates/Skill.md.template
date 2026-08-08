@@ -1,0 +1,88 @@
+# {{DESIGNATION}} — Skills (SCP Suite 8 · {{MODE}} Mode)
+
+**Suite 8**: {{DESIGNATION}}
+**Configuration**: Conductor (inherited from SCP type)
+**Mode**: {{MODE}}
+**Skills**: SCP-S1 through SCP-S8 (base, inherited from SCP type) + instance-specific skills below
+**Version**: 1.0
+**Created**: {{ORIGIN_DATE}} by Diamond {{ORIGIN_DIAMOND}}
+
+---
+
+## Inherited Base Skills (from SCP type)
+
+This instance inherits the SCP type's base skill register from `Cascades/8_SUITES/SCP Researcher/Skill.md`. The base skills (SCP-S1 through SCP-S8) operate identically here unless explicitly overridden in the **Instance-Specific Skill Overrides** section below.
+
+For the canonical base-skill specifications, see `Cascades/8_SUITES/SCP Researcher/Skill.md`. This instance's `Skill.md` only documents *this instance's* additions and deviations.
+
+---
+
+## Instance-Specific Skill Overrides
+
+(None at clone-init. Future maintenance Diamonds add overrides here as needed for {{MODE}}-mode-specific behavior or instance-specific tooling.)
+
+<!-- §Concept Authoring Extension Slot
+When a newly instantiated SCP Suite 8 needs its first custom Concept,
+dispatch SCP-S13 (Concept Authoring on the Template SCP).
+SCP-S13 is a Researcher-level Skill at
+`Cascades/8_SUITES/SCP Researcher/Skills/ConceptAuthoring.md` —
+not instance-inherited but available for any Diamond that extends this instance.
+The Skill provides the Eight-Phase procedural walk-through (Pre-Authoring Study →
+Name/Scope → 7FG Skeleton → Principles → Bridge Model → Vue → Registry →
+Verification Gate) using the Notification Concept as the Hello World template
+(Copy-Paste-Plus · M63). See Conductor.md Pattern E for the adaptation cascade
+context (Band 5 invokes SCP-S13 when addition_scope = new_concept).
+-->
+
+
+### {{DESIGNATION}}-S1 (placeholder)
+
+When this instance gains its first instance-specific skill, document it here following the SCP-S{N} schema (Aspect / Function / Inputs / Outputs / Concluder).
+
+---
+
+## Mode-Conditioned Defaults Active for This Instance
+
+| Default | Value Applied | Source |
+|---|---|---|
+| Transport | {{TRANSPORT_MODE}} bound to {{TRANSPORT_BINDING}} | SCP type · {{MODE}} mode default |
+| Identity layer | {{IDENTITY_LAYER}} | SCP type · {{MODE}} mode default |
+| Persistence boundary | {{PERSISTENCE_BOUNDARY}} | SCP type · {{MODE}} mode default |
+| Membership scope | {{MEMBERSHIP_LINE}} | SCP type · {{MODE}} mode default |
+
+If any of these change, document the change in the **Instance-Specific Skill Overrides** section above with the rationale and the change date.
+
+---
+
+## Skill Surface (Tools Exposed to MCP)
+
+The MCP tool surface this instance exposes is determined by the runtime's `muxonomyRegistry.generated.ts` (at `{{RUNTIME_PATH}}/src/concepts/muxonomyRegistry.generated.ts`). The default surface is the SCP runtime's full quality set; this instance may declare a *subset* by editing `muxonomyRegistry.generated.ts` post-clone.
+
+Refer to the runtime's `scp/` concept (`{{RUNTIME_PATH}}/src/concepts/scp/qualities/`) for the available qualities. Each quality's `scpToolMetadata` declares whether it surfaces as an MCP tool by default.
+
+---
+
+## Trajectory
+
+| Date | Diamond | Skills Touched | Note |
+|---|---|---|---|
+| {{ORIGIN_DATE}} | {{ORIGIN_DIAMOND}} | SCP-S1, SCP-S2, SCP-S3, SCP-S4 (clone-init) | Instance created · {{MODE}} mode |
+
+---
+
+## Slot Reference (for Diamond authors)
+
+| Slot | Description | Example |
+|---|---|---|
+| `{{DESIGNATION}}` | The user-chosen Suite 8 name | `MicahsPersonal` |
+| `{{MODE}}` | One of `Personal` / `Organizational` / `Project` | `Personal` |
+| `{{ORIGIN_DIAMOND}}` | The Diamond that created this instance | `SCP-4` |
+| `{{ORIGIN_DATE}}` | Creation date in YYYY-MM-DD | `2026-05-12` |
+| `{{TRANSPORT_MODE}}` | `WebSocket` / `Express HTTP` / `stdio` / `hybrid` | `WebSocket + Express HTTP` |
+| `{{TRANSPORT_BINDING}}` | Transport bind target | `localhost:7111` |
+| `{{IDENTITY_LAYER}}` | Mode-default identity layer | `Local user account · personal token.` |
+| `{{PERSISTENCE_BOUNDARY}}` | Mode-default persistence statement | `User-private.` |
+| `{{MEMBERSHIP_LINE}}` | Mode-default membership statement | `Single user.` |
+| `{{RUNTIME_PATH}}` | Path to the runtime tree | `../../scps/template/SCP/` |
+
+After clone, the slot-reference section MAY be removed.

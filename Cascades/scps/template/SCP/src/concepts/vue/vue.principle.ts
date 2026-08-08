@@ -1795,10 +1795,13 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // traversal or sibling resolves outside base → 403.
   // Template Citizenship (BO-2-C · Edit 1.1): re-anchor via resolveBridgeRoot()
   // walk-up instead of the SCS_BRIDGE_ROOT_OVERRIDE ?? cwd env read.
-  // resolveBridgeRoot() returns <scsRoot>/Cascades/Bridge; two '..' ascents yield
-  // <scsRoot>. It still honors SCS_BRIDGE_ROOT_OVERRIDE first-priority (back-compat)
-  // and walks up from a spawned SCP's cwd when the override is absent.
-  const suite8RiScsRoot = path.resolve(resolveBridgeRoot(), '..', '..');
+  // C803 · THE TWO-ROOTS SPLIT CURED (the V-1 audit · the user's Base-Informative ruling):
+  // the MINT writes SCP-LOCAL (process.cwd()/Cascades/8_SUITES) while this reader family
+  // walked UP to the workspace root — installs invisible · Instance reads 404. THE LAW:
+  // the workspace = the BASE (the canonical Suite 8 set · mirrored additively into every
+  // SCP-local tree); the SCP resolves its OWN (Informative) tree — the SessionManager's
+  // standing pattern. The roster + every /s8 reader now serve the SCP-local truth.
+  const suite8RiScsRoot = process.cwd();
   const suite8RiBase = path.resolve(suite8RiScsRoot, 'Cascades', '8_SUITES');
   expressApp.get('/suite8-anchor-spawn/:designation', (req, res) => {
     const designation = req.params.designation;
