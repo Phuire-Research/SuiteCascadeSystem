@@ -1,191 +1,191 @@
 {
- "activeDiamond": "Cascades/Working/DIAMOND-ENTOURAGE-FORGE.md",
- "priorDiamond": "Cascades/Working/DIAMOND-DIAMETRIC-SUITE8-PATTERN.md",
- "activeOnyx": "Cascades/Working/ONYX-TIER-29.md",
- "priorOnyx": "Cascades/Working/ONYX-TIER-27.md",
- "masterDiamond": "Cascades/Working/MACRO-DIAMOND-ASPIRANT.md",
- "macroDiamondAspirant": "Cascades/Working/MACRO-DIAMOND-ASPIRANT.md",
- "suiteColors": {
-  "0": "Base",
-  "1": "Red",
-  "2": "Orange",
-  "3": "Yellow",
-  "4": "Green",
-  "5": "Blue",
-  "6": "Purple",
-  "7": "Fuchsia"
- },
- "cyclePosition": {
-  "cycle": 766,
-  "rotation": 1,
-  "totalRotations": 10,
-  "gate": 0,
-  "forwardPass": "Cycle 248 \u00b7 BRIDGE TURN-OVER FORMALIZED as the SCP's MOST CRITICAL feature (the heartbeat: restart-on-branch-switch). The 043\u2192050 diagnostic epoch CLOSED \u2014 the PROVEN turn-over works in BOTH dev:self + installed SCP (seed fix f06bbbe: nodemon dotfile-ignores when .bridge-restart.json is ABSENT at startup \u2192 SEED it in finalizeScpInstall \u00b7 CLONE_SKIP_FILES excludes it) + clean A\u2194B branch names (BASEANCHOR 7c13fd9: resolveStableRoot anchors b/<name> to the true stable root, no b/b/ compounding \u00b7 user-confirmed 050 stableBranch=master/workingBranch=b/master-<ts>). The Composed Shield-A/Sword-B Macro Diamond OPENED (Cascades/Working/MACRO-DIAMOND-COMPOSED-TURNOVER-WGB.md \u00b7 Full-Suite Magic Shotgun r1-r7 \u00b7 8 Rust names CSCG/ABCS/PCGT/DPBI/STOV/TVOS/SPSA/MBATM \u00b7 substrate ~90% built \u00b7 de-risk order D-T0.5\u2713\u2192D-T1\u2192D-T2/D-T5\u2192D-T3/D-T4\u2192D-T6). PRUNED: the bridge-MCP turn-over routing was the WRONG LAYER (the poppies \u2014 cross-origin browser\u21927111 never lands \u00b7 GAFP same-origin SSR-shadowed \u00b7 currentMuxium null) \u2014 the turn-over is LOCAL (blind huirth + .bridge-restart.json + nodemon). PINNED at D-T1 (the abMode/dispatch audit: the A/B buttons are wired to the SAME triggerHardTurnOver the working sole-fuchsia uses, yet don't fire \u2014 candidates: targetBranch git-switch vs no-arg sole-fuchsia, or currentMuxium on the click page). TRAJECTORY (#676 3-aspect manifold): \u2461 Turn-Over (FORMALIZING \u00b7 HERE) \u2192 \u2460 Pewter Update Suite Color (REQUIRES a turn-over to test the re-tint) \u2192 \u2462 the Update Flow (D-U4/D-U5/D-U6). RC-To-Release \u00b7 NO push. ||| Cycle 247 \u00b7 HiFi FINAL WRAP-UP Macro Diamond (#674) \u2014 Phase 1 Suite Cascade Bar reactivity DONE (6d0a24a \u00b7 user-Lambda PASSED 'Colors are Reactively Changing'). Magic Shotgun salvo S1\u2225S4\u2225S2\u2225S3 grounded it (RDs HIFI-WRAP-R{1,4,2,3}-*.md); Conference decided per-spectrum pattern cascade + Phase-1-bars-first. TOP bar (vue.principle.ts .top-spectrum-bar) SSR-baked hex\u2192var(--color-*, #hex); BOTTOM bar + aspect aliases = Pewter 3-file pass committed. NAMED: SSR-Head Baked-Var Reactivity + the Electron-Main Bundle Concluder (top bar lands in dist/index.cjs+dist/main, NOT vite client \u2192 build:all is the gate). PHASE 2 ENGAGED via Cobalt: per-spectrum Suite Patterns (suitePatternOverride.model mirror + SuitePatternSelection.vue + SVG menu under Suite Colors). WGB Cascades/Working/HIFI-WRAP-MACRO-DIAMOND-WGB.md. After macro \u2192 Bridge Turn-Over + SCP-Update (D-U4/D-U5). RC-To-Release \u00b7 NO push. ||| Cycle 246 \u00b7 WIRE EPOCH COMPLETE (WIRE.1 8f10290 ShatteriteMenu = spawn-origin of engagement + WIRE.2 33e0ff0 constrained in-DOM canvas color picker [suiteColorPickerBands.model.ts + SuiteColorPickerPanel.vue \u00b7 hue band-clamped \u00b7 resolves the off-screen GLSL-presenter escape] \u00b7 the Pewter SCP-pattern wiring hand-off COMPLETE on the Managing Instance side \u00b7 NAMED Tier-0 R5 Self-Utilization on Agent-API-failure \u00b7 all gates green [SCP tsc 0 \u00b7 build:client 0] \u00b7 RC-To-Release \u00b7 NO push \u00b7 TESTING). r0-origin ENGAGED this turn (user directive) to (a) summate the current trajectory IN SCOPE of the previous session [the GITM Stratimuxian-Automata epoch] + (b) execute the OVERDUE TIER-20->21 fork (ONYX-TIER-20=560L / 22 Fuchsia >> 400L / 6 thresholds; the forwardPass has called it since Cycle 235) + (c) enumerate the primed Magic Shotgun salvos so they hold scope. Cycle 245 \u00b7 SCP Researcher know-how REFRESHED (913b259 \u00b7 Full Suite Magic Shotgun via teal-claude \u00b7 Instance.md current-capability-surface + Skills/ProjectKnowHow.md SCP-S18 \u00b7 meta-Suite-8 contract intact \u00b7 D-U4/D-U5 flagged PENDING). Cycle 244 \u00b7 REFOCUSED on the prior immediates (user 2026-06-22). SCP_ORIGIN/Pewter instance takes the HiFi CONTINUED effort (the Macro Diamond per-page color pass + the Suite Cascade Bars pass [bottom brown preserved] + the viridian/cobalt/amethyst/maroon\u2192spectrum aliasing). Relay/validation hand-off written \u2192 SCP_ORIGIN/Cascades/Working/HIFI-MANAGING-INSTANCE-WORK-UPDATE.md (work performed \u00a710b HIFI.1-3 \u00b7 what they must validate \u00b7 TEACHES them the SCP patterns since they are learning them \u00b7 they keep their frame on the HiFi Functional Design Cascade \u00b7 Managing Instance RETAINS authority over the specific SCP patterns). MANAGING INSTANCE STANDING BY on HiFi. THE PRIOR IMMEDIATES (await the user bridge turn-over test): D-U4 (GitM Update \u00b7 SCP-UPD-D-U4-SMOKE-TEST.md) \u00b7 SSP (Suite-8 spawn picker \u00b7 SSP-SMOKE-TEST.md) \u00b7 SAC (anchor control incl SAC.5 drop-anchor \u00b7 SAC-SMOKE-TEST.md) \u00b7 HiFi (color system \u00b7 re-tint from Settings/Pewter page). NEXT after the turnover \u2192 D-U5 (SCP Update Resolution+Apply, gated on the D-U4 user-test). All RC-To-Release \u00b7 NO push. r0-origin opens ONYX-TIER-21 next session.",
-  "cycle238": "the SCP-SOVEREIGN GIT PIVOT (4da5325 \u00b7 Macro Diamond \u00b7 7 waves \u00b7 40 files \u00b7 all gates EXIT 0). User conferred (twice): the gitm observes + turns over ONLY the active SCP's own RED repo, NOT the install root (the SCP was observing the root; activeScpDir had zero setters \u2192 RED dormant). Collapses Cycles 232-233's three-location system. Foundational Salvo S1\u2225S2\u2225S4\u2225S3 (RDs GITM-SOV-*.md) \u2192 S5. NAMED: the SCP-Sovereign Git \u00b7 the No-Embed Safety Constraint (never embed a nested .git in a user's repo \u2014 S4 LIVE-proved gitignore Cascades/ hides the RED .git; the Cascade BLUE repo init was the hole, DROPPED, replaced by gitignore+Cascades/.keep) \u00b7 the activeScpDir Bind (first setter gitmSetActiveScpDir at the 3 launch seams = entry.path) \u00b7 selectGitmOpCwd(deck)=activeScpDir||userCwd (helper; 29 op files swap userCwd\u2192it). Seam B (LOAD-BEARING): .bridge-restart.json write MOVED userCwd\u2192opCwd (the SCP nodemon dir) in both turn-over qualities \u2014 else a switch leaves stale code the failsafe can't catch; client 45s failsafe UNTOUCHED. changesPrimedOnB \u2190 the 'scp' location count (authoritative writer). SCP .gitignore (node_modules) before the RED git add -A (S4: RED over-tracked 12,968 dep files). Waves W1 prune watchers \u00b7 W2 drop BLUE+keep \u00b7 W3 bind+SCP-gitignore \u00b7 W4 centralize+count \u00b7 W5 turn-over/restart \u00b7 W6 schema dormant (zero TQNI). TESTING (URCA LIVE, fresh install: no-gitlink grep 160000\u21920 \u00b7 Seam B PID change \u00b7 45s failsafe \u00b7 badge counts SCP source). NOTE: activeScpDir=the SCP package dir scps/<name>/SCP; RED .git is the parent \u2014 git ops walk up. DEFERRED: cosmetic locations{} schema retirement. TIER-20=446 lines \u2014 r0-origin opens TIER-21.",
-  "cycle237": "the A/B setter badge read 0 forever (Blank-Test-021 \u00b7 no tick on reactive change OR reboot). SPOT-CHECK (user's ask): installed Testing SCP buttons BYTE-IDENTICAL to base \u2014 not stale. Diagnostic Shotgun S4\u2225S7\u2225S6 (logs in frame). C1 (PRIMARY \u00b7 c417fe8): the Cycle-236 dedicated-enumeration gate currentBranch===stableBranch?count:0 returns 0 when no A registered (fresh install stableBranch='' \u2192 'master'==='' false \u2192 0 forever, persists across reboot). THE DECISIVE LIVE TEST: dirtied the root fixture \u2192 gitm.json base.changeCount\u21921 AND top changesPrimedOnB\u21921 on first poll \u2192 the watcher + base\u2192top mirror WORK; only the predicate clamps (S7's frozen-watcher theory REFUTED). FIX: Shield shows count when stableBranch==='' || currentBranch===stableBranch (unregistered \u2192 current branch IS the Origin); Sword correct as-is, untouched. Live 021 hot-patched + client rebuilt. C-LEAD3 (SECONDARY \u00b7 a1e60b5): cascade location tracks the bridge's own Bridge/debug.json \u2192 perpetually dirty \u2192 mostRecentLocation pinned to cascade (badge-SAFE; changesPrimedOnB sources from base only). Scaffold: nested-maintain writes scps/+Bridge/ to Cascades/.gitignore. NAMED the Fresh-Install-Unregistered Gap (any stableBranch/workingBranch-gated feature MUST handle the empty-string case). DEFERRED: the deeper Cascade-Init Gap (021 cascade git tracks ONLY debug.json, workspace untracked \u2014 the init's git add -A didn't capture the workspace). Gates: SCP tsc 0 \u00b7 build:client 0 \u00b7 build:all 0 \u00b7 bridge tsc 0-new. TIER-20=433 lines \u2014 r0-origin opens TIER-21.",
-  "cycle236": "the A\u2194B Mechanism INTENT Refinement \u2014 the SWORD (d6944f0 \u00b7 9 files \u00b7 +590/\u2212130 \u00b7 all gates EXIT 0 \u00b7 dock test 9/9). Macro Diamond: Foundational Salvo (S1\u2225S2\u2225S4\u2225S3 \u00b7 4 RDs GITM-ABREF-*.md) GROUNDED \u2192 4-fork CONFER \u2192 S5 built 5 waves. NAMED the Pristine Baseline Doctrine (Shield=A=Origin held pristine \u00b7 Sword=B=drift vessel \u00b7 user NOT forced to commit A on load). The SWORD (GitmSwordBButton.vue \u00b7 fa-khanda \u00b7 Ochre) is DUAL-MODE: A-dirty=Drift Crystallizer (commit-msg panel \u2192 branch_create{checkout} \u2192 stage_all_and_commit \u2192 register_stable[=deadlock guard, registers A]) composing EXISTING MCP tools (NO new quality); A-clean=PRISMATIC free-hop (conic-gradient ring \u00b7 subsumes the retired Freehop \u00b7 branch_switch). Either/or=two buttons (Shield commits A / Sword spins to B). Dedicated enumeration (no new state): each setter badges changesPrimedOnB only when its branch is checked out (else 0); badges REMOVED from both Turn-Over buttons. A-Clean Turn-Over Gate (UI disable + bridge GUARDSHUNT 'a-dirty-spin-to-b'). Dual-Array Hazard resolved (default ScsBridgeTurnOverButton removed from both arrays + import + map + test). Final dock: Shield \u00b7 Turn-Over A \u00b7 Sword \u00b7 Turn-Over B \u00b7 Merge. Deferred: true per-branch inactive counts + atomic gitmSpinDriftToB quality. TESTING (URCA: dirty-A spin commits to new B + registers A; prismatic on clean-A + hop; Turn-Over A disabled while dirty; only setters badge). TIER-20 >418 lines \u2014 r0-origin opens TIER-21.",
-  "cycle235": "the ALWAYS-ON A/B turn-over button change-count badge (5b09601 \u00b7 4 files \u00b7 +90/\u22124 \u00b7 all 3 gates EXIT 0). Combined Diagnostic+Foundation Shotgun (S4\u2225S7\u2225S6 \u2225 S1\u2225S3 \u00b7 5 RDs GITM-ABBTN-*.md) \u2192 S5. KEY: the buttons are CONTROLLER-INJECTED (getGlobalGitmController), NOT prop-fed \u2014 the salvo's 'is each button prop-fed the count' diagnostic crux DISSOLVED (no relay/prop/TaskBar edit). Count source = changesPrimedOnB (staged+unstaged+conflicts = 'changes between commits') \u00b7 the salvo's '0-when-idle/B-scoped' claim DISPROVEN by live gitm.json (changesPrimedOnB:2==unstagedFiles.length:2 at abMode:idle). GitmTurnOverBButton alone had the badge gated by a showBadge hide-at-0 computed \u2192 REMOVED (always-on) + cloned .change-badge CSS recolored per button (B=ochre \u00b7 A/A=viridian \u00b7 Freehop=cobalt). CORRECTIVE f20033b (Pewter self-critique): the user's first screenshot showed only a clipped corner sliver \u2014 ROOT CAUSE the Chamfer-Clip Trap (the badge sat INSIDE the <button>'s octagonal clip-path; top:-6/right:-6 lands on the beveled corner the chamfer cuts). The 3 build gates stayed GREEN \u2014 Demonstration without Diastration is not a Muxistration Proof; a clip is invisible to tsc \u2192 URCA caught it. Fix mirrors the .btn-tip precedent (move each badge to a sibling under the unclipped *-wrap). LESSON: a build-green gate certifies Demonstration only; any CSS clip/overflow/z-index defect needs the VISUAL Lambda. TESTING (URCA re-smoke: each A/B button shows its FULL rounded badge \u00b7 2 on boot \u00b7 0 clean \u00b7 ticks atomically). TIER THRESHOLD TRIPPED: ONYX-TIER-20 >400 lines \u2014 r0-origin opens TIER-21.",
-  "cycle234": "the dev:self TIER GATE 74e0a68 (Yellow-only/total-project in the non-nested dev repo) + the WINDOW-FAIL fix 0df81b9 (the gitm relay console.log flood STARVED the TSID stdout-idle auto-spawn \u2192 removed the relay log + excluded Cascades/Bridge/ from the projectRoot watcher loop \u2192 WINDOW OPENS \u00b7 user Back In). Diagnostic Shotgun S4\u2225S7\u2225S6 converged; 74e0a68/22194e4 cleared as regressors.",
-  "phase": "Cycles 230-233 closed \u00b7 TIER-20 \u00b7 the GITM BRANCH-FLOW arc (#644) on branch `Testing` (the dev repo was checked out RC-REFINEMENT\u2192Testing mid-segment \u00b7 all commits there \u00b7 NO push \u00b7 RC-REFINEMENT FF's on request). (a) c24c938 the branch-create SILENT-failure fix \u2014 the Blank-Test-020 LOGS proved git switch -c FAILED (index.lock contention) + lastActionResult was OMITTED from the gitm.json snapshot \u2192 invisible; fix = --no-optional-locks lock-guard [Dec B] + errorCode/errorMessage in gitm.json cleared on a real user-tree change [Dec A] + inline-refresh create/switch + the A/B pill. LESSON: the LOGS are the Concluder (a source-only salvo said H1 'branch created'; the runtime reversed it to H5 'never created'). (b) be3019b the baseline ticker badge (Yellow count \u00b7 always when >0). (c) 22194e4 the THREE-LOCATION nested-git system (5 waves \u00b7 17 files): Base=Yellow \u00b7 Cascade=Blue (own history \u00b7 gitignored by Base) \u00b7 SCP=Red (own history \u00b7 self-aware) \u00b7 filtered watchers \u2192 rotating badge (argmax lastChangedAt \u00b7 location-FILL + A/B-BORDER) \u00b7 FRESH-INSTALL-ONLY safety (the dev repo's 680 tracked Cascades/ files PROVEN untouched \u00b7 never rm --cached). Deferred: the activeScpDir setter (SCP/Red dormant until threaded).",
-  "next": "Thread `activeScpDir` into gitm state (the SCP/Red location is dormant \u2014 the arm/dial/recount are ready). Then FRONT B \u2014 the A\u2194B turn-over Lambda (#641-R \u00b7 THE PRIME \u00b7 composes the A/B-border protection signal). SMOKE: dev repo \u2192 the baseline Yellow count (skips nested-git by design) \u00b7 a FRESH blank-dir install \u2192 the Blue/Red rotation. Runbook: Set A \u2192 BSEED B \u2192 edit \u2192 Turn Over B \u2192 [confirm\u2192Merge | TS-error\u219245s failsafe\u2192checkout A\u2192boot\u2192checkout B]. Post: #637 Gitm-proper \u2192 #631 Researcher Page \u2192 #623 user-facing Suite 8.",
-  "lambdaPassedAt": "2026-06-16 \u00b7 the GITM branch-flow arc (#644) \u2014 branch-create silent-failure fix (c24c938 \u00b7 LOGS-proven index.lock) + the baseline ticker badge (be3019b) + the three-location nested-git system (22194e4 \u00b7 5 waves \u00b7 fresh-install-only \u00b7 dev repo proven untouched). On branch Testing \u00b7 gate-green \u00b7 TESTING.",
-  "lastCommit": "22194e4 GITM #644 \u00b7 the three-location nested-git system + rotating color-coded badge (5 waves \u00b7 17 files \u00b7 Base=Yellow/Cascade=Blue/SCP=Red \u00b7 fresh-install-only safety \u00b7 dev repo 680\u2192680 zero delta).",
-  "macro1Status": "FULLY CLOSED \u00b7 Round-Trip Lambda PASS through dual verification (boot + supervision-death)",
-  "macro2Status": "Diamond 1 Client Muxium adoption COMPLETE (Cycle 159) \u00b7 Diamond 2 MCP Ping Pong PENDING (Cycle 160 R4)",
-  "mRulesCodifiedCycle140": [
-   "M89-TRAS",
-   "M90-SVRG-anti",
-   "M91-RDPS-resolved",
-   "M92-MSCM",
-   "M93-TQNI",
-   "M94-TQDR"
-  ],
-  "mRulesProvisionalCycle140": [
-   "LEIE-Lambda-Eye-Insufficiency-Escalation-Cinnabar-Layer-11"
-  ],
-  "eClassCodifiedCycle158-160": [
-   "E8-Reference-Bypass-Hallucination",
-   "E8b-Incomplete-Fix-Execution",
-   "E9-Scoped-CSS-Dynamic-Dispatch-Blindspot",
-   "E10-Concluder-Grep-Without-Runtime",
-   "E11-Partial-Diametric-Pattern",
-   "E12-Trigger-Without-Connection",
-   "E13-Shell-SSR-Non-Hydration-Dead-Event",
-   "E14-Silent-Hydration-Exit-Gate",
-   "E15-Indirection-Chain-Surface-Multiplication"
-  ],
-  "namedPatternsCycle159-160": [
-   "CMUX-Client-Muxium-Universal-eXtension",
-   "MCFF-Muxified-Concepts-Flat-Fold",
-   "CCKE-Controller-Co-located-Key-Export",
-   "GRGL-Global-Registration-Global-Lookup",
-   "SDPS-Separate-Display-Principle-Sync",
-   "MTCD-Multi-Type-Concept-Deck",
-   "GPIM-Global-Principle-Injected-Muxium",
-   "MLSP-Model-Layer-Sort-Pure-Function",
-   "TBBM-TaskBar-Button-Module",
-   "TBZS-TaskBar-Zone-Slot",
-   "IPSO-Internal-Popup-State-Owned",
-   "PPLD-Ping-Pong-Liveness-Diameter"
-  ],
-  "namedPatternsCycle160R4-R16-Diamond2-PPLD-CLOSED": [
-   "FBB-Filesystem-as-Bidirectional-Bridge",
-   "RBJP-Root-Bridge-Junction-Pattern",
-   "LSSD-Logging-as-Stratimux-Discipline",
-   "SF-2-Sticky-Up-Gate-connectionEstablished",
-   "CRJW-Chokidar-Resilient-Json-Watcher",
-   "BOCR-Backfill-On-Connect-Replay",
-   "FSGT-Filesystem-Ground-Truth",
-   "SCRR-Sentinel-Client-Request-Response",
-   "MCP-Correct-RPC-tools-call-envelope",
-   "DSPM-Dev-Self-Path-Manifold-Break-anti",
-   "CIFR-Cycle-Iteration-Forward-without-Re-verification-anti",
-   "DDH-Dissolved-Hazard-via-Architectural-Reframe",
-   "MFC-Manifold-Full-Convergence-TUI-in-devself",
-   "PPLD-Ping-Pong-Liveness-Diameter-CLOSED",
-   "STKU-Sticky-Up-Gate-shared-with-SF-2",
-   "TSPB-Targeted-State-Push-Broadcast",
-   "WPES-WebSocket-Pool-Event-Subscriber",
-   "MFBC-Multi-Field-Backfill-Composition",
-   "CIDS-Connection-Initialization-Distinct-Step"
-  ],
-  "namedPatternsCycle160R4-PPLD-original": [
-   "PPLD-Ping-Pong-Liveness-Diameter",
-   "CMVB-Client-Mediated-Verification-Browser",
-   "MTPP-MCP-Tool-Pong-Protocol",
-   "CMCM-Concept-Mirror-Cross-Process-Module",
-   "CDPO-CORS-Dynamic-Port-Origin",
-   "COAL-CORS-Origin-Allowlist",
-   "CMID-CORS-Middleware-Inline-Declaration",
-   "QMTR-Quality-to-MCP-Tool-Registration",
-   "TPMT-Tool-Programmatic-Muxium-Tool",
-   "SSRS-Single-Source-Reactive-Sync",
-   "CIB3-Controller-Inject-Bind-3-Surface",
-   "RAUS-Reactive-Atomic-Universal-Sync",
-   "PPSO-Ping-Payload-Stratimux-Origin",
-   "PPCT-Ping-Payload-Client-Timestamp",
-   "PPBV-Ping-Payload-Bridge-Version",
-   "SSGN-SCP-to-SCP-Graph-Network",
-   "MENP-MCP-Edge-Network-Protocol",
-   "GMNT-Graph-Mesh-Network-Topology",
-   "BSSM-Bridge-Status-State-Machine",
-   "BSCT-Bridge-Status-Color-Token",
-   "FBB-Filesystem-as-Bidirectional-Bridge",
-   "DDH-Dissolved-Hazard-via-Architectural-Reframe"
-  ],
-  "diamond2PpldReferenceDesigns": {
-   "wave1Foundation": [
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R1-MAROON-CURATION.md (342L)",
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R2-RUST-PROSPECTING.md (571L \u00b7 20 patterns)",
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R4-VIRIDIAN-AUDIT.md (151L \u00b7 11-angle audit)"
-   ],
-   "wave2Architecture": [
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-A-SCS-BRIDGE-BLUEPRINT.md (589L \u00b7 SCS-Bridge side \u00b7 PP-D1+D2)",
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-B-MCP-TOOL-BLUEPRINT.md (369L \u00b7 MCP tool registration \u00b7 PP-D3)",
-    "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-C-CLIENT-3SURFACE-BLUEPRINT.md (459L \u00b7 Client+3-Surface+Timestamp \u00b7 PP-D4+D5 \u00b7 includes Ochre-A Amendment for serverStartupTime)"
-   ],
-   "lockedDecisions2026-05-21": [
-    "Option \u03b2 \u00b7 NEW pongReceipt field (clientId+respondedAt+bridgeVersion) on BridgeJsonShape",
-    "Option \u03b6 \u00b7 Stratimux principle stage fires fetch on bridgeJson arrival \u00b7 CESA connectionEstablished gated",
-    "One-time on startup \u00b7 assume Active given Pong \u00b7 remainder is active session management",
-    "Timestamp Stale-Pong Detection \u00b7 serverStartupTime captured at huirth boot \u00b7 bridgeActive = computed(pongReceipt.respondedAt > serverStartupTime) \u00b7 isFreshPong gate is principle's own idempotency \u00b7 stale pongReceipt from prior session reads as Pending until fresh Ping arrives"
-   ],
-   "ochreAAmendmentForCobaltA": [
-    "scsBridge.type.ts add serverStartupTime: number | null to ScsBridgeState",
-    "NEW setServerStartupTime.quality.huirth.ts (~30L)",
-    "Concept registration includes new Quality",
-    "Huirth boot principle dispatches scsBridgeSetServerStartupTime({ timestamp: Date.now() }) ONCE",
-    "setBridgeJsonRelay payload extended to thread serverStartupTime through Path B broadcast",
-    "Sequentially dependent: types\u2192Quality\u2192relay extension\u2192boot dispatch"
-   ],
-   "userReframe": "Filesystem-as-Bidirectional-Bridge canonical \u00b7 HTTP/MCP uni-directional command \u00b7 WebSocket bidirectional state-return (Cycle 155 BJDP) \u00b7 MCP fetch response = ACK only \u00b7 state flows via Cycle 155 actionExchange when SCS-Bridge writes JSON file change",
-   "dissolvedHazards": [
-    "HAZARD-D-Pong-to-Quality-Bridge (DISSOLVED via Filesystem-as-Bridge architecture)"
-   ],
-   "remainingHazards": [
-    "HAZARD-G-3-Surface-Field-Fragmentation (Ochre-C scope \u00b7 resolution: controller.bridgeActive computed from pongReceipt presence + surface refactor to consume uniform field)"
-   ]
+  "activeDiamond": "DIAMOND-S8-VERSION-PIVOT.md",
+  "priorDiamond": "Cascades/Working/DIAMOND-ENTOURAGE-FORGE.md",
+  "activeOnyx": "Cascades/Working/ONYX-TIER-30.md",
+  "priorOnyx": "Cascades/Working/ONYX-TIER-29.md",
+  "masterDiamond": "Cascades/Working/MACRO-DIAMOND-ASPIRANT.md",
+  "macroDiamondAspirant": "Cascades/Working/MACRO-DIAMOND-ASPIRANT.md",
+  "suiteColors": {
+    "0": "Base",
+    "1": "Red",
+    "2": "Orange",
+    "3": "Yellow",
+    "4": "Green",
+    "5": "Blue",
+    "6": "Purple",
+    "7": "Fuchsia"
   },
-  "macroRelayRefinementStatus": "FULLY CLOSED incl closing arc \u00b7 RM-D1\u00b7D2\u00b7D3\u00b7D4 \u00b7 #596 \u00b7 #592 SCP-Researcher authority \u00b7 RC release path",
-  "cycle239": "PIVOT: GitM SCP-Sovereign epoch CLOSED (4da5325\u21923a0dd4c \u00b7 the gitm observes+counts+lists+turns-over the active SCP own RED git \u00b7 both watchers re-pointed \u00b7 Untracked panel \u00b7 verified live in Blank-Test-030: file change ticks badge+Untracked, branch switch refreshes Branches via gitm.gitdir.event). Branched Testing\u2192RC-To-Release so the SCP Update additions get their own Shield A baseline (b15f445). Conferred the SCP Update System macro + laid out 5 Diamonds (SCP-UPDATE-MACRO-DIAMOND-WGB.md). #648 pinned (Stage/Unstage white-on-white)."
- },
- "recentCycles": {
-  "Cycle 135": "B.7 SCP Container Muxification + triple-regression hotfix",
-  "Cycle 136": "Stratimuxian Scholar v2.0 doctrinal evolution \u00b7 +1908 lines \u00b7 14 Skills \u00b7 M58-M72 taxonomy",
-  "Cycle 137": "STRATIMUX-CASE.md \u00a711 emergent AI comparison authoring \u00b7 970\u21921229 lines \u00b7 13 verbatim phrases \u00b7 4 Differences \u00b7 M76/M77 PROVISIONAL",
-  "Cycle 138": "Browser Tab actualization \u00b7 scpDockHostOpenBrowserTab Quality + browserTab.ts cross-platform engine \u00b7 M76 candidate",
-  "Cycle 139 R1": "Issue #1 chokidar depth hotfix \u00b7 bridgeSessionsDir watcher \u00b7 M77 Chokidar-Depth-Discipline candidate",
-  "Cycle 139 R2 (CPPP Wiring)": "Course Correction actualized \u00b7 scsBridge concept created \u00b7 server+scp templates wired \u00b7 5 PRESERVED promoted Tier-1 \u00b7 scpDockHost+mcpProtocol DELETED \u00b7 0 tsc errors \u00b7 525KB CJS \u00b7 M81-M88 PROVISIONAL"
- },
- "colorSelectionComplete": false,
- "automata": {
-  "state": "concluded",
-  "mode": "loop-dynamic",
-  "currentMD": "DIAMOND-TURNOVER-DISCONNECT-GUARD.md + DIAMOND-SCP-COMMAND-MENU.md (both framed \u00b7 TESTING)",
-  "directive": "CONCLUDED C620: straight-through run C617-C619 placed TDG W2+W3 (six-point guard) + SCM W1-W4 (footer/helm/worktree-rail/typed-delete), all gates green, mirrored x2. NO Concluder Diamond ran per the primer. The user performs Cascades/Working/LAMBDA-TEST-SERIES.md (L0-L6). Diamonds stay framed until the series passes."
- },
- "activeBranch": "MVP-RC1-Suite8s",
- "epochE1Status": "BUILD-OUT COMPLETE (Macro B + Macro A) \u00b7 held before Macro C Cadmium \u00b7 runtime test = post-Epoch Refining Macro",
- "epochE2Status": "CADMIUM EPOCH (E2) COMPLETE \u2014 first real Suite8 \u00b7 4 Macros 4 commits on MVP-RC1-Suite8s: C1 PSCS 3d3b256 (SBST spawn-as-bridge-tool + Active-Crystraline-Suite8 Dock 3-layer append + persistent spawn-on-load + cascade-dir auto-create) \u00b7 C2 SLSA 444e407 (Suite8 Calling label TUI+SCP session managers) \u00b7 C3 PQCSM 4e3278a (Planned-Query + SCS:Aspect directive base-\u00a77 + NCEC-safe per-Suite8 OkMonitor + Diamond-Scale toggle) \u00b7 C4 CNP 483c563 (WebSearch news pipeline + CadmiumBulletin homepage + /cadmium-assets route + PELB browser-links). Engaged via /loop adaptive Epoch build (per-Macro evaluate\u2192architect\u2192Cobalt\u2192Rose\u2192commit; 2 user-added requirements muxified mid-Epoch \u2014 spawn-as-tool into C1, SLSA as new C2). BUILD-OUT \u2014 structurally proven NOT runtime-proven; runtime test = post-Epoch Refining Macro. #610 Cadmium Instance.md research teaching (content) gates the live pipeline. /loop STOPPED. No push. WGB: Cascades/Working/CADMIUM-EPOCH-DIAMOND.md.",
- "cascadePosition": "\u26a1 POST-COMPACTION RE-ENTRY: read Cascades/Working/FORWARD-PASS-COMPACTION.md FIRST (rewritten C287 for the Update Circuit epoch) \u2192 ONYX-TIER-23.md (ACTIVE \u00b7 the TIER-22 Pearl carry + the Diamond progress) \u2192 the WGB \u00a7FULL SCOPE. THE IMMEDIATE (do first on fresh context): the /mcp response-leg UNIFICATION BUILD \u2014 the actions land, the replies time out (exit 28); coordinates + the 3-step spec in the Forward Pass \u00a73. Run 4 staged (63e9f316) for 082 \u2014 the circuit rides -m 15 fire-and-timeout-forward until the unification lands. Onyx TIER-23 ACTIVE (TIER-22/21/20 prior \u00b7 never deleted).",
- "diamonds": [
-  {
-   "slug": "turnover-awareness-overlay",
-   "type": "root",
-   "path": "Cascades/Working/DIAMOND-turnover-awareness-overlay.md",
-   "onyx": "Cascades/Working/ONYX-TIER-23.md"
+  "cyclePosition": {
+    "cycle": 766,
+    "rotation": 1,
+    "totalRotations": 10,
+    "gate": 0,
+    "forwardPass": "Cycle 248 \u00b7 BRIDGE TURN-OVER FORMALIZED as the SCP's MOST CRITICAL feature (the heartbeat: restart-on-branch-switch). The 043\u2192050 diagnostic epoch CLOSED \u2014 the PROVEN turn-over works in BOTH dev:self + installed SCP (seed fix f06bbbe: nodemon dotfile-ignores when .bridge-restart.json is ABSENT at startup \u2192 SEED it in finalizeScpInstall \u00b7 CLONE_SKIP_FILES excludes it) + clean A\u2194B branch names (BASEANCHOR 7c13fd9: resolveStableRoot anchors b/<name> to the true stable root, no b/b/ compounding \u00b7 user-confirmed 050 stableBranch=master/workingBranch=b/master-<ts>). The Composed Shield-A/Sword-B Macro Diamond OPENED (Cascades/Working/MACRO-DIAMOND-COMPOSED-TURNOVER-WGB.md \u00b7 Full-Suite Magic Shotgun r1-r7 \u00b7 8 Rust names CSCG/ABCS/PCGT/DPBI/STOV/TVOS/SPSA/MBATM \u00b7 substrate ~90% built \u00b7 de-risk order D-T0.5\u2713\u2192D-T1\u2192D-T2/D-T5\u2192D-T3/D-T4\u2192D-T6). PRUNED: the bridge-MCP turn-over routing was the WRONG LAYER (the poppies \u2014 cross-origin browser\u21927111 never lands \u00b7 GAFP same-origin SSR-shadowed \u00b7 currentMuxium null) \u2014 the turn-over is LOCAL (blind huirth + .bridge-restart.json + nodemon). PINNED at D-T1 (the abMode/dispatch audit: the A/B buttons are wired to the SAME triggerHardTurnOver the working sole-fuchsia uses, yet don't fire \u2014 candidates: targetBranch git-switch vs no-arg sole-fuchsia, or currentMuxium on the click page). TRAJECTORY (#676 3-aspect manifold): \u2461 Turn-Over (FORMALIZING \u00b7 HERE) \u2192 \u2460 Pewter Update Suite Color (REQUIRES a turn-over to test the re-tint) \u2192 \u2462 the Update Flow (D-U4/D-U5/D-U6). RC-To-Release \u00b7 NO push. ||| Cycle 247 \u00b7 HiFi FINAL WRAP-UP Macro Diamond (#674) \u2014 Phase 1 Suite Cascade Bar reactivity DONE (6d0a24a \u00b7 user-Lambda PASSED 'Colors are Reactively Changing'). Magic Shotgun salvo S1\u2225S4\u2225S2\u2225S3 grounded it (RDs HIFI-WRAP-R{1,4,2,3}-*.md); Conference decided per-spectrum pattern cascade + Phase-1-bars-first. TOP bar (vue.principle.ts .top-spectrum-bar) SSR-baked hex\u2192var(--color-*, #hex); BOTTOM bar + aspect aliases = Pewter 3-file pass committed. NAMED: SSR-Head Baked-Var Reactivity + the Electron-Main Bundle Concluder (top bar lands in dist/index.cjs+dist/main, NOT vite client \u2192 build:all is the gate). PHASE 2 ENGAGED via Cobalt: per-spectrum Suite Patterns (suitePatternOverride.model mirror + SuitePatternSelection.vue + SVG menu under Suite Colors). WGB Cascades/Working/HIFI-WRAP-MACRO-DIAMOND-WGB.md. After macro \u2192 Bridge Turn-Over + SCP-Update (D-U4/D-U5). RC-To-Release \u00b7 NO push. ||| Cycle 246 \u00b7 WIRE EPOCH COMPLETE (WIRE.1 8f10290 ShatteriteMenu = spawn-origin of engagement + WIRE.2 33e0ff0 constrained in-DOM canvas color picker [suiteColorPickerBands.model.ts + SuiteColorPickerPanel.vue \u00b7 hue band-clamped \u00b7 resolves the off-screen GLSL-presenter escape] \u00b7 the Pewter SCP-pattern wiring hand-off COMPLETE on the Managing Instance side \u00b7 NAMED Tier-0 R5 Self-Utilization on Agent-API-failure \u00b7 all gates green [SCP tsc 0 \u00b7 build:client 0] \u00b7 RC-To-Release \u00b7 NO push \u00b7 TESTING). r0-origin ENGAGED this turn (user directive) to (a) summate the current trajectory IN SCOPE of the previous session [the GITM Stratimuxian-Automata epoch] + (b) execute the OVERDUE TIER-20->21 fork (ONYX-TIER-20=560L / 22 Fuchsia >> 400L / 6 thresholds; the forwardPass has called it since Cycle 235) + (c) enumerate the primed Magic Shotgun salvos so they hold scope. Cycle 245 \u00b7 SCP Researcher know-how REFRESHED (913b259 \u00b7 Full Suite Magic Shotgun via teal-claude \u00b7 Instance.md current-capability-surface + Skills/ProjectKnowHow.md SCP-S18 \u00b7 meta-Suite-8 contract intact \u00b7 D-U4/D-U5 flagged PENDING). Cycle 244 \u00b7 REFOCUSED on the prior immediates (user 2026-06-22). SCP_ORIGIN/Pewter instance takes the HiFi CONTINUED effort (the Macro Diamond per-page color pass + the Suite Cascade Bars pass [bottom brown preserved] + the viridian/cobalt/amethyst/maroon\u2192spectrum aliasing). Relay/validation hand-off written \u2192 SCP_ORIGIN/Cascades/Working/HIFI-MANAGING-INSTANCE-WORK-UPDATE.md (work performed \u00a710b HIFI.1-3 \u00b7 what they must validate \u00b7 TEACHES them the SCP patterns since they are learning them \u00b7 they keep their frame on the HiFi Functional Design Cascade \u00b7 Managing Instance RETAINS authority over the specific SCP patterns). MANAGING INSTANCE STANDING BY on HiFi. THE PRIOR IMMEDIATES (await the user bridge turn-over test): D-U4 (GitM Update \u00b7 SCP-UPD-D-U4-SMOKE-TEST.md) \u00b7 SSP (Suite-8 spawn picker \u00b7 SSP-SMOKE-TEST.md) \u00b7 SAC (anchor control incl SAC.5 drop-anchor \u00b7 SAC-SMOKE-TEST.md) \u00b7 HiFi (color system \u00b7 re-tint from Settings/Pewter page). NEXT after the turnover \u2192 D-U5 (SCP Update Resolution+Apply, gated on the D-U4 user-test). All RC-To-Release \u00b7 NO push. r0-origin opens ONYX-TIER-21 next session.",
+    "cycle238": "the SCP-SOVEREIGN GIT PIVOT (4da5325 \u00b7 Macro Diamond \u00b7 7 waves \u00b7 40 files \u00b7 all gates EXIT 0). User conferred (twice): the gitm observes + turns over ONLY the active SCP's own RED repo, NOT the install root (the SCP was observing the root; activeScpDir had zero setters \u2192 RED dormant). Collapses Cycles 232-233's three-location system. Foundational Salvo S1\u2225S2\u2225S4\u2225S3 (RDs GITM-SOV-*.md) \u2192 S5. NAMED: the SCP-Sovereign Git \u00b7 the No-Embed Safety Constraint (never embed a nested .git in a user's repo \u2014 S4 LIVE-proved gitignore Cascades/ hides the RED .git; the Cascade BLUE repo init was the hole, DROPPED, replaced by gitignore+Cascades/.keep) \u00b7 the activeScpDir Bind (first setter gitmSetActiveScpDir at the 3 launch seams = entry.path) \u00b7 selectGitmOpCwd(deck)=activeScpDir||userCwd (helper; 29 op files swap userCwd\u2192it). Seam B (LOAD-BEARING): .bridge-restart.json write MOVED userCwd\u2192opCwd (the SCP nodemon dir) in both turn-over qualities \u2014 else a switch leaves stale code the failsafe can't catch; client 45s failsafe UNTOUCHED. changesPrimedOnB \u2190 the 'scp' location count (authoritative writer). SCP .gitignore (node_modules) before the RED git add -A (S4: RED over-tracked 12,968 dep files). Waves W1 prune watchers \u00b7 W2 drop BLUE+keep \u00b7 W3 bind+SCP-gitignore \u00b7 W4 centralize+count \u00b7 W5 turn-over/restart \u00b7 W6 schema dormant (zero TQNI). TESTING (URCA LIVE, fresh install: no-gitlink grep 160000\u21920 \u00b7 Seam B PID change \u00b7 45s failsafe \u00b7 badge counts SCP source). NOTE: activeScpDir=the SCP package dir scps/<name>/SCP; RED .git is the parent \u2014 git ops walk up. DEFERRED: cosmetic locations{} schema retirement. TIER-20=446 lines \u2014 r0-origin opens TIER-21.",
+    "cycle237": "the A/B setter badge read 0 forever (Blank-Test-021 \u00b7 no tick on reactive change OR reboot). SPOT-CHECK (user's ask): installed Testing SCP buttons BYTE-IDENTICAL to base \u2014 not stale. Diagnostic Shotgun S4\u2225S7\u2225S6 (logs in frame). C1 (PRIMARY \u00b7 c417fe8): the Cycle-236 dedicated-enumeration gate currentBranch===stableBranch?count:0 returns 0 when no A registered (fresh install stableBranch='' \u2192 'master'==='' false \u2192 0 forever, persists across reboot). THE DECISIVE LIVE TEST: dirtied the root fixture \u2192 gitm.json base.changeCount\u21921 AND top changesPrimedOnB\u21921 on first poll \u2192 the watcher + base\u2192top mirror WORK; only the predicate clamps (S7's frozen-watcher theory REFUTED). FIX: Shield shows count when stableBranch==='' || currentBranch===stableBranch (unregistered \u2192 current branch IS the Origin); Sword correct as-is, untouched. Live 021 hot-patched + client rebuilt. C-LEAD3 (SECONDARY \u00b7 a1e60b5): cascade location tracks the bridge's own Bridge/debug.json \u2192 perpetually dirty \u2192 mostRecentLocation pinned to cascade (badge-SAFE; changesPrimedOnB sources from base only). Scaffold: nested-maintain writes scps/+Bridge/ to Cascades/.gitignore. NAMED the Fresh-Install-Unregistered Gap (any stableBranch/workingBranch-gated feature MUST handle the empty-string case). DEFERRED: the deeper Cascade-Init Gap (021 cascade git tracks ONLY debug.json, workspace untracked \u2014 the init's git add -A didn't capture the workspace). Gates: SCP tsc 0 \u00b7 build:client 0 \u00b7 build:all 0 \u00b7 bridge tsc 0-new. TIER-20=433 lines \u2014 r0-origin opens TIER-21.",
+    "cycle236": "the A\u2194B Mechanism INTENT Refinement \u2014 the SWORD (d6944f0 \u00b7 9 files \u00b7 +590/\u2212130 \u00b7 all gates EXIT 0 \u00b7 dock test 9/9). Macro Diamond: Foundational Salvo (S1\u2225S2\u2225S4\u2225S3 \u00b7 4 RDs GITM-ABREF-*.md) GROUNDED \u2192 4-fork CONFER \u2192 S5 built 5 waves. NAMED the Pristine Baseline Doctrine (Shield=A=Origin held pristine \u00b7 Sword=B=drift vessel \u00b7 user NOT forced to commit A on load). The SWORD (GitmSwordBButton.vue \u00b7 fa-khanda \u00b7 Ochre) is DUAL-MODE: A-dirty=Drift Crystallizer (commit-msg panel \u2192 branch_create{checkout} \u2192 stage_all_and_commit \u2192 register_stable[=deadlock guard, registers A]) composing EXISTING MCP tools (NO new quality); A-clean=PRISMATIC free-hop (conic-gradient ring \u00b7 subsumes the retired Freehop \u00b7 branch_switch). Either/or=two buttons (Shield commits A / Sword spins to B). Dedicated enumeration (no new state): each setter badges changesPrimedOnB only when its branch is checked out (else 0); badges REMOVED from both Turn-Over buttons. A-Clean Turn-Over Gate (UI disable + bridge GUARDSHUNT 'a-dirty-spin-to-b'). Dual-Array Hazard resolved (default ScsBridgeTurnOverButton removed from both arrays + import + map + test). Final dock: Shield \u00b7 Turn-Over A \u00b7 Sword \u00b7 Turn-Over B \u00b7 Merge. Deferred: true per-branch inactive counts + atomic gitmSpinDriftToB quality. TESTING (URCA: dirty-A spin commits to new B + registers A; prismatic on clean-A + hop; Turn-Over A disabled while dirty; only setters badge). TIER-20 >418 lines \u2014 r0-origin opens TIER-21.",
+    "cycle235": "the ALWAYS-ON A/B turn-over button change-count badge (5b09601 \u00b7 4 files \u00b7 +90/\u22124 \u00b7 all 3 gates EXIT 0). Combined Diagnostic+Foundation Shotgun (S4\u2225S7\u2225S6 \u2225 S1\u2225S3 \u00b7 5 RDs GITM-ABBTN-*.md) \u2192 S5. KEY: the buttons are CONTROLLER-INJECTED (getGlobalGitmController), NOT prop-fed \u2014 the salvo's 'is each button prop-fed the count' diagnostic crux DISSOLVED (no relay/prop/TaskBar edit). Count source = changesPrimedOnB (staged+unstaged+conflicts = 'changes between commits') \u00b7 the salvo's '0-when-idle/B-scoped' claim DISPROVEN by live gitm.json (changesPrimedOnB:2==unstagedFiles.length:2 at abMode:idle). GitmTurnOverBButton alone had the badge gated by a showBadge hide-at-0 computed \u2192 REMOVED (always-on) + cloned .change-badge CSS recolored per button (B=ochre \u00b7 A/A=viridian \u00b7 Freehop=cobalt). CORRECTIVE f20033b (Pewter self-critique): the user's first screenshot showed only a clipped corner sliver \u2014 ROOT CAUSE the Chamfer-Clip Trap (the badge sat INSIDE the <button>'s octagonal clip-path; top:-6/right:-6 lands on the beveled corner the chamfer cuts). The 3 build gates stayed GREEN \u2014 Demonstration without Diastration is not a Muxistration Proof; a clip is invisible to tsc \u2192 URCA caught it. Fix mirrors the .btn-tip precedent (move each badge to a sibling under the unclipped *-wrap). LESSON: a build-green gate certifies Demonstration only; any CSS clip/overflow/z-index defect needs the VISUAL Lambda. TESTING (URCA re-smoke: each A/B button shows its FULL rounded badge \u00b7 2 on boot \u00b7 0 clean \u00b7 ticks atomically). TIER THRESHOLD TRIPPED: ONYX-TIER-20 >400 lines \u2014 r0-origin opens TIER-21.",
+    "cycle234": "the dev:self TIER GATE 74e0a68 (Yellow-only/total-project in the non-nested dev repo) + the WINDOW-FAIL fix 0df81b9 (the gitm relay console.log flood STARVED the TSID stdout-idle auto-spawn \u2192 removed the relay log + excluded Cascades/Bridge/ from the projectRoot watcher loop \u2192 WINDOW OPENS \u00b7 user Back In). Diagnostic Shotgun S4\u2225S7\u2225S6 converged; 74e0a68/22194e4 cleared as regressors.",
+    "phase": "Cycles 230-233 closed \u00b7 TIER-20 \u00b7 the GITM BRANCH-FLOW arc (#644) on branch `Testing` (the dev repo was checked out RC-REFINEMENT\u2192Testing mid-segment \u00b7 all commits there \u00b7 NO push \u00b7 RC-REFINEMENT FF's on request). (a) c24c938 the branch-create SILENT-failure fix \u2014 the Blank-Test-020 LOGS proved git switch -c FAILED (index.lock contention) + lastActionResult was OMITTED from the gitm.json snapshot \u2192 invisible; fix = --no-optional-locks lock-guard [Dec B] + errorCode/errorMessage in gitm.json cleared on a real user-tree change [Dec A] + inline-refresh create/switch + the A/B pill. LESSON: the LOGS are the Concluder (a source-only salvo said H1 'branch created'; the runtime reversed it to H5 'never created'). (b) be3019b the baseline ticker badge (Yellow count \u00b7 always when >0). (c) 22194e4 the THREE-LOCATION nested-git system (5 waves \u00b7 17 files): Base=Yellow \u00b7 Cascade=Blue (own history \u00b7 gitignored by Base) \u00b7 SCP=Red (own history \u00b7 self-aware) \u00b7 filtered watchers \u2192 rotating badge (argmax lastChangedAt \u00b7 location-FILL + A/B-BORDER) \u00b7 FRESH-INSTALL-ONLY safety (the dev repo's 680 tracked Cascades/ files PROVEN untouched \u00b7 never rm --cached). Deferred: the activeScpDir setter (SCP/Red dormant until threaded).",
+    "next": "Thread `activeScpDir` into gitm state (the SCP/Red location is dormant \u2014 the arm/dial/recount are ready). Then FRONT B \u2014 the A\u2194B turn-over Lambda (#641-R \u00b7 THE PRIME \u00b7 composes the A/B-border protection signal). SMOKE: dev repo \u2192 the baseline Yellow count (skips nested-git by design) \u00b7 a FRESH blank-dir install \u2192 the Blue/Red rotation. Runbook: Set A \u2192 BSEED B \u2192 edit \u2192 Turn Over B \u2192 [confirm\u2192Merge | TS-error\u219245s failsafe\u2192checkout A\u2192boot\u2192checkout B]. Post: #637 Gitm-proper \u2192 #631 Researcher Page \u2192 #623 user-facing Suite 8.",
+    "lambdaPassedAt": "2026-06-16 \u00b7 the GITM branch-flow arc (#644) \u2014 branch-create silent-failure fix (c24c938 \u00b7 LOGS-proven index.lock) + the baseline ticker badge (be3019b) + the three-location nested-git system (22194e4 \u00b7 5 waves \u00b7 fresh-install-only \u00b7 dev repo proven untouched). On branch Testing \u00b7 gate-green \u00b7 TESTING.",
+    "lastCommit": "22194e4 GITM #644 \u00b7 the three-location nested-git system + rotating color-coded badge (5 waves \u00b7 17 files \u00b7 Base=Yellow/Cascade=Blue/SCP=Red \u00b7 fresh-install-only safety \u00b7 dev repo 680\u2192680 zero delta).",
+    "macro1Status": "FULLY CLOSED \u00b7 Round-Trip Lambda PASS through dual verification (boot + supervision-death)",
+    "macro2Status": "Diamond 1 Client Muxium adoption COMPLETE (Cycle 159) \u00b7 Diamond 2 MCP Ping Pong PENDING (Cycle 160 R4)",
+    "mRulesCodifiedCycle140": [
+      "M89-TRAS",
+      "M90-SVRG-anti",
+      "M91-RDPS-resolved",
+      "M92-MSCM",
+      "M93-TQNI",
+      "M94-TQDR"
+    ],
+    "mRulesProvisionalCycle140": [
+      "LEIE-Lambda-Eye-Insufficiency-Escalation-Cinnabar-Layer-11"
+    ],
+    "eClassCodifiedCycle158-160": [
+      "E8-Reference-Bypass-Hallucination",
+      "E8b-Incomplete-Fix-Execution",
+      "E9-Scoped-CSS-Dynamic-Dispatch-Blindspot",
+      "E10-Concluder-Grep-Without-Runtime",
+      "E11-Partial-Diametric-Pattern",
+      "E12-Trigger-Without-Connection",
+      "E13-Shell-SSR-Non-Hydration-Dead-Event",
+      "E14-Silent-Hydration-Exit-Gate",
+      "E15-Indirection-Chain-Surface-Multiplication"
+    ],
+    "namedPatternsCycle159-160": [
+      "CMUX-Client-Muxium-Universal-eXtension",
+      "MCFF-Muxified-Concepts-Flat-Fold",
+      "CCKE-Controller-Co-located-Key-Export",
+      "GRGL-Global-Registration-Global-Lookup",
+      "SDPS-Separate-Display-Principle-Sync",
+      "MTCD-Multi-Type-Concept-Deck",
+      "GPIM-Global-Principle-Injected-Muxium",
+      "MLSP-Model-Layer-Sort-Pure-Function",
+      "TBBM-TaskBar-Button-Module",
+      "TBZS-TaskBar-Zone-Slot",
+      "IPSO-Internal-Popup-State-Owned",
+      "PPLD-Ping-Pong-Liveness-Diameter"
+    ],
+    "namedPatternsCycle160R4-R16-Diamond2-PPLD-CLOSED": [
+      "FBB-Filesystem-as-Bidirectional-Bridge",
+      "RBJP-Root-Bridge-Junction-Pattern",
+      "LSSD-Logging-as-Stratimux-Discipline",
+      "SF-2-Sticky-Up-Gate-connectionEstablished",
+      "CRJW-Chokidar-Resilient-Json-Watcher",
+      "BOCR-Backfill-On-Connect-Replay",
+      "FSGT-Filesystem-Ground-Truth",
+      "SCRR-Sentinel-Client-Request-Response",
+      "MCP-Correct-RPC-tools-call-envelope",
+      "DSPM-Dev-Self-Path-Manifold-Break-anti",
+      "CIFR-Cycle-Iteration-Forward-without-Re-verification-anti",
+      "DDH-Dissolved-Hazard-via-Architectural-Reframe",
+      "MFC-Manifold-Full-Convergence-TUI-in-devself",
+      "PPLD-Ping-Pong-Liveness-Diameter-CLOSED",
+      "STKU-Sticky-Up-Gate-shared-with-SF-2",
+      "TSPB-Targeted-State-Push-Broadcast",
+      "WPES-WebSocket-Pool-Event-Subscriber",
+      "MFBC-Multi-Field-Backfill-Composition",
+      "CIDS-Connection-Initialization-Distinct-Step"
+    ],
+    "namedPatternsCycle160R4-PPLD-original": [
+      "PPLD-Ping-Pong-Liveness-Diameter",
+      "CMVB-Client-Mediated-Verification-Browser",
+      "MTPP-MCP-Tool-Pong-Protocol",
+      "CMCM-Concept-Mirror-Cross-Process-Module",
+      "CDPO-CORS-Dynamic-Port-Origin",
+      "COAL-CORS-Origin-Allowlist",
+      "CMID-CORS-Middleware-Inline-Declaration",
+      "QMTR-Quality-to-MCP-Tool-Registration",
+      "TPMT-Tool-Programmatic-Muxium-Tool",
+      "SSRS-Single-Source-Reactive-Sync",
+      "CIB3-Controller-Inject-Bind-3-Surface",
+      "RAUS-Reactive-Atomic-Universal-Sync",
+      "PPSO-Ping-Payload-Stratimux-Origin",
+      "PPCT-Ping-Payload-Client-Timestamp",
+      "PPBV-Ping-Payload-Bridge-Version",
+      "SSGN-SCP-to-SCP-Graph-Network",
+      "MENP-MCP-Edge-Network-Protocol",
+      "GMNT-Graph-Mesh-Network-Topology",
+      "BSSM-Bridge-Status-State-Machine",
+      "BSCT-Bridge-Status-Color-Token",
+      "FBB-Filesystem-as-Bidirectional-Bridge",
+      "DDH-Dissolved-Hazard-via-Architectural-Reframe"
+    ],
+    "diamond2PpldReferenceDesigns": {
+      "wave1Foundation": [
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R1-MAROON-CURATION.md (342L)",
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R2-RUST-PROSPECTING.md (571L \u00b7 20 patterns)",
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE1-R4-VIRIDIAN-AUDIT.md (151L \u00b7 11-angle audit)"
+      ],
+      "wave2Architecture": [
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-A-SCS-BRIDGE-BLUEPRINT.md (589L \u00b7 SCS-Bridge side \u00b7 PP-D1+D2)",
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-B-MCP-TOOL-BLUEPRINT.md (369L \u00b7 MCP tool registration \u00b7 PP-D3)",
+        "Cascades/Working/PPLD-DIAMOND-2-WAVE2-OCHRE-C-CLIENT-3SURFACE-BLUEPRINT.md (459L \u00b7 Client+3-Surface+Timestamp \u00b7 PP-D4+D5 \u00b7 includes Ochre-A Amendment for serverStartupTime)"
+      ],
+      "lockedDecisions2026-05-21": [
+        "Option \u03b2 \u00b7 NEW pongReceipt field (clientId+respondedAt+bridgeVersion) on BridgeJsonShape",
+        "Option \u03b6 \u00b7 Stratimux principle stage fires fetch on bridgeJson arrival \u00b7 CESA connectionEstablished gated",
+        "One-time on startup \u00b7 assume Active given Pong \u00b7 remainder is active session management",
+        "Timestamp Stale-Pong Detection \u00b7 serverStartupTime captured at huirth boot \u00b7 bridgeActive = computed(pongReceipt.respondedAt > serverStartupTime) \u00b7 isFreshPong gate is principle's own idempotency \u00b7 stale pongReceipt from prior session reads as Pending until fresh Ping arrives"
+      ],
+      "ochreAAmendmentForCobaltA": [
+        "scsBridge.type.ts add serverStartupTime: number | null to ScsBridgeState",
+        "NEW setServerStartupTime.quality.huirth.ts (~30L)",
+        "Concept registration includes new Quality",
+        "Huirth boot principle dispatches scsBridgeSetServerStartupTime({ timestamp: Date.now() }) ONCE",
+        "setBridgeJsonRelay payload extended to thread serverStartupTime through Path B broadcast",
+        "Sequentially dependent: types\u2192Quality\u2192relay extension\u2192boot dispatch"
+      ],
+      "userReframe": "Filesystem-as-Bidirectional-Bridge canonical \u00b7 HTTP/MCP uni-directional command \u00b7 WebSocket bidirectional state-return (Cycle 155 BJDP) \u00b7 MCP fetch response = ACK only \u00b7 state flows via Cycle 155 actionExchange when SCS-Bridge writes JSON file change",
+      "dissolvedHazards": [
+        "HAZARD-D-Pong-to-Quality-Bridge (DISSOLVED via Filesystem-as-Bridge architecture)"
+      ],
+      "remainingHazards": [
+        "HAZARD-G-3-Surface-Field-Fragmentation (Ochre-C scope \u00b7 resolution: controller.bridgeActive computed from pongReceipt presence + surface refactor to consume uniform field)"
+      ]
+    },
+    "macroRelayRefinementStatus": "FULLY CLOSED incl closing arc \u00b7 RM-D1\u00b7D2\u00b7D3\u00b7D4 \u00b7 #596 \u00b7 #592 SCP-Researcher authority \u00b7 RC release path",
+    "cycle239": "PIVOT: GitM SCP-Sovereign epoch CLOSED (4da5325\u21923a0dd4c \u00b7 the gitm observes+counts+lists+turns-over the active SCP own RED git \u00b7 both watchers re-pointed \u00b7 Untracked panel \u00b7 verified live in Blank-Test-030: file change ticks badge+Untracked, branch switch refreshes Branches via gitm.gitdir.event). Branched Testing\u2192RC-To-Release so the SCP Update additions get their own Shield A baseline (b15f445). Conferred the SCP Update System macro + laid out 5 Diamonds (SCP-UPDATE-MACRO-DIAMOND-WGB.md). #648 pinned (Stage/Unstage white-on-white)."
   },
-  {
-   "slug": "gitm-developer-epoch",
-   "type": "root",
-   "path": "Cascades/Working/DIAMOND-GITM-DEVELOPER-EPOCH.md",
-   "onyx": "Cascades/Working/ONYX-TIER-23.md"
+  "recentCycles": {
+    "Cycle 135": "B.7 SCP Container Muxification + triple-regression hotfix",
+    "Cycle 136": "Stratimuxian Scholar v2.0 doctrinal evolution \u00b7 +1908 lines \u00b7 14 Skills \u00b7 M58-M72 taxonomy",
+    "Cycle 137": "STRATIMUX-CASE.md \u00a711 emergent AI comparison authoring \u00b7 970\u21921229 lines \u00b7 13 verbatim phrases \u00b7 4 Differences \u00b7 M76/M77 PROVISIONAL",
+    "Cycle 138": "Browser Tab actualization \u00b7 scpDockHostOpenBrowserTab Quality + browserTab.ts cross-platform engine \u00b7 M76 candidate",
+    "Cycle 139 R1": "Issue #1 chokidar depth hotfix \u00b7 bridgeSessionsDir watcher \u00b7 M77 Chokidar-Depth-Discipline candidate",
+    "Cycle 139 R2 (CPPP Wiring)": "Course Correction actualized \u00b7 scsBridge concept created \u00b7 server+scp templates wired \u00b7 5 PRESERVED promoted Tier-1 \u00b7 scpDockHost+mcpProtocol DELETED \u00b7 0 tsc errors \u00b7 525KB CJS \u00b7 M81-M88 PROVISIONAL"
   },
-  {
-   "slug": "scp-actualization-epoch",
-   "type": "root",
-   "path": "Cascades/Working/DIAMOND-SCP-ACTUALIZATION-EPOCH.md",
-   "onyx": "Cascades/Working/ONYX-TIER-23.md"
-  }
- ]
+  "colorSelectionComplete": false,
+  "automata": {
+    "state": "concluded",
+    "mode": "loop-dynamic",
+    "currentMD": "DIAMOND-TURNOVER-DISCONNECT-GUARD.md + DIAMOND-SCP-COMMAND-MENU.md (both framed \u00b7 TESTING)",
+    "directive": "CONCLUDED C620: straight-through run C617-C619 placed TDG W2+W3 (six-point guard) + SCM W1-W4 (footer/helm/worktree-rail/typed-delete), all gates green, mirrored x2. NO Concluder Diamond ran per the primer. The user performs Cascades/Working/LAMBDA-TEST-SERIES.md (L0-L6). Diamonds stay framed until the series passes."
+  },
+  "activeBranch": "MVP-RC1-Suite8s",
+  "epochE1Status": "BUILD-OUT COMPLETE (Macro B + Macro A) \u00b7 held before Macro C Cadmium \u00b7 runtime test = post-Epoch Refining Macro",
+  "epochE2Status": "CADMIUM EPOCH (E2) COMPLETE \u2014 first real Suite8 \u00b7 4 Macros 4 commits on MVP-RC1-Suite8s: C1 PSCS 3d3b256 (SBST spawn-as-bridge-tool + Active-Crystraline-Suite8 Dock 3-layer append + persistent spawn-on-load + cascade-dir auto-create) \u00b7 C2 SLSA 444e407 (Suite8 Calling label TUI+SCP session managers) \u00b7 C3 PQCSM 4e3278a (Planned-Query + SCS:Aspect directive base-\u00a77 + NCEC-safe per-Suite8 OkMonitor + Diamond-Scale toggle) \u00b7 C4 CNP 483c563 (WebSearch news pipeline + CadmiumBulletin homepage + /cadmium-assets route + PELB browser-links). Engaged via /loop adaptive Epoch build (per-Macro evaluate\u2192architect\u2192Cobalt\u2192Rose\u2192commit; 2 user-added requirements muxified mid-Epoch \u2014 spawn-as-tool into C1, SLSA as new C2). BUILD-OUT \u2014 structurally proven NOT runtime-proven; runtime test = post-Epoch Refining Macro. #610 Cadmium Instance.md research teaching (content) gates the live pipeline. /loop STOPPED. No push. WGB: Cascades/Working/CADMIUM-EPOCH-DIAMOND.md.",
+  "cascadePosition": "\u26a1 POST-COMPACTION RE-ENTRY: read Cascades/Working/FORWARD-PASS-COMPACTION.md FIRST (rewritten C287 for the Update Circuit epoch) \u2192 ONYX-TIER-23.md (ACTIVE \u00b7 the TIER-22 Pearl carry + the Diamond progress) \u2192 the WGB \u00a7FULL SCOPE. THE IMMEDIATE (do first on fresh context): the /mcp response-leg UNIFICATION BUILD \u2014 the actions land, the replies time out (exit 28); coordinates + the 3-step spec in the Forward Pass \u00a73. Run 4 staged (63e9f316) for 082 \u2014 the circuit rides -m 15 fire-and-timeout-forward until the unification lands. Onyx TIER-23 ACTIVE (TIER-22/21/20 prior \u00b7 never deleted).",
+  "diamonds": [
+    {
+      "slug": "turnover-awareness-overlay",
+      "type": "root",
+      "path": "Cascades/Working/DIAMOND-turnover-awareness-overlay.md",
+      "onyx": "Cascades/Working/ONYX-TIER-23.md"
+    },
+    {
+      "slug": "gitm-developer-epoch",
+      "type": "root",
+      "path": "Cascades/Working/DIAMOND-GITM-DEVELOPER-EPOCH.md",
+      "onyx": "Cascades/Working/ONYX-TIER-23.md"
+    },
+    {
+      "slug": "scp-actualization-epoch",
+      "type": "root",
+      "path": "Cascades/Working/DIAMOND-SCP-ACTUALIZATION-EPOCH.md",
+      "onyx": "Cascades/Working/ONYX-TIER-23.md"
+    }
+  ]
 }
