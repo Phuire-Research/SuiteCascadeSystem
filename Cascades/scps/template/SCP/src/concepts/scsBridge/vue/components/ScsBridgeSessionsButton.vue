@@ -1,4 +1,12 @@
 <script setup lang="ts">
+function setTipPosition(e: MouseEvent): void {
+  const el = e.currentTarget as HTMLElement | null;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--tip-x', `${r.left + r.width / 2}px`);
+  el.style.setProperty('--tip-y', `${r.top - 11}px`);
+}
+
 /**
  * ScsBridgeSessionsButton — Pewter Cobalt HiFi Sessions Toggle (CBRS)
  *
@@ -45,7 +53,7 @@ function handleClick() {
 </script>
 
 <template>
-  <span class="sessions-btn-wrap">
+  <span class="sessions-btn-wrap" @mouseenter="setTipPosition">
     <button
       :class="['sessions-btn', { active: popupOpen }]"
       aria-label="Session Management"
@@ -75,10 +83,12 @@ function handleClick() {
 
 /* The Pewter HiFi hover panel — an explanatory micro-pane above the button (Cobalt). */
 .sessions-btn-wrap .btn-tip {
-  position: absolute;
-  bottom: calc(100% + 11px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  /* C812 · the clip escape (see TaskBar) — fixed coordinates set on mouseenter. */
+  position: fixed;
+  left: var(--tip-x, 50%);
+  top: var(--tip-y, 0);
+  bottom: auto;
+  transform: translate(-50%, -100%) translateY(4px);
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -116,7 +126,7 @@ function handleClick() {
 
 .sessions-btn-wrap:hover .btn-tip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -100%) translateY(0);
 }
 </style>
 

@@ -88,6 +88,16 @@ const muxameterLine = computed<string | null>(() => {
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
 
+// C812 · THE TIP COORDINATES — the hover panel is position:fixed (escaping the right-zone
+// scroll clip); the anchor point is computed from the hovered wrap's rect at mouseenter.
+function setTipPosition(e: MouseEvent): void {
+  const el = e.currentTarget as HTMLElement | null;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--tip-x', `${r.left + r.width / 2}px`);
+  el.style.setProperty('--tip-y', `${r.top - 11}px`);
+}
+
 // THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
 // island's Update tab is the one destination for every update class.
 function goUpdatePage(): void {
@@ -304,6 +314,7 @@ function handleTurnOverTriggered(): void {
           <span
             v-else
             class="taskbar-btn-wrap"
+            @mouseenter="setTipPosition"
             :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
           >
             <button
@@ -348,6 +359,7 @@ function handleTurnOverTriggered(): void {
             <span
               v-else
               class="taskbar-btn-wrap"
+            @mouseenter="setTipPosition"
               :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
             >
               <button
@@ -470,7 +482,10 @@ function handleTurnOverTriggered(): void {
 }
 
 .taskbar-zone--center {
-  flex: 1;
+  /* C812 · THE GAP CURE — the center zone is EMPTY today (Wave-4 future seat); flex:1 was
+     fighting the right zone for the free space, opening the strange gap between the version
+     badge and the button area. Restore flex:1 when Wave-4 mounts content here. */
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -498,6 +513,12 @@ function handleTurnOverTriggered(): void {
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
+  /* C812 · overflow-y:visible COMPUTES to auto when overflow-x is auto (the CSS law) — the
+     wrapper WILL clip vertically. The badge pills overhang the button tops, so the wrapper
+     carries HEADROOM (padding-top + negative margin) keeping them inside the scrollable box.
+     The hover panels ESCAPE separately (position:fixed · set on mouseenter). */
+  padding-top: 14px;
+  margin-top: -14px;
   overflow-y: visible;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
@@ -588,10 +609,14 @@ function handleTurnOverTriggered(): void {
 /* The Pewter HiFi hover panel — an explanatory micro-pane above the button. Lives as a
    SIBLING of the clipped body (under .taskbar-btn-wrap) so the chamfer never cuts it. */
 .taskbar-btn-wrap .btn-tip {
-  position: absolute;
-  bottom: calc(100% + 11px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  /* C812 · THE CLIP ESCAPE — fixed coordinates set on mouseenter (setTipPosition) so the
+     panel rises ABOVE the scroll wrapper's clip. The SCS-Bridge offscreen-safe in-DOM
+     panel discipline: never a native title on the OSR surface. */
+  position: fixed;
+  left: var(--tip-x, 50%);
+  top: var(--tip-y, 0);
+  bottom: auto;
+  transform: translate(-50%, -100%) translateY(4px);
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -629,7 +654,7 @@ function handleTurnOverTriggered(): void {
 
 .taskbar-btn-wrap:hover .btn-tip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -100%) translateY(0);
 }
 
 .taskbar-btn-badge {
