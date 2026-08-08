@@ -67,6 +67,10 @@ const pageVersionLabel = computed<string>(() => {
   return reg && reg.designation === props.entry.name ? reg.version : '-';
 });
 
+// C808 · Pewter readability — long PascalCase designations step the name size DOWN so the
+// name FITS before any break; overflow-wrap stays the last-resort guard (never a hard clip).
+const nameIsLong = computed<boolean>(() => props.entry.name.length > 14);
+
 // W3 · the 'collapse' emit is pruned with the Close card button — the Card tab owns closing now.
 const emit = defineEmits<{
   (e: 'expand', name: string): void;
@@ -735,7 +739,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div :class="['card-head', textShadowClass]">
-        <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+        <h3 :class="['card-name', 'hifi-heading', { 'card-name--long': nameIsLong }]">{{ entry.name }}</h3>
           <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
         <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
         <p v-if="displaySnippet" class="card-snippet">{{ displaySnippet }}</p>
@@ -807,7 +811,7 @@ onBeforeUnmount(() => {
 
         <!-- RIGHT · THE CO-PANEL (identity content · the Definitions idiom · no share controls) -->
         <aside :class="['co-panel', textShadowClass]">
-          <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+          <h3 :class="['card-name', 'hifi-heading', { 'card-name--long': nameIsLong }]">{{ entry.name }}</h3>
           <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
           <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
           <p v-if="protocolLine" class="identity-content">{{ protocolLine }}</p>
@@ -1046,6 +1050,8 @@ onBeforeUnmount(() => {
 }
 
 .card-head {
+  min-width: 0;
+  overflow-wrap: anywhere;
   position: relative;
   z-index: 2;
   max-width: 62%;
@@ -1054,14 +1060,20 @@ onBeforeUnmount(() => {
 .card-version {
   display: inline-block;
   margin-top: 0.15rem;
-  font-size: 0.62rem;
-  letter-spacing: 0.05em;
-  color: rgba(220, 228, 236, 0.55);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: rgba(240, 246, 252, 0.85);
 }
 .card-name {
   font-size: 1.05rem;
   margin: 0 0 0.15rem;
   line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+/* C808 · the long-designation step — fit before break (FrontierTransferTest-class names). */
+.card-name--long {
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
 }
 
 .card-domain {
@@ -1211,6 +1223,8 @@ onBeforeUnmount(() => {
 
 /* RIGHT · THE CO-PANEL (Definitions IDENTITY CONTENT idiom) */
 .co-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
