@@ -21,7 +21,7 @@
  * Citation: TU-ARC-S2-ORANGE-NAMING.md (DSSLS · SSMC · SAMLS) · TU-ARC-S1-RED-CURATION.md §4 (ISMC)
  * Reference model: CadmiumLanding.vue (the populated domain page this scaffold pares down)
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, markRaw, onMounted, onUnmounted } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 // IUPA · the suite8 CLIENT concept supplies this landing's page Muxium (mirrors CadmiumLanding
@@ -49,6 +49,9 @@ import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
 import { S8_PAGE_VERSION } from '../suite8.type';
+// V-4b · THE LENT DRAWER — this page lends its OWN Control drawer to the toolbar seat (in a
+// minted twin the rename converts this to the twin's drawer, which reads the twin's own slice).
+import Suite8ControlDrawer from './components/Suite8ControlDrawer.vue';
 import Suite8Card from '../../vue/components/S8Card.vue';
 // EF-3' · 4A · THE PANE PRUNE — the inline Forge pane folded into Suite8Control SIV
 // (the door · the model select · the previous conductions · the engage all live THERE now).
@@ -169,7 +172,7 @@ let muxium: Muxium<ClientMuxiumDeck> | null = null;
 onMounted(() => {
   // V-2 · register this page's designation + frozen version into the shared controller seat
   // (the toolbar's presence predicate + the V-5 update detection read THIS).
-  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION);
+  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION, markRaw(Suite8ControlDrawer));
   if (typeof window === 'undefined') return;
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.

@@ -16,7 +16,7 @@
  * Citation: ADMIN_ICP claudeBridgeBarController.ts (CSCM template)
  * Citation: notificationController.ts (Global Vue Component Pattern · ZKHB sibling)
  */
-import { shallowRef, computed, type ShallowRef, type ComputedRef, type InjectionKey } from 'vue';
+import { shallowRef, computed, type Component, type ShallowRef, type ComputedRef, type InjectionKey } from 'vue';
 import type { AnyAction, Muxium } from 'stratimux';
 import type {
   AnchorConfig,
@@ -120,9 +120,11 @@ export type ScsBridgeController = {
 
   toolbarButtons: ShallowRef<ToolbarButtonRegistration[]>;
   bridgeJson: ShallowRef<BridgeJsonShape | null>;
-  // V-2 · the mounted Suite 8 page's registration (null = not an S8 page).
-  currentS8Page: ShallowRef<{ designation: string; version: string } | null>;
-  registerCurrentS8Page: (designation: string, version: string) => void;
+  // V-2 · the mounted Suite 8 page's registration (null = not an S8 page). V-4b · the page
+  // LENDS its own Control drawer component (the twin's drawer reads the twin's OWN muxium
+  // slice — the suite8-keyed drawer is inert on a renamed island); drawer null = no S8 button.
+  currentS8Page: ShallowRef<{ designation: string; version: string; drawer: Component | null } | null>;
+  registerCurrentS8Page: (designation: string, version: string, drawer?: Component) => void;
   clearCurrentS8Page: () => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
@@ -407,9 +409,9 @@ export function createScsBridgeController(): ScsBridgeController {
   // V-2 · THE CURRENT S8 PAGE REGISTRATION — the mounted Suite 8 page registers its
   // designation + frozen pageVersion here (the Landing's onMounted); null = the current
   // page is NOT a Suite 8 page (V-3's toolbar S8-button presence predicate rides this).
-  const currentS8Page = shallowRef<{ designation: string; version: string } | null>(null);
-  const registerCurrentS8Page = (designation: string, version: string): void => {
-    currentS8Page.value = { designation, version };
+  const currentS8Page = shallowRef<{ designation: string; version: string; drawer: Component | null } | null>(null);
+  const registerCurrentS8Page = (designation: string, version: string, drawer?: Component): void => {
+    currentS8Page.value = { designation, version, drawer: drawer ?? null };
   };
   const clearCurrentS8Page = (): void => {
     currentS8Page.value = null;

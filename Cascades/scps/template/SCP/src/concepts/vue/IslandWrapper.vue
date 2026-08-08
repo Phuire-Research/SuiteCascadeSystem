@@ -87,7 +87,6 @@ import ScsBridgeSessionsButton from '../scsBridge/vue/components/ScsBridgeSessio
 // locality readout) + the two right-anchored DUPP drawers (SCP Management · Suite 8 Control).
 import S8DrawerButton from './components/S8DrawerButton.vue';
 import ScsBridgeScpDrawer from '../scsBridge/vue/components/ScsBridgeScpDrawer.vue';
-import Suite8ControlDrawer from '../suite8/vue/components/Suite8ControlDrawer.vue';
 // GITM A↔B-R (#641-R) — the DUALTURN custom A/B button components + the Sword B-setter.
 // FREEHOP standalone is REMOVED (Sword epoch) — its branch-hop panel is subsumed into the
 // Sword's Mode 2 (Prismatic Free-Hop). The GitmFreehopButton.vue file is retained as the
@@ -420,7 +419,9 @@ const toolbarButtonsForRender = computed<ToolbarButtonRegistration[]>(() => {
   // V-3 · THE TOOLBAR BREAKOUT · R3 THE S8 PRESENCE PREDICATE — the S8 locality face is present
   // ONLY on a Suite 8 page; when currentS8Page is null (the mounted page is not a Suite 8 page)
   // the 's8-drawer' button is filtered out entirely. The 'scp-drawer' is always present.
-  const s8Present = scsBridgeController.currentS8Page.value !== null;
+  // V-4b · the LENT drawer is the predicate — a page that lends no drawer gets no S8 button
+  // (a suite8-keyed fallback would be inert on a renamed twin island anor GraphiteScribe).
+  const s8Present = scsBridgeController.currentS8Page.value?.drawer != null;
   const gated = s8Present ? buttons : buttons.filter((b) => b.id !== 's8-drawer');
   return sortToolbarButtonsForRender(gated);
 });
@@ -984,8 +985,9 @@ defineExpose({
          the null-guard: currentS8Page must be present (a Suite 8 page) for the drawer to carry a
          designation. The presence filter + the currentS8Page watch keep this consistent with the
          S8 button's own gating. -->
-    <Suite8ControlDrawer
-      v-if="s8DrawerOpen && scsBridgeController.currentS8Page.value"
+    <component
+      :is="scsBridgeController.currentS8Page.value.drawer"
+      v-if="s8DrawerOpen && scsBridgeController.currentS8Page.value && scsBridgeController.currentS8Page.value.drawer"
       :designation="scsBridgeController.currentS8Page.value.designation"
       @close="s8DrawerOpen = false"
     />
