@@ -100,7 +100,19 @@ export type Suite8SubPage = S8SubPage;
 // STATE DEFINITION (Client-Side · InductionState included)
 // ============================================
 
+// V-2 · THE PAGE VERSION (the hard-set at actualization) — this constant lives IN the copy
+// surface DELIBERATELY: every minted page freezes the template's then-current value at its
+// creation (the enclosing concept's actualization), massed into the page's Muxium via the
+// state seed. The TEMPLATE advances this on each standardization update; a page's frozen
+// value vs the current template value IS the update detection (V-5). Pre-version pages
+// (no constant · no registration) read as the assumed default '0.0.0'. The `S8_` prefix is
+// the rename-proof token (C373) — the name survives every twin identically.
+export const S8_PAGE_VERSION = '1.0.0';
+
 export type Suite8ClientState = {
+  // V-2 · the frozen template version this page was actualized from (S8_PAGE_VERSION at
+  // the concept's creation — the Muxium carries it from birth).
+  pageVersion: string;
   // InductionState (for future Diametric routing in D4)
   actionQue: AnyAction[];
   filterKeys: string[];

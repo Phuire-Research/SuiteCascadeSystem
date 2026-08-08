@@ -50,6 +50,7 @@ import Suite8CascadeDocs from './components/Suite8CascadeDocs.vue';
 import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
+import { S8_PAGE_VERSION } from '../suite8.type';
 import Suite8Card from '../../vue/components/S8Card.vue';
 // EF-3' · 4A · THE PANE PRUNE — the inline Forge pane folded into Suite8Control SIV
 // (the door · the model select · the previous conductions · the engage all live THERE now).
@@ -168,6 +169,9 @@ async function refreshSelfForgeState(): Promise<void> {
 let muxium: Muxium<ClientMuxiumDeck> | null = null;
 
 onMounted(() => {
+  // V-2 · register this page's designation + frozen version into the shared controller seat
+  // (the toolbar's presence predicate + the V-5 update detection read THIS).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION);
   if (typeof window === 'undefined') return;
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
@@ -245,6 +249,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium (mirror CadmiumLanding onUnmounted).
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);

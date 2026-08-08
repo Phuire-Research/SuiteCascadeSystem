@@ -5,6 +5,7 @@
  * Citation: STRATIMUX-REFERENCE.md "🧠 Strategic State Management"
  */
 import type { Suite8ClientState } from './suite8.type';
+import { S8_PAGE_VERSION } from './suite8.type';
 import { DEFAULT_SUITE8_ACTIVE_TAB, DEFAULT_SUITE8_SUB_PAGE } from './suite8.type';
 import { EMPTY_MENU_STAGE } from '../../model/shatteriteMenu.model';
 
@@ -47,6 +48,8 @@ export function createSuite8ClientState(): Suite8ClientState {
     // designation. Always {} at boot (KeyedSelector · the install-watcher SMRP relay populates
     // per-designation keys at runtime; the Suite8 Control's dual-write also seeds keys).
     installRequirementsMap: {},
+    // V-2 · the hard-set page version (frozen at actualization · massed into the Muxium).
+    pageVersion: S8_PAGE_VERSION,
 
     // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one snapshot per designation. Always
     // {} at boot (KeyedSelector). suite8LocalityStcpRelay broadcasts suite8SetSyncLocalityClient;

@@ -120,6 +120,10 @@ export type ScsBridgeController = {
 
   toolbarButtons: ShallowRef<ToolbarButtonRegistration[]>;
   bridgeJson: ShallowRef<BridgeJsonShape | null>;
+  // V-2 · the mounted Suite 8 page's registration (null = not an S8 page).
+  currentS8Page: ShallowRef<{ designation: string; version: string } | null>;
+  registerCurrentS8Page: (designation: string, version: string) => void;
+  clearCurrentS8Page: () => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (mirrors sessionsList shape)
@@ -400,6 +404,16 @@ export function createScsBridgeController(): ScsBridgeController {
   // Vue-owned refs · mirrors of Stratimux scsBridge state
   const toolbarButtons = shallowRef<ToolbarButtonRegistration[]>([]);
   const bridgeJson = shallowRef<BridgeJsonShape | null>(null);
+  // V-2 · THE CURRENT S8 PAGE REGISTRATION — the mounted Suite 8 page registers its
+  // designation + frozen pageVersion here (the Landing's onMounted); null = the current
+  // page is NOT a Suite 8 page (V-3's toolbar S8-button presence predicate rides this).
+  const currentS8Page = shallowRef<{ designation: string; version: string } | null>(null);
+  const registerCurrentS8Page = (designation: string, version: string): void => {
+    currentS8Page.value = { designation, version };
+  };
+  const clearCurrentS8Page = (): void => {
+    currentS8Page.value = null;
+  };
   const bridgeStatus = shallowRef<string>('');
   const sessionsList = shallowRef<ScsBridgeSessionEntry[]>([]);
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (full-replaced by the relay)
@@ -1987,6 +2001,9 @@ export function createScsBridgeController(): ScsBridgeController {
   return {
     toolbarButtons,
     bridgeJson,
+    currentS8Page,
+    registerCurrentS8Page,
+    clearCurrentS8Page,
     bridgeStatus,
     sessionsList,
     archiveManifest,
