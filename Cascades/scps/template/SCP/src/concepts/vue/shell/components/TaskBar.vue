@@ -88,15 +88,6 @@ const muxameterLine = computed<string | null>(() => {
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
 
-// C812 · THE TIP COORDINATES — the hover panel is position:fixed (escaping the right-zone
-// scroll clip); the anchor point is computed from the hovered wrap's rect at mouseenter.
-function setTipPosition(e: MouseEvent): void {
-  const el = e.currentTarget as HTMLElement | null;
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty('--tip-x', `${r.left + r.width / 2}px`);
-  el.style.setProperty('--tip-y', `${r.top - 11}px`);
-}
 
 // THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
 // island's Update tab is the one destination for every update class.
@@ -247,6 +238,12 @@ function fallbackTipBody(btn: ToolbarButtonRegistration): string {
   return FALLBACK_TIP_CONTENT[btn.id]?.body ?? '';
 }
 
+// C813 · the one-line readout the body-level portal renders (title · body).
+function fallbackReadout(btn: ToolbarButtonRegistration): string {
+  const tip = FALLBACK_TIP_CONTENT[btn.id];
+  return tip ? `${tip.title} · ${tip.body}` : btn.label;
+}
+
 function handleTurnOverTriggered(): void {
   console.log('[TaskBar] handleTurnOverTriggered FIRED · emitting buttonClicked turn-over');
   emit('buttonClicked', 'turn-over');
@@ -314,13 +311,14 @@ function handleTurnOverTriggered(): void {
           <span
             v-else
             class="taskbar-btn-wrap"
-            @mouseenter="setTipPosition"
             :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
           >
+            <!-- C813 · the readout portal (the pair-arm sweep — the left lane's twin). -->
             <button
               :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
               :disabled="!btn.enabled"
               :aria-label="btn.label"
+              :data-readout="fallbackReadout(btn)"
               @click="handleFallbackClick(btn)"
             >
               <i :class="['taskbar-btn-icon', btn.icon]"></i>
@@ -328,10 +326,6 @@ function handleTurnOverTriggered(): void {
                 {{ btn.badgeCount }}
               </span>
             </button>
-            <span class="btn-tip" role="tooltip">
-              <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
-              <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
-            </span>
           </span>
         </template>
       </div>
@@ -359,13 +353,16 @@ function handleTurnOverTriggered(): void {
             <span
               v-else
               class="taskbar-btn-wrap"
-            @mouseenter="setTipPosition"
               :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
             >
+              <!-- C813 · THE ON-HOVER READOUT (the Reference Design · the Tactical Bridge
+                   pattern): data-readout → the ONE body-level portal (fixed · measured ·
+                   viewport-clamped · NEVER clipped) — the per-element tip retired. -->
               <button
                 :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
                 :disabled="!btn.enabled"
                 :aria-label="btn.label"
+                :data-readout="fallbackReadout(btn)"
                 @click="handleFallbackClick(btn)"
               >
                 <i :class="['taskbar-btn-icon', btn.icon]"></i>
@@ -373,10 +370,6 @@ function handleTurnOverTriggered(): void {
                   {{ btn.badgeCount }}
                 </span>
               </button>
-              <span class="btn-tip" role="tooltip">
-                <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
-                <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
-              </span>
             </span>
           </template>
         </div>
@@ -606,56 +599,10 @@ function handleTurnOverTriggered(): void {
   cursor: not-allowed;
 }
 
-/* The Pewter HiFi hover panel — an explanatory micro-pane above the button. Lives as a
-   SIBLING of the clipped body (under .taskbar-btn-wrap) so the chamfer never cuts it. */
-.taskbar-btn-wrap .btn-tip {
-  /* C812 · THE CLIP ESCAPE — fixed coordinates set on mouseenter (setTipPosition) so the
-     panel rises ABOVE the scroll wrapper's clip. The SCS-Bridge offscreen-safe in-DOM
-     panel discipline: never a native title on the OSR surface. */
-  position: fixed;
-  left: var(--tip-x, 50%);
-  top: var(--tip-y, 0);
-  bottom: auto;
-  transform: translate(-50%, -100%) translateY(4px);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  width: 220px;
-  padding: 8px 11px;
-  white-space: normal;
-  text-align: left;
-  background: rgba(10, 12, 18, 0.97);
-  border: 1px solid color-mix(in srgb, var(--btn-neon) 50%, transparent);
-  border-radius: 5px;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--btn-neon) 32%, transparent), 0 6px 16px rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease, transform 0.16s ease;
-  z-index: 220;
-}
 
-.taskbar-btn-wrap .btn-tip-title {
-  font-family: var(--font-heading, 'Orbitron', system-ui, sans-serif);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--btn-neon);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--btn-neon) 45%, transparent), 0.5px 0.5px 0 #fff;
-}
 
-.taskbar-btn-wrap .btn-tip-body {
-  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
-  font-size: 0.64rem;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
-  color: rgba(228, 232, 240, 0.82);
-  text-shadow: 0.5px 0.5px 0 #fff;
-}
 
-.taskbar-btn-wrap:hover .btn-tip {
-  opacity: 1;
-  transform: translate(-50%, -100%) translateY(0);
-}
+
 
 .taskbar-btn-badge {
   position: absolute;

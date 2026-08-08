@@ -1,11 +1,4 @@
 <script setup lang="ts">
-function setTipPosition(e: MouseEvent): void {
-  const el = e.currentTarget as HTMLElement | null;
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty('--tip-x', `${r.left + r.width / 2}px`);
-  el.style.setProperty('--tip-y', `${r.top - 11}px`);
-}
 
 /**
  * ScsBridgeSessionsButton — Pewter Cobalt HiFi Sessions Toggle (CBRS)
@@ -53,22 +46,19 @@ function handleClick() {
 </script>
 
 <template>
-  <span class="sessions-btn-wrap" @mouseenter="setTipPosition">
+  <span class="sessions-btn-wrap">
     <button
       :class="['sessions-btn', { active: popupOpen }]"
       aria-label="Session Management"
       @click="handleClick"
-    >
+    
+    data-readout="Sessions · Manage the Claude Code sessions bound to this SCP.">
       <i class="fa-solid fa-terminal" aria-hidden="true"></i>
       <span class="sessions-btn-label">Session Management</span>
       <span v-if="showSessionBadge" class="sessions-badge">
         {{ sessionCount }}
       </span>
     </button>
-    <span class="btn-tip" role="tooltip">
-      <span class="btn-tip-title">Sessions</span>
-      <span class="btn-tip-body">Manage the Claude Code sessions bound to this SCP.</span>
-    </span>
   </span>
 </template>
 
@@ -82,52 +72,9 @@ function handleClick() {
 }
 
 /* The Pewter HiFi hover panel — an explanatory micro-pane above the button (Cobalt). */
-.sessions-btn-wrap .btn-tip {
-  /* C812 · the clip escape (see TaskBar) — fixed coordinates set on mouseenter. */
-  position: fixed;
-  left: var(--tip-x, 50%);
-  top: var(--tip-y, 0);
-  bottom: auto;
-  transform: translate(-50%, -100%) translateY(4px);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  width: 220px;
-  padding: 8px 11px;
-  white-space: normal;
-  text-align: left;
-  background: rgba(10, 13, 20, 0.97);
-  border: 1px solid rgba(59, 130, 246, 0.55);
-  border-radius: 5px;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.32), 0 6px 16px rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease, transform 0.16s ease;
-  z-index: 220;
-}
 
-.sessions-btn-wrap .btn-tip-title {
-  font-family: var(--font-heading, 'Orbitron', system-ui, sans-serif);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: rgb(120, 170, 255);
-  text-shadow: 0 0 6px rgba(59, 130, 246, 0.5), 0.5px 0.5px 0 #fff;
-}
 
-.sessions-btn-wrap .btn-tip-body {
-  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
-  font-size: 0.64rem;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
-  color: rgba(220, 228, 240, 0.82);
-  text-shadow: 0.5px 0.5px 0 #fff;
-}
 
-.sessions-btn-wrap:hover .btn-tip {
-  opacity: 1;
-  transform: translate(-50%, -100%) translateY(0);
-}
 </style>
 
 <!--
