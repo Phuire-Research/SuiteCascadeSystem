@@ -288,11 +288,10 @@ async function engageEntourageForge(): Promise<void> {
     // EF-3′ · 1A · THE TARGET S8 THREAD + THE LEADING VERMILLION ASPECT — the conduction is
     // COMMISSIONED to formalize THIS page: the target rides the registry entry (the Previous
     // Conductions per-page filter) AND leads the spawn Vermillion as the initial directive.
-    // (In a minted twin the rename converts the mount name below to the twin's own — correct.)
     const forgeDirective = [
       `THE ENTOURAGE FORGE COMMISSION · target Suite 8 page: "${props.suite8Name}".`,
       `This conduction formalizes the "${props.suite8Name}" page — research its domain, build out the page, and hand the Suite back ready.`,
-      'THE SIGN-OFF: when the page is sufficiently developed, flip the page\'s hard-coded <Suite8Control :worked="false" /> mount to :worked="true" — the Entourage Forge section then boots collapsed (the page stands signed off as Worked).',
+      'THE SIGN-OFF (V-4): the Suite 8 Control rides the toolbar drawer now — there is NO inline mount to flip. When the page is sufficiently developed, record the completion in the page\'s Cascades/Working notes and alert for turn-over; the drawer boots the Forge section collapsed by design.',
     ].join('\n');
     ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true, false, forgeDirective, true, true, props.suite8Name);
     forgeSpawnNote.value = 'Entourage Forge engaged. It will research and build out this Suite.';

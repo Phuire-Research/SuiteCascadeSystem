@@ -39,8 +39,6 @@ import { getGlobalScsBridgeController } from '../../scsBridge/scsBridgeControlle
 import type { MenuStage, MenuDocument } from '../../../model/shatteriteMenu.model';
 import { EMPTY_MENU_STAGE, EMPTY_MENU_DOCUMENT } from '../../../model/shatteriteMenu.model';
 import ShatteriteMenu from './components/ShatteriteMenu.vue';
-// L1 GROUND (C778) · the canonical held Control — mounted directly per the Holding Law.
-import Suite8Control from './components/Suite8Control.vue';
 // IE-D4 · CREATE-S8 DYNAMIC LINKAGE · the LIVE D-O widget (the generic Suite8CascadeDocs · reads THIS
 // designation's Cascades/Extended/<name>/ pair from the Tier-2 suiteCascade cascades Record · page-
 // editable plan + session-written trajectory + tier menu). Replaces the prop-fed SuiteCascadeDiamondOnyxPane
@@ -321,13 +319,9 @@ onUnmounted(() => {
            engagement): with no live anchor + anchorSpawn 'prompt' the menu surfaces its own Spawn +
            Anchor button; the page no longer renders a separate spawn-prompt row.
            ============================================================ -->
-      <!-- L1 GROUND (C778) · THE SUITE 8 CONTROL ON THE TEMPLATE PAGE — the Holding Law's
-           second mount (Cadmium first · the minted pages inherit THIS seat through the
-           page-create's copy-adapt): the Locality register + the SCPs helm + the Entourage
-           Forge §IV ride every minted Suite 8 from birth. The scaffolding process is
-           UNTOUCHED — only the Template Suite 8 Page (the user's sanction). -->
-      <Suite8Control :suite8-name="suite8Name" :worked="false" />
-
+      <!-- V-4 · THE PAGE PRUNE — the inline Suite8Control mount retired; the S8 toolbar
+           drawer is the sole Control surface (presence-predicated on this page's
+           registerCurrentS8Page). -->
       <div class="domain-menu-zone">
         <ShatteriteMenu
           :menu-stage="EMPTY_MENU_STAGE"
