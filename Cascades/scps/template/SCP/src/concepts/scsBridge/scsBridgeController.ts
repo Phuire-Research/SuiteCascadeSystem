@@ -2114,10 +2114,16 @@ export function isScsBridgeController(obj: unknown): obj is ScsBridgeController 
 //
 // Pattern matches ADMIN_ICP claudeBridgeBarController.ts L536-549.
 
-let globalController: ScsBridgeController | null = null;
+// C823 · THE REACTIVE GLOBAL — a plain `let` gave consumers' computeds/watch getters ZERO
+// reactive dependency: a child component evaluating before the landing registered the
+// controller cached null FOREVER (the deaf-chip class — subscription settles + face watches
+// all read through the dead cache). Backing the holder with a shallowRef makes every
+// existing `getGlobalScsBridgeController()` read inside a computed anor watch getter a REAL
+// dependency — the signature is unchanged; every consumer revives without edits.
+const globalControllerRef = shallowRef<ScsBridgeController | null>(null);
 
 export function setGlobalScsBridgeController(controller: ScsBridgeController | null): void {
-  globalController = controller;
+  globalControllerRef.value = controller;
   console.log(
     '[ScsBridgeController] Global controller',
     controller ? 'registered' : 'cleared',
@@ -2125,10 +2131,10 @@ export function setGlobalScsBridgeController(controller: ScsBridgeController | n
 }
 
 export function getGlobalScsBridgeController(): ScsBridgeController | null {
-  return globalController;
+  return globalControllerRef.value;
 }
 
 export function clearGlobalScsBridgeController(): void {
-  globalController = null;
+  globalControllerRef.value = null;
   console.log('[ScsBridgeController] Global controller cleared');
 }

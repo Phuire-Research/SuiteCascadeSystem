@@ -107,12 +107,20 @@ function snapshotToInfo(snap: Record<string, unknown>): LocalityFaceInfo {
 }
 
 let localityPlanner: { conclude: () => void } | null = null;
+let armedMuxium: unknown = null;
 let localitySubSettleTimer: ReturnType<typeof setTimeout> | null = null;
 let localitySubSettleTries = 0;
 function ensureLocalitySubscription(): boolean {
-  if (localityPlanner) return true;
   const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
   if (!muxium) return false;
+  // C823 · THE MUXIUM-IDENTITY RE-ARM — armed-once was deaf to a REPLACED page muxium
+  // (GPIM re-bind); a planner concluded against a dead muxium never hears the live one.
+  if (localityPlanner && armedMuxium === muxium) return true;
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
+  }
+  armedMuxium = muxium;
   localityPlanner = muxium.plan<ClientMuxiumDeck>(
     's8DrawerButtonLocalitySubscription',
     ({ staging, stage, d__ }) =>

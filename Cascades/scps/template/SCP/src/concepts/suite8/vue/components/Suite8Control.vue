@@ -713,6 +713,7 @@ function hydrateLocalityOnce(): void {
 // CadmiumLanding's stagePlanner.conclude cleanup). NO Stratimux plan runs synchronously in the
 // template — this is the ONE plan this component holds, purely for the reactive read.
 let localityPlanner: { conclude: () => void } | null = null;
+let armedMuxium: unknown = null;
 // B-RLM-2b · ARM-ON-BIND — Vue mounts children BEFORE the parent Landing's onMounted binds the
 // muxium (setMuxium), so a mount-time arm finds null and MUST retry: a bounded 250ms settle (the
 // SOE boot-coalescer class · stops the beat it arms · ~10s cap) covers the binding window, and
@@ -721,9 +722,16 @@ let localityPlanner: { conclude: () => void } | null = null;
 let localitySubSettleTimer: ReturnType<typeof setTimeout> | null = null;
 let localitySubSettleTries = 0;
 function ensureLocalitySubscription(): boolean {
-  if (localityPlanner) return true;
   const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
   if (!muxium) return false;
+  // C823 · THE MUXIUM-IDENTITY RE-ARM — armed-once was deaf to a REPLACED page muxium
+  // (GPIM re-bind); a planner concluded against a dead muxium never hears the live one.
+  if (localityPlanner && armedMuxium === muxium) return true;
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
+  }
+  armedMuxium = muxium;
   localityPlanner = muxium.plan<ClientMuxiumDeck>(
     'suite8ControlLocalitySubscription',
     ({ staging, stage, d__ }) =>
