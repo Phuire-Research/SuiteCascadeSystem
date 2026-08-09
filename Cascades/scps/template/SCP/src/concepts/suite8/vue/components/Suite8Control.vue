@@ -795,10 +795,8 @@ onMounted(() => {
   document.addEventListener('visibilitychange', refreshAll);
 });
 onBeforeUnmount(() => {
-  // C822 · S4's face-unfreeze — the drawer-time push must NOT outlive this Control (the
-  // frozen face shadowed the button's own live lane through the ?? preference; nulling it
-  // lets every face fall back to live data the moment the drawer closes).
-  getGlobalScsBridgeController()?.setCurrentS8Locality(null);
+  // V-4g · the C822 unmount null-push RETIRED — the PAGE owner holds the face now; a panel
+  // clearing it on close was exactly the drawer-close revert the user field-found.
   if (typeof window === 'undefined') return;
   window.removeEventListener('focus', refreshAll);
   document.removeEventListener('visibilitychange', refreshAll);
@@ -835,18 +833,17 @@ const specifiedLive = computed<boolean>(() => {
 watch(
   syncLocality,
   (s) => {
-    console.log('[S8-LOC] control FACE PUSH ·', s ? `specified=${s.specified} localScp=${s.localScp}` : 'null');
-    getGlobalScsBridgeController()?.setCurrentS8Locality(
-      s
-        ? {
-          localScp: s.localScp ?? null,
-          specified: s.specified ?? null,
-          ring: (s.ring ?? []).map((e) => ({ scpName: e.scpName, status: e.status })),
-        }
-        : null,
-    );
+    // V-4g · TRUTH-ONLY PUSH — the page owner holds the face; this panel reinforces with
+    // its own hydrated truth but NEVER writes null over the owner (the mount-null clobber).
+    if (!s) return;
+    console.log('[S8-LOC] control FACE PUSH · specified=', s.specified, '· localScp=', s.localScp);
+    getGlobalScsBridgeController()?.setCurrentS8Locality({
+      localScp: s.localScp ?? null,
+      specified: s.specified ?? null,
+      targetScp: s.targetScp ?? null,
+      ring: (s.ring ?? []).map((e) => ({ scpName: e.scpName, status: e.status })),
+    });
   },
-  { immediate: true },
 );
 
 const localityLabel = computed<string>(() => {
@@ -879,6 +876,8 @@ async function chooseLocality(scpName: string | null): Promise<void> {
     gateNote.value = String(err).slice(0, 120);
   } finally {
     refreshAll();
+    // V-4g · the POST echo — the page owner re-GETs immediately (no relay dependence).
+    getGlobalScsBridgeController()?.triggerS8LocalityRefresh();
   }
 }
 

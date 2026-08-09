@@ -49,6 +49,7 @@ import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
 import { S8_PAGE_VERSION } from '../suite8.type';
+import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
 // V-4b · THE LENT DRAWER — this page lends its OWN Control drawer to the toolbar seat (in a
 // minted twin the rename converts this to the twin's drawer, which reads the twin's own slice).
 import Suite8ControlDrawer from './components/Suite8ControlDrawer.vue';
@@ -194,6 +195,11 @@ onMounted(() => {
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(muxium);
 
+  // V-4g · THE PAGE-OWNED LOCALITY — the page's muxium is created HERE, so the page arms
+  // the ONE locality subscription (no bind race) and publishes the shared face every
+  // surface reads; the drawer panel is a reader+writer, never an owner.
+  localityOwner = armS8LocalityPageOwner(muxium, suite8Name.value);
+
   // ============================================================
   // ADAPT: DOMAIN WORK SURFACE — onMounted wiring
   // If the domain work surface needs live state, add the stage-planner subscription here
@@ -249,7 +255,11 @@ onMounted(() => {
 
 });
 
+let localityOwner: { conclude: () => void } | null = null;
+
 onUnmounted(() => {
+  localityOwner?.conclude();
+  localityOwner = null;
   getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium (mirror CadmiumLanding onUnmounted).
   const sbController = getGlobalScsBridgeController();

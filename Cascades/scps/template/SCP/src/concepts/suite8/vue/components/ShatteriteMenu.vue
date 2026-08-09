@@ -157,14 +157,29 @@ const syncLocality = ref<SyncLocalityInfo | null>(null);
 // EFFECTIVE locality: specified-if-live, else the real SCP this Suite 8 is composed on.
 // Preventative — a command must never target a dead locality while the disk waits out the
 // grace. (Hoisted with the refs — the C880 TDZ law; the induction below reads these.)
+// V-4g · the page-owner's shared face is the primary truth (always live · panel-mount
+// independent); the component's own lanes remain as fallback until their retirement.
+const effectiveSyncLocality = computed<SyncLocalityInfo | null>(() => {
+  const f = getGlobalScsBridgeController()?.currentS8Locality.value;
+  if (f) {
+    return {
+      localScp: f.localScp,
+      specified: f.specified,
+      targetScp: f.targetScp ?? null,
+      ring: f.ring,
+      targetLive: f.targetLive,
+    };
+  }
+  return syncLocality.value;
+});
 const localityDark = computed<boolean>(() => {
-  const s = syncLocality.value;
+  const s = effectiveSyncLocality.value;
   if (!s?.specified) return false;
   const ringLive = s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
   return !(ringLive || s.targetLive === true);
 });
 const effectiveTargetScp = computed<string | null>(() =>
-  syncLocality.value?.targetScp && !localityDark.value ? syncLocality.value.targetScp : null,
+  effectiveSyncLocality.value?.targetScp && !localityDark.value ? effectiveSyncLocality.value.targetScp : null,
 );
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
@@ -1101,7 +1116,7 @@ async function primeSend(
 // falls back to the composed-on SCP the moment the ring reads not-live, while the disk holds
 // the selection through the grace (a returning target flips the chip back with no user act).
 const localityLabel = computed<string>(() => {
-  const s = syncLocality.value;
+  const s = effectiveSyncLocality.value;
   // C821 · THE SPECIFIC-CHIP LAW (the user's ruling) — bare 'Local' is NO information;
   // the chip ALWAYS names the SCP (localScp when the snapshot carries it, else the
   // resolved own citizen — originScpName via /scp-config).

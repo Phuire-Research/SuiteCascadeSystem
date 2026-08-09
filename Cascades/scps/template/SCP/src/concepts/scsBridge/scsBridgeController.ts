@@ -24,6 +24,10 @@ export type S8LocalityFace = {
   localScp: string | null;
   specified: string | null;
   ring: { scpName: string; status: string }[];
+  // V-4g · the page-owner publishes the FULL snapshot face (the Shatterite's anchor scope
+  // reads targetScp; localityDark honors targetLive).
+  targetScp?: string | null;
+  targetLive?: boolean;
 };
 import type { AnyAction, Muxium } from 'stratimux';
 import type {
@@ -138,6 +142,9 @@ export type ScsBridgeController = {
   // lanes work on ANY island); the held toolbar face reads THIS, never a concept slice.
   currentS8Locality: ShallowRef<S8LocalityFace | null>;
   setCurrentS8Locality: (face: S8LocalityFace | null) => void;
+  // V-4g · the page-owner registers its hydrate here; the panel triggers it after a POST.
+  registerS8LocalityRefresh: (fn: (() => void) | null) => void;
+  triggerS8LocalityRefresh: () => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (mirrors sessionsList shape)
@@ -432,6 +439,13 @@ export function createScsBridgeController(): ScsBridgeController {
   const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
   const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
     currentS8Locality.value = face;
+  };
+  let s8LocalityRefreshFn: (() => void) | null = null;
+  const registerS8LocalityRefresh = (fn: (() => void) | null): void => {
+    s8LocalityRefreshFn = fn;
+  };
+  const triggerS8LocalityRefresh = (): void => {
+    s8LocalityRefreshFn?.();
   };
   const bridgeStatus = shallowRef<string>('');
   const sessionsList = shallowRef<ScsBridgeSessionEntry[]>([]);
@@ -2025,6 +2039,8 @@ export function createScsBridgeController(): ScsBridgeController {
     clearCurrentS8Page,
     currentS8Locality,
     setCurrentS8Locality,
+    registerS8LocalityRefresh,
+    triggerS8LocalityRefresh,
     bridgeStatus,
     sessionsList,
     archiveManifest,
