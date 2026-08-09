@@ -125,8 +125,19 @@ const bootCascade = ref<Cascade | null>(null);
 const specifiedLocality = computed<string | null>(
   () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
 );
+// V-4i · THE LOCALITY-EPOCH GATE (the AL field find) — the live Record can hold content
+// captured under a PRIOR locality (the frozen server watcher — the F3 card); on a locality
+// flip the Record is UNTRUSTED until it re-delivers under the new epoch. Without this, a
+// flip BACK to an empty Local ground let the foreign capture keep rendering (the sticky-IE
+// disjoint — invisible on grounds whose local truth is non-empty).
+const localityEpoch = ref(0);
+const recordEpochSeen = ref(0);
+watch(cascade, () => {
+  recordEpochSeen.value = localityEpoch.value;
+});
+const recordTrusted = computed<boolean>(() => recordEpochSeen.value === localityEpoch.value);
 const effectiveCascade = computed<Cascade | null>(() => {
-  const live = cascade.value;
+  const live = recordTrusted.value ? cascade.value : null;
   if (specifiedLocality.value) return bootCascade.value ?? null;
   if (live && live.activeCascadeFiles.length > 0) return live;
   return bootCascade.value ?? live;
@@ -143,6 +154,7 @@ const emptyAtTarget = computed<boolean>(() =>
 watch(specifiedLocality, (now, prior) => {
   if (now === prior) return;
   console.log('[S8-LOC] cascade-memory face-watch fire · specified=', now);
+  localityEpoch.value += 1;
   bootCascade.value = null;
   void hydrateCascadeBootFloor();
   void refreshPriorTiers();
@@ -247,7 +259,9 @@ async function hydrateCascadeBootFloor(): Promise<void> {
     const entries: CascadeFileEntry[] = (body.activeCascadeFiles ?? [])
       .filter((f) => typeof f.filePath === 'string' && typeof f.content === 'string')
       .map((f) => ({ filePath: f.filePath as string, markdown: f.content as string }));
-    if (entries.length === 0) return;
+    // V-4i · EMPTY IS A STATE (the standing law) — a memory-less ground floors an EMPTY
+    // cascade so the render is honest; a null floor here let the untrusted Record's foreign
+    // capture stand as the only non-null leg.
     bootCascade.value = {
       name: body.name ?? props.designation,
       cascadeDirectory: '',
