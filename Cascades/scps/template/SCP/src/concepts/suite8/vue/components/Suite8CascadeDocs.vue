@@ -32,7 +32,9 @@
  * Pattern precedent: Suite8Landing.vue (Tier-2 cascades subscription) ·
  *                    SuiteCascadeDiamondOnyxPane.vue (marked render + Pewter hifi-* panes).
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+// V-4h · F1/F2 — the page-owner locality face (V-4g) drives re-sourcing + precedence.
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 import { createAction } from 'stratimux';
 import type { Action, Muxium } from 'stratimux';
 import { marked } from 'marked';
@@ -116,10 +118,34 @@ let mountHydrationPlanner: { conclude: () => void } | null = null;
 // the fetch only floors the boot — an empty registration relay never blanks a filled floor,
 // and a filled relay always overrides the floor (the fetch never blocks the relay).
 const bootCascade = ref<Cascade | null>(null);
+// V-4h · F2 · THE PRECEDENCE GATE — under a SPECIFIED locality the boot floor WINS: the
+// GET is locality-honoring per call (SL-3), while the live Record can carry the LOCAL
+// content the frozen server watcher last relayed (Seat A — the F3 card). Record-wins
+// stands only for the Local ground.
+const specifiedLocality = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
 const effectiveCascade = computed<Cascade | null>(() => {
   const live = cascade.value;
+  if (specifiedLocality.value) return bootCascade.value ?? null;
   if (live && live.activeCascadeFiles.length > 0) return live;
   return bootCascade.value ?? live;
+});
+// V-4h · F4 · the honest state — the target genuinely carries no docs (never the local
+// pair masquerading as the target's memory).
+const emptyAtTarget = computed<boolean>(() =>
+  specifiedLocality.value !== null
+  && effectiveCascade.value !== null
+  && effectiveCascade.value.activeCascadeFiles.length === 0,
+);
+// V-4h · F1 · the face-watch — a locality change re-runs the (locality-honoring) boot
+// floor + the prior-tier menu; the V-4g owner face is the change signal.
+watch(specifiedLocality, (now, prior) => {
+  if (now === prior) return;
+  console.log('[S8-LOC] cascade-memory face-watch fire · specified=', now);
+  bootCascade.value = null;
+  void hydrateCascadeBootFloor();
+  void refreshPriorTiers();
 });
 
 // ── Diamond / Onyx split from the finite activeCascadeFiles list ──────────────────
@@ -356,6 +382,11 @@ onUnmounted(() => {
     <template v-if="sectionExpanded">
       <div v-if="!hasCascade" class="hifi-pane-base s8cd-empty">
         <span class="hifi-label s8cd-placeholder">Cascade memory is loading…</span>
+      </div>
+
+      <!-- V-4h · F4 · the honest no-docs-at-target state + the source tag -->
+      <div v-else-if="emptyAtTarget" class="hifi-pane-base s8cd-empty">
+        <span class="hifi-label s8cd-placeholder">No cascade memory at {{ specifiedLocality }} for this designation.</span>
       </div>
 
       <template v-else>
