@@ -835,6 +835,7 @@ const specifiedLive = computed<boolean>(() => {
 watch(
   syncLocality,
   (s) => {
+    console.log('[S8-LOC] control FACE PUSH ·', s ? `specified=${s.specified} localScp=${s.localScp}` : 'null');
     getGlobalScsBridgeController()?.setCurrentS8Locality(
       s
         ? {
@@ -869,6 +870,7 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ specified: scpName }),
     });
+    console.log('[S8-LOC] control CHOOSE POST · specified=', scpName, '· status=', r.status);
     if (!r.ok) {
       const j = (await r.json().catch(() => null)) as { error?: string } | null;
       gateNote.value = j?.error ?? 'the locality write was refused';

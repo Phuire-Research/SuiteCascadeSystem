@@ -66,6 +66,7 @@ import {
   readClientSyncLocalities,
   clientSyncLocalitiesSelector,
   dispatchClientSyncLocalitySnapshot,
+  debugS8LocalityDeckKeys,
 } from '../../../../model/scpLocalityClientAccess.model';
 
 // C473 · THE DOUBLE-ENGAGE GUARD (r7: two menu instances on one page fired engage twice within
@@ -479,6 +480,7 @@ onMounted(() => {
     () => controller.value?.currentS8Locality.value,
     (face, prior) => {
       if (face === prior) return;
+      console.log('[S8-LOC] chip V-4d face-watch fire · face=', face ? JSON.stringify({ specified: face.specified, localScp: face.localScp }) : 'null');
       hydrateLocalityOnce();
     },
   );
@@ -686,6 +688,7 @@ function ensureLocalitySubscription(): boolean {
     localityPlanner = null;
   }
   armedMuxium = muxium;
+  console.log('[S8-LOC] chip ARM · designation=', props.suite8Name, '· deck=', JSON.stringify(debugS8LocalityDeckKeys(muxium)));
   localityPlanner = muxium.plan<ClientMuxiumDeck>(
     'shatteriteMenuLocalitySubscription',
     ({ staging, stage, d__ }) =>
@@ -697,6 +700,7 @@ function ensureLocalitySubscription(): boolean {
               Suite8SyncLocalitySnapshot
             >;
             const snap = record[props.suite8Name];
+            console.log('[S8-LOC] chip STAGE fire · recordKeys=', JSON.stringify(Object.keys(record)), '· mine=', snap ? `specified=${(snap as { specified?: unknown }).specified} targetLive=${(snap as { targetLive?: unknown }).targetLive}` : 'ABSENT');
             // B-RLM-2c · ABSENCE IS NOT EMPTINESS — no key = not-yet-relayed; writing null
             // clobbers the ODCF dual-write (the chip + the anchor scope would blank until a
             // POST round-trips). Only a real snapshot assigns.
@@ -718,7 +722,13 @@ function ensureLocalitySubscription(): boolean {
 }
 function settleLocalitySubscription(): void {
   if (ensureLocalitySubscription()) return;
-  if (localitySubSettleTries >= 40) return;
+  if (localitySubSettleTries >= 40) {
+    if (localitySubSettleTries === 40) {
+      localitySubSettleTries += 1;
+      console.warn('[S8-LOC] chip subscription settle EXHAUSTED (40×250ms) · designation=', props.suite8Name);
+    }
+    return;
+  }
   localitySubSettleTries += 1;
   localitySubSettleTimer = setTimeout(settleLocalitySubscription, 250);
 }
@@ -746,6 +756,7 @@ function hydrateLocalityOnce(): void {
         localLive: jx.localLive === true,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
+      console.log('[S8-LOC] chip HYDRATE result · designation=', props.suite8Name, '· specified=', snapshot.specified, '· localScp=', snapshot.localScp, '· targetLive=', snapshot.targetLive, '· ring=', JSON.stringify(snapshot.ring));
       syncLocality.value = {
         localScp: snapshot.localScp,
         specified: snapshot.specified,

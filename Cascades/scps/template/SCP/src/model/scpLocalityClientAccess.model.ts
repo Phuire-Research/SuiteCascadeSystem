@@ -38,6 +38,14 @@ const findS8LocalityDeckEntry = (clientDeck: any): any => {
   return undefined;
 };
 
+// C824 · arm-time diagnostic — WHICH client deck key carries the localities Register.
+export const debugS8LocalityDeckKeys = (muxium: { deck: any } | null): { keys: string[]; found: string | null } => {
+  const sub = muxium?.deck?.d?.client?.d ?? {};
+  const keys = Object.keys(sub);
+  const found = keys.find((k) => sub[k]?.k?.localities) ?? null;
+  return { keys, found };
+};
+
 export const readClientSyncLocalities = (d: any): Record<string, unknown> =>
   (findS8LocalityDeckEntry(d.client)?.k.localities.select() ?? {}) as Record<string, unknown>;
 
@@ -64,7 +72,11 @@ export const dispatchClientSyncLocalitySnapshot = (
   // The SET action discovered by suffix — 'suite8SetSyncLocalityClient' on the template,
   // '<twinName>SetSyncLocalityClient' on a minted twin (the rename moves the prefix only).
   const setKey = Object.keys(entry.e).find((k) => k.endsWith('SetSyncLocalityClient'));
-  if (!setKey) return;
+  if (!setKey) {
+    console.warn('[S8-LOC] dual-write DROPPED · no SetSyncLocalityClient action on the discovered deck entry');
+    return;
+  }
+  console.log('[S8-LOC] dual-write dispatch · setKey=', setKey, '· designation=', designation);
   muxium.dispatch(
     entry.e[setKey]({
       localities: { [designation]: snapshot },
