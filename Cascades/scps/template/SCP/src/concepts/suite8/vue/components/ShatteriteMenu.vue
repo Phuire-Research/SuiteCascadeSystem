@@ -81,7 +81,7 @@ import { getGlobalScsBridgeController, type ScsBridgeController } from '../../..
 // BO-1 · the rename-proof anchor contract (the C373 s8 law) — the session-field lookup and
 // the anchor-spawn route live in a NEVER-COPIED scsBridge model so the suite8:page token
 // rewrite cannot break them in mints (s.suite8Name → s.{domain}Name was the BO-1 kill).
-import { resolveS8Anchor, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
+import { resolveS8Anchor, filterS8Sessions, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
 // W1 (C758) · REWRITE-PROOF ROUTES (the BO-1 law) — the menu-floor path survives the mint rewrite.
 import { s8MenuPath, S8_MENU_STAGE_SET_PATH } from '../../../scsBridge/model/s8Routes.model';
 import ScsInput from '../../../vue/components/ScsInput.vue';
@@ -875,7 +875,9 @@ async function handleSpawnAnchor(): Promise<void> {
 
   // Readiness poll — settle on the launched anchor, else fall back to an explicit set-anchor.
   const SOE_STEP_MS = 250;
-  const SOE_MAX_MS = 3000;
+  // C821 · S7 field find: the session's hook-fires-start latency floor is ~3.0-3.2s — a
+  // 3s poll ceiling settled BEFORE the registry row could exist. 6s clears the floor.
+  const SOE_MAX_MS = 6000;
   let elapsedMs = 0;
   if (spawnPoll) clearInterval(spawnPoll);
   spawnPoll = setInterval(() => {
@@ -885,8 +887,10 @@ async function handleSpawnAnchor(): Promise<void> {
       // (1) launched anchor present → focus the Terminal, clear the poll, done.
       // D-AFS · own-citizen scoped — the poll must never settle on another SCP's row.
       // D-AFS2 · newborn scoped — nor on any session that predates this spawn.
-      const live = sessions.find(
-        (s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
+      // C821 · BO-1 LAW — the ENTRY field access rides the held helper (an inline
+      // `s.suite8Name` mint-renames into a dead field; props.suite8Name renames FINE).
+      const live = filterS8Sessions(sessions, props.suite8Name).find(
+        (s) => matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
       );
       if (live) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
@@ -901,10 +905,10 @@ async function handleSpawnAnchor(): Promise<void> {
       // scope-clear wipes the prior). Only set-anchor when there is genuinely NO existing anchor.
       if (elapsedMs >= SOE_MAX_MS) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
-        const existingAnchor = sessions.find((s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && s.isAnchor === true);
+        const existingAnchor = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesOwnCitizen(s) && s.isAnchor === true);
         // D-AFS2 · the fallback set-anchor candidate MUST be the newborn — an elder plain
         // session is never promoted (the anchor-steal wound). No newborn → no action.
-        const unanchored = sessions.find((s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
+        const unanchored = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
         if (existingAnchor) {
           console.log('[ShatteriteMenu SOE] fallback · existing anchor present → re-engage (NO steal) · anchorId=', existingAnchor.id);
           ctrl.triggerEngageSession(existingAnchor.id);
@@ -969,8 +973,8 @@ async function handleReengageAnchor(): Promise<void> {
   if (reengagePoll) clearInterval(reengagePoll);
   reengagePoll = setInterval(() => {
     elapsedMs += REENGAGE_STEP_MS;
-    const live = sessionsList.value.find(
-      (s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && s.isAnchor === true && s.status === 'launched',
+    const live = filterS8Sessions(sessionsList.value, props.suite8Name).find(
+      (s) => matchesOwnCitizen(s) && s.isAnchor === true && s.status === 'launched',
     );
     if (live) {
       if (reengagePoll) { clearInterval(reengagePoll); reengagePoll = null; }
@@ -1071,9 +1075,13 @@ async function primeSend(
 // the selection through the grace (a returning target flips the chip back with no user act).
 const localityLabel = computed<string>(() => {
   const s = syncLocality.value;
-  if (!s) return 'Locality: Local';
+  // C821 · THE SPECIFIC-CHIP LAW (the user's ruling) — bare 'Local' is NO information;
+  // the chip ALWAYS names the SCP (localScp when the snapshot carries it, else the
+  // resolved own citizen — originScpName via /scp-config).
+  const ownScp = s?.localScp || originScpName.value;
+  if (!s) return `Locality: Local${originScpName.value ? ` · ${originScpName.value}` : ''}`;
   if (s.specified && !localityDark.value) return `Locality: ${s.specified}`;
-  return `Locality: Local${s.localScp ? ` · ${s.localScp}` : ''}`;
+  return `Locality: Local${ownScp ? ` · ${ownScp}` : ''}`;
 });
 
 // U4B · THE SL-4 PRUNE — resolveDispatchAnchor (the fire-time double-fetch) is RETIRED:

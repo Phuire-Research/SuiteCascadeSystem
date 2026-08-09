@@ -41,6 +41,7 @@ import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../../clie
 import { createSuite8ClientConcept } from '../../suite8.concept.client';
 import { suite8Muxonomic } from '../../suite8.muxonomy';
 import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
+import { filterS8Sessions } from '../../../scsBridge/model/s8Anchor.model';
 import type { ScsBridgeSessionEntry } from '../../../scsBridge/scsBridge.type';
 
 // ============================================================
@@ -107,7 +108,7 @@ const allSessions = computed<ScsBridgeSessionEntry[]>(
 // PFGD pre-filter: only sessions whose suite8Name matches the prop.
 // This is the structural Diameter — suite8Name prop IS the filter predicate.
 const filteredSessions = computed<ScsBridgeSessionEntry[]>(() =>
-  allSessions.value.filter((s) => s.suite8Name === props.suite8Name),
+  filterS8Sessions(allSessions.value, props.suite8Name),
 );
 
 // ============================================================
