@@ -28,12 +28,25 @@ export const syncLocalityEndpoint = (designation: string): string =>
 // THE SHAPE DISCOVERY — the composed S8 concept is the client sub-deck carrying the
 // `localities` Register. suite8 checked first for determinism where it composes; otherwise
 // the first (and only) shape match — a page island composes exactly one S8 concept.
+// C833 · THE UNAMBIGUOUS SHAPE (the dual-write-DROPPED root): k.localities alone is NOT
+// unique — another composed concept can carry a `localities` Register without being the S8
+// locality owner (the first-match then bound the WRONG entry: no SET action → every
+// dual-write DROPPED · the subscription armed on the wrong Register). The S8 carrier is
+// the entry with the Register AND its SetSyncLocalityClient action; where `e` is not
+// exposed (selector contexts) the Register alone stands (tolerant).
+const carriesS8Locality = (entry: any): boolean => {
+  if (!entry?.k?.localities) return false;
+  if (entry.e && !Object.keys(entry.e).some((k: string) => k.endsWith('SetSyncLocalityClient'))) {
+    return false;
+  }
+  return true;
+};
 const findS8LocalityDeckEntry = (clientDeck: any): any => {
   const sub = clientDeck?.d;
   if (!sub) return undefined;
-  if (sub.suite8?.k?.localities) return sub.suite8;
+  if (carriesS8Locality(sub.suite8)) return sub.suite8;
   for (const key of Object.keys(sub)) {
-    if (sub[key]?.k?.localities) return sub[key];
+    if (carriesS8Locality(sub[key])) return sub[key];
   }
   return undefined;
 };

@@ -256,16 +256,24 @@ async function refreshPriorTiers(): Promise<void> {
 // panes IMMEDIATELY. The live Record still WINS when it fills (effectiveCascade
 // precedence) — the fetch never blocks anor clobbers the relay.
 async function hydrateCascadeBootFloor(): Promise<void> {
+  // C833 · THE IN-FLIGHT RACE GUARD (S7's 10ms field capture): a query launched under the
+  // PRIOR locality can land AFTER a flip and overwrite the new ground while self-stamping
+  // with resolve-time state. The response's identity is the locality AT FETCH START —
+  // a flip mid-flight discards the landing.
+  const fetchEpoch = localityEpoch.value;
+  const fetchSpecified = specifiedLocality.value ?? null;
   try {
     const r = await fetch(s8CascadePath(props.designation), {
       headers: { Accept: 'application/json' },
     });
+    if (fetchEpoch !== localityEpoch.value) return; // stale in-flight — a flip occurred
     if (!r.ok) return; // 404 honest → no floor (the relay legs still stand)
     const body = (await r.json()) as {
       name?: string;
       cascadeJson?: Record<string, unknown> | null;
       activeCascadeFiles?: { filePath?: string; content?: string }[];
     };
+    if (fetchEpoch !== localityEpoch.value) return; // stale — flip during the body parse
     const entries: CascadeFileEntry[] = (body.activeCascadeFiles ?? [])
       .filter((f) => typeof f.filePath === 'string' && typeof f.content === 'string')
       .map((f) => ({ filePath: f.filePath as string, markdown: f.content as string }));
@@ -278,8 +286,8 @@ async function hydrateCascadeBootFloor(): Promise<void> {
       cascadeJson: body.cascadeJson ?? null,
       activeCascadeFiles: entries,
       missingCascadeJson: false,
-      // C831 · the floor is fetched under the CURRENT locality by construction.
-      servedFrom: specifiedLocality.value ?? null,
+      // C833 · stamped from FETCH START (resolve-time stamping was the race's disguise).
+      servedFrom: fetchSpecified,
     };
     console.log('[Suite8CascadeDocs] on-boot self-query floored · files=', entries.length);
   } catch {
