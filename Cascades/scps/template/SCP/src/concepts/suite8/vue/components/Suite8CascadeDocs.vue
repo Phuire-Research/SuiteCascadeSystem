@@ -152,11 +152,14 @@ const effectiveCascade = computed<Cascade | null>(() => {
   if (live && live.activeCascadeFiles.length > 0) return live;
   return bootCascade.value ?? live;
 });
-// V-4h · F4 · the honest state — the target genuinely carries no docs (never the local
-// pair masquerading as the target's memory).
-const emptyAtTarget = computed<boolean>(() =>
-  specifiedLocality.value !== null
-  && effectiveCascade.value !== null
+// C835 · S2-NAMED · THE EMPTY-GROUND UNIFICATION (the user's branch clue): the honest
+// empty state was GATED on a specified locality — the SAME truth (0 files) rendered as
+// 'No cascade memory at <target>' under a specified ground but as blank Diamond/Onyx
+// placeholder panes when the ORIGIN itself was the null state (the Local-empty ground).
+// One truth, one render: EVERY 0-file ground states itself plainly; the pane branch
+// renders only when files exist.
+const emptyGround = computed<boolean>(() =>
+  effectiveCascade.value !== null
   && effectiveCascade.value.activeCascadeFiles.length === 0,
 );
 // V-4h · F1 · the face-watch — a locality change re-runs the (locality-honoring) boot
@@ -418,9 +421,9 @@ onUnmounted(() => {
         <span class="hifi-label s8cd-placeholder">Cascade memory is loading…</span>
       </div>
 
-      <!-- V-4h · F4 · the honest no-docs-at-target state + the source tag -->
-      <div v-else-if="emptyAtTarget" class="hifi-pane-base s8cd-empty">
-        <span class="hifi-label s8cd-placeholder">No cascade memory at {{ specifiedLocality }} for this designation.</span>
+      <!-- C835 · the unified honest empty state — every 0-file ground, Local included -->
+      <div v-else-if="emptyGround" class="hifi-pane-base s8cd-empty">
+        <span class="hifi-label s8cd-placeholder">No cascade memory{{ specifiedLocality ? ` at ${specifiedLocality}` : '' }} for this designation.</span>
       </div>
 
       <template v-else>
