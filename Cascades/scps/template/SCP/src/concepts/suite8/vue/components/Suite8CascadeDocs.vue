@@ -135,7 +135,17 @@ const recordEpochSeen = ref(0);
 watch(cascade, () => {
   recordEpochSeen.value = localityEpoch.value;
 });
-const recordTrusted = computed<boolean>(() => recordEpochSeen.value === localityEpoch.value);
+const recordTrusted = computed<boolean>(() => {
+  // C831 · CONTENT-AWARE TRUST — the relayed entry carries the locality it was resolved
+  // under (servedFrom); trust = stamp matches the current effective locality. The epoch
+  // heuristic remains only as the pre-stamp fallback (an unstamped entry from an older
+  // server build).
+  const live = cascade.value as (Cascade & { servedFrom?: string | null }) | null;
+  if (live && live.servedFrom !== undefined) {
+    return (live.servedFrom ?? null) === (specifiedLocality.value ?? null);
+  }
+  return recordEpochSeen.value === localityEpoch.value;
+});
 const effectiveCascade = computed<Cascade | null>(() => {
   const live = recordTrusted.value ? cascade.value : null;
   if (specifiedLocality.value) return bootCascade.value ?? null;
@@ -268,6 +278,8 @@ async function hydrateCascadeBootFloor(): Promise<void> {
       cascadeJson: body.cascadeJson ?? null,
       activeCascadeFiles: entries,
       missingCascadeJson: false,
+      // C831 · the floor is fetched under the CURRENT locality by construction.
+      servedFrom: specifiedLocality.value ?? null,
     };
     console.log('[Suite8CascadeDocs] on-boot self-query floored · files=', entries.length);
   } catch {

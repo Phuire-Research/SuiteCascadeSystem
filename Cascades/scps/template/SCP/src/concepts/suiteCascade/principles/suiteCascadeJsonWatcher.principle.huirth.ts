@@ -66,7 +66,7 @@ import {
 // SL-3 · the Sync Library resolution seam — a SHARED-MODEL downward import (src/model/ ·
 // the shatteriteMenu/stcpComponentRelay stratum), NOT a suite8 import: the boundary
 // discipline above holds (suiteCascade remains the PRIOR base, standing alone).
-import { resolveSyncLocality } from '../../../model/scpSyncLibrary.model';
+import { resolveSyncLocality, readSpecifiedKey, resolveSyncLibraryPath } from '../../../model/scpSyncLibrary.model';
 // DPASL-D1 · BOUNDARY DISCIPLINE — the watcher is the PURE CONSUMER. It imports NOTHING
 // from `../../suite8/` (suite8 is the EMERGENT base that muxifies suiteCascade; suiteCascade
 // is the PRIOR base, must stand alone). The watcher reads ONLY its OWN `k_.cascades` Record
@@ -287,6 +287,7 @@ const buildCascade = (
   cascadeDirectory: string,
   cascadeJson: Record<string, unknown> | null,
   missingCascadeJson: boolean,
+  servedFrom: string | null,
 ): Cascade => ({
   name: cascadeName,
   cascadeDirectory,
@@ -294,6 +295,9 @@ const buildCascade = (
   activeCascadeFiles: [],
   // C1-D5 CWSD · true only when the Cascade.json file is absent on disk (ENOENT).
   missingCascadeJson,
+  // C831 · the locality this load resolved under (content-aware trust — the client
+  // compares against its current effective locality).
+  servedFrom,
 });
 
 // ============================================
@@ -318,6 +322,11 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
   // Keyed by directory so a re-load disposes the stale handle before arming fresh (idempotent
   // per path · never-throw). The md-content relay Diameter the Cascade.json watch cannot see.
   const contentWatchers = new Map<string, FSWatcher>();
+  // C831 · the per-designation SyncLibrary watchers (F3 · the re-arm comparator) + the
+  // specified baselines + the mass-zero prior counts.
+  const libraryWatchers = new Map<string, FSWatcher>();
+  const lastSpecifiedByName = new Map<string, string | null>();
+  const lastFileCounts = new Map<string, number>();
   let cascadeDebounceTimer: NodeJS.Timeout | null = null;
   // THE CONTENT-FILE WATCH · shared debounce for the content re-read (matches the file's
   // existing 100ms DEBOUNCE_MS idiom · the dir is captured in the content event handler).
@@ -338,7 +347,11 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
     const loadCascade = async (cascadeDirectory: string): Promise<void> => {
       const cascadeName = deriveCascadeName(cascadeDirectory);
       const { cascadeJson, missingCascadeJson } = await readCascadeJson(cascadeDirectory);
-      const cascade = buildCascade(cascadeName, cascadeDirectory, cascadeJson, missingCascadeJson);
+      // C831 · the resolution this load runs under — stamped onto everything it relays.
+      const servedFrom = cascadeName !== GENERAL_CASCADE_NAME ? readSpecifiedKey(cascadeName) : null;
+      const cascade = buildCascade(cascadeName, cascadeDirectory, cascadeJson, missingCascadeJson, servedFrom);
+      lastSpecifiedByName.set(cascadeName, servedFrom);
+      armLibraryWatch(cascadeDirectory, cascadeName);
 
       // SBIS Base first — Huirth-local reducer runs so cascades[name] exists server-side.
       nextA(
@@ -349,10 +362,25 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
         d.suiteCascade.e.suiteCascadeSetCascadeRelay({ name: cascadeName, cascade }),
       );
 
-      const { entries: activeCascadeFiles, resolvedPaths } = await readActiveCascadeFiles(
+      let { entries: activeCascadeFiles, resolvedPaths } = await readActiveCascadeFiles(
         cascadeDirectory,
         cascadeJson,
       );
+      // C831 · THE MASS-ZERO GUARD (verify-before-broadcast) — a 0-file read over a
+      // known non-empty prior is retried once after the write-settle window; only a
+      // CONFIRMED empty relays (the 04:13:25 mass zero-broadcast wave class).
+      const priorCount = lastFileCounts.get(cascadeName) ?? 0;
+      if (activeCascadeFiles.length === 0 && priorCount > 0) {
+        sinkWatcherTelemetry('zero-transient.retry', { name: cascadeName, priorCount });
+        await new Promise((res) => setTimeout(res, 150));
+        const retry = await readActiveCascadeFiles(cascadeDirectory, cascadeJson);
+        activeCascadeFiles = retry.entries;
+        resolvedPaths = retry.resolvedPaths;
+        if (activeCascadeFiles.length === 0) {
+          sinkWatcherTelemetry('zero-confirmed', { name: cascadeName });
+        }
+      }
+      lastFileCounts.set(cascadeName, activeCascadeFiles.length);
       // THE CONTENT-FILE WATCH · arm (re-arm) on the resolved md paths this load just read.
       armContentWatch(cascadeDirectory, resolvedPaths);
       console.log(
@@ -385,6 +413,39 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
           activeCascadeFiles,
         }),
       );
+    };
+
+    // C831 · F3 · THE SYNC-LIBRARY RE-ARM (the menu-watch comparator ported — discharges
+    // the header's carded gap): a specified flip re-runs loadCascade, so the relay carries
+    // the TARGET's content stamped under the NEW resolution — the live leg follows flips.
+    const armLibraryWatch = (cascadeDirectory: string, cascadeName: string): void => {
+      if (cascadeName === GENERAL_CASCADE_NAME) return;
+      if (libraryWatchers.has(cascadeName)) return;
+      try {
+        const libraryWatcher = chokidarWatch(resolveSyncLibraryPath(cascadeName), {
+          persistent: true,
+          ignoreInitial: true,
+          awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
+        });
+        const handleLibraryChange = (): void => {
+          const nowSpecified = readSpecifiedKey(cascadeName);
+          const wasSpecified = lastSpecifiedByName.get(cascadeName) ?? null;
+          if (nowSpecified === wasSpecified) return;
+          console.log('[SuiteCascade Watcher] sync-locality change ·', cascadeName, '·', wasSpecified ?? 'Local', '→', nowSpecified ?? 'Local', '· re-loading');
+          sinkWatcherTelemetry('sync-locality.reload', {
+            name: cascadeName,
+            from: wasSpecified ?? 'Local',
+            to: nowSpecified ?? 'Local',
+          });
+          lastSpecifiedByName.set(cascadeName, nowSpecified);
+          void loadCascade(cascadeDirectory);
+        };
+        libraryWatcher.on('add', handleLibraryChange);
+        libraryWatcher.on('change', handleLibraryChange);
+        libraryWatchers.set(cascadeName, libraryWatcher);
+      } catch {
+        sinkWatcherTelemetry('library-watch.arm-failed', { name: cascadeName });
+      }
     };
 
     // THE CONTENT-FILE WATCH · arm a chokidar watch on the RESOLVED md paths (the same paths
@@ -686,6 +747,15 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
       }
     }
     contentWatchers.clear();
+    // C831 · close the SyncLibrary watchers (no handle leak).
+    for (const watcher of libraryWatchers.values()) {
+      try {
+        watcher.close();
+      } catch {
+        /* watcher already closed */
+      }
+    }
+    libraryWatchers.clear();
     watcherPlan.conclude();
   };
 };

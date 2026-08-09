@@ -63,6 +63,11 @@ export type Cascade = {
   // one (false · cascadeJson parsed but carries no manifest keys). Non-optional per
   // KeyedSelector discipline (no `?`); defaults false.
   missingCascadeJson: boolean;
+  // C831 · THE SERVEDFROM STAMP — the locality this entry's content was RESOLVED under
+  // (null = the Local ground). Consumers trust the relayed Record only when the stamp
+  // matches their current effective locality — content-aware trust replaces timing
+  // heuristics (the mass-zero-broadcast field find). Non-optional per the same law.
+  servedFrom: string | null;
 };
 
 // ============================================
