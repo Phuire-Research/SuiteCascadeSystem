@@ -146,6 +146,9 @@ type SyncLocalityInfo = {
   specified: string | null;
   targetScp: string | null;
   ring: { scpName: string; status: string }[];
+  // C822 · the Scholar liveness (server-computed) — localityDark honors it alongside the
+  // raw ring (a stale-ring GET no longer darkens a genuinely-live specified target).
+  targetLive?: boolean;
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
 // DSP-B2d · THE EFFECTIVE LOCALITY LAW (the user's ruling) — the DISK holds the selection
@@ -156,7 +159,8 @@ const syncLocality = ref<SyncLocalityInfo | null>(null);
 const localityDark = computed<boolean>(() => {
   const s = syncLocality.value;
   if (!s?.specified) return false;
-  return !s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+  const ringLive = s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+  return !(ringLive || s.targetLive === true);
 });
 const effectiveTargetScp = computed<string | null>(() =>
   syncLocality.value?.targetScp && !localityDark.value ? syncLocality.value.targetScp : null,
@@ -694,6 +698,7 @@ function ensureLocalitySubscription(): boolean {
                 specified: snap.specified,
                 targetScp: snap.targetScp,
                 ring: Array.isArray(snap.ring) ? snap.ring : [],
+                targetLive: (snap as { targetLive?: unknown }).targetLive === true,
               };
             }
           },
@@ -738,14 +743,17 @@ function hydrateLocalityOnce(): void {
         specified: snapshot.specified,
         targetScp: snapshot.targetScp,
         ring: snapshot.ring,
+        targetLive: snapshot.targetLive,
       };
       ensureLocalitySubscription();
       const muxium = controller.value?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
       if (!muxium) return;
       dispatchClientSyncLocalitySnapshot(muxium, props.suite8Name, snapshot);
     })
-    .catch(() => {
-      /* ODCF absent/unreachable → stay on null; the relay still delivers live snapshots */
+    .catch((err) => {
+      // C822 · F4 — the silently-swallowed hydrate was the unobservable leg of the stale-chip
+      // diagnosis; the failure now names itself.
+      console.warn('[ShatteriteMenu] locality hydrate failed · designation=', props.suite8Name, err);
     });
 }
 

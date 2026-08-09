@@ -787,6 +787,10 @@ onMounted(() => {
   document.addEventListener('visibilitychange', refreshAll);
 });
 onBeforeUnmount(() => {
+  // C822 · S4's face-unfreeze — the drawer-time push must NOT outlive this Control (the
+  // frozen face shadowed the button's own live lane through the ?? preference; nulling it
+  // lets every face fall back to live data the moment the drawer closes).
+  getGlobalScsBridgeController()?.setCurrentS8Locality(null);
   if (typeof window === 'undefined') return;
   window.removeEventListener('focus', refreshAll);
   document.removeEventListener('visibilitychange', refreshAll);
