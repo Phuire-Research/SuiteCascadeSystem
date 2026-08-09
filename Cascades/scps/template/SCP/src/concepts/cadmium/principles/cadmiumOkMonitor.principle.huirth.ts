@@ -553,7 +553,6 @@ export const cadmiumOkMonitorPrinciple: CadmiumOkMonitorPrincipleType = ({ d_, p
           cascadeJson: null,
           activeCascadeFiles: [],
           missingCascadeJson: false,
-      servedFrom: null,
         };
         // SBIS Base first (runs local Huirth reducer so server state is real), then Relay.
         nextA(

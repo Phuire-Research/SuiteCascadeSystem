@@ -289,7 +289,6 @@ export const extendedCascadeAutoRegistrationPrinciple: SuiteCascadeHuirthPrincip
             cascadeJson: null,
             activeCascadeFiles: [],
             missingCascadeJson: true,
-      servedFrom: null,
           };
           nextA(
             d.suiteCascade.e.suiteCascadeSetCascadeHuirthBase({ name: trimmed, cascade: stubCascade }),

@@ -32,6 +32,10 @@ import { suiteCascadeSetCascadeRelay } from './qualities/suiteCascadeSetCascadeR
 import { suiteCascadeSetActiveCascadeFilesRelay } from './qualities/suiteCascadeSetActiveCascadeFilesRelay.quality';
 // B-5 SDCR + GRID · Relay — broadcast the active dir to the Client (Path B).
 import { suiteCascadeSetActiveCascadeDirectoryRelay } from './qualities/suiteCascadeSetActiveCascadeDirectoryRelay.quality';
+// CMLS · the subscription-target setter pair — Base (SBIS first · the CSS sweep's selector
+// truth) + Relay (broadcast the target to the Client · Path B).
+import { suiteCascadeSetCascadeSubscriptionTargetHuirthBase } from './qualities/suiteCascadeSetCascadeSubscriptionTargetHuirthBase.quality.huirth';
+import { suiteCascadeSetCascadeSubscriptionTargetRelay } from './qualities/suiteCascadeSetCascadeSubscriptionTargetRelay.quality';
 import { suiteCascadeJsonWatcherPrinciple } from './principles/suiteCascadeJsonWatcher.principle.huirth';
 import { suiteCascadeBackfillOnConnectPrinciple } from './principles/suiteCascadeBackfillOnConnect.principle.huirth';
 import { suiteCascadeStateMirrorPrinciple } from './principles/suiteCascadeStateMirror.principle.huirth';
@@ -63,6 +67,9 @@ const suiteCascadeHuirthQualities: SuiteCascadeHuirthQualities = {
   suiteCascadeSetCascadeRelay,
   suiteCascadeSetActiveCascadeFilesRelay,
   suiteCascadeSetActiveCascadeDirectoryRelay,
+  // CMLS · the subscription-target setter pair (Base + Relay).
+  suiteCascadeSetCascadeSubscriptionTargetHuirthBase,
+  suiteCascadeSetCascadeSubscriptionTargetRelay,
   // SCRR · Diametric Real — receives client sentinel + responds with Huirth cascades.
   suiteCascadeSendCascadeRequest: suiteCascadeSendCascadeRequestHuirth,
 };

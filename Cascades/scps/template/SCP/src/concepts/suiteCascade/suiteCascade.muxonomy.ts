@@ -49,6 +49,8 @@ export const suiteCascadeMuxonomic: MuxonomicConfig<'suiteCascade'> = {
     'activeCascadeDirectory',
     // B-6 HCD — the SubPage selector key (local-only UI; never synced).
     'activeSubPage',
+    // CMLS — the subscription target registry (the CSS sweep + the client flip-watch select on it).
+    'cascadeSubscriptionTargets',
   ],
 
   novelChange: {
@@ -57,10 +59,10 @@ export const suiteCascadeMuxonomic: MuxonomicConfig<'suiteCascade'> = {
 
   sync: {
     direction: 'toClient',
-    // cascades + activeCascadeDirectory broadcast via the explicit
-    // actionExchange.serverToClient relay (Path B · B-4 WCJF + B-5 SDCR) rather than
+    // cascades + activeCascadeDirectory + cascadeSubscriptionTargets broadcast via the explicit
+    // actionExchange.serverToClient relay (Path B · B-4 WCJF + B-5 SDCR + CMLS) rather than
     // auto-sync — mirrors scsBridge bridgeJson.
-    filterKeys: ['cascades', 'activeCascadeDirectory'],
+    filterKeys: ['cascades', 'activeCascadeDirectory', 'cascadeSubscriptionTargets'],
     novelChange: {
       mode: ChangeDetectionMode.KeyedSelector,
     },
@@ -131,6 +133,15 @@ export const suiteCascadeMuxonomic: MuxonomicConfig<'suiteCascade'> = {
         location: DeploymentTarget.Huirth,
         diameter: false,
       },
+      // CMLS · SBIS BASE subscription-target setter (Huirth-only · the CSS sweep reads its
+      // [k_.cascadeSubscriptionTargets] selector to re-point the subscription).
+      {
+        name: 'suiteCascadeSetCascadeSubscriptionTargetHuirthBase',
+        type: 'Suite Cascade Set Cascade Subscription Target Huirth Base',
+        filePath: 'qualities/suiteCascadeSetCascadeSubscriptionTargetHuirthBase.quality.huirth.ts',
+        location: DeploymentTarget.Huirth,
+        diameter: false,
+      },
       // ============================================
       // B-4 WCJF · SBIS RELAY (dual-deployment · broadcast via actionExchange · Path B)
       // ============================================
@@ -153,6 +164,15 @@ export const suiteCascadeMuxonomic: MuxonomicConfig<'suiteCascade'> = {
         name: 'suiteCascadeSetActiveCascadeDirectoryRelay',
         type: 'Suite Cascade Set Active Cascade Directory Relay',
         filePath: 'qualities/suiteCascadeSetActiveCascadeDirectoryRelay.quality.ts',
+        location: DeploymentTarget.Client,
+        diameter: false,
+      },
+      // CMLS · SBIS RELAY (dual-deployment · broadcast the subscription target · Path B ·
+      // doubles as the Client receiver for the C836 label + the flip-watch).
+      {
+        name: 'suiteCascadeSetCascadeSubscriptionTargetRelay',
+        type: 'Suite Cascade Set Cascade Subscription Target Relay',
+        filePath: 'qualities/suiteCascadeSetCascadeSubscriptionTargetRelay.quality.ts',
         location: DeploymentTarget.Client,
         diameter: false,
       },
@@ -204,6 +224,12 @@ export const suiteCascadeMuxonomic: MuxonomicConfig<'suiteCascade'> = {
       {
         qualityName: 'suiteCascadeSetActiveCascadeDirectoryRelay',
         actionType: 'Suite Cascade Set Active Cascade Directory Relay',
+        direction: ExchangeDirection.ServerToClient,
+      },
+      // CMLS · broadcast the subscription target (the SyncLibrary flip edge) to the Client.
+      {
+        qualityName: 'suiteCascadeSetCascadeSubscriptionTargetRelay',
+        actionType: 'Suite Cascade Set Cascade Subscription Target Relay',
         direction: ExchangeDirection.ServerToClient,
       },
     ],

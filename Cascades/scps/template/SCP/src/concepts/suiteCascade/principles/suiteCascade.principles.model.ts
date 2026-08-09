@@ -55,7 +55,6 @@ export const suiteCascadeGeneralWatcherPrinciple: SuiteCascadePrinciple = ({ pla
             activeCascadeFiles: [],
             // C1-D5 CWSD · scaffold registration before any Cascade.json read · true.
             missingCascadeJson: true,
-      servedFrom: null,
           },
         }),
         { iterateStage: true },

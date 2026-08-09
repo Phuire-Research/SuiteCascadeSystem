@@ -132,7 +132,9 @@ const DEFAULT_LANDING_MUXONOMIC: MuxonomicConfig<'default'> = {
 };
 
 import { graphiteScribeMuxonomic } from '../graphiteScribe/graphiteScribe.muxonomy';
-// SL-3/SL-4/SL-5 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+// SL-4/SL-5 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+// The SL-3 cascade-route consult is RETIRED (CMLS · Wave 3) — the cascade routes resolve through
+// the ONE seat; only the SL-4/SL-5 locality routes (the Signal's own surface) keep these imports.
 import {
   resolveSyncLocality,
   readSpecifiedKey,
@@ -140,6 +142,9 @@ import {
   readSyncRingFromBridgeJson,
   writeSpecifiedAdditive,
 } from '../../model/scpSyncLibrary.model';
+// CMLS · CSRS · the ONE seat — the cascade routes (floor · tiers · doc-save) resolve the target
+// dir through this state-projection (replaces the SL-3 consult · the Honest-Absence Law · §3.6).
+import { resolveCascadeSubscriptionDir } from '../../model/cascadeSubscriptionRegistry.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -920,25 +925,21 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     ) {
       return null;
     }
-    // SL-3 · THE CASCADE-MEMORY LEG — the Sync Library resolution seam consults FIRST: a
-    // Specified locality serves the TARGET SCP's Extended/<designation>/ (reads AND the
-    // doc-save write leg — working with a locality remotely lands the work at the target;
-    // the observer's own Local files stand untouched, the Truth Law). The target dir must
-    // EXIST — absent ⇒ the local two-roots walk stands (the guarded fall-through).
-    const syncLocality = resolveSyncLocality(designation);
-    if (syncLocality) {
-      const targetExtendedBase = path.resolve(syncLocality.root, 'Cascades', 'Extended');
-      const targetDir = path.resolve(targetExtendedBase, designation);
-      if (targetDir !== targetExtendedBase && targetDir.startsWith(targetExtendedBase + path.sep)) {
-        try {
-          if (fs.statSync(targetDir).isDirectory()) {
-            return { extendedBase: targetExtendedBase, dir: targetDir };
-          }
-        } catch {
-          /* target dir absent — fall through to the local walk (never dark: the seam sinks its own skips) */
-        }
-      }
+    // CMLS · §3.6 · THE ONE SEAT + THE HONEST-ABSENCE LAW (HAL). The SL-3 per-read SyncLibrary
+    // consult is RETIRED: a standing subscription resolves through the ONE seat the CSS sweep
+    // publishes (the routes + the watcher can never disagree). HAL — a standing subscription serves
+    // the TARGET anor honest absence, NEVER a silent local fall-through (the as-built existence-gated
+    // fall-through IS the C837b disguise class: local content masquerading as the target). An absent
+    // target dir is an honest 404/empty — the C835 surface renders it plainly. Existence NOT required.
+    const resolution = resolveCascadeSubscriptionDir(designation);
+    if (resolution && resolution.target !== null) {
+      const targetExtendedBase = path.resolve(resolution.target.targetRoot, 'Cascades', 'Extended');
+      const dir = resolution.effectiveDir;
+      // Traversal guard — the resolved dir must stay inside the target's Extended base.
+      if (dir === targetExtendedBase || !dir.startsWith(targetExtendedBase + path.sep)) return null;
+      return { extendedBase: targetExtendedBase, dir }; // existence NOT required — honest absence.
     }
+    // no subscription → the local two-roots walk-up, byte-identical to today.
     const roots: string[] = [process.cwd()];
     let walk = process.cwd();
     for (let i = 0; i < 6; i += 1) {
@@ -1094,6 +1095,19 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       res.status(404).json({ ok: false, error: 'designation cascade not found' });
       return;
     }
+    // CMLS · §3.6 · the seat's own resolution for THIS designation — the floor reads the ONE
+    // state-held target (the floor + the relay can never disagree). serving = the C836 label's
+    // SERVER truth (C837 fix 2 · the label reads the server's truth, not the client's ask).
+    const seatResolution = resolveCascadeSubscriptionDir(req.params.designation);
+    const serving = seatResolution && seatResolution.target !== null
+      ? seatResolution.target.specifiedScp
+      : null;
+    // CMLS · C837 fix 1 (route leg) — the file-read fallback root: under a subscribed resolution
+    // the process.cwd() fallback is INVALID (it would serve LOCAL bytes for a re-pointed dir); the
+    // fallback must be the TARGET root anor nothing. Local resolution keeps process.cwd().
+    const fileReadFallbackRoot = seatResolution && seatResolution.target !== null
+      ? seatResolution.target.targetRoot
+      : process.cwd();
     let cascadeJson: Record<string, unknown> | null = null;
     try {
       cascadeJson = JSON.parse(
@@ -1113,9 +1127,9 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         if (typeof value !== 'string' || value.length === 0 || seen.has(value)) continue;
         seen.add(value);
         // OWN-ROOT-FIRST (the watcher's C712/IE-D4e resolution): a founded dir's Working/-relative
-        // anor bare-basename path lives beside the manifest; fall back to the cwd-relative
-        // (repo-relative) interpretation when the dir-local file is absent.
-        for (const candidate of [path.resolve(resolved.dir, value), path.resolve(process.cwd(), value)]) {
+        // anor bare-basename path lives beside the manifest; fall back to the CROSS-AWARE root
+        // (the target root under a subscription · cwd for Local) when the dir-local file is absent.
+        for (const candidate of [path.resolve(resolved.dir, value), path.resolve(fileReadFallbackRoot, value)]) {
           try {
             activeCascadeFiles.push({ filePath: value, content: fs.readFileSync(candidate, 'utf-8') });
             break;
@@ -1125,7 +1139,8 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         }
       }
     }
-    res.json({ name: req.params.designation, cascadeJson, activeCascadeFiles });
+    // CMLS · the serving echo (the C836 label reads this) + the resolved dir (the server's truth).
+    res.json({ name: req.params.designation, cascadeJson, activeCascadeFiles, serving, resolvedDir: resolved.dir });
   });
 
   // GET — THE MENU FLOOR (1A-prime · the ODCF doctrine lifted from CadmiumLanding into the
@@ -1309,6 +1324,27 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
     try {
       fs.writeFileSync(target, markdown, 'utf-8');
+      // CMLS · WLD · §3.8 · THE WRITE-LANE-DISCIPLINE note (the in-process arm of the 22:08 cure):
+      // doc-save resolves through the ONE seat, so it NAMES ITS TARGET by construction. Sink the
+      // resolved target onto the same Bridge rail the watcher/drives grep — every in-repo writer
+      // that crosses this route logs where the bytes landed (never a silent foreign-tree write).
+      try {
+        const writeLaneSinkPath = path.join(resolveScpLocalBridgeDir(), 'suitecascade-watcher.json');
+        fs.mkdirSync(path.dirname(writeLaneSinkPath), { recursive: true });
+        fs.appendFileSync(
+          writeLaneSinkPath,
+          JSON.stringify({
+            ts: new Date().toISOString(),
+            seat: 'write-lane.target',
+            name: designation,
+            dir: target,
+            writer: 'doc-save',
+          }) + '\n',
+          'utf8',
+        );
+      } catch {
+        /* telemetry must never harm the write · skip */
+      }
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ ok: false, error: `write failed: ${String(err)}` });

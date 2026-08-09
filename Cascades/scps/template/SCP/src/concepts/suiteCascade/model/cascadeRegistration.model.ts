@@ -89,7 +89,6 @@ export const createCascadeRegistrationPrinciple = (
     cascadeJson: null,
     activeCascadeFiles: [],
     missingCascadeJson: true,
-      servedFrom: null,
   };
 
   const cascadeRegistrationPrinciple: SuiteCascadeHuirthPrinciple = ({ plan, nextA }) => {

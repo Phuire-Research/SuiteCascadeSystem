@@ -19,6 +19,8 @@ export function createSuiteCascadeState(): SuiteCascadeState {
     // Always {} — never optional (Scholar §3; KeyedSelector requirement).
     // General Watcher Principle populates cascades['General'] at boot.
     cascades: {},
+    // CMLS · the subscription target registry — {} default (absent = Local).
+    cascadeSubscriptionTargets: {},
     // B-5 SDCR + GRID — DEFAULT = GRID (the General RI, always the assumed default).
     // Re-points to a Suite8's Cascades/ on docking; restored to GRID on un-dock.
     activeCascadeDirectory: GENERAL_CASCADE_DIRECTORY,
@@ -43,6 +45,8 @@ export function createSuiteCascadeHuirthState(): SuiteCascadeHuirthState {
     // B-5 SDCR + GRID — server-side Base default = GRID. The WCJF watcher reads this
     // selector to decide which dir's Cascade.json to arm; re-scope dispatch re-points it.
     activeCascadeDirectory: GENERAL_CASCADE_DIRECTORY,
+    // CMLS · the subscription target registry (server-side Base) — {} default (absent = Local).
+    cascadeSubscriptionTargets: {},
   };
 }
 
@@ -52,4 +56,7 @@ export const SUITE_CASCADE_FILTER_KEYS: string[] = [
   'activeCascadeDirectory',
   // B-6 HCD — the SubPage selector key (local-only UI; never synced).
   'activeSubPage',
+  // CMLS — the subscription target registry (the client face syncs it; the CSS sweep + the
+  // client flip-watch both select on it).
+  'cascadeSubscriptionTargets',
 ];

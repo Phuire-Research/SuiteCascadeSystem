@@ -227,7 +227,6 @@ async function hydrateCascadeBootFloor(): Promise<void> {
       cascadeJson: body.cascadeJson ?? null,
       activeCascadeFiles: entries,
       missingCascadeJson: false,
-      servedFrom: null,
     };
     console.log('[GraphiteScribeCascadeDocs] on-boot self-query floored · files=', entries.length);
   } catch {
