@@ -158,6 +158,18 @@ const effectiveCascade = computed<Cascade | null>(() => {
 // placeholder panes when the ORIGIN itself was the null state (the Local-empty ground).
 // One truth, one render: EVERY 0-file ground states itself plainly; the pane branch
 // renders only when files exist.
+// C836 · THE MEMORY SOURCE LABEL (troubleshooting surface · user-commissioned) — the
+// component states what it BELIEVES: the current locality · which leg serves (floor anor
+// record) · the effective content's servedFrom stamp · the file count. A capture of this
+// label names the lying layer without a log dive.
+const memorySourceLabel = computed<string>(() => {
+  const current = specifiedLocality.value ?? 'Local';
+  const eff = effectiveCascade.value as (Cascade & { servedFrom?: string | null }) | null;
+  if (!eff) return `Locality: ${current} · Serving: — (no ground)`;
+  const serving = eff.servedFrom === undefined ? 'unstamped' : (eff.servedFrom ?? 'Local');
+  const leg = eff === bootCascade.value ? 'floor' : 'record';
+  return `Locality: ${current} · Serving: ${serving} · via ${leg} · files: ${eff.activeCascadeFiles.length}`;
+});
 const emptyGround = computed<boolean>(() =>
   effectiveCascade.value !== null
   && effectiveCascade.value.activeCascadeFiles.length === 0,
@@ -417,6 +429,9 @@ onUnmounted(() => {
     </button>
 
     <template v-if="sectionExpanded">
+      <!-- C836 · the memory source label — always visible while expanded -->
+      <div class="s8cd-source-label hifi-mono hifi-label">{{ memorySourceLabel }}</div>
+
       <div v-if="!hasCascade" class="hifi-pane-base s8cd-empty">
         <span class="hifi-label s8cd-placeholder">Cascade memory is loading…</span>
       </div>
@@ -576,6 +591,15 @@ onUnmounted(() => {
   font-size: 0.65rem;
   color: rgba(200, 200, 200, 0.3);
   font-style: italic;
+}
+
+/* C836 · the memory source label (the troubleshooting surface) */
+.s8cd-source-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  padding: 2px 6px 6px;
+  text-transform: none;
 }
 
 .s8cd-empty {
