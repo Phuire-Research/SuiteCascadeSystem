@@ -284,10 +284,14 @@ async function hydrateCascadeBootFloor(onDemandTarget?: string | null): Promise<
   // is the epoch AT FETCH START — a flip mid-flight discards the landing.
   const fetchEpoch = subscriptionEpoch.value;
   try {
-    // the on-demand arm queries the TARGET by name; the bare floor rides the seat route.
+    // the on-demand arm queries the TARGET by name; the RELEASE (explicit null) queries the
+    // OWN ground via the reserved Local name (seat-free — the C847 release-race cure); the
+    // bare mount rides the seat route (the standing subscription's truth).
     const floorUrl = onDemandTarget
       ? scpCascadeMemoryPath(onDemandTarget, props.designation)
-      : s8CascadePath(props.designation);
+      : (onDemandTarget === null
+        ? scpCascadeMemoryPath('Local', props.designation)
+        : s8CascadePath(props.designation));
     const r = await fetch(floorUrl, {
       headers: { Accept: 'application/json' },
     });

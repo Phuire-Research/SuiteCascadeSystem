@@ -26,6 +26,10 @@ type MinimalExpressApp = {
 // scpName → the SCP's package root. The own SCP answers from cwd; others from the ring.
 export const resolveScpRootByName = (scpName: string): string | null => {
   if (!scpName) return null;
+  // C847 · THE RESERVED LOCAL NAME — the release's target is KNOWN (the own ground); a
+  // 'Local' query resolves own-cwd directly and NEVER consults the seat (the release-race
+  // cure: the on-demand fetch raced the server's ~1.3s release and floored the stale seat).
+  if (scpName === 'Local') return process.cwd();
   const local = readLocalScpName();
   if (local && local === scpName) return process.cwd();
   const ring = readSyncRingFromBridgeJson();
