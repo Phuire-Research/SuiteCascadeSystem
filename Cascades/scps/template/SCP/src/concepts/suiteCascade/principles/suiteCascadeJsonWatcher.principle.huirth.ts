@@ -644,14 +644,18 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
             cascadeDirectory,
             setTimeout(() => {
               contentDebounceTimersByDirectory.delete(cascadeDirectory);
-              if (
-                heldDirectoryByName.get(name) !== cascadeDirectory ||
-                subscriptionGenerationByName.get(name) !== generationAtSchedule
-              ) {
+              // C854 · GENERATION-ONLY DISCARD — the held-dir term was the FALSE-POSITIVE
+              // source (arm-order noise can move `held` with NO repoint — the HelloWorld
+              // deafness: every local event discarded forever). Every repoint bumps the
+              // generation as step 1, so the generation term ALONE is precise.
+              if (subscriptionGenerationByName.get(name) !== generationAtSchedule) {
                 sinkWatcherTelemetry('subscription.repoint.stale-debounce-discard', {
                   name,
                   dir: cascadeDirectory,
                   lane: 'content',
+                  genAtSchedule: generationAtSchedule,
+                  genNow: subscriptionGenerationByName.get(name) ?? 0,
+                  heldNow: heldDirectoryByName.get(name) ?? null,
                 });
                 return;
               }
@@ -813,14 +817,16 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
             cascadeDirectory,
             setTimeout(() => {
               cascadeDebounceTimersByDirectory.delete(cascadeDirectory);
-              if (
-                heldDirectoryByName.get(name) !== cascadeDirectory ||
-                subscriptionGenerationByName.get(name) !== generationAtSchedule
-              ) {
+              // C854 · GENERATION-ONLY DISCARD (see the content-lane note — the held-dir
+              // term retired as the false-positive source; repoint ⇔ generation bump).
+              if (subscriptionGenerationByName.get(name) !== generationAtSchedule) {
                 sinkWatcherTelemetry('subscription.repoint.stale-debounce-discard', {
                   name,
                   dir: cascadeDirectory,
                   lane: 'manifest',
+                  genAtSchedule: generationAtSchedule,
+                  genNow: subscriptionGenerationByName.get(name) ?? 0,
+                  heldNow: heldDirectoryByName.get(name) ?? null,
                 });
                 return;
               }
