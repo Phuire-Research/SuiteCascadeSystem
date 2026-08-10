@@ -427,8 +427,34 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
       const cascade = buildCascade(cascadeName, cascadeDirectory, cascadeJson, missingCascadeJson);
       // LSBW · seed the specified baseline so the SyncLibrary edge comparator has a prior to
       // compare against (the boundary-signal edge detector · the flip's ONLY SyncLibrary read).
-      lastSpecifiedByName.set(cascadeName, cascadeName !== GENERAL_CASCADE_NAME ? readSpecifiedKey(cascadeName) : null);
+      const persistedSpecified = cascadeName !== GENERAL_CASCADE_NAME ? readSpecifiedKey(cascadeName) : null;
+      lastSpecifiedByName.set(cascadeName, persistedSpecified);
       armLocalitySignalWatch(cascadeDirectory, cascadeName);
+      // C851 · THE BOOT EDGE — the signal watch arms ignoreInitial, so a PERSISTED specified
+      // fires NO edge at boot: the subscription state boots EMPTY, the sweep arms LOCAL, and
+      // the Record fills with local content under a specified truth (the turn-over-retains-
+      // local field find; AL escaped only because its empty local Record LOSES to the floor
+      // while IE's 2-file Record WINS). Seed the state from the persisted SyncLibrary at
+      // load — the seat guard makes it once-per-boot; the proven SET chain (sweep → repoint
+      // → target load → relay) carries it from there.
+      if (persistedSpecified !== null) {
+        const seatNow = resolveCascadeSubscriptionDir(cascadeName);
+        if (!seatNow || seatNow.target === null) {
+          const bootTarget = resolveLocalitySignalEdge(cascadeName);
+          if (bootTarget) {
+            sinkWatcherTelemetry('locality-signal.boot-seed', {
+              name: cascadeName,
+              target: bootTarget.absoluteDir,
+            });
+            nextA(
+              d.suiteCascade.e.suiteCascadeSetCascadeSubscriptionTargetHuirthBase({ name: cascadeName, target: bootTarget }),
+            );
+            nextA(
+              d.suiteCascade.e.suiteCascadeSetCascadeSubscriptionTargetRelay({ name: cascadeName, target: bootTarget }),
+            );
+          }
+        }
+      }
       // CMLS · C837 fix 1 — the cross-aware manifest fallback root (target root under a
       // subscription · SCS_ROOT for the local lane).
       const fallbackRoot = resolveManifestFallbackRoot(cascadeName);
