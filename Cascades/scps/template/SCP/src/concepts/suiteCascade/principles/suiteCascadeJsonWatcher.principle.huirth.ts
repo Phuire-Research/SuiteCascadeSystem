@@ -648,7 +648,12 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
               // source (arm-order noise can move `held` with NO repoint — the HelloWorld
               // deafness: every local event discarded forever). Every repoint bumps the
               // generation as step 1, so the generation term ALONE is precise.
-              if (subscriptionGenerationByName.get(name) !== generationAtSchedule) {
+              // C856 · THE NORMALIZED COMPARE — the TRUE eternal-discard root all along: a
+              // never-repointed designation has NO map entry; the schedule side normalized
+              // (?? 0) but the compare used the RAW get — undefined !== 0 → every fire
+              // discarded, with the telemetry's own ?? 0 masking it (the discriminant's
+              // genNow:0 · genAtSchedule:0 · discard = this exact signature).
+              if ((subscriptionGenerationByName.get(name) ?? 0) !== generationAtSchedule) {
                 sinkWatcherTelemetry('subscription.repoint.stale-debounce-discard', {
                   name,
                   dir: cascadeDirectory,
@@ -819,7 +824,12 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
               cascadeDebounceTimersByDirectory.delete(cascadeDirectory);
               // C854 · GENERATION-ONLY DISCARD (see the content-lane note — the held-dir
               // term retired as the false-positive source; repoint ⇔ generation bump).
-              if (subscriptionGenerationByName.get(name) !== generationAtSchedule) {
+              // C856 · THE NORMALIZED COMPARE — the TRUE eternal-discard root all along: a
+              // never-repointed designation has NO map entry; the schedule side normalized
+              // (?? 0) but the compare used the RAW get — undefined !== 0 → every fire
+              // discarded, with the telemetry's own ?? 0 masking it (the discriminant's
+              // genNow:0 · genAtSchedule:0 · discard = this exact signature).
+              if ((subscriptionGenerationByName.get(name) ?? 0) !== generationAtSchedule) {
                 sinkWatcherTelemetry('subscription.repoint.stale-debounce-discard', {
                   name,
                   dir: cascadeDirectory,
