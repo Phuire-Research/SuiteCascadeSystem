@@ -145,6 +145,8 @@ import {
 // CMLS · CSRS · the ONE seat — the cascade routes (floor · tiers · doc-save) resolve the target
 // dir through this state-projection (replaces the SL-3 consult · the Honest-Absence Law · §3.6).
 import { resolveCascadeSubscriptionDir } from '../../model/cascadeSubscriptionRegistry.model';
+// CMLS-R · the fetch-on-demand query surface (roster + by-name memory · held registration).
+import { registerCascadeMemoryQueryRoutes } from '../../model/cascadeMemoryQuery.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -1089,6 +1091,9 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // doc routes; the manifest's filePaths resolve OWN-ROOT-FIRST (a Working/-relative path lands
   // inside Extended/<designation>/), falling back to the SCP cwd (the repo-relative case).
   // NEVER throws: absent designation → 404 honest; an unreadable manifest file → skipped.
+  // CMLS-R · the query surface registers beside the floor (the switch's immediate arm).
+  registerCascadeMemoryQueryRoutes(expressApp);
+
   expressApp.get('/suite8-cascade/:designation', (req, res) => {
     const resolved = resolveExtendedDesignationDir(req.params.designation);
     if (!resolved) {

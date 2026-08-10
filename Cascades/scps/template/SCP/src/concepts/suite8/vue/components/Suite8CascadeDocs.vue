@@ -43,7 +43,10 @@ import { suiteCascadeMuxonomic } from '../../../suiteCascade/suiteCascade.muxono
 import { suite8Muxonomic } from '../../suite8.muxonomy';
 // W1 (C758) · REWRITE-PROOF ROUTES — the /suite8-* literals live ONLY in the never-copied
 // scsBridge s8Routes model; the mint's suite8-token rewrite cannot break these fetch paths.
-import { s8CascadePath, s8DocTiersPath, S8_DOC_SAVE_PATH } from '../../../scsBridge/model/s8Routes.model';
+import { s8CascadePath, s8DocTiersPath, S8_DOC_SAVE_PATH, scpCascadeMemoryPath } from '../../../scsBridge/model/s8Routes.model';
+// CMLS-R · the face is the switch's FAST signal (the Control pushes it right after the POST);
+// the on-demand fetch rides it — a SPEED lane only, the truth still confirmed by the relay.
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 import type { Cascade, CascadeFileEntry, CascadeSubscriptionTarget } from '../../../suiteCascade/suiteCascade.type';
 // SCRR sentinel constants (the client request leg) — reused by the on-mount re-request.
 import {
@@ -261,13 +264,31 @@ async function refreshPriorTiers(): Promise<void> {
 // active files straight from disk (two-roots resolved · own-root-first) and floors the
 // panes IMMEDIATELY. The live Record still WINS when it fills (effectiveCascade
 // precedence) — the fetch never blocks anor clobbers the relay.
-async function hydrateCascadeBootFloor(): Promise<void> {
+// CMLS-R · THE ON-DEMAND ARM — the owner face's specified is the fastest observable switch
+// signal; on change the floor fetches the TARGET's memory DIRECTLY (the by-name query) while
+// the server re-point places the change detection in parallel. Same epoch guard; the relay
+// leg confirms/updates behind it.
+const onDemandTargetScp = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
+watch(onDemandTargetScp, (now, prior) => {
+  if (now === prior) return;
+  subscriptionEpoch.value += 1;
+  console.log('[Suite8CascadeDocs] on-demand switch fetch · target=', now ?? 'Local');
+  void hydrateCascadeBootFloor(now);
+});
+
+async function hydrateCascadeBootFloor(onDemandTarget?: string | null): Promise<void> {
   // C833 · THE IN-FLIGHT RACE GUARD (re-keyed to subscriptionEpoch): a query launched under the
   // PRIOR subscription can land AFTER a flip and overwrite the new ground; the response's identity
   // is the epoch AT FETCH START — a flip mid-flight discards the landing.
   const fetchEpoch = subscriptionEpoch.value;
   try {
-    const r = await fetch(s8CascadePath(props.designation), {
+    // the on-demand arm queries the TARGET by name; the bare floor rides the seat route.
+    const floorUrl = onDemandTarget
+      ? scpCascadeMemoryPath(onDemandTarget, props.designation)
+      : s8CascadePath(props.designation);
+    const r = await fetch(floorUrl, {
       headers: { Accept: 'application/json' },
     });
     if (fetchEpoch !== subscriptionEpoch.value) return; // stale in-flight — a flip occurred.
