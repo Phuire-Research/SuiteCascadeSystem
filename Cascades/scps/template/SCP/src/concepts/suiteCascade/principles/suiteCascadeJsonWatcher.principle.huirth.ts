@@ -537,6 +537,32 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
           nextA(
             d.suiteCascade.e.suiteCascadeSetCascadeSubscriptionTargetRelay({ name: cascadeName, target }),
           );
+          sinkWatcherTelemetry('locality-signal.dispatched', {
+            name: cascadeName,
+            target: target ? target.absoluteDir : null,
+          });
+          // C846 · THE DIRECT RELEASE RE-POINT — the release fired its edge with NO sweep
+          // following (the field signature: edge → silence · no diverge · no error) — the
+          // release's only trigger was the targets-selector firing on a key DELETION, an
+          // unproven dependency. The safety-critical direction (never leave a foreign watch
+          // standing) now re-points HOME synchronously at the edge; the dispatches above
+          // still inform the clients + the state; the later sweep no-ops (idempotent).
+          if (target === null) {
+            const heldDir = heldDirectoryByName.get(cascadeName);
+            const effectiveDir = resolveEffectiveCascadeDirectory(cascadeDirectory, null);
+            if (heldDir !== undefined && heldDir !== effectiveDir) {
+              try {
+                repointCascadeSubscription(cascadeName, heldDir, effectiveDir, null);
+              } catch (err) {
+                sinkWatcherTelemetry('locality-signal.release-repoint.error', {
+                  name: cascadeName,
+                  error: String(err).slice(0, 200),
+                });
+              }
+            } else {
+              publishCascadeSubscriptionResolution(cascadeName, effectiveDir, null);
+            }
+          }
         };
         const signalGated = (changed: string): void => {
           if (path.basename(changed) === syncLibraryBasename) handleLocalitySignalEdge();
@@ -866,6 +892,10 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
     }): void => {
       const cascades = k.cascades.select();
       const targets = k.cascadeSubscriptionTargets.select();
+      sinkWatcherTelemetry('subscription.sweep.run', {
+        cascadeCount: Object.keys(cascades).length,
+        targetKeys: Object.keys(targets),
+      });
       for (const entry of Object.values(cascades)) {
         if (!entry || entry.name === GENERAL_CASCADE_NAME) {
           continue; // filter the General — its watch is the always-on STAGE 0 base.
