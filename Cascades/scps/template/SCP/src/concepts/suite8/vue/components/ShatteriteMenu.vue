@@ -236,12 +236,19 @@ const autoModeEnabled = ref<boolean>(false);
 // would mint a MIS-ANCHORED origin citizen the target-scoped anchor can never see (the r4
 // hazard). The honest posture: no spawn while viewing another's locality; ENGAGE the
 // target's anchor (present anor re-engage) anor release to Local to spawn.
+// C850 · THE ANCHOR ENABLEMENT — the U4B suppression RETIRED (its rationale, 'the bridge
+// has no cross-SCP spawn routing', was obsoleted by the C373 scpName thread + the C390
+// birth-stamp + the pair-scoped anchor): under a SPECIFIED locality the affordance now
+// stands and ROUTES TO THE TARGET. The Hard Live Gate holds it DISABLED (with the reason)
+// while the specified target is dark — never a silent own-citizen fall-through.
+const spawnTargetDark = computed<boolean>(
+  () => !!effectiveSyncLocality.value?.specified && localityDark.value,
+);
 const showSpawnOption = computed<boolean>(
   () =>
     isAnchorAuthority.value &&
     !anchor.value &&
-    anchorSpawnMode.value === 'prompt' &&
-    !effectiveTargetScp.value,
+    anchorSpawnMode.value === 'prompt',
 );
 
 // P1 RE-ENGAGE GATE · the ORPHAN-ANCHOR case: an anchor entry EXISTS (isAnchor=true) but is NOT
@@ -910,10 +917,18 @@ async function handleSpawnAnchor(): Promise<void> {
   // at spawn stands server-side).
   const priorSessionIds = new Set(sessionsList.value.map((s) => s.id));
 
+  // C850 · THE PRESS-TIME SNAPSHOT — the spawn's citizen scope is fixed AT THE PRESS (the
+  // live matcher flips if the locality changes mid-poll); under a specified locality the
+  // spawn ROUTES TO THE TARGET (the C373 scpName thread — the session provisions under the
+  // target citizen and the pair-scoped anchor lands there; the induction then finds it).
+  const targetAtPress = effectiveTargetScp.value;
+  const matchesPressCitizen = (s: ScsBridgeSessionEntry): boolean =>
+    targetAtPress ? (s.scpName ?? null) === targetAtPress : matchesOwnCitizen(s);
+
   // Spawn — the bridge claimAnchorIfUnclaimed auto-anchors the new session to this page.
   // C373 · triggerSpawnS8Session (rename-proof alias) — survives the suite8:page domain-token rewrite.
   const origin = await ensureOriginScpName();
-  ctrl.triggerSpawnS8Session(props.suite8Name, origin || undefined);
+  ctrl.triggerSpawnS8Session(props.suite8Name, targetAtPress || origin || undefined);
 
   // Readiness poll — settle on the launched anchor, else fall back to an explicit set-anchor.
   const SOE_STEP_MS = 250;
@@ -932,7 +947,7 @@ async function handleSpawnAnchor(): Promise<void> {
       // C821 · BO-1 LAW — the ENTRY field access rides the held helper (an inline
       // `s.suite8Name` mint-renames into a dead field; props.suite8Name renames FINE).
       const live = filterS8Sessions(sessions, props.suite8Name).find(
-        (s) => matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
+        (s) => matchesPressCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
       );
       if (live) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
@@ -947,10 +962,10 @@ async function handleSpawnAnchor(): Promise<void> {
       // scope-clear wipes the prior). Only set-anchor when there is genuinely NO existing anchor.
       if (elapsedMs >= SOE_MAX_MS) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
-        const existingAnchor = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesOwnCitizen(s) && s.isAnchor === true);
+        const existingAnchor = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesPressCitizen(s) && s.isAnchor === true);
         // D-AFS2 · the fallback set-anchor candidate MUST be the newborn — an elder plain
         // session is never promoted (the anchor-steal wound). No newborn → no action.
-        const unanchored = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
+        const unanchored = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesPressCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
         if (existingAnchor) {
           console.log('[ShatteriteMenu SOE] fallback · existing anchor present → re-engage (NO steal) · anchorId=', existingAnchor.id);
           ctrl.triggerEngageSession(existingAnchor.id);
@@ -1507,13 +1522,15 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       <button
         type="button"
         class="menu-option-btn menu-spawn-btn"
-        :disabled="spawning"
+        :disabled="spawning || spawnTargetDark"
+        :title="spawnTargetDark ? 'The specified locality is offline — spawn its SCP to enable (the Live Locality Law)' : ''"
         @click="handleSpawnAnchor"
       >
         <span class="menu-option-kind">SPAWN</span>
-        <span class="menu-option-label">Spawn + Anchor this domain</span>
+        <span class="menu-option-label">Spawn + Anchor {{ effectiveTargetScp ? `at ${effectiveTargetScp}` : 'this domain' }}</span>
         <span v-if="spawning" class="menu-option-spinner">…</span>
       </button>
+      <span v-if="spawnTargetDark" class="hifi-label menu-stub-text">The specified locality is offline — the launch waits for it.</span>
     </div>
 
     <!-- P1 · ORPHAN-ANCHOR RE-ENGAGE · an anchor exists but is offline (status !== 'launched').
