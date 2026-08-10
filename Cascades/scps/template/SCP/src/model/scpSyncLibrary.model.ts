@@ -679,6 +679,13 @@ const vaultPathFor = (designation: string, key: string, rel: string): string => 
 };
 
 // LOCAL MODE · the preservation motion — every registered surface ushers INTO the vault.
+// CMLS · THE READ-THROUGH DISARM (the C845 cure of the 02:41/22:08 writer class): under the
+// Cascade-Memory-Locality-Subscription the cascade surfaces are READ THROUGH to the target —
+// the usher must NEVER copy/replace/restore them (its replace-from-target physically removed
+// a citizen's Diamond+Onyx and exported another's — both field-caught). The menu surface (and
+// every registered extra) keeps the full usher machine; ONLY the cascade pair is exempt.
+export const CMLS_READ_THROUGH_SURFACE_KEYS = new Set(['cascadeManifest', 'working']);
+
 export const snapshotRegisteredToVault = (designation: string): UsherCopyResult => {
   // D-LSG · THE USHER GUARD — the tree's occupying content must be the SCP's OWN locality
   // anor the vault REFUSES wholesale (the race class dies here: preservation firing while
@@ -691,6 +698,7 @@ export const snapshotRegisteredToVault = (designation: string): UsherCopyResult 
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
   for (const [key, rel] of Object.entries(shape.registered)) {
+    if (CMLS_READ_THROUGH_SURFACE_KEYS.has(key)) continue; // CMLS · read-through — never copied.
     out = addResults(
       out,
       usherSurface(path.resolve(process.cwd(), rel), vaultPathFor(designation, key, rel)),
@@ -706,6 +714,7 @@ export const restoreRegisteredFromVault = (designation: string): UsherCopyResult
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
   for (const [key, rel] of Object.entries(shape.registered)) {
+    if (CMLS_READ_THROUGH_SURFACE_KEYS.has(key)) continue; // CMLS · read-through — never copied.
     const vaultAbs = vaultPathFor(designation, key, rel);
     const destAbs = path.resolve(process.cwd(), rel);
     let vaultExists = false;
@@ -899,6 +908,7 @@ export const replaceRegisteredFromTarget = (
   const { shape } = seedSyncLibraryAdditive(designation);
   let out = emptyUsherResult();
   for (const [key, rel] of Object.entries(shape.registered)) {
+    if (CMLS_READ_THROUGH_SURFACE_KEYS.has(key)) continue; // CMLS · read-through — never copied.
     const srcAbs = path.resolve(targetRoot, rel);
     const destAbs = path.resolve(process.cwd(), rel);
     let srcExists = false;

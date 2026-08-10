@@ -873,11 +873,28 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
         const target = targets[entry.name] ?? null;
         const effectiveDir = resolveEffectiveCascadeDirectory(entry.cascadeDirectory, target);
         const heldDir = heldDirectoryByName.get(entry.name);
-        if (heldDir !== undefined && heldDir !== effectiveDir) {
-          repointCascadeSubscription(entry.name, heldDir, effectiveDir, target); // close → publish → arm.
-        } else {
-          publishCascadeSubscriptionResolution(entry.name, effectiveDir, target); // seat kept warm (idempotent).
-          armWatcherOn(effectiveDir, entry.name); // additive + idempotent (unchanged).
+        // C845 · THE SWEEP ARMOR — one entry's failure (e.g. a foreign-handle close mid
+        // unlink-storm) must NEVER conclude the whole watcher plan (the silent-halt class:
+        // the release edge fired with no repoint following). Named skip; the next sweep retries.
+        try {
+          if (heldDir !== undefined && heldDir !== effectiveDir) {
+            sinkWatcherTelemetry('subscription.sweep.diverge', {
+              name: entry.name,
+              held: heldDir,
+              effective: effectiveDir,
+            });
+            repointCascadeSubscription(entry.name, heldDir, effectiveDir, target); // close → publish → arm.
+          } else {
+            publishCascadeSubscriptionResolution(entry.name, effectiveDir, target); // seat kept warm (idempotent).
+            armWatcherOn(effectiveDir, entry.name); // additive + idempotent (unchanged).
+          }
+        } catch (err) {
+          sinkWatcherTelemetry('subscription.sweep.error', {
+            name: entry.name,
+            held: heldDir ?? null,
+            effective: effectiveDir,
+            error: String(err).slice(0, 200),
+          });
         }
       }
     };
