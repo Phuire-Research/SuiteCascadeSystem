@@ -72,6 +72,7 @@ import {
   buildRequirementsMapperVermillion,
   buildInstallEntourageVermillion,
   buildUpdateCircuitVermillion,
+  buildUpdateVermillion,
   type InstallRequirementsShape,
   type UpdateCircuitDirection,
 } from '../../../../model/scpS8InstallCircuit.model';
@@ -189,35 +190,35 @@ const ENTOURAGE_FORGE_CONFIG = {
       label: 'Topics Registry + Live Article Bulletin',
       line: 'A user-curated topic list synced to a live folder-tree of research articles, merged and relayed to the client in real-time.',
       shape:
-        'Topics Registry-Driven Content Tree with Live Folder-Tree Relay — 2 relay configs + 4 qualities (2 Huirth-base, 2 client) + muxonomy wiring + the Frontier component + 1 Sync registration.',
+        'LIVE in Cadmium: topics.json curated through the page (SCS:TopicUpdate chip input) + the frontier folder-tree watcher (armFolderTreeWatch) merging worker articles → the Huirth-base bulletin quality FIRST → the relay quality → client state → subscription → the Frontier ref. Four sibling STCP relay instances already run this (menu · topics · researchBulletin · targeted-menu). The single unifying Reference Design formalizes on cascade; the spine it names is built.',
     },
     {
       rdKey: 'RD-B',
-      label: 'Research Dispatch + Workers',
-      line: 'Single or full-salvo fleet dispatch of ephemeral researchers; the bridge serializes the fleet, the page observes via the session registry.',
+      label: 'Prepared Agent Dispatch (PGED) — an Entourage for Your Page',
+      line: 'Prepare, by way of your page UI, the dispatch of any number of agents in sequence, grounded on YOUR page: single or full-salvo, the bridge serializes the fleet, your page observes every worker land its work. The Topic Researcher is the worked instance.',
       shape:
-        'A pure Vermillion builder feeding ONE batch enqueue — AUTHOR ONLY the Vermillion builder + output contract; spec stamping, batch, observatory, locality resolution ALL inherited.',
+        'Page-Grounded Entourage Dispatch — AUTHOR ONLY two Demometers: (1) your Prepare Surface (the domain unit list + fire controls) and (2) a pure Vermillion builder with its output contract (unit + RI path + write-shape + teardown step). INHERITED WHOLE: the spawn rail (triggerRelayEnqueue kind:spawn anor triggerSpawnS8Session), the ASTO sequence law (serialized spawn→gate→prime blocks · MISO), the grounding (TPRI · your designation + RI dir · CMLS locality for remote citizens), and the observation lane (registry ledger → roster → focus → All Clear + your registered relay lanes).',
     },
     {
       rdKey: 'RD-C',
       label: 'The Relay Lanes',
       line: 'The reactive spine every surface rides: file → watcher → Huirth state → SMRP → client state → subscription → ref.',
       shape:
-        'The Relay Lane Class — the 6-step registration checklist (model config · Huirth Base quality · Relay quality · muxonomy · Huirth principles · Landing subscription+ODCF) under THE FOUR LAWS (empty-is-a-state · absence-is-not-emptiness · unlinkDir coverage · no boot-skips).',
+        'LIVE: the file → watcher → Huirth-base quality → relay quality (SMRP) → client state → subscription → ref spine runs across four sibling STCP instances in Cadmium today — the same spine RD-A rides. Any new surface registers into the lane the page already carries; results-return is a property of the page, not of the dispatch. The 6-step registration checklist and THE FOUR LAWS (empty-is-a-state · absence-is-not-emptiness · unlinkDir coverage · no boot-skips) formalize as one Reference Design on cascade; the spine they codify is built and observable.',
     },
     {
       rdKey: 'RD-D',
       label: 'Sync Library + Locality',
       line: 'The diametric capability: view or operate another live SCP’s Cascade content from your Suite 8 page.',
       shape:
-        'The vault + the 3-stage usher machine + the three guards + the locality relay — ONE entry in KNOWN_SURFACE_REGISTRATIONS (+ optional empty form); everything else inherited at zero cost. Hard Live Gate: the target must be spawned + online.',
+        'LIVE (CMLS locality, as built): scpName stamps the spawn, riBase roots the RI read at the TARGET citizen\'s absolute tree, targetScpName labels the Vermillion header — a dispatch grounds on a REMOTE citizen\'s memory (the D-SLE Effective Locality stamp + D-TRL target-rooting in Cadmium). The subscription rides the same relay spine; a signal-watch carries the target\'s content back; absence is a state, not an error (HONEST ABSENCE — an offline target reports offline, it does not fabricate content). HARD LIVE GATE: the target must be spawned + online. The vault + 3-stage usher + KNOWN_SURFACE_REGISTRATIONS entry formalize as one Reference Design on cascade; the locality relay they wrap is built.',
     },
     {
       rdKey: 'RD-E',
       label: 'The Forge + Actualization',
       line: 'The Suite 8 creation system: the forge predicate + the 4-step create pipeline + the 6-band creation Vermillion.',
       shape:
-        'THE GROUND FOR EF-2..4 — the fold seat (Suite8Control §IV) · the flair exchange (transparent ↔ the Forge’s prismatic) · the launch toggle seats · THE NAMED BIAS attach seat (Band 4.5 — page-creation guidance).',
+        'LIVE in this very component (EF-2..4): the fold seat (Suite8Control §IV) · the flair exchange (transparent ↔ the Forge\'s prismatic PULSE) · the launch toggle seat (blankSlateLaunch, §IV config) · THE ONE MOTION engage — a live Forge is FOCUSED, else a fresh anchor spawn carrying the forgeDirective (triggerSpawnS8Session). The Forge dispatches THROUGH the same PGED rail RD-B names: the capability it cascades into a page is the capability that dispatched it. THE NAMED BIAS attach seat (Band 4.5 · page-creation guidance) formalizes on cascade — not yet wired.',
     },
   ],
 } as const;
@@ -291,6 +292,9 @@ async function engageEntourageForge(): Promise<void> {
     const forgeDirective = [
       `THE ENTOURAGE FORGE COMMISSION · target Suite 8 page: "${props.suite8Name}".`,
       `This conduction formalizes the "${props.suite8Name}" page — research its domain, build out the page, and hand the Suite back ready.`,
+      'THE PGED FRAME: the capability you cascade into this page is the capability that dispatched YOU — Page-Grounded Entourage Dispatch, the UI-prepared dispatch of any number of agents in sequence grounded on one Suite 8 page. Author only two Demometers per page (the Prepare Surface + a pure Vermillion builder with its output contract); inherit four whole (the spawn rail, the ASTO sequence law, the grounding, the observation lane).',
+      'THE WORKED INSTANCE: the Topic Researcher IS the general pattern proven in the field — read its Inspirant docs (Cadmium Researcher/Onboard.md) as the worked example that teaches PGED, not as a research-only feature.',
+      'THE REAL-SYSTEM ANCHORS you may build against, verified live: the spawn rail (triggerSpawnS8Session · designation-agnostic by the s8 alias contract) · the relay-lane spine (file → watcher → Huirth state → client → subscription → ref) · CMLS locality (a page may serve a REMOTE citizen\'s memory) · the s8 counter axis (S8_PAGE_COUNTER · the version row).',
       'THE SIGN-OFF (V-4): the Suite 8 Control rides the toolbar drawer now — there is NO inline mount to flip. When the page is sufficiently developed, record the completion in the page\'s Cascades/Working notes and alert for turn-over; the drawer boots the Forge section collapsed by design.',
     ].join('\n');
     ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true, false, forgeDirective, true, true, props.suite8Name);
@@ -406,11 +410,58 @@ const pageS8Display = computed<string>(() =>
 const npmS8Display = computed<string>(() =>
   npmS8CounterValue.value === null ? '—' : `#${npmS8CounterValue.value}`,
 );
-// engageVersionedUpdate · THE PM-5 SEAM — the always-enabled update control fires this. PM-5
-// wires the Vermillion (buildUpdateVermillion · the Forge conference + the close sequence); until
-// then this proves the control renders + fires (the Lambda seam · a clear console marker · no-op).
-function engageVersionedUpdate(): void {
-  console.log('[S8-PM] engageVersionedUpdate — PM-5 wires the Vermillion');
+// MD-S8PM · PM-5 · engageVersionedUpdate — THE FORGE UPDATE VERMILLION, wired real. The
+// always-enabled update control (the panel version row) AND the Shatterite Menu path both fire
+// this ONE function (the board's convergence law). It composes buildUpdateVermillion with the
+// honest s8 pair (the PM-2/PM-3 controller seats · ?? 0 floor for the page, ?? page for npm when
+// npm is unknown so the pair never asserts a fabricated behind) and spawns through the SAME rail +
+// the SAME ONE MOTION law as engageEntourageForge. THE ONE MOTION VERDICT (honest read of
+// findLiveS8Session): liveness keys on suite8Name === 'Entourage Forge' + scpName + status ===
+// 'launched' — it does NOT discern the session's OWN target page (that rides the registry
+// targetSuite8Name field, not suite8Name). So an update-Forge and a build-out-Forge occupy the
+// SAME pool: ONE MOTION focuses whichever live Forge exists for this SCP rather than duplicating.
+const versionedUpdateSpawning = ref<boolean>(false);
+const versionedUpdateNote = ref<string>('');
+async function engageVersionedUpdate(): Promise<void> {
+  const ctrl = getGlobalScsBridgeController();
+  if (!ctrl || versionedUpdateSpawning.value) return;
+  settleForgeLaunchPulse();
+  versionedUpdateSpawning.value = true;
+  versionedUpdateNote.value = '';
+  try {
+    // THE HONEST PAIR — the page's minted counter (floor 0) and npm's current (page value when
+    // npm is unknown, so the embedded pair never fabricates a behind delta; the session RE-READs
+    // /scs-bridge-version for the live counter regardless).
+    const pageS8 = pageS8CounterValue.value ?? 0;
+    const npmS8 = npmS8CounterValue.value ?? pageS8;
+    // THE TIMEOUT RACE (C375) — a never-settling getScpName must never hang the dispatch.
+    const scpName = (await Promise.race([
+      ctrl.getScpName(),
+      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
+    ])) ?? undefined;
+    // THE ONE MOTION — a live Forge conduction for THIS SCP is FOCUSED, never duplicated (the
+    // update session shares the Entourage Forge pool; see the verdict note above).
+    const liveForge = findLiveS8Session(ctrl.sessionsList.value ?? [], 'Entourage Forge', scpName);
+    if (liveForge) {
+      ctrl.triggerFocusSession(liveForge.id);
+      versionedUpdateNote.value = 'Focused the running Forge.';
+      return;
+    }
+    // ELSE — a fresh anchor spawn carrying the Forge Update Vermillion (the engageEntourageForge
+    // idiom VERBATIM: fresh:false · onboard:true · anchor:true · target = this page).
+    ctrl.triggerSpawnS8Session(
+      'Entourage Forge', scpName, false, true, false,
+      buildUpdateVermillion(props.suite8Name, pageS8, npmS8),
+      true, true, props.suite8Name,
+    );
+    versionedUpdateNote.value = 'The Forge Update engaged — it will confer the standardization and hand the Suite back.';
+  } catch {
+    versionedUpdateNote.value = 'Could not engage the Forge Update — is the Bridge running?';
+  } finally {
+    setTimeout(() => {
+      versionedUpdateSpawning.value = false;
+    }, 1200);
+  }
 }
 const onWorkingB = computed<boolean>(() =>
   isWorkingBranchPer(currentBranch.value, gitmControllerForDoor?.gitmJson.value),
@@ -1104,6 +1155,29 @@ async function chooseLocality(scpName: string | null): Promise<void> {
             </button>
             <p v-if="forgeSpawnNote" class="s8c-forge-note">{{ forgeSpawnNote }}</p>
 
+            <!-- MD-S8PM · PM-5 · THE MENU-PATH UPDATE PRESENCE — the update option present GENERALLY
+                 on the same Forge menu path as "Engage Entourage Forge", ACTIVATED over the versioned
+                 state (amber when s8PageBehind · the SAME amber as the version-row control). Converges
+                 on the SAME engageVersionedUpdate the always-enabled version-row control fires (the
+                 board's convergence law). ALWAYS ENABLED (the version-row control's always-enabled law
+                 rides here too — enabled current anor behind); the amber only signals the behind state. -->
+            <button
+              type="button"
+              class="s8c-forge-btn s8c-forge-update-btn"
+              :class="{ 's8c-forge-update-btn--behind': s8PageBehindValue }"
+              :disabled="versionedUpdateSpawning"
+              title="Update this Suite 8 page from the Template Suite 8 — the Forge confers which standardizations adapt over (always available; amber when the page is behind npm's s8 counter)."
+              @click="engageVersionedUpdate"
+            >
+              <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+              <span>{{
+                versionedUpdateSpawning
+                  ? 'Engaging…'
+                  : `Update from Template · PAGE ${pageS8Display} → NPM ${npmS8Display}`
+              }}</span>
+            </button>
+            <p v-if="versionedUpdateNote" class="s8c-forge-note">{{ versionedUpdateNote }}</p>
+
             <!-- EF-3′d · THE PILL FILTER SYSTEM — target pills over the SCP-wide conduction
                  pool; the page's own pill AUTO-SELECTS (leads the row); any prior remains
                  referenceable from the same page. The chips stay lean (ulid + model) — the
@@ -1535,6 +1609,18 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   filter: brightness(1.08);
 }
 .s8c-version-update-btn--behind {
+  color: #1a0f08;
+  background: #fdba74;
+  border-top-color: #ffd8a8;
+  border-right-color: #ffd8a8;
+  border-bottom-color: #c2410c;
+  border-left-color: #c2410c;
+  box-shadow: -1px 1px 4px rgba(194, 65, 12, 0.55);
+}
+/* MD-S8PM · PM-5 · THE MENU-PATH UPDATE BUTTON — reuses .s8c-forge-btn (the Pewter bevel) as its
+   base; the --behind variant wears the SAME amber lineage as the version-row control (the amber
+   convergence · #fdba74 / #c2410c). Quiet Pewter at rest (current), amber when behind. */
+.s8c-forge-update-btn--behind {
   color: #1a0f08;
   background: #fdba74;
   border-top-color: #ffd8a8;

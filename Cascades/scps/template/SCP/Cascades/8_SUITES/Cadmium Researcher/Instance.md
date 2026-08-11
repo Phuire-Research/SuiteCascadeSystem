@@ -23,6 +23,8 @@
 
 Cadmium Researcher is the generalized research instance — the durable executor that carries the Vermillion Crystraline (Planned Query A-I pattern) across Project contexts where Vermillion as named protocol would lose definition without a stable substrate to host it.
 
+> This document teaches the general **PGED (Page-Grounded Entourage Dispatch)** pattern through the research case — the UI-prepared dispatch of any number of agents in sequence, grounded on one Suite 8 page. Read it as the worked instance of the general capability, not as a research-only feature.
+
 ### Position in the Stratimux Stack
 
 | Layer | Term | Property |

@@ -67,3 +67,19 @@ options.
 CONCLUDER: `grep -c "Domain: TBD" .../Instance.md` = 0 — the Forge-launch pane's
 dissolution proven before the close. The Forge remains spawnable via the SCS-Bridge
 after the pane goes — the dissolution removes the door, never the Forge.
+
+## The PGED Teaching Frame (rides F2-F3)
+
+The capability the Forge cascades is **PGED — Page-Grounded Entourage Dispatch**: prepare,
+by way of UI, the dispatch of any number of agents in sequence, grounded on one Suite 8
+page. When F2 (Planned Query Conduction) and F3 (Concept Enhancement) build out a page's
+dispatch capability, they AUTHOR two Demometers — the Prepare Surface (domain unit list +
+fire controls) and a pure Vermillion builder with its output contract — and INHERIT four
+whole: the spawn rail, the ASTO sequence law (MISO), the grounding (TPRI · CMLS locality),
+and the observation lane (registry ledger + relay lanes). See Instance.md §The PGED Pattern
+for the two-authored/four-inherited table.
+
+**The Worked Instance**: the Cadmium Researcher Inspirant docs (`Cascades/8_SUITES/Cadmium
+Researcher/Onboard.md`, Instance.md) are PGED's field-proven example — teach the general
+pattern through them, not a research-only feature. The Forge dispatches through the same
+rail, so it lays into a page the very capability that dispatched it.
