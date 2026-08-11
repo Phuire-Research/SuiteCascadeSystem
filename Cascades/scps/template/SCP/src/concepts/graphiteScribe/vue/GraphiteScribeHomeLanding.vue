@@ -21,7 +21,7 @@
  * Citation: TU-ARC-S2-ORANGE-NAMING.md (DSSLS · SSMC · SAMLS) · TU-ARC-S1-RED-CURATION.md §4 (ISMC)
  * Reference model: CadmiumLanding.vue (the populated domain page this scaffold pares down)
  */
-import { ref, shallowRef, computed, onMounted, onUnmounted, inject } from 'vue';
+import { ref, shallowRef, computed, markRaw, onMounted, onUnmounted, inject } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 // IUPA · the graphiteScribe CLIENT concept supplies this landing's page Muxium (mirrors CadmiumLanding
@@ -49,6 +49,16 @@ import { GRAPHITESCRIBE_DEFAULT_MENU_STAGE } from '../model/graphiteScribeDefaul
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the GraphiteScribeCard by this page's display name.
 import type { GraphiteScribeEntry } from '../graphiteScribe.type';
 import GraphiteScribeCard from './components/GraphiteScribeCard.vue';
+// MD-USP · US-1 · TO-STANDARD · V-4b THE LENT DRAWER — this page lends the shared Suite8ControlDrawer
+// to the toolbar seat (the rung-2 blocker cure). Cross-concept import to the suite8 concept, the SAME
+// path CadmiumLanding.vue:70 walks (the wild-class precedent); GraphiteScribe carries no drawer of its
+// own, so the standard drawer is shared verbatim.
+import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// MD-USP · US-1 · TO-STANDARD · PM-3 THE s8-AXIS COUNTER — the rename-proof shared axis value (the
+// C373 S8_ law: `S8_PAGE_COUNTER` bears none of the three rename tokens, so it survives every twin
+// identically — it is the template's single canonical counter, NOT a per-page constant). Cross-concept
+// import to suite8.type, the SAME boundary CadmiumLanding.vue:54 crosses for Suite8SyncLocalitySnapshot.
+import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
 // W2 · THE FORGE MENU DOOR — the branch-aware two-state door reused VERBATIM from GraphiteScribeBiplane
 // (the forge-door idiom · the .shatterite-menu Pewter family). The turn-over leg reads the live git
 // branch (gitm.json relay · inject-with-getGlobal fallback), the engage leg anchor-spawns Entourage Forge.
@@ -393,9 +403,13 @@ onMounted(() => {
   // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
   // locality (mirrors Suite8HomeLanding). GraphiteScribe has NO version constant of its own, so
   // we register with the assumed '0.0.0' (the frozen pageVersion field the S8 face does not display).
-  // MD-S8PM · PM-3 · a wild page never saw the s8 counter: the counter arg is OMITTED (this call
-  // passes neither counter nor drawer), floored to 0 at readPageS8Counter (C856).
-  getGlobalScsBridgeController()?.registerCurrentS8Page(graphiteScribeName.value, '0.0.0');
+  // MD-USP · US-1 · TO-STANDARD — the wild page is brought to the current 4-arg standard: the s8-AXIS
+  // counter (S8_PAGE_COUNTER · slot 3) rides ALONGSIDE the version string, and the LENT drawer
+  // (markRaw(Suite8ControlDrawer) · slot 4) seats the toolbar S8 button + Control panel (the rung-2
+  // blocker cure — IslandWrapper.vue:424 `s8Present = currentS8Page.value?.drawer != null`). The '0.0.0'
+  // version string is UNCHANGED (the frozen pageVersion field the S8 face does not display). Shape
+  // matches Suite8HomeLanding.vue:178 exactly; drawer import matches CadmiumLanding.vue:70.
+  getGlobalScsBridgeController()?.registerCurrentS8Page(graphiteScribeName.value, '0.0.0', S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
   console.log('[GraphiteScribeHomeLanding] mounted · build=C376-pointerfix-clickprobe');
