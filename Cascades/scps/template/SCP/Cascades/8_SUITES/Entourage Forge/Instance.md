@@ -77,3 +77,14 @@ becoming an Article is the shape.
 in, Article out. Its Inspirant docs (`Cascades/8_SUITES/Cadmium Researcher/Onboard.md`,
 Instance.md) teach the GENERAL pattern through the specific research case — read them as the
 example that proves the class, not as a research-only feature.
+
+**The Ship Path (the Directive as Primed Vermillion)**: row 2's Primed Vermillion SHIPS
+at `Cascades/8_SUITES/<designation>/Onboard.md` — the SCP-local stratum the
+`suite8_page_transfer` motion carries with the page. The receiving citizen's anchor spawns
+WITH it: the cli-handler reads the file at fire time via the C378 two-ground resolver
+(SCP-local first, workspace second), hydrates the STVI runtime tokens, and delivers it as
+the anchor's first turn. A page that ships an Onboard.md is a First-Class Intelligent
+Application — its anchor onboards the page's own user. The **F5 Actualization Close** authors
+the first Onboard.md for a newly minted page; the author refines it thereafter (a page
+without one spawns a graceful bare anchor). The worked instance is the Cadmium
+Researcher/Onboard.md ASDR named above.

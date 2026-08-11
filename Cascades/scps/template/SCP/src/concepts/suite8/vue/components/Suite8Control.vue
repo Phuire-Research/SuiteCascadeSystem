@@ -220,6 +220,13 @@ const ENTOURAGE_FORGE_CONFIG = {
       shape:
         'LIVE in this very component (EF-2..4): the fold seat (Suite8Control §IV) · the flair exchange (transparent ↔ the Forge\'s prismatic PULSE) · the launch toggle seat (blankSlateLaunch, §IV config) · THE ONE MOTION engage — a live Forge is FOCUSED, else a fresh anchor spawn carrying the forgeDirective (triggerSpawnS8Session). The Forge dispatches THROUGH the same PGED rail RD-B names: the capability it cascades into a page is the capability that dispatched it. THE NAMED BIAS attach seat (Band 4.5 · page-creation guidance) formalizes on cascade — not yet wired.',
     },
+    {
+      rdKey: 'RD-F',
+      label: 'OnBoard.md — the Primed Vermillion Your Page Ships',
+      line: 'Place a Primed Vermillion you refine at Cascades/8_SUITES/<designation>/Onboard.md; your page ships as a First-Class Intelligent Application — its anchor onboards YOUR user. The 8_SUITES folder travels with your page (suite8_page_transfer), so the receiving citizen spawns the anchor WITH it — the C378 two-ground resolver + STVI hydration are LIVE today.',
+      shape:
+        'The anchor spawn reads Cascades/8_SUITES/<designation>/Onboard.md at fire time (SCP-local FIRST, workspace SECOND — the C378 sovereignty resolver). The cli-handler hydrates runtime tokens (BRIDGE_ENDPOINT · SCP_WINDOW_ID · SCP_NAME), prepends the generic Shatterite Menu How, and delivers the composed prompt as the anchor\'s FIRST turn. Absent = graceful no-seed spawn (the page works; the anchor receives a bare seat, no priming). THE WORKED INSTANCE: the Cadmium Researcher Onboard.md ASDR — the routine that reads topics.json, authors menu.json, refocuses the UI, and stays interactive. HONEST MARKS: the mint does NOT create Onboard.md — the Forge F5 Close is the first author; refine yours thereafter through the three live lanes (Installation · Updating · Live-use), and the anchor receives the refined version on every fresh spawn. The on-location refinement editor is deferred by doctrine — refinement today IS editing the file.',
+    },
   ],
 } as const;
 

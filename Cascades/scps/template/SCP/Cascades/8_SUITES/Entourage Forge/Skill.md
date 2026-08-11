@@ -68,6 +68,15 @@ CONCLUDER: `grep -c "Domain: TBD" .../Instance.md` = 0 — the Forge-launch pane
 dissolution proven before the close. The Forge remains spawnable via the SCS-Bridge
 after the pane goes — the dissolution removes the door, never the Forge.
 
+**THE SHIP PATH (F5 writes the page's first Onboard.md)**: F5 IS the first author of
+`Cascades/8_SUITES/<designation>/Onboard.md` — the SCP-local stratum `suite8_page_transfer`
+carries with the page. Because the anchor reads it at spawn (C378 two-ground resolver +
+STVI hydration, LIVE today), the minted page ships as a First-Class Intelligent
+Application: its own anchor onboards its own user. A page minted without an Onboard.md
+spawns a graceful bare anchor; F5 is what makes the seat first-class. The author refines
+the Vermillion thereafter — refinement today IS editing the file, and every fresh spawn
+picks up the refined version.
+
 ## The PGED Teaching Frame (rides F2-F3)
 
 The capability the Forge cascades is **PGED — Page-Grounded Entourage Dispatch**: prepare,
