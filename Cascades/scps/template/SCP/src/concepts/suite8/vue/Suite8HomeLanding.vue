@@ -48,7 +48,7 @@ import Suite8CascadeDocs from './components/Suite8CascadeDocs.vue';
 import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
-import { S8_PAGE_VERSION } from '../suite8.type';
+import { S8_PAGE_VERSION, S8_PAGE_COUNTER } from '../suite8.type';
 import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
 // V-4b · THE LENT DRAWER — this page lends its OWN Control drawer to the toolbar seat (in a
 // minted twin the rename converts this to the twin's drawer, which reads the twin's own slice).
@@ -173,7 +173,9 @@ let muxium: Muxium<ClientMuxiumDeck> | null = null;
 onMounted(() => {
   // V-2 · register this page's designation + frozen version into the shared controller seat
   // (the toolbar's presence predicate + the V-5 update detection read THIS).
-  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION, markRaw(Suite8ControlDrawer));
+  // MD-S8PM · PM-3 · the s8-AXIS counter (S8_PAGE_COUNTER) rides ALONGSIDE the version string —
+  // 3rd arg = counter, 4th = the lent drawer (the version stamp is UNCHANGED).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION, S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
   if (typeof window === 'undefined') return;
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.

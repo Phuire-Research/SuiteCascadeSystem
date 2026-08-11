@@ -682,7 +682,10 @@ onMounted(() => {
   // register with the assumed '0.0.0' (the field is a frozen pageVersion the S8 face does not
   // display; the V-5 update detection · not in scope here · would read it). The designation ref
   // (cadmiumDesignationName) hydrates async — the S8 face's designation-arrival re-arm follows it.
-  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0', markRaw(Suite8ControlDrawer));
+  // MD-S8PM · PM-3 · a wild page never saw the s8 counter: the counter arg is OMITTED (undefined),
+  // floored to 0 at readPageS8Counter (C856) — the owner-who-never-saw surfaces the update. The
+  // drawer moves to the 4th slot under the new signature (designation · version · counter · drawer).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0', undefined, markRaw(Suite8ControlDrawer));
 
   // MD-6 · D-BP-2 · seed the name-filtered Cascade Documents list (the SCP-local read).
   void loadCadmiumWorkingDocs();

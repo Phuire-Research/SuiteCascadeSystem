@@ -109,6 +109,17 @@ export type Suite8SubPage = S8SubPage;
 // the rename-proof token (C373) — the name survives every twin identically.
 export const S8_PAGE_VERSION = '1.0.0';
 
+// MD-S8PM · PM-3 · THE PAGE COUNTER (the stamp joins the s8 axis). The human-readable
+// version string above is RETAINED unchanged (the S8Card label + the wild-page '0.0.0'
+// stamps keep it). This SIBLING is the s8-AXIS value — the counter the template carries
+// NOW, matching the founding npm s8:1 (package.json scsMuxameter.s8 · PM-1). The mint
+// pass-through stamps this automatically: cloneRenameEngine recursively copies the suite8
+// concept files verbatim and renames ONLY the npm-package tokens (huirth-scp-template + the
+// long title) — `suite8`/`Suite8`/`SUITE8` are NOT rename targets, so `S8_PAGE_COUNTER`
+// (bearing none of the three tokens) survives the twin identically (the C373 S8_ law).
+// The compare `pageS8Counter < npmS8Counter` = out-of-sync (PM-4 colors the S8 toggle).
+export const S8_PAGE_COUNTER = 1;
+
 export type Suite8ClientState = {
   // V-2 · the frozen template version this page was actualized from (S8_PAGE_VERSION at
   // the concept's creation — the Muxium carries it from birth).

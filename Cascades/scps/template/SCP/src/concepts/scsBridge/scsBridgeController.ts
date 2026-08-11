@@ -135,8 +135,13 @@ export type ScsBridgeController = {
   // V-2 · the mounted Suite 8 page's registration (null = not an S8 page). V-4b · the page
   // LENDS its own Control drawer component (the twin's drawer reads the twin's OWN muxium
   // slice — the suite8-keyed drawer is inert on a renamed island); drawer null = no S8 button.
-  currentS8Page: ShallowRef<{ designation: string; version: string; drawer: Component | null } | null>;
-  registerCurrentS8Page: (designation: string, version: string, drawer?: Component) => void;
+  // MD-S8PM · PM-3 · `counter` carries the s8-AXIS value (S8_PAGE_COUNTER · a number) ALONGSIDE
+  // the human-readable `version` string. It is OPTIONAL on the registration shape (NOT a Stratimux
+  // state slice — a plain Vue ref object, so the KeyedSelector no-optional law does not bind here):
+  // wild pages (GraphiteScribe/Cadmium) that never saw a counter register WITHOUT it; the floor-law
+  // helper readPageS8Counter normalizes absent/non-number → the floor 0 at the READ seat (C856).
+  currentS8Page: ShallowRef<{ designation: string; version: string; counter?: number; drawer: Component | null } | null>;
+  registerCurrentS8Page: (designation: string, version: string, counter?: number, drawer?: Component) => void;
   clearCurrentS8Page: () => void;
   // MD-S8PM · PM-2 · THE READ SEAT (the s8 pair · THE NO-RED LAW — never a verdict input).
   // npmS8Counter · the AVAILABLE s8 counter from the served /scs-bridge-version answer
@@ -146,10 +151,14 @@ export type ScsBridgeController = {
   // pageS8Counter to color the S8 toggle border; PM-2 only seats it.
   npmS8Counter: ShallowRef<number | null>;
   // pageS8Counter · the CURRENT page's s8 counter — the axis value the page carried when minted.
-  // PM-2 seats it null-tolerant: today currentS8Page.version is the '1.0.0'/'0.0.0' STRING stamp
-  // (NOT an s8 axis number), so this reads null until PM-3 moves the stamp onto the counter axis.
-  // The '1.0.0' string is deliberately NOT parsed into a number — that would fake the axis.
+  // MD-S8PM · PM-3 · THE REAL AXIS: reads the registration's `counter` (S8_PAGE_COUNTER for the
+  // home page · the floor 0 for pre-counter wild pages via readPageS8Counter · C856). null only
+  // when NO S8 page is mounted. The '1.0.0'/'0.0.0' version string is NEVER coerced (would fake it).
   pageS8Counter: ComputedRef<number | null>;
+  // s8PageBehind · MD-S8PM · PM-3 · THE COMPARE (token-free · null-tolerant). pageS8Counter <
+  // npmS8Counter = out-of-sync. null when either half is unknown. PM-4 reads it for the S8 toggle
+  // border + panel version row; never a TaskBar-badge input (THE NO-RED LAW holds).
+  s8PageBehind: ComputedRef<boolean | null>;
   // relayNpmS8Counter · the token-free relay setter. The single existing /scs-bridge-version
   // poller (TaskBar/GitM/Suite8 landing — whoever holds both the served answer AND the controller)
   // hands the parsed remoteMuxameter.s8 here. A bare number in; no duplicate polling opens.
@@ -444,9 +453,11 @@ export function createScsBridgeController(): ScsBridgeController {
   // V-2 · THE CURRENT S8 PAGE REGISTRATION — the mounted Suite 8 page registers its
   // designation + frozen pageVersion here (the Landing's onMounted); null = the current
   // page is NOT a Suite 8 page (V-3's toolbar S8-button presence predicate rides this).
-  const currentS8Page = shallowRef<{ designation: string; version: string; drawer: Component | null } | null>(null);
-  const registerCurrentS8Page = (designation: string, version: string, drawer?: Component): void => {
-    currentS8Page.value = { designation, version, drawer: drawer ?? null };
+  const currentS8Page = shallowRef<{ designation: string; version: string; counter?: number; drawer: Component | null } | null>(null);
+  // MD-S8PM · PM-3 · the s8-AXIS `counter` rides ALONGSIDE the `version` string (the S8 home page
+  // passes S8_PAGE_COUNTER; wild pages omit it — floored to 0 at readPageS8Counter).
+  const registerCurrentS8Page = (designation: string, version: string, counter?: number, drawer?: Component): void => {
+    currentS8Page.value = { designation, version, counter, drawer: drawer ?? null };
   };
   const clearCurrentS8Page = (): void => {
     currentS8Page.value = null;
@@ -458,14 +469,29 @@ export function createScsBridgeController(): ScsBridgeController {
   const relayNpmS8Counter = (s8: number | null): void => {
     npmS8Counter.value = typeof s8 === 'number' ? s8 : null;
   };
-  // pageS8Counter · null-tolerant NOW. currentS8Page.version is the '1.0.0'/'0.0.0' STRING stamp
-  // until PM-3 moves the stamp onto the s8 axis; the string is NOT coerced to a number (that would
-  // fake the axis). PM-3 replaces this body with the real axis read (the assumed-floor 0 for
-  // pre-counter pages). Today: on any S8 page it reads null (no honest number to serve yet).
-  const pageS8Counter = computed<number | null>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _pageStamp = currentS8Page.value?.version; // PM-3 axis seat — deliberately unparsed.
-    return null;
+  // MD-S8PM · PM-3 · THE FLOOR-LAW HELPER (C856 · normalize at the READ seat · token-free).
+  // A page's s8-axis counter reads from its registration's `counter` field. Pre-counter pages
+  // (wild pages minted before this band · or any registration without a number) read the FLOOR 0
+  // — the owner-who-never-saw-a-counter surfaces the update honestly. The '1.0.0'/'0.0.0' version
+  // STRING is NEVER coerced (that would fake the axis); only the real number axis is read.
+  const readPageS8Counter = (
+    entry: { counter?: number } | null | undefined,
+  ): number => (typeof entry?.counter === 'number' ? entry.counter : 0);
+  // pageS8Counter · THE REAL AXIS (PM-3). On any mounted S8 page it reads the page's counter
+  // (S8_PAGE_COUNTER for the home page · floor 0 for wild pages); null only when NO S8 page is
+  // mounted (currentS8Page null · not an S8 page). THE NO-RED LAW holds: this feeds no verdict.
+  const pageS8Counter = computed<number | null>(() =>
+    currentS8Page.value === null ? null : readPageS8Counter(currentS8Page.value),
+  );
+  // MD-S8PM · PM-3 · THE COMPARE SEAT (token-free). s8PageBehind = the current page's counter is
+  // strictly below npm's available s8 → out-of-sync. Null when either half is unknown (no S8 page
+  // mounted · or npm's s8 not yet fetched+relayed). PM-4 reads this for the S8 toggle border /
+  // panel version row; PM-3 only exposes it. THE NO-RED LAW: never a TaskBar-badge input.
+  const s8PageBehind = computed<boolean | null>(() => {
+    const page = pageS8Counter.value;
+    const npm = npmS8Counter.value;
+    if (page === null || npm === null) return null;
+    return page < npm;
   });
   const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
   const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
@@ -2070,6 +2096,7 @@ export function createScsBridgeController(): ScsBridgeController {
     clearCurrentS8Page,
     npmS8Counter,
     pageS8Counter,
+    s8PageBehind,
     relayNpmS8Counter,
     currentS8Locality,
     setCurrentS8Locality,

@@ -393,6 +393,8 @@ onMounted(() => {
   // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
   // locality (mirrors Suite8HomeLanding). GraphiteScribe has NO version constant of its own, so
   // we register with the assumed '0.0.0' (the frozen pageVersion field the S8 face does not display).
+  // MD-S8PM · PM-3 · a wild page never saw the s8 counter: the counter arg is OMITTED (this call
+  // passes neither counter nor drawer), floored to 0 at readPageS8Counter (C856).
   getGlobalScsBridgeController()?.registerCurrentS8Page(graphiteScribeName.value, '0.0.0');
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
