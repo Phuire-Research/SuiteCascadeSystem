@@ -85,7 +85,12 @@ const muxameterLine = computed<string | null>(() => {
     if (rv === undefined || iv === rv) return `${label} #${iv ?? rv}`;
     return `${label} #${iv ?? '—'} → #${rv}`;
   };
-  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}`;
+  // MD-S8PM · PM-2 · THE s8 INFORMATION LEG — the available S8 Page System counter appended to
+  // the muxameter hover line as pure INFORMATION when npm carries it (THE NO-RED LAW: this never
+  // enters the badge verdict — versionState/bridgeUpdateClass read only cli/scp). The page-side
+  // s8 (the current-page axis) lands in PM-3; today only the npm-available number is honest here.
+  const s8Leg = typeof r?.s8 === 'number' ? ` · S8 #${r.s8}` : '';
+  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}${s8Leg}`;
 });
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);

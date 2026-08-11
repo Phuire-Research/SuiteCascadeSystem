@@ -138,6 +138,22 @@ export type ScsBridgeController = {
   currentS8Page: ShallowRef<{ designation: string; version: string; drawer: Component | null } | null>;
   registerCurrentS8Page: (designation: string, version: string, drawer?: Component) => void;
   clearCurrentS8Page: () => void;
+  // MD-S8PM · PM-2 · THE READ SEAT (the s8 pair · THE NO-RED LAW — never a verdict input).
+  // npmS8Counter · the AVAILABLE s8 counter from the served /scs-bridge-version answer
+  // (remoteMuxameter.s8 · null until an s8-carrying publish is fetched + relayed). Token-free:
+  // a bare number, no color. Fed by the EXISTING /scs-bridge-version poller via relayNpmS8Counter
+  // (no new poll — the TaskBar/GitM fetch already lands the served answer). PM-4 reads it against
+  // pageS8Counter to color the S8 toggle border; PM-2 only seats it.
+  npmS8Counter: ShallowRef<number | null>;
+  // pageS8Counter · the CURRENT page's s8 counter — the axis value the page carried when minted.
+  // PM-2 seats it null-tolerant: today currentS8Page.version is the '1.0.0'/'0.0.0' STRING stamp
+  // (NOT an s8 axis number), so this reads null until PM-3 moves the stamp onto the counter axis.
+  // The '1.0.0' string is deliberately NOT parsed into a number — that would fake the axis.
+  pageS8Counter: ComputedRef<number | null>;
+  // relayNpmS8Counter · the token-free relay setter. The single existing /scs-bridge-version
+  // poller (TaskBar/GitM/Suite8 landing — whoever holds both the served answer AND the controller)
+  // hands the parsed remoteMuxameter.s8 here. A bare number in; no duplicate polling opens.
+  relayNpmS8Counter: (s8: number | null) => void;
   // V-4c · the current page's locality FACE — pushed by the page-owned Control (whose HTTP
   // lanes work on ANY island); the held toolbar face reads THIS, never a concept slice.
   currentS8Locality: ShallowRef<S8LocalityFace | null>;
@@ -436,6 +452,21 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page.value = null;
     currentS8Locality.value = null;
   };
+  // MD-S8PM · PM-2 · THE READ SEAT — the s8 pair (npm-available · current-page). THE NO-RED LAW:
+  // neither ref feeds a verdict; PM-4 reads them to color the S8 toggle border, never the badge.
+  const npmS8Counter = shallowRef<number | null>(null);
+  const relayNpmS8Counter = (s8: number | null): void => {
+    npmS8Counter.value = typeof s8 === 'number' ? s8 : null;
+  };
+  // pageS8Counter · null-tolerant NOW. currentS8Page.version is the '1.0.0'/'0.0.0' STRING stamp
+  // until PM-3 moves the stamp onto the s8 axis; the string is NOT coerced to a number (that would
+  // fake the axis). PM-3 replaces this body with the real axis read (the assumed-floor 0 for
+  // pre-counter pages). Today: on any S8 page it reads null (no honest number to serve yet).
+  const pageS8Counter = computed<number | null>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _pageStamp = currentS8Page.value?.version; // PM-3 axis seat — deliberately unparsed.
+    return null;
+  });
   const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
   const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
     currentS8Locality.value = face;
@@ -2037,6 +2068,9 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page,
     registerCurrentS8Page,
     clearCurrentS8Page,
+    npmS8Counter,
+    pageS8Counter,
+    relayNpmS8Counter,
     currentS8Locality,
     setCurrentS8Locality,
     registerS8LocalityRefresh,
