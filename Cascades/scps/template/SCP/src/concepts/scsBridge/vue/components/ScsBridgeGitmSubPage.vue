@@ -69,20 +69,20 @@ interface Props {
     // sync is available (the install button's key — independent of the class).
     appliedScpMuxameter?: number | null;
     syncAvailable?: boolean;
-    installedMuxameter?: { cli: number; scp: number } | null;
-    remoteMuxameter?: { cli: number; scp: number } | null;
+    installedMuxameter?: { cli: number; scp: number; s8?: number } | null;
+    remoteMuxameter?: { cli: number; scp: number; s8?: number } | null;
     // MD-UM · LEG 4 · THE DIFFERENTIAL RELAY — the incoming releases the bridge fetched
     // (LEG 3 · the /scs-bridge-version response carries it). null on a pre-MD-UM bridge ⇒ the
     // differential mount stands in with the SCP-local updates.json wings.
     releaseManifest?: {
       schemaVersion?: number;
       current?: string;
-      muxameter?: { cli: number; scp: number };
+      muxameter?: { cli: number; scp: number; s8?: number };
       releases?: Array<{
         id: string;
         version?: string;
         label: string;
-        muxameter?: { cli: number; scp: number };
+        muxameter?: { cli: number; scp: number; s8?: number };
         magnitude?: number;
         features: Array<{ title: string; color: string; summary: string; detail: string[] }>;
       }>;

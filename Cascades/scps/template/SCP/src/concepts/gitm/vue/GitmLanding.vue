@@ -39,18 +39,18 @@ const versionCheck = ref<{
   // widened so they flow through to the SubPage's versionCheck prop.
   appliedScpMuxameter?: number | null;
   syncAvailable?: boolean;
-  installedMuxameter?: { cli: number; scp: number } | null;
-  remoteMuxameter?: { cli: number; scp: number } | null;
+  installedMuxameter?: { cli: number; scp: number; s8?: number } | null;
+  remoteMuxameter?: { cli: number; scp: number; s8?: number } | null;
   // MD-UM · LEG 4 · the differential relay — the incoming releases the bridge fetched.
   releaseManifest?: {
     schemaVersion?: number;
     current?: string;
-    muxameter?: { cli: number; scp: number };
+    muxameter?: { cli: number; scp: number; s8?: number };
     releases?: Array<{
       id: string;
       version?: string;
       label: string;
-      muxameter?: { cli: number; scp: number };
+      muxameter?: { cli: number; scp: number; s8?: number };
       magnitude?: number;
       features: Array<{ title: string; color: string; summary: string; detail: string[] }>;
     }>;

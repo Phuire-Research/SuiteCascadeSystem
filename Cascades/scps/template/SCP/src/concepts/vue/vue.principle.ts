@@ -2589,7 +2589,10 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // — even when the npm VERSION is newer (counters equal = nothing of value → no nag).
   // `syncAvailable` (version differs remote-newer) drives the install button independently
   // of the class — the double bind (button hidden while red persists) is dissolved.
-  type ScsCounterPair = { cli: number; scp: number };
+  // MD-S8PM · PM-1 · THE THIRD COUNTER: `s8` joins the pair — the S8 Page System version
+  // the DevCascade increments when the TEMPLATE SUITE 8 PAGE SURFACE changes. Optional at
+  // the seat (old npm data anor old bridge.json predate it → the `?? 0` floor reads honestly).
+  type ScsCounterPair = { cli: number; scp: number; s8?: number };
   // MD-UM · LEG 3 · THE DIFFERENTIAL RELAY — the release manifest shape the bridge writes into
   // bridge.json (updateManifest.model.ts · getCachedReleaseManifest). Carried alongside the verdict
   // so the Update Page's differential mount reads the incoming releases the SAME way it reads the
@@ -2630,9 +2633,14 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     releaseManifest: null,
   };
   const parseCounterPair = (m: unknown): ScsCounterPair | null => {
-    const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+    const o = m as { cli?: unknown; scp?: unknown; s8?: unknown } | null | undefined;
+    // The pair is the gate (cli + scp both required — the pre-counter floor); `s8` is
+    // OPTIONAL-TOLERANT: present-as-number flows, absent (old npm/bridge.json) omits — the
+    // reader's `?? 0` supplies the floor. Nothing consumes s8 yet; it lands as data (PM-1).
     return o && typeof o.cli === 'number' && typeof o.scp === 'number'
-      ? { cli: o.cli, scp: o.scp }
+      ? typeof o.s8 === 'number'
+        ? { cli: o.cli, scp: o.scp, s8: o.s8 }
+        : { cli: o.cli, scp: o.scp }
       : null;
   };
   const readInstalledBridgeVersion = (): void => {

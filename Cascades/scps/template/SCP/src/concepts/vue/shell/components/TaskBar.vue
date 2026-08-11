@@ -71,7 +71,9 @@ const bridgeUpdateClass = ref<'none' | 'cli' | 'scp' | 'both' | 'unknown'>('none
 // THE FULL MUXAMETER LINE — the two Demometers' counters, installed → remote, rendered in
 // the pop over once available (installed rides bridge.json; remote rides the npm /latest
 // custom field — absent until a counter-carrying publish).
-type CounterPair = { cli: number; scp: number };
+// MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — old bridge data omits it;
+// nothing here consumes it yet · THE NO-RED LAW leaves the badge verdict untouched — PM-2/PM-4).
+type CounterPair = { cli: number; scp: number; s8?: number };
 const installedCounters = ref<CounterPair | null>(null);
 const remoteCounters = ref<CounterPair | null>(null);
 const muxameterLine = computed<string | null>(() => {
@@ -165,9 +167,11 @@ onMounted(() => {
         bridgeUpdateClass.value = body.updateClass as 'none' | 'cli' | 'scp' | 'both' | 'unknown';
       }
       const pair = (m: unknown): CounterPair | null => {
-        const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+        const o = m as { cli?: unknown; scp?: unknown; s8?: unknown } | null | undefined;
         return o && typeof o.cli === 'number' && typeof o.scp === 'number'
-          ? { cli: o.cli, scp: o.scp }
+          ? typeof o.s8 === 'number'
+            ? { cli: o.cli, scp: o.scp, s8: o.s8 }
+            : { cli: o.cli, scp: o.scp }
           : null;
       };
       if (body) {

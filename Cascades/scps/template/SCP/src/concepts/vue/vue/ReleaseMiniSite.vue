@@ -66,7 +66,7 @@ interface ReleaseCategory {
 // and the authored magnitude (1-5). The evergreen tour categories carry none of these.
 interface ReleaseWing extends ReleaseCategory {
   version?: string;
-  muxameter?: { cli: number; scp: number };
+  muxameter?: { cli: number; scp: number; s8?: number };
   magnitude?: number;
 }
 
@@ -76,7 +76,7 @@ interface ReleaseWing extends ReleaseCategory {
 interface UpdateManifest {
   schemaVersion: number;
   current: string;
-  muxameter: { cli: number; scp: number };
+  muxameter: { cli: number; scp: number; s8?: number };
   releases: ReleaseWing[];
 }
 
@@ -94,7 +94,7 @@ interface IncomingRelease {
   id: string;
   version?: string;
   label: string;
-  muxameter?: { cli: number; scp: number };
+  muxameter?: { cli: number; scp: number; s8?: number };
   magnitude?: number;
   features: IncomingReleaseFeature[];
 }
