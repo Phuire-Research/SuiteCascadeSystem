@@ -52,6 +52,9 @@ import { createSuite8ClientConcept } from '../../suite8/suite8.concept.client';
 // D-SLE · the locality snapshot type — the relay-fed suite8 localities slice the Effective
 // Locality Law reads to resolve the effective SCP for the research spawn stamp.
 import type { Suite8SyncLocalitySnapshot } from '../../suite8/suite8.type';
+// MD-USP · US-2 · TO-STANDARD — the shared page-counter axis rides slot 3 (undefined → the counter);
+// value-import (not type) since the counter is an export const — the US-1 precedent's separate line.
+import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
 import { cadmiumMuxonomic } from '../cadmium.muxonomy';
 import { suite8Muxonomic } from '../../suite8/suite8.muxonomy';
 // Cycle 159 D1 · GPIM · Vue-layer Muxium binding into universal scsBridge controller
@@ -685,7 +688,7 @@ onMounted(() => {
   // MD-S8PM · PM-3 · a wild page never saw the s8 counter: the counter arg is OMITTED (undefined),
   // floored to 0 at readPageS8Counter (C856) — the owner-who-never-saw surfaces the update. The
   // drawer moves to the 4th slot under the new signature (designation · version · counter · drawer).
-  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0', undefined, markRaw(Suite8ControlDrawer));
+  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0', S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
 
   // MD-6 · D-BP-2 · seed the name-filtered Cascade Documents list (the SCP-local read).
   void loadCadmiumWorkingDocs();
