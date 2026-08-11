@@ -72,6 +72,16 @@ const currentDesignation = computed<string>(
   () => getGlobalScsBridgeController()?.currentS8Page.value?.designation ?? '',
 );
 
+// MD-S8PM · PM-4 · THE OUT-OF-SYNC SIGNAL (token-free · controller-direct — the SAME idiom this
+// button already reads its locality face through). The controller's s8PageBehind compares the
+// page's minted s8 counter against npm's available s8 (fed by the TaskBar relay). ONLY `true`
+// signals: null (either half unknown — no npm answer yet · not an S8 page) stays QUIET, never
+// signals on unknown. The border colors amber when the page is behind (the update surface).
+// THE NO-RED LAW holds: this reads s8PageBehind, never the TaskBar badge verdict.
+const s8OutOfSync = computed<boolean>(
+  () => getGlobalScsBridgeController()?.s8PageBehind.value === true,
+);
+
 // THE EFFECTIVE LOCALITY (ported from Suite8Control.localityLabel) — specified-if-live, else the
 // real composed-on SCP, else the designation intake face. The surface never rests on a dead locality.
 const specifiedLive = computed<boolean>(() => {
@@ -197,7 +207,7 @@ onBeforeUnmount(() => {
 <template>
   <span class="taskbar-btn-wrap s8-drawer-btn-wrap" :style="{ '--btn-neon': 'var(--color-viridian)' }">
     <button
-      :class="['taskbar-btn', 'btn-base', 's8-drawer-btn', { active: drawerOpen }]"
+      :class="['taskbar-btn', 'btn-base', 's8-drawer-btn', { active: drawerOpen, 's8-out-of-sync': s8OutOfSync }]"
       data-readout="Suite 8 Control · This page's locality + the Suite 8 helm. Click to open the control drawer."
       aria-label="Suite 8 Control"
       @click="handleClick"
@@ -243,5 +253,17 @@ onBeforeUnmount(() => {
 }
 .s8-drawer-btn.active {
   box-shadow: 0 0 0 1px var(--color-viridian, #40826d), 0 0 10px rgba(64, 130, 109, 0.4);
+}
+/* MD-S8PM · PM-4 · THE OUT-OF-SYNC SIGNAL — the border colors amber when the page is behind
+   npm's s8 counter (the update surface · the .turn-over-btn.armed amber precedent
+   rgba(249, 115, 22, *) · the toolbar-button neon voice). QUIET when current anor unknown
+   (the class only binds on s8PageBehind === true). The .active viridian ring still layers when
+   the drawer is open — the amber border reads underneath it (border-color, not box-shadow). */
+.s8-drawer-btn.s8-out-of-sync {
+  border-color: rgba(249, 115, 22, 0.85);
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.45);
+}
+.s8-drawer-btn.s8-out-of-sync .taskbar-btn-icon {
+  color: rgb(253, 186, 116);
 }
 </style>

@@ -377,6 +377,41 @@ const scsBridgeControllerForDoor =
 const currentBranch = computed<string>(
   () => gitmControllerForDoor?.gitmJson.value?.currentBranch ?? '',
 );
+
+// ============================================================
+// MD-S8PM · PM-4 · THE PANEL VERSION ROW — the s8-axis counters + the always-enabled update
+// control. Reads the controller's PM-3 seats through the SAME settled ref every dispatch uses
+// (scsBridgeControllerForDoor · the proven reactive idiom). THE NO-RED LAW: these never touch
+// the TaskBar badge verdict — the s8 signal owns this panel row + the toolbar toggle border only.
+// ============================================================
+// PAGE — the current page's minted s8 counter (floor 0 for wild pages · null only when no S8
+// page is mounted, which cannot happen while this Control renders). Honest render: 0 → '#0'.
+const pageS8CounterValue = computed<number | null>(
+  () => scsBridgeControllerForDoor?.pageS8Counter.value ?? null,
+);
+// NPM — the available s8 counter fed by the TaskBar relay (null until an s8-carrying answer
+// lands · '—' when unknown, never a fabricated 0).
+const npmS8CounterValue = computed<number | null>(
+  () => scsBridgeControllerForDoor?.npmS8Counter.value ?? null,
+);
+// BEHIND — the compare (page < npm · null when either half unknown). Colors the row + control
+// amber; ONLY true signals (null stays quiet — never signals on unknown).
+const s8PageBehindValue = computed<boolean>(
+  () => scsBridgeControllerForDoor?.s8PageBehind.value === true,
+);
+// The honest counter renders — page shows its number (0 = '#0'); npm shows '#M' anor '—'.
+const pageS8Display = computed<string>(() =>
+  pageS8CounterValue.value === null ? '—' : `#${pageS8CounterValue.value}`,
+);
+const npmS8Display = computed<string>(() =>
+  npmS8CounterValue.value === null ? '—' : `#${npmS8CounterValue.value}`,
+);
+// engageVersionedUpdate · THE PM-5 SEAM — the always-enabled update control fires this. PM-5
+// wires the Vermillion (buildUpdateVermillion · the Forge conference + the close sequence); until
+// then this proves the control renders + fires (the Lambda seam · a clear console marker · no-op).
+function engageVersionedUpdate(): void {
+  console.log('[S8-PM] engageVersionedUpdate — PM-5 wires the Vermillion');
+}
 const onWorkingB = computed<boolean>(() =>
   isWorkingBranchPer(currentBranch.value, gitmControllerForDoor?.gitmJson.value),
 );
@@ -901,6 +936,28 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       <h3 class="s8c-title hifi-heading">SUITE 8 CONTROL</h3>
     </header>
 
+    <!-- MD-S8PM · PM-4 · THE PANEL VERSION ROW — the page's minted s8 counter beside npm's
+         available s8, plus the ALWAYS-ENABLED update control (THE ALWAYS-ENABLED LAW: enabled
+         current anor behind). Colored amber when s8PageBehind (the SAME amber as the toolbar
+         toggle border · quiet when current). Renders ALWAYS (floor-0 pages show PAGE #0 — the
+         honest behind state). The control fires engageVersionedUpdate (the PM-5 seam · a stub
+         until PM-5 wires the Forge Vermillion). THE NO-RED LAW: never a badge input. -->
+    <div class="s8c-version-row" :class="{ 's8c-version-row--behind': s8PageBehindValue }">
+      <span class="s8c-version-pair hifi-mono">
+        PAGE {{ pageS8Display }} · NPM {{ npmS8Display }}
+      </span>
+      <button
+        type="button"
+        class="s8c-version-update-btn hifi-mono"
+        :class="{ 's8c-version-update-btn--behind': s8PageBehindValue }"
+        title="Update this Suite 8 page from the Template Suite 8 (always available — enabled whether current or behind)."
+        @click="engageVersionedUpdate"
+      >
+        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        <span>S8 UPDATE</span>
+      </button>
+    </div>
+
     <!-- SECTION I · THE LOCALITY -->
     <div class="s8c-section">
       <div class="s8c-current" :class="{ 's8c-specified': isSpecified }">
@@ -1423,6 +1480,68 @@ async function chooseLocality(scpName: string | null): Promise<void> {
   letter-spacing: 0.1em;
   color: #cfc8ba;
   margin: 0;
+}
+/* MD-S8PM · PM-4 · THE VERSION ROW — the s8 counters + the always-enabled update control. The
+   row wears the Pewter neutral voice AT REST (current) and shifts amber when behind (the SAME
+   amber alert token as the toolbar toggle border · rgba(249, 115, 22, *)). Renders ALWAYS. */
+.s8c-version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+}
+.s8c-version-row--behind {
+  border-color: rgba(249, 115, 22, 0.6);
+  background: rgba(249, 115, 22, 0.06);
+}
+.s8c-version-pair {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+}
+.s8c-version-row--behind .s8c-version-pair {
+  color: rgb(253, 186, 116);
+}
+/* THE UPDATE CONTROL — the Pewter forge-button idiom AT REST (quiet · current), amber when
+   behind. ALWAYS ENABLED (never :disabled — THE ALWAYS-ENABLED LAW). */
+.s8c-version-update-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  font-family: var(--font-heading, 'Orbitron', sans-serif);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #1c1812;
+  background: #d8c79a;
+  border-top: 1px solid #efe2bb;
+  border-right: 1px solid #efe2bb;
+  border-bottom: 1px solid #a8975e;
+  border-left: 1px solid #a8975e;
+  box-shadow: -1px 1px 3px rgba(168, 151, 94, 0.5);
+  transition: filter 0.15s ease;
+  flex-shrink: 0;
+}
+.s8c-version-update-btn:hover {
+  filter: brightness(1.08);
+}
+.s8c-version-update-btn--behind {
+  color: #1a0f08;
+  background: #fdba74;
+  border-top-color: #ffd8a8;
+  border-right-color: #ffd8a8;
+  border-bottom-color: #c2410c;
+  border-left-color: #c2410c;
+  box-shadow: -1px 1px 4px rgba(194, 65, 12, 0.55);
 }
 .s8c-section {
   margin-top: 0.5rem;

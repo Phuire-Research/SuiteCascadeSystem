@@ -26,6 +26,12 @@ import { RESERVED_TOOLBAR_BUTTON_IDS } from '../../../../model/toolbarRegistrati
 // the user WHO IT IS. loadScpConfig is the 3s-abort-bounded /scp-config fetch (null-tolerant:
 // no name → no chip, never a placeholder).
 import { loadScpConfig } from '../../../../model/scpConfig.model';
+// MD-S8PM · PM-4 · THE RELAY FEED — TaskBar is the always-mounted toolbar that co-hosts the
+// S8DrawerButton AND already polls /scs-bridge-version + parses the s8 leg (remoteCounters).
+// It hands the parsed npm s8 to the controller's token-free relayNpmS8Counter (no new poll):
+// the controller then answers s8PageBehind for the S8 toggle border + the panel version row.
+// Token-free reach (the S8DrawerButton idiom) — a bare number in, no suite8-token coupling.
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 
 interface Props {
   buttons: ToolbarButtonRegistration[];
@@ -182,6 +188,12 @@ onMounted(() => {
       if (body) {
         installedCounters.value = pair(body.installedMuxameter);
         remoteCounters.value = pair(body.remoteMuxameter);
+        // MD-S8PM · PM-4 · relay the npm s8 to the controller (null when absent — never signals
+        // on unknown). THE NO-RED LAW: this feeds only the s8 toggle border / panel row, never
+        // the badge verdict (bridgeUpdateClass is set above from body.updateClass alone).
+        getGlobalScsBridgeController()?.relayNpmS8Counter(
+          typeof remoteCounters.value?.s8 === 'number' ? remoteCounters.value.s8 : null,
+        );
       }
     })
     .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
