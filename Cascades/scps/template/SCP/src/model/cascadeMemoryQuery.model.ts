@@ -120,4 +120,29 @@ export const registerCascadeMemoryQueryRoutes = (expressApp: MinimalExpressApp):
       resolvedDir: dir,
     });
   });
+
+  // (3) THE BY-NAME HIFI-CONFIG QUERY — the target SCP's shipped HiFi design (colors + patterns).
+  // MD-USP · US-3 · Pewter's color-locality adaptation: a Specified locality on Pewter previews the
+  // TARGET citizen's SCS COLORS (the hifiConfig.json relay — NOT its documents). This is the cross-SCP
+  // twin of the LOCAL /hifi-config route (vue.principle.ts) — SAME filename, SAME read shape, the ONLY
+  // difference being the by-name resolved root in place of the own cwd. The local route reads
+  // path.resolve(process.cwd(), 'Cascades', 'hifiConfig.json'); this reads the target root's identical
+  // Cascades/hifiConfig.json. hifiConfig.json is a fixed filename with no user-controlled path segment —
+  // no traversal guard needed (the scpName resolution is already ring-guarded by resolveScpRootByName).
+  // Absent / unreadable / malformed → {} (the Honest-Absence Law — never a local masquerade; the client
+  // treats a non-HifiConfig {} as null and shows the honest "no color design" state).
+  expressApp.get('/scp-hifi-config/:scpName', (req, res) => {
+    const scpName = String(req.params.scpName ?? '');
+    const root = resolveScpRootByName(scpName);
+    if (!root) {
+      res.status(404).json({ ok: false, error: `unknown SCP: ${scpName}` });
+      return;
+    }
+    try {
+      const raw = fs.readFileSync(path.resolve(root, 'Cascades', 'hifiConfig.json'), 'utf-8');
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({});
+    }
+  });
 };

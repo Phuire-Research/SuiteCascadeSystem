@@ -42,6 +42,24 @@ export async function loadHifiConfig(): Promise<HifiConfig | null> {
   }
 }
 
+// MD-USP · US-3 · Fetch a TARGET SCP's shipped hifiConfig.json by name via the cross-SCP query surface
+// (/scp-hifi-config/:scpName · cascadeMemoryQuery.model.ts). The read-only twin of loadHifiConfig — same
+// shape, same Honest-Absence discipline — but for ANOTHER citizen's design (Pewter's color-locality
+// preview: a Specified locality surfaces the target's COLORS). Null on 404 / absent / unreadable /
+// malformed / non-HifiConfig (the server serves {} for absence; a {} with no schemaVersion resolves null).
+export async function loadTargetHifiConfig(scpName: string): Promise<HifiConfig | null> {
+  if (typeof window === 'undefined') return null;
+  if (!scpName) return null;
+  try {
+    const r = await fetch(`/scp-hifi-config/${encodeURIComponent(scpName)}`);
+    if (!r.ok) return null;
+    const j = (await r.json()) as unknown;
+    return j && typeof j === 'object' && 'schemaVersion' in j ? (j as HifiConfig) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Apply the SCP-design baseline UNDER the user's localStorage clicks (precedence: JSON < localStorage).
 // Applies a JSON entry ONLY where the user has NOT overridden that spectrum — so the user's click
 // always wins, no re-apply, no flicker (the JSON + localStorage spectrum sets are disjoint). Call
