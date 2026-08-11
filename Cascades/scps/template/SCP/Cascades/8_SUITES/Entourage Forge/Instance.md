@@ -60,13 +60,20 @@ A page instantiates PGED by AUTHORING exactly two Demometers and INHERITING four
 | | Demometer | Authored anor Inherited |
 |---|---|---|
 | 1 | The Prepare Surface — the domain unit list + fire controls | AUTHORED |
-| 2 | The Directive — a pure Vermillion builder + output contract | AUTHORED |
+| 2 | The Directive — a pure Vermillion builder + output contract; the Primed Vermillion, crafted through install/update/onboard utilization | AUTHORED |
 | 3 | The Dispatch Rail — the spawn-spec batch enqueue | INHERITED |
 | 4 | The Sequence Law — the bridge ASTO serialization (MISO) | INHERITED |
 | 5 | The Grounding — TPRI path-not-content · CMLS locality | INHERITED |
 | 6 | The Observation Lane — the registry ledger + relay lanes | INHERITED |
 
-**The Worked Instance**: the Cadmium Researcher is the field-proven instance of PGED. Its
-Inspirant docs (`Cascades/8_SUITES/Cadmium Researcher/Onboard.md`, Instance.md) teach the
-GENERAL pattern through the specific research case — read them as the example that proves
-the class, not as a research-only feature.
+**The Conception Pair** (PGED's content law): a Seeded Concept in, an Actualized Artifact
+out — `A ⊗ B`, where A is the governing abstraction the page holds and B is ANY text-based
+artifact the agent is trained on (code · specs · fiction · ADRs · tests · migrations ·
+lessons · copy · clause drafts — and a Vermillion itself). THE GUARD: the general claim
+NEVER appears without the worked instance beside it — Concept in, Artifact out, a Topic
+becoming an Article is the shape.
+
+**The Worked Instance**: the Cadmium Researcher is the field-proven instance of PGED — Topic
+in, Article out. Its Inspirant docs (`Cascades/8_SUITES/Cadmium Researcher/Onboard.md`,
+Instance.md) teach the GENERAL pattern through the specific research case — read them as the
+example that proves the class, not as a research-only feature.

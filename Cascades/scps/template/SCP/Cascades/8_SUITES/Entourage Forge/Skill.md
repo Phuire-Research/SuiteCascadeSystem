@@ -79,7 +79,15 @@ whole: the spawn rail, the ASTO sequence law (MISO), the grounding (TPRI · CMLS
 and the observation lane (registry ledger + relay lanes). See Instance.md §The PGED Pattern
 for the two-authored/four-inherited table.
 
+**The Conception Pair** is PGED's content law — a Seeded Concept in, an Actualized Artifact
+out (`A ⊗ B`: A = the abstraction the page holds; B = ANY text-based means the agent is
+trained on — code, specs, fiction, ADRs, tests, copy, a Vermillion itself). THE GUARD: the
+general claim never stands without the worked instance beside it — Concept in, Artifact out,
+a Topic becoming an Article is the shape.
+
 **The Worked Instance**: the Cadmium Researcher Inspirant docs (`Cascades/8_SUITES/Cadmium
-Researcher/Onboard.md`, Instance.md) are PGED's field-proven example — teach the general
-pattern through them, not a research-only feature. The Forge dispatches through the same
-rail, so it lays into a page the very capability that dispatched it.
+Researcher/Onboard.md`, Instance.md) are PGED's field-proven example (Topic in, Article out) —
+teach the general pattern through them, not a research-only feature. The Forge dispatches
+through the same rail, so it lays into a page the very capability that dispatched it — and
+the Directive it authors is a Primed Vermillion, crafted through install/update/onboard
+utilization.
