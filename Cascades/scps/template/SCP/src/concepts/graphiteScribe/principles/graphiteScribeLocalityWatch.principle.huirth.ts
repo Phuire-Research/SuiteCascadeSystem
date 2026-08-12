@@ -62,7 +62,11 @@ export type GraphiteScribeLocalityWatchPrincipleType = PrincipleFunction<
 >;
 
 // THIS designation — the RI dir basename under Cascades/Extended/ AND the SyncLibrary key resolved.
-const LOCALITY_DESIGNATION = DEFAULT_GRAPHITESCRIBE_DESIGNATION_NAME;
+// C897 · THE DESIGNATION-FORM WOUND (field-convicted by the skip sink): the spaceless
+// DEFAULT_GRAPHITESCRIBE_DESIGNATION_NAME ('GraphiteScribe') is a DIFFERENT axis — the
+// LOCALITY designation is the Extended-dir form the page ref + the drawer + the registry
+// all use. Watching the spaceless path resolved null and fell honestly to LOCAL forever.
+const LOCALITY_DESIGNATION = 'Graphite Scribe';
 
 // File-sunk telemetry — the console.logs below are LOST to nodemon (the C738 unobservable class). Every
 // seat ALSO appends a JSONL line to the SCP-local Bridge rail so a drive can Conclude (grep) whether the
