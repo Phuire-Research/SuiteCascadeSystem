@@ -2715,6 +2715,19 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   const acceptRemote = (version: string, muxameter: unknown): void => {
     scsBridgeVersionCheck.npmLatestVersion = version;
     scsBridgeVersionCheck.remoteMuxameter = parseCounterPair(muxameter);
+    // THE S8 MOCK LANE (test-only · the 1A Conference · PRUNE SCOPE: the Publish Diamond).
+    // The registry carries no s8 until the first s8-bearing publish — local Lambda testing of
+    // the amber circuit needs the remote s8 mocked. SCS_S8_NPM_MOCK=<N> (set at bridge launch;
+    // child SCP servers inherit) overrides ONLY s8 on a PARSED pair; env absent = real npm
+    // truth — zero shipped behavior. Never a silent masquerade: the application logs itself.
+    const s8MockRaw = process.env.SCS_S8_NPM_MOCK;
+    if (s8MockRaw !== undefined && scsBridgeVersionCheck.remoteMuxameter) {
+      const s8Mock = Number.parseInt(s8MockRaw, 10);
+      if (Number.isFinite(s8Mock)) {
+        scsBridgeVersionCheck.remoteMuxameter.s8 = s8Mock;
+        console.log(`[S8-MOCK] s8.mock.applied · SCS_S8_NPM_MOCK=${s8Mock} · the remote s8 is MOCKED for local Lambda testing`);
+      }
+    }
     scsBridgeVersionCheck.checkedAt = Date.now();
     deriveScsUpdateClass();
   };
