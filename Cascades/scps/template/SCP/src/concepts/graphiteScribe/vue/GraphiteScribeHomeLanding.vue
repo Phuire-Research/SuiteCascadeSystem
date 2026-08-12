@@ -323,6 +323,18 @@ const scsBridgeControllerForDoor =
 
 const currentBranch = computed<string>(() => gitmController?.gitmJson.value?.currentBranch ?? '');
 
+// GLW-5 · THE OBSERVING NOTIFY (C836 self-diagnosing label idiom · the ground's letter). The editor's
+// observed folder tracks the Selected Locality (the CMLS re-point · GLW-3 re-points the server-side
+// /editor-fs lanes). The client reads the SAME state's CLIENT truth from the locality face
+// (currentS8Locality.specified · already armed C894) — NO new fetch. observingSpecified = a Specified
+// target name (a foreign tree under the pen · the Pewter alert accent) anor null (LOCAL · quiet muted).
+const observingSpecified = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
+const observingLabel = computed<string>(() =>
+  observingSpecified.value ? `OBSERVING ${observingSpecified.value}` : 'OBSERVING Local',
+);
+
 // MD-CE-5 · THE TREE BADGE MAP — gitm.json paths are REPO-ROOT-relative (the bridge watches the
 // user project) while the tree's paths are SCP-PACKAGE-relative; the SCP package lives somewhere
 // under the repo (dev:self: Cascades/scps/template/SCP/…). SUFFIX-STRIP: keep the segment after
@@ -587,7 +599,19 @@ onUnmounted(() => {
            the Session Manager are PRUNED from this Suite (the user's Magic Shotgun directive);
            the forge script machinery remains dormant for the minting scaffold. -->
       <section class="hifi-pane-base ce-work-surface-pane">
-        <h2 class="hifi-heading">Editor</h2>
+        <!-- GLW-5 · the Editor header row — the OBSERVING notify rides beside the heading (C836
+             idiom · quiet muted when Local · the Pewter alert accent when a Specified target tree
+             is under the pen · reads the client locality face · no new fetch). -->
+        <div class="ce-work-surface-header">
+          <h2 class="hifi-heading">Editor</h2>
+          <span
+            class="ce-observing"
+            :class="{ 'ce-observing-specified': observingSpecified !== null }"
+            :title="observingSpecified !== null
+              ? `The editor is observing the ${observingSpecified} SCP tree (Selected Locality · reads + writes land at the target).`
+              : 'The editor is observing this SCP\'s own tree (Local).'"
+          >{{ observingLabel }}</span>
+        </div>
         <div class="ce-workbench">
           <!-- MD-CE-5 · THE FILE BROWSER — lazy tree + GitM badges; click rides the
                shared open circuit into the surface's tab strip. -->
@@ -1044,6 +1068,37 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 1rem 0;
+}
+
+/* GLW-5 · the Editor header row — the heading + the OBSERVING notify chip on one baseline. The row
+   owns the bottom spacing; the wrapped h2 drops its own bottom margin so the baseline stays clean. */
+.ce-work-surface-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem 0;
+}
+.ce-work-surface-header h2 {
+  margin: 0;
+}
+/* GLW-5 · OBSERVING notify — QUIET (muted) when Local: no accent, the pewter chrome the page uses. */
+.ce-observing {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  color: var(--color-pewter, rgba(255, 255, 255, 0.5));
+  white-space: nowrap;
+}
+/* GLW-5 · ALERT accent when a Specified target tree is under the pen — the Pewter amber edge (the
+   rgba(234,179,8) idiom the page + the FileTree context-menu use) · a foreign write deserves visibility. */
+.ce-observing-specified {
+  color: rgba(234, 179, 8, 0.92);
+  border-left-color: rgba(234, 179, 8, 0.6);
+  background: rgba(234, 179, 8, 0.08);
 }
 
 .ce-workbench {
