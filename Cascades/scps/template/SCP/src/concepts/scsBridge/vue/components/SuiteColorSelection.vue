@@ -21,7 +21,7 @@
  * Output Firewall: SPECTRUM names + FUNCTIONAL designations ONLY — no profession/cascade names,
  * no scare-quotes. The user picks colors; the cascade/profession semantics stay internal.
  */
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, watch, onMounted } from 'vue';
 import {
   type SpectrumName,
   SPECTRUM_NAMES,
@@ -34,6 +34,11 @@ import { inject } from 'vue';
 import SuiteColorPickerPanel from './SuiteColorPickerPanel.vue';
 // D-PXT · PXT-2 · the origin-blind cross-SCP color injection (the Specified-locality send path).
 import { sendColorToTarget } from '../../../../model/crossScpColorInjection.model';
+// C904 · LEG-B · THE TARGET-READ (read-coherence cure) — under a Specified locality the swatches must
+// load the TARGET's CURRENT palette (the same US-3 read lane PewterLanding's preview uses), so the user
+// sees + edits the TARGET's actual colors, not their own. Read-only twin of loadHifiConfig · raw target
+// config (no own-override merge — that merge lives in applyHifiConfigUnderOverrides, a distinct path).
+import { loadTargetHifiConfig } from '../../../../model/hifiConfig.model';
 
 // D-PCL · the scsBridge controller carries the color click's Induction dispatch (applyHifiConfig).
 // inject-first (Vue runtime-singleton) with the getGlobal fallback — the GitmTurnOver button idiom.
@@ -80,6 +85,50 @@ const selection = reactive<Record<SpectrumName, string>>({
   ...loadSuiteColorOverrides(),
 });
 
+// ============================================================
+// C904 · LEG-B · THE SWATCH-SEEDING (the read-coherence cure the user named:
+// "under a Specified locality the Suite Colors do not Change Based on that Configuration")
+// ============================================================
+//
+// The swatch state is `selection`. LOCAL (targetScpName null) it holds the user's OWN palette
+// (DEFAULT_HEX under localStorage overrides). SPECIFIED it must instead hold the TARGET's shipped
+// palette so the user EDITS the target's actual colors (every onColorChange under a Specified locality
+// injects `{ ...selection }` to the target — a stale-own seed would push the user's own colors, not the
+// target's edited ones). The seed reads the SAME US-3 lane (loadTargetHifiConfig) PewterLanding's
+// preview uses; a target hex fills its row, an absent hex falls to the RD default (Honest-Absence, never
+// a silent own-color masquerade). Local resumes the user's OWN palette. Stale-safe: a flip mid-fetch
+// discards the late resolve (the targetScpName guard).
+
+function seedFromOwn(): void {
+  const own = { ...DEFAULT_HEX, ...loadSuiteColorOverrides() };
+  for (const n of SPECTRUM_NAMES) selection[n] = own[n];
+}
+
+async function seedFromTarget(name: string): Promise<void> {
+  const cfg = await loadTargetHifiConfig(name);
+  // Stale-guard — the locality may have flipped again while this fetch was in flight.
+  if (targetScpName.value !== name) return;
+  const colors = cfg?.colors ?? {};
+  for (const n of SPECTRUM_NAMES) selection[n] = colors[n] ?? DEFAULT_HEX[n];
+}
+
+function reseedSwatches(): void {
+  const name = targetScpName.value;
+  if (name) void seedFromTarget(name);
+  else seedFromOwn();
+}
+
+// C898 face-watch idiom (GraphiteScribeHomeLanding:373) — react on the locality EDGE only. Specified →
+// load the target's palette into the swatches; Local → restore the own palette. immediate seeds the
+// initial mount state (a page opened already under a Specified locality shows the target's colors).
+watch(targetScpName, (next, prev) => {
+  if (next === prev) return;
+  reseedSwatches();
+});
+onMounted(() => {
+  if (targetScpName.value) reseedSwatches();
+});
+
 // D-PXT · PXT-2 · THE INJECTION SEND — the origin-blind cross-SCP push. Builds the deck-matched
 // Induction via the controller (never hand-rolled) and hands it to sendColorToTarget, which opens the
 // ephemeral WS to the TARGET's port, injects the SAME action, and awaits the receipt (bounded). The
@@ -105,6 +154,11 @@ function pushColorToTarget(scpName: string, full: Record<SpectrumName, string>):
     // pushed state (a same-target push does not change targetScpName, so the Pewter watch alone would
     // not re-fire). Honest no-op on a page with no preview registered.
     scsBridgeController?.triggerTargetHifiPreviewRefresh();
+    // C904 · LEG-B · THE RECEIPT RE-SEED — the injection landed on the TARGET; re-read its now-pushed
+    // hifiConfig into the swatches so they confirm the landed truth (a same-target push does not change
+    // targetScpName, so the LEG-B watch alone would not re-fire — this closes that gap, the swatch twin
+    // of the preview-coherence hook above).
+    reseedSwatches();
   });
 }
 
