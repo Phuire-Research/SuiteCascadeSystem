@@ -78,3 +78,20 @@ export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
   if (Object.keys(jsonColors).length) applySuiteColorOverrides(jsonColors);
   if (Object.keys(jsonPatterns).length) applySuitePatternOverrides(jsonPatterns);
 }
+
+// D-PCL · THE ROUND-TRIP COLOR CIRCUIT · the RETURN-apply. Re-runs the FULL boot precedence
+// (localStorage FIRST, then JSON UNDER it) so a fresh hifiConfig broadcast paints uniformly across
+// every connected client. This is the exact two-layer sequence IslandWrapper runs at mount
+// (applySuiteColorOverrides(loadSuiteColorOverrides()) THEN applyHifiConfigUnderOverrides(cfg)) —
+// factory :root < JSON < localStorage held verbatim.
+//
+// THE SHADOW-WRINKLE CURE (choice α · documented on the D-PCL board): the clicker writes their new
+// color into their OWN localStorage at click time (intent · NO paint — painting stays the return's
+// act). When THIS return-apply runs on the clicker's window, the localStorage layer paints their new
+// color; on every OTHER client (no such localStorage entry) the JSON layer paints it. Precedence law
+// is preserved: localStorage still wins where the user set it — which is now their fresh click.
+export function applyHifiConfigWithOverrides(config: HifiConfig): void {
+  applySuiteColorOverrides(loadSuiteColorOverrides());
+  applySuitePatternOverrides(loadSuitePatternOverrides());
+  applyHifiConfigUnderOverrides(config);
+}

@@ -31,6 +31,9 @@ import type { ScpLogEntry, ScpLogSource } from '../scpLog/scpLog.type';
 import type { ArchiveManifestEntry } from './archiveManifest.types';
 // MD-9 · D-MC-6 · the template-side model catalog mirror shape (BridgeJsonShape.availableModels).
 import type { ScsModelCatalogEntry } from './model/scsModelCatalog.model';
+// D-PCL · THE ROUND-TRIP COLOR CIRCUIT · the shipped-HiFi JSON shape the Huirth Real merge-writes and
+// the return broadcast carries (colors + patterns + schemaVersion). Source of truth: hifiConfig.model.
+import type { HifiConfig } from '../../model/hifiConfig.model';
 // CadmiumTutorialJoinState is declared later in this file (TypeScript hoists module types)
 
 // ============================================
@@ -264,6 +267,35 @@ export type ScsBridgeSetHighlightTargetPayload = {
   target: string | null;
 };
 
+// ============================================
+// D-PCL · THE ROUND-TRIP COLOR CIRCUIT (PCL-1 · the deck-matched pair payloads)
+// ============================================
+//
+// The color selection paints ONLY at the round trip's end. The click dispatches
+// scsBridgeApplyHifiConfig (Client Induction · ClientToServer · createInductionQualityCardWithPayload)
+// → the Huirth Real merge-writes <cwd>/Cascades/hifiConfig.json → broadcasts the FRESH merged config
+// back via scsBridgeSetHifiConfigRelay (ServerToClient) → every client re-runs the boot precedence
+// (localStorage < JSON) → the whole app re-tints. The visible color IS the receipt of the truth.
+//
+// PACP (Payload Action Concept Prefix): the `scsBridgeHifiColors` / `scsBridgeHifiConfig` prefixes
+// avoid collision with the Stratimux Action base type.
+//
+// Citation: D-PCL board · notification/qualities/helloWorld.quality.huirth.diameter.ts (Diameter pair
+//   exemplar) · sendBridgeMessage.quality.huirth.diameter.ts scs:highlight branch (broadcast idiom).
+
+// PCL-1 (a) · the Client INDUCTION payload — the sparse per-spectrum hex map the click carries.
+// hex values keyed by SpectrumName (base/red/orange/yellow/green/blue/purple/fuchsia).
+export type ScsBridgeApplyHifiConfigPayload = {
+  scsBridgeHifiColors: Record<string, string>;
+};
+
+// PCL-1 (c) · the RETURN broadcast payload — the FRESH merged hifiConfig the Huirth Real produced.
+// Carried IN the broadcast (one fewer round · no client re-GET of /hifi-config). Every client applies
+// this identical post-merge config through the boot precedence, so the paint is uniform.
+export type ScsBridgeSetHifiConfigRelayPayload = {
+  scsBridgeHifiConfig: HifiConfig;
+};
+
 // SWRM · D4 · consolidated local reducer payload for the Settings sub-page UI state. Each field
 // is optional; the reducer updates only those present (one quality for target + both mode echoes).
 export type ScsBridgeSetRenderSettingsPayload = {
@@ -462,6 +494,13 @@ export type ScsBridgeClientQualities = {
   // GITM color-cascade (W4) · Vermillion Focus+Highlight — the transient highlight-target reducer
   // (set via the scs:highlight relay · cleared via the Vue auto-reset · both use this quality).
   scsBridgeSetHighlightTarget: Quality<ScsBridgeClientState, ScsBridgeSetHighlightTargetPayload>;
+
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT (PCL-1)
+  // scsBridgeApplyHifiConfig · Client INDUCTION (routes the color click to actionQue → Huirth Real).
+  // scsBridgeSetHifiConfigRelay · the RETURN SET (received via actionExchange.serverToClient · applies
+  // the fresh merged config through the boot precedence · the round trip's paint).
+  scsBridgeApplyHifiConfig: Quality<ScsBridgeClientState, ScsBridgeApplyHifiConfigPayload>;
+  scsBridgeSetHifiConfigRelay: Quality<ScsBridgeClientState, ScsBridgeSetHifiConfigRelayPayload>;
 
   // M2-A1-D1 · Install Menu Foundation (local-only UI reducers)
   scsBridgeSetInstallMenuOpen: Quality<ScsBridgeClientState, ScsBridgeSetInstallMenuOpenPayload>;
@@ -1011,6 +1050,12 @@ export type ScsBridgeHuirthQualities = {
   scsBridgeSetBridgeJsonRelay: Quality<ScsBridgeHuirthState, ScsBridgeSetBridgeJsonRelayPayload>;
   scsBridgeSetSessionsListRelay: Quality<ScsBridgeHuirthState, ScsBridgeSetSessionsListRelayPayload>;
   scsBridgeSendBridgeMessage: Quality<ScsBridgeHuirthState, ScsBridgeSendBridgeMessagePayload>; // E11 fix · Cycle 160 · Huirth Real registration
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT (PCL-1 · PCL-2)
+  // scsBridgeApplyHifiConfig · the Huirth REAL — merge-writes <cwd>/Cascades/hifiConfig.json then
+  //   broadcasts the fresh merged config to ALL clients (the Zero-Knowledge Handoff · muxiumTimeOut).
+  // scsBridgeSetHifiConfigRelay · the emitter the Real broadcasts (dual-deployment · Client applies it).
+  scsBridgeApplyHifiConfig: Quality<ScsBridgeHuirthState, ScsBridgeApplyHifiConfigPayload>;
+  scsBridgeSetHifiConfigRelay: Quality<ScsBridgeHuirthState, ScsBridgeSetHifiConfigRelayPayload>;
   // PP-D4 · setServerStartupTime · captures huirth boot timestamp · stale-pong baseline
   scsBridgeSetServerStartupTime: Quality<ScsBridgeHuirthState, ScsBridgeSetServerStartupTimePayload>;
   // SBIS Base maintenance qualities (Cycle 163 R6 · Huirth-only · NOT in actionExchange)

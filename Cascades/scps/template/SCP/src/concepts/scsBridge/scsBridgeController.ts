@@ -230,6 +230,12 @@ export type ScsBridgeController = {
   // route is removed. State returns via the gitm.json watcher relay (ACK-ONLY · SORD §10).
   triggerGitmAction: (tool: string, args: Record<string, unknown>) => void;
 
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's dispatch surface. Constructs
+  // scsBridgeApplyHifiConfig (the Client Induction) via deck.d.client.d.scsBridge.e and dispatches via
+  // the held Muxium (GPIM · mirrors triggerSpawnSession). Does NOT paint — the paint is the return's
+  // act (scsBridgeSetHifiConfigRelay). SuiteColorSelection.vue calls this on swatch change.
+  applyHifiConfig: (colors: Record<string, string>) => void;
+
   // ----------------------------------------
   // D3D Wave-2 · CMIA-Spawn + CMIA-Engage + SAES dispatch API
   // ScsBridgeSessionManagement.vue calls these from button click handlers.
@@ -2096,6 +2102,33 @@ export function createScsBridgeController(): ScsBridgeController {
     void triggerGitmMean(tool, args);
   };
 
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — dispatch the color click's Client Induction (GPIM · mirrors
+  // triggerSpawnSession). Routes the sparse per-spectrum hex map to actionQue → the webSocketClient
+  // principle sends it → the Huirth Real merge-writes hifiConfig.json + broadcasts the fresh config
+  // back. This method NEVER paints — the paint arrives on the return (scsBridgeSetHifiConfigRelay).
+  const applyHifiConfig = (colors: Record<string, string>): void => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] applyHifiConfig called without bound Muxium · color round-trip will NOT fire',
+      );
+      return;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      const action: AnyAction = deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiColors: colors,
+      });
+      mux.dispatch(action);
+      console.log(
+        '[ScsBridgeController] applyHifiConfig dispatched · spectra=',
+        Object.keys(colors).length,
+      );
+    } catch (err) {
+      console.error('[ScsBridgeController] applyHifiConfig dispatch failed:', err);
+    }
+  };
+
   return {
     toolbarButtons,
     bridgeJson,
@@ -2126,6 +2159,8 @@ export function createScsBridgeController(): ScsBridgeController {
     closeDefaultMuxium,
     triggerHardTurnOver,
     triggerGitmAction,
+    // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's dispatch surface (no paint · return paints)
+    applyHifiConfig,
     triggerSpawnSession,
     getScpName: resolveScpName,
     triggerSpawnSuite8Session,

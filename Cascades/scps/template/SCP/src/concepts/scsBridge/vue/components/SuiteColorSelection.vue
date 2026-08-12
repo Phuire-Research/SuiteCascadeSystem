@@ -7,8 +7,16 @@
  *
  * Each row is a swatch button + a spectrum label + a functional designation; clicking the swatch
  * opens the constrained in-DOM canvas picker (WIRE.2 · SuiteColorPickerPanel · hue band-clamped,
- * no native dialog). On change → save the full selection + apply (re-tints :root on documentElement).
- * Reset → clear the persisted map and restore the `:root` defaults.
+ * no native dialog).
+ *
+ * D-PCL · THE ROUND-TRIP COLOR CIRCUIT — On change the click NO LONGER paints. It (α) persists the new
+ * hex to the user's OWN localStorage (intent · so the return's precedence merge paints their fresh
+ * click, not their stale one) and dispatches the Client Induction (scsBridgeApplyHifiConfig) via the
+ * scsBridge controller → the Huirth merge-writes hifiConfig.json → the RETURN broadcast (setHifiConfigRelay)
+ * re-runs the boot precedence on EVERY client and re-tints. The visible color IS the receipt of the
+ * truth — the clicking window paints no earlier than the rest. applySuiteColorOverrides is RETIRED from
+ * the click path (it survives inside the return-apply · hifiConfig.model applyHifiConfigWithOverrides).
+ * Reset stays local (clears the user's overrides + restores :root defaults · a distinct un-set op).
  *
  * Output Firewall: SPECTRUM names + FUNCTIONAL designations ONLY — no profession/cascade names,
  * no scare-quotes. The user picks colors; the cascade/profession semantics stay internal.
@@ -19,10 +27,15 @@ import {
   SPECTRUM_NAMES,
   loadSuiteColorOverrides,
   saveSuiteColorOverrides,
-  applySuiteColorOverrides,
   clearSuiteColorOverrides,
 } from '../../../../model/suiteColorOverride.model';
+import { getGlobalScsBridgeController, SCS_BRIDGE_CONTROLLER_KEY } from '../../scsBridgeController';
+import { inject } from 'vue';
 import SuiteColorPickerPanel from './SuiteColorPickerPanel.vue';
+
+// D-PCL · the scsBridge controller carries the color click's Induction dispatch (applyHifiConfig).
+// inject-first (Vue runtime-singleton) with the getGlobal fallback — the GitmTurnOver button idiom.
+const scsBridgeController = inject(SCS_BRIDGE_CONTROLLER_KEY) ?? getGlobalScsBridgeController();
 
 // The RD default hex per spectrum suite — the `:root` baseline a Reset restores to.
 const DEFAULT_HEX: Record<SpectrumName, string> = {
@@ -56,10 +69,12 @@ const selection = reactive<Record<SpectrumName, string>>({
 
 function onColorChange(n: SpectrumName, hex: string): void {
   selection[n] = hex;
-  // Persist the full selection (defaults + overrides), then re-tint the app live (HIFI.1).
   const full: Record<SpectrumName, string> = { ...selection };
+  // D-PCL · (α) persist the intent to the user's OWN localStorage — NO paint here. This makes the
+  // return's precedence merge (localStorage < JSON) paint their FRESH click, not their stale override.
   saveSuiteColorOverrides(full);
-  applySuiteColorOverrides(full);
+  // D-PCL · dispatch the Client Induction — the round trip paints on the RETURN broadcast, not now.
+  scsBridgeController?.applyHifiConfig(full);
 }
 
 function onReset(): void {
@@ -78,8 +93,10 @@ function togglePicker(n: SpectrumName): void {
 function onResetOne(n: SpectrumName): void {
   selection[n] = DEFAULT_HEX[n];
   const full: Record<SpectrumName, string> = { ...selection };
+  // D-PCL · reset-one is a re-selection of the RD default — same round trip: persist intent (α),
+  // dispatch the Induction, paint on the return. No local applySuiteColorOverrides.
   saveSuiteColorOverrides(full);
-  applySuiteColorOverrides(full);
+  scsBridgeController?.applyHifiConfig(full);
 }
 </script>
 

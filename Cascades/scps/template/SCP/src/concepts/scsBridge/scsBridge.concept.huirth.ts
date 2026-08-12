@@ -24,6 +24,10 @@ import { createScsBridgeHuirthState } from './scsBridge.state';
 import type { ScsBridgeHuirthQualities } from './scsBridge.type';
 import { scsBridgeTriggerHardTurnOverHuirth } from './qualities/triggerHardTurnOver.quality.huirth.diameter';
 import { scsBridgeSendBridgeMessageHuirth } from './qualities/sendBridgeMessage.quality.huirth.diameter';
+// D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the Huirth REAL (merge-writes hifiConfig.json + broadcasts)
+// + the return SET emitter (dual-deployment · the Real broadcasts it · Client applies it).
+import { scsBridgeApplyHifiConfig } from './qualities/applyHifiConfig.quality.huirth.diameter';
+import { scsBridgeSetHifiConfigRelay } from './qualities/setHifiConfigRelay.quality';
 import { scsBridgeSetBridgeJsonRelay } from './qualities/setBridgeJsonRelay.quality';
 import { scsBridgeSetSessionsListRelay } from './qualities/setSessionsListRelay.quality';
 // SE · Epoch Extension · ASMQ · archive-manifest Base (Huirth-only) + Relay (serverToClient)
@@ -63,6 +67,9 @@ export const scsBridgeHuirthName = 'scsBridge';
 const scsBridgeHuirthQualities: ScsBridgeHuirthQualities = {
   scsBridgeTriggerHardTurnOver: scsBridgeTriggerHardTurnOverHuirth,
   scsBridgeSendBridgeMessage: scsBridgeSendBridgeMessageHuirth,
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the Huirth Real + the return SET emitter
+  scsBridgeApplyHifiConfig,
+  scsBridgeSetHifiConfigRelay,
   scsBridgeSetBridgeJsonRelay,
   scsBridgeSetSessionsListRelay,
   scsBridgeSetServerStartupTime,

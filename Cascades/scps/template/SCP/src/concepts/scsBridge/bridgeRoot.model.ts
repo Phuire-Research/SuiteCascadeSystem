@@ -65,3 +65,14 @@ export function resolveScpLocalBridgeDir(): string {
 export function resolveScpLocalExtendedDir(): string {
   return path.resolve(process.cwd(), 'Cascades', 'Extended');
 }
+
+/**
+ * D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the SCP's OWN shipped-HiFi JSON (cwd/Cascades/hifiConfig.json).
+ * The BYTE-IDENTICAL path the /hifi-config GET serves (vue.principle.ts:2431 · C465/C872: cwd IS the
+ * package, NEVER the workspace ancestor — the Pewter write landed SCP-local and the workspace file
+ * would answer otherwise). Centralized here so the round-trip WRITE (applyHifiConfig Huirth Real) and
+ * the boot READ (/hifi-config GET) resolve the SAME file. NEVER walked-up, NEVER env-diverted.
+ */
+export function resolveScpCascadesHifiConfigPath(): string {
+  return path.resolve(process.cwd(), 'Cascades', 'hifiConfig.json');
+}
