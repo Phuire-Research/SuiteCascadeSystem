@@ -37,6 +37,46 @@ import { execSync } from 'node:child_process';
 import { validateAndDerive } from './installScpPrompts';
 import { readScpRegistry } from './scpPersistence';
 
+// E-NEWLINE-DIR (C886) · THE CONTROL-CHAR ENTRY GUARD — the C885 field find: a directory
+// literally named `suite8.type.ts\nsrc` (a newline INSIDE the name, holding a 0-file dir
+// skeleton) rode the mint's recursive cpSync into a fresh page, then the transfer's overlay
+// onto the receiving citizen. Git is structurally blind to empty dirs, so no gate catches
+// the class. This sweep runs AFTER every recursive copy: an entry whose NAME carries a
+// control character is REMOVED if it holds zero files, anor HELD (reported, never deleted)
+// if any file lives inside — the propagation lane closes even if a seed reappears.
+export const sweepControlCharEntries = (root: string): { removed: string[]; held: string[] } => {
+  const removed: string[] = [];
+  const held: string[] = [];
+  // eslint-disable-next-line no-control-regex
+  const hasControlChar = (name: string): boolean => /[\x00-\x1f]/.test(name);
+  const countFiles = (p: string): number => {
+    let n = 0;
+    for (const e of readdirSync(p, { withFileTypes: true })) {
+      if (e.isDirectory()) n += countFiles(join(p, e.name));
+      else n += 1;
+    }
+    return n;
+  };
+  const walk = (dir: string): void => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (hasControlChar(e.name)) {
+        const files = e.isDirectory() ? countFiles(full) : 1;
+        if (e.isDirectory() && files === 0) {
+          rmSync(full, { recursive: true, force: true });
+          removed.push(full);
+        } else {
+          held.push(full);
+        }
+      } else if (e.isDirectory()) {
+        walk(full);
+      }
+    }
+  };
+  if (existsSync(root)) walk(root);
+  return { removed, held };
+};
+
 // ============================================
 // PUBLIC SURFACE
 // ============================================
@@ -318,6 +358,11 @@ export function runSuite8PageCreate(opts: Suite8PageCreateOptions): Suite8PageCr
 
     // ---- S5 · cp the template concept (template dir UNTOUCHED) ----
     cpSync(templateDir, newDir, { recursive: true });
+    // E-NEWLINE-DIR guard (C886) — the copy may have carried a control-char-named entry.
+    const controlCharSweep = sweepControlCharEntries(newDir);
+    if (controlCharSweep.removed.length > 0 || controlCharSweep.held.length > 0) {
+      console.log('[suite8PageCreate] control-char entry sweep:', JSON.stringify(controlCharSweep));
+    }
 
     // ---- S6 · GLOB mv walk (S3 DISCOVERY · supersedes the literal 14-mv) ----
     const filesRenamed = renameBasenamesInDir(newDir, Domain, domainLower);

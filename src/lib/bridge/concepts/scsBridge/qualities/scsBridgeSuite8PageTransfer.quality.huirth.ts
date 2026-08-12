@@ -60,7 +60,7 @@ import type {
   ScsBridgeSuite8PageTransferPayload,
   ScsBridgeSuite8PageTransfer,
 } from '../scsBridge.types';
-import { runSuite8PageCreate } from '../../../../scp/suite8PageCreate';
+import { runSuite8PageCreate, sweepControlCharEntries } from '../../../../scp/suite8PageCreate';
 import { readScpRegistry } from '../../../../scp/scpPersistence';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
 import { log } from '../../../debugLog';
@@ -230,6 +230,15 @@ export const scsBridgeSuite8PageTransfer = createQualityCardWithPayload<
           suitePackageCopied = true;
         } else {
           log('scsbridge.suite8PageTransfer.no-suite-package', { sourceSuiteDir });
+        }
+
+        // E-NEWLINE-DIR guard (C886) — the recursive overlays may have carried a
+        // control-char-named entry from the source (the C885 propagation lane). Sweep BOTH
+        // copy targets: 0-file entries removed, populated ones HELD in the log for the report.
+        const overlaySweep = sweepControlCharEntries(targetConceptDir);
+        const suiteSweep = sweepControlCharEntries(targetSuiteDir);
+        if (overlaySweep.removed.length || overlaySweep.held.length || suiteSweep.removed.length || suiteSweep.held.length) {
+          log('scsbridge.suite8PageTransfer.control-char-sweep', { overlaySweep, suiteSweep });
         }
       } catch (err) {
         // Overlay/copy failure BEFORE the gate → restore the scaffold, remove any partial suite copy.
