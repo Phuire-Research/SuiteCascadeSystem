@@ -1,11 +1,69 @@
 {
   "schemaVersion": 1,
-  "current": "0.944.1",
+  "current": "0.945.0",
   "muxameter": {
-    "cli": 11,
-    "scp": 12
+    "cli": 12,
+    "scp": 13,
+    "s8": 2
   },
   "releases": [
+    {
+      "id": "v0945",
+      "version": "0.945.0",
+      "label": "New in 0.945.0",
+      "muxameter": {
+        "cli": 12,
+        "scp": 13,
+        "s8": 2
+      },
+      "magnitude": 4,
+      "features": [
+        {
+          "title": "Every page carries its own version",
+          "color": "purple",
+          "summary": "A Suite 8 page now holds a version of its own — and when a newer one ships, the page's own toolbar button turns amber to say so, quietly, without touching the main version badge.",
+          "detail": [
+            "Until now, only the app as a whole knew whether it was current. A Suite 8 page is a living surface — it can advance on its own cadence — so each page now carries a <span class=\"hifi-hl-purple\">page version</span> counted apart from the CLI and the app template. When the published page version outpaces the one your page carries, the page's own <span class=\"hifi-hl-yellow\">Suite 8 toolbar button turns amber</span> — a signal that belongs to that page alone.",
+            "The main version badge keeps its own voice: it never turns amber for a page update, and the amber toolbar never turns the badge red. Two signals, two meanings — the badge speaks for the app, the amber toggle speaks for the page in front of you."
+          ]
+        },
+        {
+          "title": "The page update, always within reach",
+          "color": "blue",
+          "summary": "The Suite 8 Control panel now carries a standing PAGE and NPM readout with an update control beside it — refresh a single page to its latest shipped version whenever you choose.",
+          "detail": [
+            "Open the Suite 8 Control panel and a plain row reads it straight: <span class=\"hifi-hl-blue\">PAGE #N · NPM #M</span> — the version your page carries beside the version the release ships. The update control stands right there, always available: you decide when a page catches up, page by page, never all-at-once by surprise.",
+            "The readout tells the truth whether or not an update waits: matching numbers mean the page is current, and the amber toggle rests. A higher NPM number is the invitation — press the control when the moment suits you."
+          ]
+        },
+        {
+          "title": "A page update that honors your design",
+          "color": "green",
+          "summary": "A page refresh runs through the Entourage Forge with a conference first — nothing you shaped is overwritten without your say, the way every SCP update already protects your work.",
+          "detail": [
+            "Refreshing a page is not a silent overwrite. It runs through the <span class=\"hifi-hl-green\">Entourage Forge</span>, which opens a conference honoring what you have already made: where the new page and your version differ, you decide — your own design is never clobbered by a template default. The same preservation discipline the SCP update circuit stands on now guards the single page.",
+            "The Forge carries the change onto your page and lets you review it in place. Land what serves you, keep what is yours — the refresh is conducted by you, decision by decision."
+          ]
+        },
+        {
+          "title": "The Forge's Reference Designs, renewed",
+          "color": "orange",
+          "summary": "The Entourage Forge's Reference Design list gains two: Prepared Agent Dispatch — sequence any number of agents straight from your page — and OnBoard.md, so a page ships with its own onboarding.",
+          "detail": [
+            "<span class=\"hifi-hl-orange\">Prepared Agent Dispatch</span> lets your page prepare any number of agents in sequence — a directed line-up dispatched straight from the page, each carrying its own directive into motion.",
+            "<span class=\"hifi-hl-blue\">OnBoard.md</span> lets a page ship with its own onboarding written alongside it — the page arrives already knowing how to introduce itself, so whoever opens it next is met, not left guessing."
+          ]
+        },
+        {
+          "title": "Pewter Tessera joins as a full page",
+          "color": "base",
+          "summary": "Pewter Tessera ships as a full Suite 8 page — pick a locality to preview an SCP's shipped colors without ever touching your own styling.",
+          "detail": [
+            "<span class=\"hifi-hl-base\">Pewter Tessera</span> is now a full Suite 8 page in its own right. Choose a locality and it previews that SCP's shipped colors in place — a look at how another app dresses itself, held entirely apart from your own styling. Nothing you preview ever lands on your page; your look stays yours throughout."
+          ]
+        }
+      ]
+    },
     {
       "id": "v09441",
       "version": "0.944.1",

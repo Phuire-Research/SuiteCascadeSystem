@@ -206,11 +206,32 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.944.1
+## Release Notes — v0.945.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.945.0 — every page carries its own version**: a Suite 8 page now holds a version of
+  its own, counted apart from the CLI and the app template. When a newer page ships, that
+  page's own Suite 8 toolbar button turns amber — a signal that belongs to the page alone;
+  the main version badge never turns amber for a page update, and the amber toggle never
+  turns the badge red. Two signals, two meanings.
+- **0.945.0 — the page update, always within reach**: the Suite 8 Control panel carries a
+  standing PAGE #N · NPM #M readout with an update control beside it, always available.
+  Matching numbers mean the page is current; a higher NPM number is the invitation to
+  refresh a single page when the moment suits you — page by page, never all-at-once.
+- **0.945.0 — a page update that honors your design**: a page refresh runs through the
+  Entourage Forge with a conference first — where the new page and your version differ, you
+  decide; nothing you shaped is overwritten without your say. The same preservation
+  discipline the SCP update circuit stands on now guards the single page.
+- **0.945.0 — the Forge's Reference Designs, renewed**: two join the Entourage Forge's
+  list. Prepared Agent Dispatch prepares any number of agents in sequence, dispatched
+  straight from your page, each carrying its own directive. OnBoard.md lets a page ship
+  with its own onboarding written alongside it — the page arrives already knowing how to
+  introduce itself.
+- **0.945.0 — Pewter Tessera joins as a full page**: Pewter Tessera ships as a full Suite 8
+  page — pick a locality to preview that SCP's shipped colors in place, held entirely apart
+  from your own styling. Nothing you preview ever lands; your look stays yours.
 - **0.944.1 — the bridge never hangs on git**: a remote git operation stalling on
   credentials could freeze the whole bridge with it. Git is now told never to prompt
   (it fails fast with its own reason), and a two-minute backstop ends any transport
