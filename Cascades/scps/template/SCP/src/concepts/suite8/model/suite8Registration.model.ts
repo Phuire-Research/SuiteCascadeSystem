@@ -89,6 +89,15 @@ export const KNOWN_SUITE8_ENTRIES: Suite8Entry[] = [
     description: 'Spawned ClaudeCode Instance Page Island',
     color: '#c44d22',
   }),
+  // MD-USP · US-1 · LOCALITY · the template Suite 8 scaffold designation (the pre-adapt Graphite Scribe
+  // home page · Cascades/Extended/Graphite Scribe/ + Cascades/8_SUITES/Graphite Scribe/ ship in-template).
+  // Seeds SyncLibrary.json at boot via the MPRF path (robust · survives an Extended-dir mint) so the
+  // GraphiteScribeHomeLanding locality drawer has a SyncLibrary to offer. Pewter Tessera was already present.
+  buildSuite8Registration({
+    name: 'Graphite Scribe',
+    description: 'Template Suite 8 Home Page scaffold · adapted per-domain at install',
+    color: '#7c6f9a',
+  }),
   buildSuite8Registration({
     name: 'SCP Researcher',
     description: 'Personal SCP Designation Manager · SCP Adapt cascade',

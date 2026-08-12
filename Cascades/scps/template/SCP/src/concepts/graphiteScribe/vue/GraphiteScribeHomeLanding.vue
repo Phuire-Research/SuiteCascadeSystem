@@ -28,6 +28,17 @@ import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/
 // supplying createCadmiumClientConcept). The SSMC's GPIM controller binding needs a live Muxium.
 import { createGraphiteScribeClientConcept } from '../graphiteScribe.concept.client';
 import { graphiteScribeMuxonomic } from '../graphiteScribe.muxonomy';
+// MD-USP · US-3 · LOCALITY · the suite8 CLIENT concept + its muxonomy — mounted as a SECOND muxium
+// member so d.client.d.suite8.k.localities exists for armS8LocalityPageOwner + the Suite8Control drawer
+// subscription (this was US-3 Missing Rung 2 · S4-LOCALITY-MEANS-DELTA §GS Rung 2). Cross-concept import
+// to the suite8 concept, the SAME array-shape CadmiumLanding.vue:51/59/699 walks (the wild-class precedent).
+import { createSuite8ClientConcept } from '../../suite8/suite8.concept.client';
+import { suite8Muxonomic } from '../../suite8/suite8.muxonomy';
+// MD-USP · US-3 · LOCALITY · the page-owned locality arm (the held model · the SAME path Suite8HomeLanding.vue:52
+// walks). The page's muxium is created HERE, so the page arms the ONE locality subscription (no bind race) and
+// publishes the shared face every surface reads (Pewter's targetScpName · the toolbar S8 face). This was US-3
+// Missing Rung 1 (no owner → currentS8Locality never pushed from this page · S4-LOCALITY-MEANS-DELTA §GS Rung 3).
+import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
 // SSMC · the importable Session Management component (mode=specific · graphiteScribeName) — the SAME
 // import + props CadmiumLanding.vue:37 uses. This binds the session list to the domain Suite 8.
 // GPIM · Vue-layer Muxium binding into the universal scsBridge controller (the SSMC reads its
@@ -381,6 +392,10 @@ async function requestTurnOverToB(): Promise<void> {
 // (page-load convenience) but DEFERS first-run spawn entirely to the menu (no page-level spawn).
 
 let muxium: Muxium<ClientMuxiumDeck> | null = null;
+// MD-USP · US-3 · LOCALITY · the page-owned locality subscription handle (armed in onMounted after
+// setMuxium · concluded in onUnmounted). Mirrors Suite8HomeLanding.vue:260 (declaration) — this was
+// US-3 Missing Rung 2 (no handle → leaked planner + stale refresh callback · S4 §GS Rung 4).
+let localityOwner: { conclude: () => void } | null = null;
 // MD-CE-4 · THE REACTIVE MUXIUM HAND-OFF — the plain `let muxium` is assigned in onMounted
 // AFTER the first render, so a child receiving `:muxium="muxium"` captures null and never
 // re-receives it without an unrelated re-render (the C431 finding). The shallowRef makes the
@@ -417,7 +432,12 @@ onMounted(() => {
   // IUPA · this landing supplies graphiteScribe as the muxonomic page concept (the SSMC controller
   // binding needs a live Muxium; the domain work surface can dispatch into it once adapted).
   muxium = createClientMuxiumInstance<ClientMuxiumDeck>(
-    [{ concept: createGraphiteScribeClientConcept(), muxonomy: graphiteScribeMuxonomic }],
+    // MD-USP · US-3 · LOCALITY · suite8 mounts FIRST (CadmiumLanding.vue:699 array-shape), then the page
+    // concept — so d.client.d.suite8.k.localities exists for the arm + the Suite8Control drawer subscription.
+    [
+      { concept: createSuite8ClientConcept(), muxonomy: suite8Muxonomic },
+      { concept: createGraphiteScribeClientConcept(), muxonomy: graphiteScribeMuxonomic },
+    ],
     {
       title: 'GraphiteScribeHomeLanding',
       logging: true,
@@ -431,6 +451,13 @@ onMounted(() => {
   if (sbController) sbController.setMuxium(muxium);
   // MD-CE-4 · the reactive hand-off to the editor surface (see surfaceMuxium declaration).
   surfaceMuxium.value = muxium;
+
+  // MD-USP · US-3 · LOCALITY · V-4g THE PAGE-OWNED LOCALITY — the page's muxium is created HERE (and
+  // now carries suite8 · GS Rung 2), so the page arms the ONE locality subscription (no bind race) and
+  // publishes the shared face every surface reads; the drawer panel is a reader+writer, never an owner.
+  // Runs AFTER setMuxium so the arm's dispatch + stage-planner bind against the bound suite8 slice.
+  // Shape mirrors Suite8HomeLanding.vue:203 (designation = the page's graphiteScribeName ref).
+  localityOwner = armS8LocalityPageOwner(muxium, graphiteScribeName.value);
 
   // ============================================================
   // ADAPT: DOMAIN WORK SURFACE — onMounted wiring
@@ -500,6 +527,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // MD-USP · US-3 · LOCALITY · conclude the page-owned locality subscription FIRST — stops the planner,
+  // unregisters the hydrate refresh callback, null-pushes the shared face (mirrors Suite8HomeLanding.vue:263).
+  // Without this the planner + stale refresh callback leak after navigation (US-3 Missing Rung 2 cure).
+  localityOwner?.conclude();
+  localityOwner = null;
   // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
   // the toolbar's S8 face + drawer fall away when leaving this page (mirrors Suite8HomeLanding).
   getGlobalScsBridgeController()?.clearCurrentS8Page();
