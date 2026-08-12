@@ -400,28 +400,30 @@ const currentBranch = computed<string>(
 const pageS8CounterValue = computed<number | null>(
   () => scsBridgeControllerForDoor?.pageS8Counter.value ?? null,
 );
-// NPM — the available s8 counter fed by the TaskBar relay (null until an s8-carrying answer
-// lands · '—' when unknown, never a fabricated 0).
-const npmS8CounterValue = computed<number | null>(
-  () => scsBridgeControllerForDoor?.npmS8Counter.value ?? null,
+// SYSTEM — the INSTALLED bridge's s8 counter fed by the TaskBar relay (null until an s8-carrying
+// answer lands · '—' when unknown, never a fabricated 0). THE UPDATE-ORDER LAW: the installed
+// bridge package.json IS the source of truth for the S8 system counter — the page cannot update
+// until the bridge update lands the new package.json, so this reads the INSTALLED side, not npm.
+const installedS8CounterValue = computed<number | null>(
+  () => scsBridgeControllerForDoor?.installedS8Counter.value ?? null,
 );
-// BEHIND — the compare (page < npm · null when either half unknown). Colors the row + control
-// amber; ONLY true signals (null stays quiet — never signals on unknown).
+// BEHIND — the compare (page < installed system · null when either half unknown). Colors the row +
+// control amber; ONLY true signals (null stays quiet — never signals on unknown).
 const s8PageBehindValue = computed<boolean>(
   () => scsBridgeControllerForDoor?.s8PageBehind.value === true,
 );
-// The honest counter renders — page shows its number (0 = '#0'); npm shows '#M' anor '—'.
+// The honest counter renders — page shows its number (0 = '#0'); system shows '#M' anor '—'.
 const pageS8Display = computed<string>(() =>
   pageS8CounterValue.value === null ? '—' : `#${pageS8CounterValue.value}`,
 );
-const npmS8Display = computed<string>(() =>
-  npmS8CounterValue.value === null ? '—' : `#${npmS8CounterValue.value}`,
+const installedS8Display = computed<string>(() =>
+  installedS8CounterValue.value === null ? '—' : `#${installedS8CounterValue.value}`,
 );
 // MD-S8PM · PM-5 · engageVersionedUpdate — THE FORGE UPDATE VERMILLION, wired real. The
 // always-enabled update control (the panel version row) AND the Shatterite Menu path both fire
 // this ONE function (the board's convergence law). It composes buildUpdateVermillion with the
-// honest s8 pair (the PM-2/PM-3 controller seats · ?? 0 floor for the page, ?? page for npm when
-// npm is unknown so the pair never asserts a fabricated behind) and spawns through the SAME rail +
+// honest s8 pair (the PM-2/PM-3 controller seats · ?? 0 floor for the page, ?? page for the installed
+// system when it is unknown so the pair never asserts a fabricated behind) and spawns through the SAME rail +
 // the SAME ONE MOTION law as engageEntourageForge. THE ONE MOTION VERDICT (honest read of
 // findLiveS8Session): liveness keys on suite8Name === 'Entourage Forge' + scpName + status ===
 // 'launched' — it does NOT discern the session's OWN target page (that rides the registry
@@ -436,11 +438,12 @@ async function engageVersionedUpdate(): Promise<void> {
   versionedUpdateSpawning.value = true;
   versionedUpdateNote.value = '';
   try {
-    // THE HONEST PAIR — the page's minted counter (floor 0) and npm's current (page value when
-    // npm is unknown, so the embedded pair never fabricates a behind delta; the session RE-READs
-    // /scs-bridge-version for the live counter regardless).
+    // THE HONEST PAIR — the page's minted counter (floor 0) and the INSTALLED system's current
+    // (page value when the installed s8 is unknown, so the embedded pair never fabricates a behind
+    // delta; the session RE-READs /scs-bridge-version for the live installed counter regardless).
+    // THE UPDATE-ORDER LAW: the installed bridge package.json's s8 is the source of truth.
     const pageS8 = pageS8CounterValue.value ?? 0;
-    const npmS8 = npmS8CounterValue.value ?? pageS8;
+    const installedS8 = installedS8CounterValue.value ?? pageS8;
     // THE TIMEOUT RACE (C375) — a never-settling getScpName must never hang the dispatch.
     const scpName = (await Promise.race([
       ctrl.getScpName(),
@@ -458,7 +461,7 @@ async function engageVersionedUpdate(): Promise<void> {
     // idiom VERBATIM: fresh:false · onboard:true · anchor:true · target = this page).
     ctrl.triggerSpawnS8Session(
       'Entourage Forge', scpName, false, true, false,
-      buildUpdateVermillion(props.suite8Name, pageS8, npmS8),
+      buildUpdateVermillion(props.suite8Name, pageS8, installedS8),
       true, true, props.suite8Name,
     );
     versionedUpdateNote.value = 'The Forge Update engaged — it will confer the standardization and hand the Suite back.';
@@ -994,15 +997,16 @@ async function chooseLocality(scpName: string | null): Promise<void> {
       <h3 class="s8c-title hifi-heading">SUITE 8 CONTROL</h3>
     </header>
 
-    <!-- MD-S8PM · PM-4 · THE PANEL VERSION ROW — the page's minted s8 counter beside npm's
-         available s8, plus the ALWAYS-ENABLED update control (THE ALWAYS-ENABLED LAW: enabled
+    <!-- MD-S8PM · PM-4 · THE PANEL VERSION ROW — the page's minted s8 counter beside the installed
+         system's s8 (the installed bridge package.json is the source of truth · the update-order
+         law), plus the ALWAYS-ENABLED update control (THE ALWAYS-ENABLED LAW: enabled
          current anor behind). Colored amber when s8PageBehind (the SAME amber as the toolbar
          toggle border · quiet when current). Renders ALWAYS (floor-0 pages show PAGE #0 — the
          honest behind state). The control fires engageVersionedUpdate (the PM-5 seam · a stub
          until PM-5 wires the Forge Vermillion). THE NO-RED LAW: never a badge input. -->
     <div class="s8c-version-row" :class="{ 's8c-version-row--behind': s8PageBehindValue }">
       <span class="s8c-version-pair hifi-mono">
-        PAGE {{ pageS8Display }} · NPM {{ npmS8Display }}
+        PAGE {{ pageS8Display }} · SYSTEM {{ installedS8Display }}
       </span>
       <button
         type="button"
@@ -1173,14 +1177,14 @@ async function chooseLocality(scpName: string | null): Promise<void> {
               class="s8c-forge-btn s8c-forge-update-btn"
               :class="{ 's8c-forge-update-btn--behind': s8PageBehindValue }"
               :disabled="versionedUpdateSpawning"
-              title="Update this Suite 8 page from the Template Suite 8 — the Forge confers which standardizations adapt over (always available; amber when the page is behind npm's s8 counter)."
+              title="Update this Suite 8 page from the Template Suite 8 — the Forge confers which standardizations adapt over (always available; amber when the page is behind the installed system's s8 counter)."
               @click="engageVersionedUpdate"
             >
               <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
               <span>{{
                 versionedUpdateSpawning
                   ? 'Engaging…'
-                  : `Update from Template · PAGE ${pageS8Display} → NPM ${npmS8Display}`
+                  : `Update from Template · PAGE ${pageS8Display} → SYSTEM ${installedS8Display}`
               }}</span>
             </button>
             <p v-if="versionedUpdateNote" class="s8c-forge-note">{{ versionedUpdateNote }}</p>

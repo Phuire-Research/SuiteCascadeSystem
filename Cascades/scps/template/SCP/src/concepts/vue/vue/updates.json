@@ -4,7 +4,7 @@
   "muxameter": {
     "cli": 12,
     "scp": 13,
-    "s8": 2
+    "s8": 1
   },
   "releases": [
     {
@@ -14,7 +14,7 @@
       "muxameter": {
         "cli": 12,
         "scp": 13,
-        "s8": 2
+        "s8": 1
       },
       "magnitude": 4,
       "features": [

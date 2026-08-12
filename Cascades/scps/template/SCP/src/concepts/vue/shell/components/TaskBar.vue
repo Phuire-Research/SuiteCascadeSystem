@@ -27,9 +27,12 @@ import { RESERVED_TOOLBAR_BUTTON_IDS } from '../../../../model/toolbarRegistrati
 // no name → no chip, never a placeholder).
 import { loadScpConfig } from '../../../../model/scpConfig.model';
 // MD-S8PM · PM-4 · THE RELAY FEED — TaskBar is the always-mounted toolbar that co-hosts the
-// S8DrawerButton AND already polls /scs-bridge-version + parses the s8 leg (remoteCounters).
-// It hands the parsed npm s8 to the controller's token-free relayNpmS8Counter (no new poll):
-// the controller then answers s8PageBehind for the S8 toggle border + the panel version row.
+// S8DrawerButton AND already polls /scs-bridge-version + parses the s8 leg (installedCounters).
+// It hands the parsed INSTALLED s8 to the controller's token-free relayInstalledS8Counter (no new
+// poll): the controller then answers s8PageBehind for the S8 toggle border + the panel version row.
+// THE UPDATE-ORDER LAW: the installed bridge package.json IS the source of truth for the S8 system
+// counter — the S8 page cannot update until the bridge update lands the new package.json, so the
+// S8 lane reads installedMuxameter.s8 (served locally off disk), never npm directly.
 // Token-free reach (the S8DrawerButton idiom) — a bare number in, no suite8-token coupling.
 import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 
@@ -91,11 +94,12 @@ const muxameterLine = computed<string | null>(() => {
     if (rv === undefined || iv === rv) return `${label} #${iv ?? rv}`;
     return `${label} #${iv ?? '—'} → #${rv}`;
   };
-  // MD-S8PM · PM-2 · THE s8 INFORMATION LEG — the available S8 Page System counter appended to
-  // the muxameter hover line as pure INFORMATION when npm carries it (THE NO-RED LAW: this never
-  // enters the badge verdict — versionState/bridgeUpdateClass read only cli/scp). The page-side
-  // s8 (the current-page axis) lands in PM-3; today only the npm-available number is honest here.
-  const s8Leg = typeof r?.s8 === 'number' ? ` · S8 #${r.s8}` : '';
+  // MD-S8PM · PM-2 · THE s8 INFORMATION LEG — the INSTALLED S8 Page System counter appended to
+  // the muxameter hover line as pure INFORMATION (THE NO-RED LAW: this never enters the badge
+  // verdict — versionState/bridgeUpdateClass read only cli/scp). THE UPDATE-ORDER LAW: the tip
+  // informs the system's LOCAL truth — the installed bridge package.json's s8 (installedMuxameter.s8,
+  // read from disk by the SCP's own answer); it rides no extra fetch and never reads npm directly.
+  const s8Leg = typeof i?.s8 === 'number' ? ` · S8 #${i.s8}` : '';
   return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}${s8Leg}`;
 });
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
@@ -188,11 +192,15 @@ onMounted(() => {
       if (body) {
         installedCounters.value = pair(body.installedMuxameter);
         remoteCounters.value = pair(body.remoteMuxameter);
-        // MD-S8PM · PM-4 · relay the npm s8 to the controller (null when absent — never signals
-        // on unknown). THE NO-RED LAW: this feeds only the s8 toggle border / panel row, never
-        // the badge verdict (bridgeUpdateClass is set above from body.updateClass alone).
-        getGlobalScsBridgeController()?.relayNpmS8Counter(
-          typeof remoteCounters.value?.s8 === 'number' ? remoteCounters.value.s8 : null,
+        // MD-S8PM · PM-4 · relay the INSTALLED s8 to the controller (null when absent — never
+        // signals on unknown). THE UPDATE-ORDER LAW: the installed bridge's package.json IS the
+        // source of truth for the S8 system counter (installedMuxameter.s8 · read from disk by the
+        // SCP's own /scs-bridge-version answer). The S8 page cannot update until the bridge update
+        // lands the new package.json — so the S8 lane reads the INSTALLED side, never npm directly.
+        // THE NO-RED LAW: this feeds only the s8 toggle border / panel row, never the badge verdict
+        // (bridgeUpdateClass is set above from body.updateClass alone).
+        getGlobalScsBridgeController()?.relayInstalledS8Counter(
+          typeof installedCounters.value?.s8 === 'number' ? installedCounters.value.s8 : null,
         );
       }
     })

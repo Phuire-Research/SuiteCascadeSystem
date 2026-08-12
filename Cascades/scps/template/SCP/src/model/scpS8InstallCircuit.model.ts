@@ -129,20 +129,23 @@ export const buildUpdateCircuitVermillion = (
 // THE CONFLATION GUARD: this is a SIBLING of buildUpdateCircuitVermillion, NEVER the same builder.
 // The Update Circuit (:108) is the Base↔Informative BILATERAL sync between two installed SCPs; THIS
 // is the ONE page adapting to the Template Suite 8 Page per the standardization updates between the
-// page's own s8 counter (pageS8) and npm's current s8 counter (npmS8). Token-free export (copy surface).
+// page's own s8 counter (pageS8) and the INSTALLED system's s8 counter (installedS8). THE UPDATE-ORDER
+// LAW: the installed bridge package.json IS the source of truth for the S8 system counter — the S8
+// update unlocks only after the bridge update lands the new counter. Token-free export (copy surface).
 export const buildUpdateVermillion = (
   designation: string,
   pageS8: number,
-  npmS8: number,
+  installedS8: number,
 ): string =>
   [
-    `SCS:Vermillion · THE FORGE UPDATE · Suite 8 page "${designation}" · s8 #${pageS8} → npm s8 #${npmS8}.`,
+    `SCS:Vermillion · THE FORGE UPDATE · Suite 8 page "${designation}" · s8 #${pageS8} → system s8 #${installedS8}.`,
     'You are the page\'s Entourage Forge conducting ONE update, then dissipating (the ONE MOTION law spawned you as this page\'s anchor Forge so a duplicate engage FOCUSES you rather than re-spawning; your Lambda is the update + the report, then teardown). This Vermillion is ERROR-CORRECTING: where reality diverges from it, verify against the LIVE surfaces and correct course — record every correction in the update report.',
     '',
     // (a) THE COMMISSION — the s8 PAIR embedded literally + the /scs-bridge-version surface NAMED
-    // so the session can RE-READ npm-current during the update (the pair may be stale at spawn).
-    `THE COMMISSION: update THIS page's Suite 8 from the Template Suite 8 Page per the standardization updates between counter s8 #${pageS8} (this page's minted counter) and counter s8 #${npmS8} (npm's current). The pair above is the spawn-time snapshot; RE-READ npm-current during the update via the SCP-local surface GET /scs-bridge-version (the served answer carries scsMuxameter.s8) so you standardize toward the LIVE counter, not a stale number.`,
-    `1. Resolve THIS SCP root (Cascades/Bridge/bridge.json boundScps anor the workspace ancestor) and the Template Suite 8 Page surface: the page's concept directory under src/concepts/ (the camelCase of "${designation}") + Cascades/8_SUITES/${designation}/. The Template's current stratum is the standardization target.`,
+    // so the session can RE-READ the installed system counter during the update (the pair may be
+    // stale at spawn). THE UPDATE-ORDER LAW: the installed bridge package.json is the source of truth.
+    `THE COMMISSION: update THIS page's Suite 8 from the Template Suite 8 Page per the standardization updates between counter s8 #${pageS8} (this page's minted counter) and counter s8 #${installedS8} (the installed system's current). The pair above is the spawn-time snapshot; RE-READ the system counter during the update via the SCP-local surface GET /scs-bridge-version — the answer's installedMuxameter.s8 IS the installed system's counter (the installed bridge package.json is the source of truth; the S8 update unlocks only when the installed counters carry it) — so you standardize toward the LIVE installed counter, not a stale number. The counter VALUE comes from the answer; never hunt the workspace for a higher constant as the source.`,
+    `1. Resolve THIS SCP root (Cascades/Bridge/bridge.json boundScps anor the workspace ancestor) and the PAGE surface: the page's concept directory under src/concepts/ (the camelCase of "${designation}") + Cascades/8_SUITES/${designation}/. THE TEMPLATE SOURCE (the standardization content): the installed scs-bridge package's template stratum — resolve the bridge install root (npm root -g anor the dev link target) → Cascades/scps/template/SCP/ — its suite8 concept + 8_SUITES strata are the Template Suite 8 Page the diff runs against. If the installed template's stratum does NOT exceed the page's (the counters at parity anor the source absent), report HONESTLY and hold — never fabricate a standardization.`,
     '2. Diff the page\'s stratum against the Template Suite 8 Page (the 3-way-diff discipline — additions · removals · both-changed), scoped to the standardization updates the s8 counter names.',
     '',
     // (b) THE HONOR-THE-DESIGN CONFERENCE — apply anor conference anor preserve; every uniquely
@@ -155,7 +158,7 @@ export const buildUpdateVermillion = (
     '',
     // (d) THE RESTAMP — on completion + user implementation, S8_PAGE_COUNTER updates to the npm value
     // (the update itself edits the constant as part of the standardization apply).
-    `4. THE RESTAMP: once the standardization is applied and the user has implemented the changes, update the page's own counter constant S8_PAGE_COUNTER (src/concepts/suite8/suite8.type.ts) to the npm value #${npmS8} — the restamp is part of the standardization apply, so the page's counter names the version it now carries.`,
+    `4. THE RESTAMP: once the standardization is applied and the user has implemented the changes, update THE PAGE'S OWN counter constant S8_PAGE_COUNTER in THE PAGE'S OWN type file — src/concepts/<camelCase of "${designation}">/<same>.type.ts — to the re-read npm value. ADD the constant if the page never carried one (a version-less page GAINS its counter at update — the floor-0 page becoming current IS the cure). NEVER write src/concepts/suite8/suite8.type.ts — that is the mint scaffold; writing it restamps every FUTURE page, not this one.`,
     `5. THE UPDATE REPORT — the durable artifact: write this SCP's Cascades/Working/S8-UPDATE-${designation.replace(/\s+/g, '-')}.md: applied standardizations · held (conferred) files with both sides quoted + the user's choice · the S8_PAGE_COUNTER restamp · the re-run instruction. The report is the Muxistration; the transcript is not. Gate: this SCP's tsc must hold its own baseline — a regression → revert and report honestly.`,
     '',
     // (e) THE CLOSE — the Install Entourage precedent (:100-102) VERBATIM in discipline.

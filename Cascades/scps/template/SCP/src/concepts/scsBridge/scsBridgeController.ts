@@ -144,25 +144,29 @@ export type ScsBridgeController = {
   registerCurrentS8Page: (designation: string, version: string, counter?: number, drawer?: Component) => void;
   clearCurrentS8Page: () => void;
   // MD-S8PM · PM-2 · THE READ SEAT (the s8 pair · THE NO-RED LAW — never a verdict input).
-  // npmS8Counter · the AVAILABLE s8 counter from the served /scs-bridge-version answer
-  // (remoteMuxameter.s8 · null until an s8-carrying publish is fetched + relayed). Token-free:
-  // a bare number, no color. Fed by the EXISTING /scs-bridge-version poller via relayNpmS8Counter
-  // (no new poll — the TaskBar/GitM fetch already lands the served answer). PM-4 reads it against
-  // pageS8Counter to color the S8 toggle border; PM-2 only seats it.
-  npmS8Counter: ShallowRef<number | null>;
+  // installedS8Counter · the INSTALLED bridge's s8 counter from the served /scs-bridge-version
+  // answer (installedMuxameter.s8 · read from the installed package.json on disk · null until an
+  // s8-carrying bridge is installed + relayed). THE UPDATE-ORDER LAW: the installed bridge
+  // package.json IS the source of truth for the S8 system counter — the S8 page cannot update
+  // until the bridge update lands the new package.json, so this counter is the LOCAL truth, never
+  // npm directly. Token-free: a bare number, no color. Fed by the EXISTING /scs-bridge-version
+  // poller via relayInstalledS8Counter (no new poll — the TaskBar/GitM fetch already lands the
+  // served answer). PM-4 reads it against pageS8Counter to color the S8 toggle border; PM-2 only seats it.
+  installedS8Counter: ShallowRef<number | null>;
   // pageS8Counter · the CURRENT page's s8 counter — the axis value the page carried when minted.
   // MD-S8PM · PM-3 · THE REAL AXIS: reads the registration's `counter` (S8_PAGE_COUNTER for the
   // home page · the floor 0 for pre-counter wild pages via readPageS8Counter · C856). null only
   // when NO S8 page is mounted. The '1.0.0'/'0.0.0' version string is NEVER coerced (would fake it).
   pageS8Counter: ComputedRef<number | null>;
   // s8PageBehind · MD-S8PM · PM-3 · THE COMPARE (token-free · null-tolerant). pageS8Counter <
-  // npmS8Counter = out-of-sync. null when either half is unknown. PM-4 reads it for the S8 toggle
-  // border + panel version row; never a TaskBar-badge input (THE NO-RED LAW holds).
+  // installedS8Counter = out-of-sync. null when either half is unknown. PM-4 reads it for the S8
+  // toggle border + panel version row; never a TaskBar-badge input (THE NO-RED LAW holds).
   s8PageBehind: ComputedRef<boolean | null>;
-  // relayNpmS8Counter · the token-free relay setter. The single existing /scs-bridge-version
+  // relayInstalledS8Counter · the token-free relay setter. The single existing /scs-bridge-version
   // poller (TaskBar/GitM/Suite8 landing — whoever holds both the served answer AND the controller)
-  // hands the parsed remoteMuxameter.s8 here. A bare number in; no duplicate polling opens.
-  relayNpmS8Counter: (s8: number | null) => void;
+  // hands the parsed installedMuxameter.s8 here (the installed bridge package.json's s8 · the source
+  // of truth per the update-order law). A bare number in; no duplicate polling opens.
+  relayInstalledS8Counter: (s8: number | null) => void;
   // V-4c · the current page's locality FACE — pushed by the page-owned Control (whose HTTP
   // lanes work on ANY island); the held toolbar face reads THIS, never a concept slice.
   currentS8Locality: ShallowRef<S8LocalityFace | null>;
@@ -463,11 +467,13 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page.value = null;
     currentS8Locality.value = null;
   };
-  // MD-S8PM · PM-2 · THE READ SEAT — the s8 pair (npm-available · current-page). THE NO-RED LAW:
-  // neither ref feeds a verdict; PM-4 reads them to color the S8 toggle border, never the badge.
-  const npmS8Counter = shallowRef<number | null>(null);
-  const relayNpmS8Counter = (s8: number | null): void => {
-    npmS8Counter.value = typeof s8 === 'number' ? s8 : null;
+  // MD-S8PM · PM-2 · THE READ SEAT — the s8 pair (installed-system · current-page). THE UPDATE-ORDER
+  // LAW: the installed bridge package.json IS the source of truth for the S8 system counter (the S8
+  // page cannot update until the bridge update lands the new package.json). THE NO-RED LAW: neither
+  // ref feeds a verdict; PM-4 reads them to color the S8 toggle border, never the badge.
+  const installedS8Counter = shallowRef<number | null>(null);
+  const relayInstalledS8Counter = (s8: number | null): void => {
+    installedS8Counter.value = typeof s8 === 'number' ? s8 : null;
   };
   // MD-S8PM · PM-3 · THE FLOOR-LAW HELPER (C856 · normalize at the READ seat · token-free).
   // A page's s8-axis counter reads from its registration's `counter` field. Pre-counter pages
@@ -484,14 +490,16 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page.value === null ? null : readPageS8Counter(currentS8Page.value),
   );
   // MD-S8PM · PM-3 · THE COMPARE SEAT (token-free). s8PageBehind = the current page's counter is
-  // strictly below npm's available s8 → out-of-sync. Null when either half is unknown (no S8 page
-  // mounted · or npm's s8 not yet fetched+relayed). PM-4 reads this for the S8 toggle border /
-  // panel version row; PM-3 only exposes it. THE NO-RED LAW: never a TaskBar-badge input.
+  // strictly below the INSTALLED system's s8 → out-of-sync. Null when either half is unknown (no S8
+  // page mounted · or the installed s8 not yet fetched+relayed). THE UPDATE-ORDER LAW: the installed
+  // bridge package.json's s8 is the source of truth — the S8 page unlocks its update only after the
+  // bridge update lands the new counter. PM-4 reads this for the S8 toggle border / panel version
+  // row; PM-3 only exposes it. THE NO-RED LAW: never a TaskBar-badge input.
   const s8PageBehind = computed<boolean | null>(() => {
     const page = pageS8Counter.value;
-    const npm = npmS8Counter.value;
-    if (page === null || npm === null) return null;
-    return page < npm;
+    const installed = installedS8Counter.value;
+    if (page === null || installed === null) return null;
+    return page < installed;
   });
   const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
   const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
@@ -2094,10 +2102,10 @@ export function createScsBridgeController(): ScsBridgeController {
     currentS8Page,
     registerCurrentS8Page,
     clearCurrentS8Page,
-    npmS8Counter,
+    installedS8Counter,
     pageS8Counter,
     s8PageBehind,
-    relayNpmS8Counter,
+    relayInstalledS8Counter,
     currentS8Locality,
     setCurrentS8Locality,
     registerS8LocalityRefresh,
