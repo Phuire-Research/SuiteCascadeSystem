@@ -163,24 +163,25 @@ const previewOverrideStyle = computed<Record<string, string>>(() => {
   return style;
 });
 
+// The by-name target-hifi fetch — extracted so BOTH the reactive watch (target CHANGE) and the D-PXT
+// PXT-4 preview-coherence hook (a same-target color PUSH settling) can invoke it. Idempotent + stale-safe.
+async function refetchTargetHifiConfig(): Promise<void> {
+  const name = targetScpName.value;
+  if (!name) {
+    targetHifiConfig.value = null;
+    targetFetchState.value = 'idle';
+    return;
+  }
+  targetFetchState.value = 'loading';
+  const cfg = await loadTargetHifiConfig(name);
+  // Guard against a stale resolve — the target may have flipped again while this fetch was in flight.
+  if (targetScpName.value !== name) return;
+  targetHifiConfig.value = cfg;
+  targetFetchState.value = cfg ? 'loaded' : 'absent';
+}
+
 // The reactive fetch: a locality flip anor clear re-runs this. null target → LOCAL (idle · no fetch).
-watch(
-  targetScpName,
-  async (name) => {
-    if (!name) {
-      targetHifiConfig.value = null;
-      targetFetchState.value = 'idle';
-      return;
-    }
-    targetFetchState.value = 'loading';
-    const cfg = await loadTargetHifiConfig(name);
-    // Guard against a stale resolve — the target may have flipped again while this fetch was in flight.
-    if (targetScpName.value !== name) return;
-    targetHifiConfig.value = cfg;
-    targetFetchState.value = cfg ? 'loaded' : 'absent';
-  },
-  { immediate: true },
-);
+watch(targetScpName, () => void refetchTargetHifiConfig(), { immediate: true });
 
 // ============================================================
 // SHATTERITE MENU (Cadmium pattern · default static stage fallback)
@@ -247,6 +248,12 @@ onMounted(() => {
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(muxium);
 
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE — register Pewter's target-hifi refetch so a cross-SCP color
+  // injection settling (SuiteColorSelection's Specified fork · the receipt anor bounded timeout) nudges
+  // the preview to reflect the TARGET's now-pushed hifiConfig.json. A same-target push does not change
+  // targetScpName, so the watch alone would not re-fire — this hook closes that gap.
+  sbController?.registerTargetHifiPreviewRefresh(() => void refetchTargetHifiConfig());
+
   // MD-USP · US-3 · THE PAGE INDUCTION — register Pewter as the current standard S8 page (the #670
   // INDUCT gap cured): the toolbar S8 button + drawer appear (slot 4 = markRaw(Suite8ControlDrawer) ·
   // IslandWrapper.vue reads currentS8Page.value.drawer), the counter axis contributes (slot 3 =
@@ -281,6 +288,8 @@ onUnmounted(() => {
   // the toolbar S8 face + drawer fall away when leaving this page (Suite8HomeLanding.vue:263-265).
   localityOwner?.conclude();
   localityOwner = null;
+  // D-PXT · PXT-4 · unregister the preview-coherence hook (the page leaves · no dangling refetch).
+  getGlobalScsBridgeController()?.registerTargetHifiPreviewRefresh(null);
   getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind the controller from this landing's Muxium (restores the principle shim)
   // and close the page Muxium so it is not leaked across navigation (GitmLanding :100-106).

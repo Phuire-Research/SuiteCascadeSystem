@@ -174,6 +174,14 @@ export type ScsBridgeController = {
   // V-4g · the page-owner registers its hydrate here; the panel triggers it after a POST.
   registerS8LocalityRefresh: (fn: (() => void) | null) => void;
   triggerS8LocalityRefresh: () => void;
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE HOOK — Pewter's US-3 preview owns the by-name target-hifi
+  // fetch (loadTargetHifiConfig · reactive on the target NAME, not on a same-target push). After a
+  // cross-SCP color injection settles (the receipt anor a bounded timeout), SuiteColorSelection fires
+  // THIS so the preview re-fetches the TARGET's now-pushed hifiConfig.json — the preview reflects the
+  // pushed state. Pewter registers its refetch; a page without a preview registers nothing (the trigger
+  // no-ops honestly). Distinct from the locality-refresh hook (which re-hydrates the WHOLE face).
+  registerTargetHifiPreviewRefresh: (fn: (() => void) | null) => void;
+  triggerTargetHifiPreviewRefresh: () => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (mirrors sessionsList shape)
@@ -235,6 +243,13 @@ export type ScsBridgeController = {
   // the held Muxium (GPIM · mirrors triggerSpawnSession). Does NOT paint — the paint is the return's
   // act (scsBridgeSetHifiConfigRelay). SuiteColorSelection.vue calls this on swatch change.
   applyHifiConfig: (colors: Record<string, string>) => void;
+
+  // D-PXT · PXT-2 · THE INJECTION DECK-CONSTRUCTOR — builds the SAME deck-matched Induction action
+  // applyHifiConfig dispatches (deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig), but RETURNS it
+  // instead of dispatching. The origin-blind cross-SCP injection (crossScpColorInjection.model
+  // sendColorToTarget) hands this to the ephemeral WS so the wire action is the deck-matched shape
+  // verbatim (never a hand-rolled literal). Null when no Muxium is bound (the caller reports honestly).
+  buildApplyHifiConfigAction: (colors: Record<string, string>) => AnyAction | null;
 
   // ----------------------------------------
   // D3D Wave-2 · CMIA-Spawn + CMIA-Engage + SAES dispatch API
@@ -517,6 +532,16 @@ export function createScsBridgeController(): ScsBridgeController {
   };
   const triggerS8LocalityRefresh = (): void => {
     s8LocalityRefreshFn?.();
+  };
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE HOOK — Pewter registers its target-hifi refetch; the cross-SCP
+  // injection settle fires it so the preview reflects the pushed state. A page with no preview registers
+  // nothing — the trigger no-ops (honest skip). Distinct fn from the locality-refresh above.
+  let targetHifiPreviewRefreshFn: (() => void) | null = null;
+  const registerTargetHifiPreviewRefresh = (fn: (() => void) | null): void => {
+    targetHifiPreviewRefreshFn = fn;
+  };
+  const triggerTargetHifiPreviewRefresh = (): void => {
+    targetHifiPreviewRefreshFn?.();
   };
   const bridgeStatus = shallowRef<string>('');
   const sessionsList = shallowRef<ScsBridgeSessionEntry[]>([]);
@@ -2129,6 +2154,29 @@ export function createScsBridgeController(): ScsBridgeController {
     }
   };
 
+  // D-PXT · PXT-2 · THE INJECTION DECK-CONSTRUCTOR — builds (does NOT dispatch) the deck-matched
+  // Induction the origin-blind cross-SCP injection sends to the TARGET's ephemeral WS. Mirrors
+  // applyHifiConfig's action construction verbatim (the deck-matched shape · never hand-rolled), but
+  // returns it for crossScpColorInjection.model to serialize + inject. Null when no Muxium is bound.
+  const buildApplyHifiConfigAction = (colors: Record<string, string>): AnyAction | null => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] buildApplyHifiConfigAction called without bound Muxium · cross-SCP injection will NOT fire',
+      );
+      return null;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      return deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiColors: colors,
+      }) as AnyAction;
+    } catch (err) {
+      console.error('[ScsBridgeController] buildApplyHifiConfigAction failed:', err);
+      return null;
+    }
+  };
+
   return {
     toolbarButtons,
     bridgeJson,
@@ -2143,6 +2191,9 @@ export function createScsBridgeController(): ScsBridgeController {
     setCurrentS8Locality,
     registerS8LocalityRefresh,
     triggerS8LocalityRefresh,
+    // D-PXT · PXT-4 · the preview coherence hook (Pewter registers its target-hifi refetch)
+    registerTargetHifiPreviewRefresh,
+    triggerTargetHifiPreviewRefresh,
     bridgeStatus,
     sessionsList,
     archiveManifest,
@@ -2161,6 +2212,8 @@ export function createScsBridgeController(): ScsBridgeController {
     triggerGitmAction,
     // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's dispatch surface (no paint · return paints)
     applyHifiConfig,
+    // D-PXT · PXT-2 · the injection deck-constructor (builds the deck-matched Induction · never dispatches)
+    buildApplyHifiConfigAction,
     triggerSpawnSession,
     getScpName: resolveScpName,
     triggerSpawnSuite8Session,

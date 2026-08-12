@@ -21,7 +21,7 @@
  * Output Firewall: SPECTRUM names + FUNCTIONAL designations ONLY — no profession/cascade names,
  * no scare-quotes. The user picks colors; the cascade/profession semantics stay internal.
  */
-import { reactive, ref } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import {
   type SpectrumName,
   SPECTRUM_NAMES,
@@ -32,10 +32,23 @@ import {
 import { getGlobalScsBridgeController, SCS_BRIDGE_CONTROLLER_KEY } from '../../scsBridgeController';
 import { inject } from 'vue';
 import SuiteColorPickerPanel from './SuiteColorPickerPanel.vue';
+// D-PXT · PXT-2 · the origin-blind cross-SCP color injection (the Specified-locality send path).
+import { sendColorToTarget } from '../../../../model/crossScpColorInjection.model';
 
 // D-PCL · the scsBridge controller carries the color click's Induction dispatch (applyHifiConfig).
 // inject-first (Vue runtime-singleton) with the getGlobal fallback — the GitmTurnOver button idiom.
 const scsBridgeController = inject(SCS_BRIDGE_CONTROLLER_KEY) ?? getGlobalScsBridgeController();
+
+// D-PXT · PXT-2/PXT-3 · THE TARGET FACE — the controller-direct locality read (the PewterLanding idiom
+// currentS8Locality.value?.specified). null = LOCAL (the own SCP · the D-PCL own-circuit dispatch);
+// a name = SPECIFIED (a cross-SCP TARGET · the injection fork). The stamp (PXT-3) + the fork (PXT-2)
+// both read THIS. The own SCP's name (for the quiet Local stamp) rides the same face's localScp.
+const targetScpName = computed<string | null>(
+  () => scsBridgeController?.currentS8Locality.value?.specified ?? null,
+);
+const localScpName = computed<string | null>(
+  () => scsBridgeController?.currentS8Locality.value?.localScp ?? null,
+);
 
 // The RD default hex per spectrum suite — the `:root` baseline a Reset restores to.
 const DEFAULT_HEX: Record<SpectrumName, string> = {
@@ -67,9 +80,44 @@ const selection = reactive<Record<SpectrumName, string>>({
   ...loadSuiteColorOverrides(),
 });
 
+// D-PXT · PXT-2 · THE INJECTION SEND — the origin-blind cross-SCP push. Builds the deck-matched
+// Induction via the controller (never hand-rolled) and hands it to sendColorToTarget, which opens the
+// ephemeral WS to the TARGET's port, injects the SAME action, and awaits the receipt (bounded). The
+// α-FIREWALL: NO localStorage write (the α intent is for the OWN colors only), NO own-window paint
+// (the target paints on ITS return). On settle (receipt anor timeout) fires PXT-4 preview coherence.
+function pushColorToTarget(scpName: string, full: Record<SpectrumName, string>): void {
+  const build = scsBridgeController?.buildApplyHifiConfigAction;
+  if (!build) {
+    console.warn('[SuiteColorSelection] no controller · cross-SCP injection skipped', { scp: scpName });
+    return;
+  }
+  void sendColorToTarget(scpName, full, (colors) => {
+    const action = build(colors);
+    if (!action) {
+      // No bound Muxium — sendColorToTarget still telemetries; a null action cannot be sent. Throw so
+      // the ephemeral send path reports ws-error honestly rather than injecting an undefined frame.
+      throw new Error('[SuiteColorSelection] buildApplyHifiConfigAction returned null (no bound Muxium)');
+    }
+    return action;
+  }).then((result) => {
+    console.log('[SuiteColorSelection] cross-SCP injection settled', result);
+    // PXT-4 · THE PREVIEW COHERENCE — nudge Pewter's target-hifi refetch so the preview reflects the
+    // pushed state (a same-target push does not change targetScpName, so the Pewter watch alone would
+    // not re-fire). Honest no-op on a page with no preview registered.
+    scsBridgeController?.triggerTargetHifiPreviewRefresh();
+  });
+}
+
 function onColorChange(n: SpectrumName, hex: string): void {
   selection[n] = hex;
   const full: Record<SpectrumName, string> = { ...selection };
+  // D-PXT · THE SPECIFIED FORK — a Specified locality names a TARGET → inject to the target's WS
+  // (NO localStorage · NO own paint · the α-firewall). Local (null) → the own D-PCL round-trip circuit.
+  const target = targetScpName.value;
+  if (target) {
+    pushColorToTarget(target, full);
+    return;
+  }
   // D-PCL · (α) persist the intent to the user's OWN localStorage — NO paint here. This makes the
   // return's precedence merge (localStorage < JSON) paint their FRESH click, not their stale override.
   saveSuiteColorOverrides(full);
@@ -93,6 +141,13 @@ function togglePicker(n: SpectrumName): void {
 function onResetOne(n: SpectrumName): void {
   selection[n] = DEFAULT_HEX[n];
   const full: Record<SpectrumName, string> = { ...selection };
+  // D-PXT · THE SPECIFIED FORK — reset-one under a Specified locality is a re-selection of the RD
+  // default pushed to the TARGET (same injection · α-firewall). Local → the own D-PCL circuit.
+  const target = targetScpName.value;
+  if (target) {
+    pushColorToTarget(target, full);
+    return;
+  }
   // D-PCL · reset-one is a re-selection of the RD default — same round trip: persist intent (α),
   // dispatch the Induction, paint on the return. No local applySuiteColorOverrides.
   saveSuiteColorOverrides(full);
@@ -103,7 +158,25 @@ function onResetOne(n: SpectrumName): void {
 <template>
   <section class="suite-colors-root hifi-pane-base">
     <header class="suite-colors-header">
-      <h2 class="hifi-heading suite-colors-title">Suite Colors</h2>
+      <div class="suite-colors-title-row">
+        <h2 class="hifi-heading suite-colors-title">Suite Colors</h2>
+        <!-- D-PXT · PXT-3 · THE TARGET STAMP (Pewter's own design voice — the blue-accent target voice
+             pewter-preview-source established, NOT Graphite's amber chip). Quiet/own-styled when LOCAL
+             (names the own citizen); the blue alert accent naming the TARGET when SPECIFIED — informing
+             which SCP the color change lands on. The GLW-stamp Diameter rendered through Pewter. -->
+        <span
+          class="suite-colors-target-stamp"
+          :class="targetScpName ? 'stamp--specified' : 'stamp--local'"
+        >
+          <span class="stamp-dot" aria-hidden="true"></span>
+          <span v-if="targetScpName" class="stamp-text">
+            Lands on <strong>{{ targetScpName }}</strong>
+          </span>
+          <span v-else class="stamp-text">
+            Lands on {{ localScpName ?? 'this SCP' }}
+          </span>
+        </span>
+      </div>
       <p class="suite-colors-subtitle">
         Pick the spectrum colors — the whole app re-tints live and remembers across restart.
       </p>
@@ -165,8 +238,63 @@ function onResetOne(n: SpectrumName): void {
   flex-direction: column;
   gap: 0.25rem;
 }
+/* D-PXT · PXT-3 · the title row holds the heading + the target stamp on one line. */
+.suite-colors-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 .suite-colors-title {
   margin: 0;
+}
+
+/* D-PXT · PXT-3 · THE TARGET STAMP — Pewter's design voice (the blue-accent target voice, matching
+   pewter-preview-source's --color-blue-light · NOT Graphite's amber OBSERVING chip). A small pill with
+   a status dot + a "Lands on <name>" clause, informing which SCP the color change lands on. */
+.suite-colors-target-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 0.35rem;
+  font-family: var(--font-heading, 'Orbitron', sans-serif);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+.suite-colors-target-stamp .stamp-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.suite-colors-target-stamp .stamp-text strong {
+  font-weight: 700;
+}
+/* LOCAL · quiet / own-styled — the muted ground voice (the own citizen · no alert). */
+.suite-colors-target-stamp.stamp--local {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+}
+.suite-colors-target-stamp.stamp--local .stamp-dot {
+  background: rgba(255, 255, 255, 0.4);
+}
+/* SPECIFIED · the blue alert accent naming the TARGET — Pewter's confident target voice
+   (--color-blue-light · the pewter-preview-source register), so the user READS that the change
+   lands elsewhere. Opaque + accent-bordered = the moment carries weight. */
+.suite-colors-target-stamp.stamp--specified {
+  background: color-mix(in srgb, var(--color-blue, #3b82f6) 16%, transparent);
+  border: 1px solid var(--color-blue, #3b82f6);
+  color: var(--color-blue-light, #93c5fd);
+}
+.suite-colors-target-stamp.stamp--specified .stamp-dot {
+  background: var(--color-blue-light, #93c5fd);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue, #3b82f6) 35%, transparent);
 }
 .suite-colors-subtitle {
   margin: 0;

@@ -145,4 +145,46 @@ export const registerCascadeMemoryQueryRoutes = (expressApp: MinimalExpressApp):
       res.json({});
     }
   });
+
+  // (4) THE BY-NAME PORT QUERY — the target SCP's live WebSocket PORT (bridge-owned truth).
+  // D-PXT · PXT-1 · THE PORT LANE · the origin-blind cross-SCP color injection needs the TARGET's
+  // port to open the ephemeral second connection (ws://localhost:<port>/muxium · the D-PXT injection).
+  // THE ADDRESS LAW: the port is bridge-owned — it lives in the SCP's OWN sovereign bridge.json under
+  // boundScps[scpName].port (the SAME field composeRingOrigin reads for the ring origin, and the SAME
+  // foreign-read idiom vue.principle's /suite8-menu cross-citizen read uses for boundScps[name].dir).
+  // The client stays NAME-ONLY (the S4-PCL-GROUND finding) — it learns the port at the moment of send.
+  // Reads the SCP's OWN bridge.json (resolveScpRootByName('Local') === process.cwd() · but this route
+  // reads the bridge boundScps which is the workspace-fanned map, so it reads the OWN bridge.json path
+  // directly, mirroring readSyncRingFromBridgeJson). HONEST-ABSENCE: unknown SCP anor unbound anor
+  // portless anor unreadable bridge.json → 404 (never a phantom port; the client reports honestly).
+  expressApp.get('/scp-port/:scpName', (req, res) => {
+    const scpName = String(req.params.scpName ?? '');
+    if (!scpName) {
+      res.status(404).json({ ok: false, error: 'scpName required' });
+      return;
+    }
+    try {
+      // The OWN sovereign bridge.json (cwd/Cascades/Bridge/bridge.json · the boundScps map the bridge
+      // fans out — the byte-identical path readSyncRingFromBridgeJson + the vue.principle foreign read use).
+      const bridgeJsonPath = path.resolve(process.cwd(), 'Cascades', 'Bridge', 'bridge.json');
+      const parsed = JSON.parse(fs.readFileSync(bridgeJsonPath, 'utf-8')) as {
+        boundScps?: Record<string, { port?: number | string; status?: string }>;
+      };
+      const entry = parsed.boundScps?.[scpName];
+      const rawPort = entry?.port;
+      const port =
+        typeof rawPort === 'number'
+          ? rawPort
+          : typeof rawPort === 'string' && rawPort.trim().length > 0
+            ? Number.parseInt(rawPort, 10)
+            : NaN;
+      if (!Number.isFinite(port) || port <= 0) {
+        res.status(404).json({ ok: false, error: `SCP not bound anor portless: ${scpName}` });
+        return;
+      }
+      res.json({ ok: true, scpName, port, status: typeof entry?.status === 'string' ? entry.status : 'offline' });
+    } catch {
+      res.status(404).json({ ok: false, error: 'bridge.json unreadable · port unavailable' });
+    }
+  });
 };
