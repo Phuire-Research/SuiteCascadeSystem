@@ -21,7 +21,7 @@
  * Citation: TU-ARC-S2-ORANGE-NAMING.md (DSSLS · SSMC · SAMLS) · TU-ARC-S1-RED-CURATION.md §4 (ISMC)
  * Reference model: CadmiumLanding.vue (the populated domain page this scaffold pares down)
  */
-import { ref, shallowRef, computed, markRaw, onMounted, onUnmounted, inject } from 'vue';
+import { ref, shallowRef, computed, markRaw, onMounted, onUnmounted, inject, watch } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 // IUPA · the graphiteScribe CLIENT concept supplies this landing's page Muxium (mirrors CadmiumLanding
@@ -335,6 +335,53 @@ const observingLabel = computed<string>(() =>
   observingSpecified.value ? `OBSERVING ${observingSpecified.value}` : 'OBSERVING Local',
 );
 
+// C898 · THE LIVE LOCALITY-CHANGE REACTION (the client half of the messaging cure). The editor's
+// tree serves from the SERVER'S observed root (setEditorObservedRoot · re-pointed by
+// graphiteScribeLocalityWatch · now LIVE on the same disk write via the B1 F4 cure). The client's
+// live carrier is the already-live locality face (observingSpecified · driven by the drawer→hydrate
+// refresh coupling + the suite8LocalityStcpRelay SMRP broadcast · GROUND 2) — NO new relay needed;
+// the manifold the ruling names already exists and is race-honest (the server speaks the re-point
+// AFTER publishing the getter). Two effects on a locality edge:
+//   B4 · DESELECT — a tab from the OLD tree must not linger against the NEW root. Close every open
+//        tab through the EXISTING close idiom (graphiteScribeCloseFile · the same × the tab strip
+//        fires), clearing openFiles + tabOrder + activeFilePath to empty.
+//   B3 · REFETCH — bump treeReloadKey to force the FileTree root to unmount+remount, re-firing every
+//        level's onMounted(loadLevel) against the re-pointed /editor-fs root. A short settle
+//        (TREE_REFETCH_SETTLE_MS) exceeds the server re-point debounce (100ms) + awaitWriteFinish
+//        (100ms) so the refetch never out-races the server serving the OLD tree (the ruling's race).
+const treeReloadKey = ref<number>(0);
+const TREE_REFETCH_SETTLE_MS = 260;
+let localityReactionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function deselectOpenEditorFiles(): void {
+  const m = muxium as unknown as {
+    dispatch: (a: unknown) => void;
+    deck: { d: { client: { d: { graphiteScribe: {
+      e: Record<string, (p: unknown) => unknown>;
+      k: { tabOrder: { select: () => string[] } };
+    } } } } };
+  } | null;
+  if (!m) return;
+  const g = m.deck.d.client.d.graphiteScribe;
+  // Snapshot the current tabs (the reducer mutates tabOrder as each closes · iterate the snapshot).
+  const openPaths = [...(g.k.tabOrder.select() ?? [])];
+  for (const path of openPaths) {
+    m.dispatch(g.e.graphiteScribeCloseFile({ path }));
+  }
+}
+
+watch(observingSpecified, (next, prev) => {
+  if (next === prev) return; // no edge — no reaction.
+  console.log('[GraphiteScribeHomeLanding] C898 locality edge ·', prev ?? 'Local', '→', next ?? 'Local', '· deselect + settle-refetch');
+  // B4 · deselect immediately — the stale tab dies the instant the locality flips.
+  deselectOpenEditorFiles();
+  // B3 · refetch AFTER a settle so the server (B1) has re-pointed /editor-fs before the tree re-reads.
+  if (localityReactionTimer) clearTimeout(localityReactionTimer);
+  localityReactionTimer = setTimeout(() => {
+    treeReloadKey.value += 1;
+  }, TREE_REFETCH_SETTLE_MS);
+});
+
 // MD-CE-5 · THE TREE BADGE MAP — gitm.json paths are REPO-ROOT-relative (the bridge watches the
 // user project) while the tree's paths are SCP-PACKAGE-relative; the SCP package lives somewhere
 // under the repo (dev:self: Cascades/scps/template/SCP/…). SUFFIX-STRIP: keep the segment after
@@ -544,6 +591,11 @@ onUnmounted(() => {
   // Without this the planner + stale refresh callback leak after navigation (US-3 Missing Rung 2 cure).
   localityOwner?.conclude();
   localityOwner = null;
+  // C898 · clear the pending locality-reaction settle timer (no leaked refetch after navigation).
+  if (localityReactionTimer) {
+    clearTimeout(localityReactionTimer);
+    localityReactionTimer = null;
+  }
   // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
   // the toolbar's S8 face + drawer fall away when leaving this page (mirrors Suite8HomeLanding).
   getGlobalScsBridgeController()?.clearCurrentS8Page();
@@ -616,7 +668,10 @@ onUnmounted(() => {
           <!-- MD-CE-5 · THE FILE BROWSER — lazy tree + GitM badges; click rides the
                shared open circuit into the surface's tab strip. -->
           <aside class="ce-workbench-tree">
-            <GraphiteScribeFileTree :muxium="surfaceMuxium" :badges="treeBadges" />
+            <!-- C898 · :key=treeReloadKey — a locality edge bumps the key → the tree root
+                 unmounts+remounts → every level re-fires onMounted(loadLevel) against the
+                 re-pointed /editor-fs root (the honest minimal live refetch). -->
+            <GraphiteScribeFileTree :key="treeReloadKey" :muxium="surfaceMuxium" :badges="treeBadges" />
           </aside>
           <div class="ce-workbench-editor">
             <GraphiteScribeSurface :muxium="surfaceMuxium" />

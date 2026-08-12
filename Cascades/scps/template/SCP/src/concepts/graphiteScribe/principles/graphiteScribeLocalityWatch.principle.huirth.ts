@@ -144,6 +144,20 @@ export const graphiteScribeLocalityWatchPrinciple: GraphiteScribeLocalityWatchPr
     // GLW-2 · dispatch the state pair (Base-maintenance · single-dispatch-per-stage · nextA async-safe
     // action-queue append · the SAME dispatch idiom the menu-watch uses for its SBIS Base).
     nextA(graphiteScribeSetObservedRootHuirthBase.actionCreator({ observedScpName, observedRoot }));
+    // C898 · THE SERVER-SPEAKS-AFTER-REPOINT NOTIFY — the editor root is now re-pointed (the getter
+    // published + the Base dispatched). This line is the race-honest signal the user's ruling names:
+    // the server notifies AFTER the repoint, so a client refetch keyed to it can never out-race the
+    // server serving the OLD tree. The client's live carrier is the already-live locality face
+    // (currentS8Locality.specified · driven by the drawer→hydrate coupling + the suite8LocalityStcpRelay
+    // SMRP broadcast · GROUND 2); with B1 this re-point now fires LIVE on the same disk write the face
+    // rides, so the client's face-watch (deselect + settle-refetch) lands on a re-pointed server root.
+    sinkLocalityWatchTelemetry('locality-watch.notify', {
+      occasion,
+      designation: LOCALITY_DESIGNATION,
+      observedScpName,
+      observedRoot,
+      speaks: 'after-repoint',
+    });
   };
 
   const localityWatchPlan = plan(
@@ -157,16 +171,28 @@ export const graphiteScribeLocalityWatchPrinciple: GraphiteScribeLocalityWatchPr
           console.log('[GraphiteScribe LocalityWatch] Stage 1 · boot resolve + arm library watch');
           // The boot pass — publishes the standing observed root ONCE (LOCAL anor a pre-set target).
           resolveAndRepoint('arm');
-          // Arm the single SyncLibrary watch (the suite8SyncUsher idiom · change/add + awaitWriteFinish).
-          // NEVER throws (arm failure = skip + telemetry · the SCP is never harmed).
+          // Arm the SyncLibrary watch. NEVER throws (arm failure = skip + telemetry · the SCP is never harmed).
+          // C898 · THE F4 CURE (the pre-emptive C899/C900 idiom · alignment with suiteCascadeJsonWatcher's
+          // armLocalitySignalWatch:534): a naive FILE-path watch DIES on writeSpecifiedAdditive
+          // (scpSyncLibrary.model.ts:443) — the canonical rewrite some fs layers execute as
+          // write-temp-then-rename swaps the inode and a single-file watch never fires 'change'. THE
+          // FIELD SIGNATURE this cures: the editor re-points on bridge turn-over (the boot 'arm' pass
+          // re-reads fresh) but NOT on a LIVE locality change (the single-file watch missed the write).
+          // The chip already fires live because its owner (s8LocalityPageOwner) is refresh-coupled to
+          // the drawer POST; the editor's ONLY carrier was this watch. Watch the PARENT DIR (depth 0) +
+          // basename-gate on SyncLibrary.json — rename-immune, byte-parity with the proven cascade cure.
           try {
             const libPath = resolveSyncLibraryPath(LOCALITY_DESIGNATION);
-            libraryWatcher = chokidarWatch(libPath, {
+            const libBasename = path.basename(libPath);
+            libraryWatcher = chokidarWatch(path.dirname(libPath), {
               persistent: true,
               ignoreInitial: true,
+              depth: 0,
               awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
             });
-            const onChange = (): void => {
+            const onChange = (changed: string): void => {
+              // basename-gate — only THIS designation's SyncLibrary.json re-points (sibling writes ignored).
+              if (path.basename(changed) !== libBasename) return;
               if (resolveDebounceTimer) clearTimeout(resolveDebounceTimer);
               resolveDebounceTimer = setTimeout(() => resolveAndRepoint('change'), RESOLVE_DEBOUNCE_MS);
             };
@@ -175,8 +201,12 @@ export const graphiteScribeLocalityWatchPrinciple: GraphiteScribeLocalityWatchPr
             libraryWatcher.on('error', () => {
               /* never harm the SCP */
             });
-            console.log('[GraphiteScribe LocalityWatch] chokidar armed on', libPath);
-            sinkLocalityWatchTelemetry('library-watch-armed', { designation: LOCALITY_DESIGNATION, libPath });
+            console.log('[GraphiteScribe LocalityWatch] chokidar armed on parent dir', path.dirname(libPath), '· gate', libBasename);
+            sinkLocalityWatchTelemetry('library-watch-armed', {
+              designation: LOCALITY_DESIGNATION,
+              watchedDir: path.dirname(libPath),
+              gateBasename: libBasename,
+            });
           } catch (err) {
             console.log('[GraphiteScribe LocalityWatch] watch.skip · reason=arm-failed ·', err);
             sinkLocalityWatchTelemetry('library-watch.skip', {
