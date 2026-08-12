@@ -49,6 +49,9 @@ import { lookupScpWindowId } from '../../../scpSessionRegistry';
 import { log } from '../../../debugLog';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+// E-ALERT-RACE (C888) — the alert write JOINS the per-rail gitm.json write chain (the bare
+// writeFileSync raced the fan-out's read-modify-write and the alert was ERASED pre-arm).
+import { enqueueGitmRailMutation } from '../../gitm/principles/gitmEndpoint.principle';
 
 const DEFAULT_PURPOSE =
   'A newly minted page awaits — Turn Over A rebuilds and re-serves this SCP under you.';
@@ -174,7 +177,7 @@ export const scsBridgeAlertTurnOver = createQualityCardWithPayload<
           || currentBranch.startsWith('b/')
             ? 'B'
             : 'A';
-        parsed.turnOverAlert = {
+        const alertBody = {
           requestedAt,
           source: activeSide,
           purpose:
@@ -182,8 +185,33 @@ export const scsBridgeAlertTurnOver = createQualityCardWithPayload<
               ? purpose.trim()
               : DEFAULT_PURPOSE,
         };
-        writeFileSync(gitmPath, JSON.stringify(parsed, null, 2), 'utf8');
-        log('scsbridge.alertTurnOver.written', { scpName: resolvedName, gitmPath, requestedAt });
+        // E-ALERT-RACE (C888): the write ENQUEUES onto the per-rail chain — serialized with
+        // every fan-out write, so no in-flight read-modify-write can erase it. The mutator
+        // RE-READS + RE-GUARDS at run time (the queue delay may have advanced the baseline).
+        // ok:true = QUEUED ON THE ATOMIC RAIL — the LANDING signal remains the caller's poll
+        // (turnOverAlert visible · turnOver.at > requestedAt = the user performed it).
+        const railDir = dir;
+        void enqueueGitmRailMutation(railDir, () => {
+          try {
+            const fresh = JSON.parse(readFileSync(gitmPath, 'utf8')) as Record<string, unknown>;
+            const freshTurnOverAt =
+              typeof (fresh.turnOver as { at?: unknown } | undefined)?.at === 'number'
+                ? (fresh.turnOver as { at: number }).at
+                : 0;
+            if (freshTurnOverAt > requestedAt) {
+              log('scsbridge.alertTurnOver.born-retired', { scpName: resolvedName, freshTurnOverAt, requestedAt });
+              return;
+            }
+            fresh.turnOverAlert = alertBody;
+            writeFileSync(gitmPath, JSON.stringify(fresh, null, 2), 'utf8');
+            log('scsbridge.alertTurnOver.written', { scpName: resolvedName, gitmPath, requestedAt });
+          } catch (mutErr) {
+            log('scsbridge.alertTurnOver.chain-write-error', {
+              scpName: resolvedName,
+              error: mutErr instanceof Error ? mutErr.message : String(mutErr),
+            });
+          }
+        });
 
         // ── the window focus · fire-and-forget async tail (does NOT gate the result) ──
         void (async (): Promise<void> => {
