@@ -136,36 +136,33 @@ export const buildUpdateVermillion = (
   designation: string,
   pageS8: number,
   installedS8: number,
-): string =>
-  [
-    `SCS:Vermillion · THE FORGE UPDATE · Suite 8 page "${designation}" · s8 #${pageS8} → system s8 #${installedS8}.`,
-    'You are the page\'s Entourage Forge conducting ONE update, then dissipating (the ONE MOTION law spawned you as this page\'s anchor Forge so a duplicate engage FOCUSES you rather than re-spawning; your Lambda is the update + the report, then teardown). This Vermillion is ERROR-CORRECTING: where reality diverges from it, verify against the LIVE surfaces and correct course — record every correction in the update report.',
-    '',
-    // (a) THE COMMISSION — the s8 PAIR embedded literally + the /scs-bridge-version surface NAMED
-    // so the session can RE-READ the installed system counter during the update (the pair may be
-    // stale at spawn). THE UPDATE-ORDER LAW: the installed bridge package.json is the source of truth.
-    `THE COMMISSION: update THIS page's Suite 8 from the Template Suite 8 Page per the standardization updates between counter s8 #${pageS8} (this page's minted counter) and counter s8 #${installedS8} (the installed system's current). The pair above is the spawn-time snapshot; RE-READ the system counter during the update via the SCP-local surface GET /scs-bridge-version — the answer's installedMuxameter.s8 IS the installed system's counter (the installed bridge package.json is the source of truth; the S8 update unlocks only when the installed counters carry it) — so you standardize toward the LIVE installed counter, not a stale number. The counter VALUE comes from the answer; never hunt the workspace for a higher constant as the source.`,
-    `1. Resolve THIS SCP root (Cascades/Bridge/bridge.json boundScps anor the workspace ancestor) and the PAGE surface: the page's concept directory under src/concepts/ (the camelCase of "${designation}") + Cascades/8_SUITES/${designation}/. THE TEMPLATE SOURCE (the standardization content): the installed scs-bridge package's template stratum — resolve the bridge install root (npm root -g anor the dev link target) → Cascades/scps/template/SCP/ — its suite8 concept + 8_SUITES strata are the Template Suite 8 Page the diff runs against. If the installed template's stratum does NOT exceed the page's (the counters at parity anor the source absent), report HONESTLY and hold — never fabricate a standardization.`,
-    '2. Diff the page\'s stratum against the Template Suite 8 Page (the 3-way-diff discipline — additions · removals · both-changed), scoped to the standardization updates the s8 counter names.',
-    '',
-    // (b) THE HONOR-THE-DESIGN CONFERENCE — apply anor conference anor preserve; every uniquely
-    // changed file HOLDS for the user's choice (the buildUpdateCircuitVermillion :120-122 discipline).
-    'THE HONOR-THE-DESIGN CONFERENCE (apply anor conference anor preserve): a Template standardization the page has NOT diverged on APPLIES; a file the page\'s owner UNIQUELY changed is a CONFERENCE — hold it, NEVER clobber, and surface it to the user for the choice of which aspects adapt over. Divergence REQUIRES resolution, never a blind overwrite — the owner\'s design is sovereign.',
-    '3. CONFER: present each held file (both sides quoted) and let the user choose apply anor preserve per aspect. Apply only what the user accepts; preserve the rest verbatim.',
-    '',
-    // (c) THE PGED FRAME — the update rides the same rail the page's own dispatches ride.
-    'THE PGED FRAME: this update rides the SAME rail the page\'s own dispatches ride — the spawn rail (triggerSpawnS8Session · designation-agnostic by the s8 alias contract), the relay-lane spine, and CMLS locality. You are the page\'s own Entourage, updating it toward the standardization.',
-    '',
-    // (d) THE RESTAMP — on completion + user implementation, S8_PAGE_COUNTER updates to the npm value
-    // (the update itself edits the constant as part of the standardization apply).
-    `4. THE RESTAMP: once the standardization is applied and the user has implemented the changes, update THE PAGE'S OWN counter constant S8_PAGE_COUNTER in THE PAGE'S OWN type file — src/concepts/<camelCase of "${designation}">/<same>.type.ts — to the re-read npm value. ADD the constant if the page never carried one (a version-less page GAINS its counter at update — the floor-0 page becoming current IS the cure). NEVER write src/concepts/suite8/suite8.type.ts — that is the mint scaffold; writing it restamps every FUTURE page, not this one.`,
-    `5. THE UPDATE REPORT — the durable artifact: write this SCP's Cascades/Working/S8-UPDATE-${designation.replace(/\s+/g, '-')}.md: applied standardizations · held (conferred) files with both sides quoted + the user's choice · the S8_PAGE_COUNTER restamp · the re-run instruction. The report is the Muxistration; the transcript is not. Gate: this SCP's tsc must hold its own baseline — a regression → revert and report honestly.`,
-    '',
-    // (e) THE CLOSE — the Install Entourage precedent (:100-102) VERBATIM in discipline.
-    // THE RECEIVING SCP is this page's OWN SCP (single-SCP update); resolve its scpName from
-    // bridge.json — "${designation}" is the suite8 page name (focus's suite8Name), NOT the scpName.
-    'THE CLOSING MOTION (the Topic-Researcher idiom · the RECEIVING SCP is THIS page\'s own SCP — resolve its scpName from Cascades/Bridge/bridge.json boundScps):',
-    '6. scp_alert_turn_over { scpName: <this SCP\'s name> }. THE ACK LAW (C888): ok:true means the alert was QUEUED — NEVER that the turn-over landed. The turn-over is the USER\'S act. THE LANDING POLL: read this SCP\'s Cascades/Bridge/gitm.json — first confirm turnOverAlert appears (the queue committed), then poll until turnOver.at EXCEEDS your requestedAt (the user performed it). Poll ~every 5s, bounded ~2 minutes; the bound expiring is NOT a failure — report "alert standing, turn-over awaits the user" honestly and proceed. { dropped, reason } → the alert already holds; treat as queued and poll the same.',
-    `7. scp_focus_suite8_page { suite8Name: "${designation}", scpName: <this SCP's name> } — check focus.ok, report it, and proceed regardless.`,
-    '8. THEN dissipate via scs_dissipate_session with your OWN sessionId READ FROM THE REGISTRY (the bridge sessions surface — never a guessed id). THE DISSIPATE VERIFY (C888): accepted is an ACK, not the act — re-read the registry; your session\'s status must FLIP off launched. Still launched → re-fire ONCE with the exact registry id; still standing → report it honestly in your final line (the user retires you). No artifacts beyond the update + the report.',
-  ].join('\n');
+): string => {
+  const camel = designation.charAt(0).toLowerCase() + designation.slice(1);
+  const reportPath = `Cascades/Working/S8-UPDATE-${designation.replace(/\s+/g, '-')}.md`;
+
+  return `SCS:Vermillion Update the Suite 8 page ${designation} to the current S8 Page System standard, then write the update report.
+
+<VermillionPlan topic="S8 Page Update · ${designation}">
+
+Page: ${designation} (concept dir src/concepts/${camel}/)
+Page Counter At Spawn: #${pageS8}
+Installed System Counter At Spawn: #${installedS8}
+Update Report: ${reportPath}
+
+Step 1 (Simple Prompt) — Read your doctrine:
+  Informative: Your update doctrine is your own Suite 8's Strategy (SCP-local):
+    Cascades/8_SUITES/Entourage Forge/Strategy/EF-S1-S8-Page-Update.md
+  Actionable: Read it in full. Its Parameters section binds to this anchor:
+    <designation> = ${designation} · <pageS8> = ${pageS8} · <installedS8> = ${installedS8}
+
+Step 2 (Simple Prompt) — Execute the Strategy:
+  Informative: The Strategy carries every ground and law — the source of truth, the
+    template source, the conference, the restamp, the report, and the concluding
+    sequence. This anchor carries only the run: the page and the counter pair above.
+  Actionable: Execute the Strategy start to contract line with the bound parameters.
+
+</VermillionPlan>
+
+After acting, respond with the contract line first:
+SCS:Vermillion:OK:<one-line summary of the update pass>`;
+};
