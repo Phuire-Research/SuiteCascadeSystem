@@ -65,6 +65,9 @@ import GraphiteScribeCard from './components/GraphiteScribeCard.vue';
 // path CadmiumLanding.vue:70 walks (the wild-class precedent); GraphiteScribe carries no drawer of its
 // own, so the standard drawer is shared verbatim.
 import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
 // MD-USP · US-1 · TO-STANDARD · PM-3 THE s8-AXIS COUNTER — the rename-proof shared axis value (the
 // C373 S8_ law: `S8_PAGE_COUNTER` bears none of the three rename tokens, so it survives every twin
 // identically — it is the template's single canonical counter, NOT a per-page constant). Cross-concept
@@ -707,6 +710,11 @@ onUnmounted(() => {
       </section>
 
       <GraphiteScribeCascadeDocs :designation="graphiteScribeName" />
+
+      <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The persisted
+           removal flag gates the render inside the widget; this mount line remains through
+           removal anor updates. The Suite 8 Control drawer stays the always-accessible seat. -->
+      <S8ForgeMenu :designation="graphiteScribeName" :worked="true" :allow-remove="true" />
 
       <!-- ============================================================
            PRE-EPOCH · WTO TRIPTYCH · ZONE 2 (2nd) · the Shatterite Menu. ShatteriteMenu carries the

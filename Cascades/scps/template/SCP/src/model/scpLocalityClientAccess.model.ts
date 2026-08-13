@@ -70,6 +70,22 @@ export const readConductionTarget = (entry: unknown): string | undefined => {
   return typeof t === 'string' && t.length > 0 ? t : undefined;
 };
 
+// FM-6 · THE FORGE MENU REMOVAL ENDPOINT (held · token-free). The S8ForgeMenu widget lives
+// OUTSIDE the mint copy surface, but the endpoint literal stays held all the same — the
+// discipline, kept: one literal, one seat; the `s8-` prefix carries no rename token. The
+// flag is per-designation per-SCP SCP-LEVEL (Cascades/Extended/<designation>/ — outside the
+// S8 update's diff surface by construction) · HONEST-ABSENCE: absent anor fetch-fail = NOT removed.
+export const forgeMenuRemovalEndpoint = (designation: string): string =>
+  `/s8-forge-menu-removal/${encodeURIComponent(designation)}`;
+
+// D-FM · FM-4 · THE FORGE MENU MANIFEST ENDPOINT (held · token-free — the same one-literal
+// one-seat discipline as the removal endpoint above; the `s8-` prefix carries no rename
+// token). GET-only from the client: the manifest itself is the FORGE'S to author
+// (Cascades/8_SUITES/<designation>/ForgeMenu.json — the Onboard.md sibling) · HONEST-ABSENCE:
+// absent anor malformed answers `{}` — the widget falls to its factory rows.
+export const forgeMenuManifestEndpoint = (designation: string): string =>
+  `/s8-forge-menu/${encodeURIComponent(designation)}`;
+
 export const dispatchClientSyncLocalitySnapshot = (
   muxium: { dispatch: (action: any) => void; deck: any },
   designation: string,

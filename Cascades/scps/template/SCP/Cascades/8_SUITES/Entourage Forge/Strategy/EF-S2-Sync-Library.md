@@ -121,6 +121,32 @@ origin-blind injection, ids only, never css:
    target re-tiles. Availability and selection are two motions, one accounted citizen
    apart.
 
+## The Forge Menu Manifest (the page's Build Buttons)
+
+`Cascades/8_SUITES/<designation>/ForgeMenu.json` — the per-PAGE Build Button manifest,
+the Onboard.md sibling (it rides the S8 transferable package). The S8ForgeMenu widget
+enumerates its entries as Build Buttons; each fire builds a Forge Menu Vermillion
+(`buildForgeMenuVermillion` · `src/model/scpS8InstallCircuit.model.ts`) that ROUTES to the
+live page-Forge (the `scs_deliver_vermillion` first-line contract) anor SPAWNS one (the
+Vermillion riding the initialDirective + the page's target stamp).
+
+```json
+{
+  "schemaVersion": 1,
+  "entries": [
+    { "id": "kebab-case-id", "label": "Button label", "prime": "The commission text the Vermillion carries." }
+  ]
+}
+```
+
+THE AUTHORSHIP LAW: the Forge authors anor refines this manifest FOR the page when
+conferring on it — the buttons are the page's own capabilities, primed in the page's own
+words; the page's Onboard.md remains the primary bound doctrine every button's Vermillion
+cites. THE FACTORY LAW (the PATTERN_LIBRARY precedent): absent anor malformed, the
+widget's hard-coded RD rows stand — manifest over factory, never a forced seed (the mint
+does NOT create ForgeMenu.json). Read lane: `GET /s8-forge-menu/:designation`
+(vue.principle.ts · Honest-Absence `{}`).
+
 ## The Concluding Discipline (the motion verified)
 
 The introduction is verified by READ, never by claim: (1) the target's

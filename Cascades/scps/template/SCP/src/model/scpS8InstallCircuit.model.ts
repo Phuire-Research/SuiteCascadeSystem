@@ -166,3 +166,53 @@ Step 2 (Simple Prompt) — Execute the Strategy:
 After acting, respond with the contract line first:
 SCS:Vermillion:OK:<one-line summary of the update pass>`;
 };
+
+// D-FM · FM-4 · THE FORGE MENU MANIFEST (3A — the menu.json idiom extended). The per-PAGE
+// Build Button manifest the Forge AUTHORS for the user's page when conferring on it:
+// Cascades/8_SUITES/<designation>/ForgeMenu.json — the Onboard.md sibling (it rides the S8's
+// transferable package like the Install gate file above). The S8ForgeMenu widget enumerates
+// entries as Build Buttons; ABSENT anor malformed = the factory rows stand (the
+// PATTERN_LIBRARY manifest-over-factory precedent · Honest-Absence). Token-free exports.
+export const FORGE_MENU_SCHEMA_VERSION = 1;
+export const FORGE_MENU_FILE_NAME = 'ForgeMenu.json';
+
+export type ForgeMenuEntry = {
+  id: string;
+  label: string;
+  // the button's commission text — the Vermillion carries it as the entry's prime.
+  prime: string;
+};
+
+export type ForgeMenuShape = {
+  schemaVersion: number;
+  entries: ForgeMenuEntry[];
+};
+
+export const forgeMenuRelPath = (designation: string): string =>
+  `Cascades/8_SUITES/${designation}/${FORGE_MENU_FILE_NAME}`;
+
+// D-FM · FM-4 · THE FORGE MENU VERMILLION (4A — the wrapped SCS:Vermillion conferral). The
+// THIN text a Build Button fires. THE FIRST-LINE CONTRACT: the marker rides INLINE in the
+// first line (the buildUpdateVermillion sibling idiom above) — on the SPAWN leg this text IS
+// the initialDirective whole; on the ROUTE leg the scs_deliver_vermillion bridge Quality
+// prefixes its own bare directive line per its contract (`SCS:Vermillion\n${vermillion}` ·
+// scsBridgeDeliverVermillion.quality.huirth.ts) — both legs land the same directive read.
+// The page's OWN Onboard.md is the primary bound doctrine; the entry's prime is the
+// commission; the Conference frame honors the design.
+export const buildForgeMenuVermillion = (
+  designation: string,
+  entry: ForgeMenuEntry,
+): string =>
+  [
+    `SCS:Vermillion · THE FORGE MENU BUILD · "${entry.label}" · for the Suite 8 Page "${designation}".`,
+    'You are an Entourage Forge conduction commissioned to build ON this page (the honor-the-design class — the page is the owner\'s).',
+    '',
+    'THE PRIMARY BOUND DOCTRINE (read FIRST · SCP-local):',
+    `Cascades/8_SUITES/${designation}/Onboard.md — this page's own Primed Vermillion. Read it in full; its laws govern every motion here. HONEST-ABSENCE: absent = proceed on this commission alone and note the absence in your report.`,
+    '',
+    `THE COMMISSION (the "${entry.id}" prime):`,
+    entry.prime,
+    '',
+    'THE CONFERENCE FRAME (honor-the-design): confer with the user IN CONTEXT per the Onboard law — surface each structural decision as an AskUserQuestion decision point BEFORE striking it; an arrangement the owner made is never overridden unasked.',
+    `THE MENU IS YOURS TO REFINE: the Build Buttons enumerate from ${forgeMenuRelPath(designation)} ({ schemaVersion, entries: [{ id, label, prime }] }). When this conferral lands new page capabilities, author anor refine that manifest FOR the page — the factory rows stand only while it is absent.`,
+  ].join('\n');

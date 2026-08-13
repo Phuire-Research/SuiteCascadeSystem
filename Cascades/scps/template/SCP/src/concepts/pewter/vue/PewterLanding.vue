@@ -59,6 +59,9 @@ import Suite8CascadeDocs from '../../suite8/vue/components/Suite8CascadeDocs.vue
 // law). Cross-concept imports to the suite8 concept — the SAME paths Suite8HomeLanding.vue:52,178 and
 // CadmiumLanding.vue:70 walk (the wild-class precedent). Shape matches Suite8HomeLanding.vue:178 exactly.
 import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
 import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
 // MD-USP · US-3 · THE PAGE-OWNED LOCALITY — the page's muxium is the page's, so the page arms the ONE
 // locality subscription (V-4g) and publishes the shared S8LocalityFace every surface reads. Pewter's
@@ -352,6 +355,11 @@ onUnmounted(() => {
              own header) — present on EVERY Suite 8 page for consistency, functional anor not:
              Pewter's design cycles record onto its Diamond/Onyx tiers the same as any domain. -->
         <Suite8CascadeDocs designation="Pewter Tessera" />
+
+        <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The persisted
+             removal flag gates the render inside the widget; this mount line remains through
+             removal anor updates. The Suite 8 Control drawer stays the always-accessible seat. -->
+        <S8ForgeMenu :designation="PEWTER_SUITE_8_NAME" :worked="true" :allow-remove="true" />
 
         <ShatteriteMenu
           :menu-stage="menuStage"

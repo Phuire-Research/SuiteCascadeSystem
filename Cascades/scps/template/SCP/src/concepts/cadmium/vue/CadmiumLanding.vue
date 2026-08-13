@@ -71,6 +71,9 @@ import Suite8CascadeDocs from '../../suite8/vue/components/Suite8CascadeDocs.vue
 // V-4b · THE LENT DRAWER — Cadmium lends the suite8 Control drawer (valid HERE: this island
 // composes the suite8 concept, so the drawer's slice exists).
 import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
 import type { Cascade } from '../../suiteCascade/suiteCascade.type';
 
 const cadmiumDesignationName = ref<string>('');
@@ -986,6 +989,15 @@ onUnmounted(() => {
            default) — component consistency with the generated Suite 8 pages. The C861
            wrapper tab + the working-docs extension are retired with it. -->
       <Suite8CascadeDocs designation="Cadmium Researcher" />
+
+      <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The designation
+           expr mirrors the registerCurrentS8Page fallback idiom (the async-hydrating ref). The
+           persisted removal flag gates the render inside the widget; this mount line remains. -->
+      <S8ForgeMenu
+        :designation="cadmiumDesignationName || 'Cadmium Researcher'"
+        :worked="true"
+        :allow-remove="true"
+      />
 
       <!-- V-4 · THE PAGE PRUNE — the DSP-2 inline Suite8Control retired; the S8 toolbar
            drawer carries the Control on this page (registerCurrentS8Page seats the

@@ -54,6 +54,11 @@ import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model
 // minted twin the rename converts this to the twin's drawer, which reads the twin's own slice).
 import Suite8ControlDrawer from './components/Suite8ControlDrawer.vue';
 import Suite8Card from '../../vue/components/S8Card.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · OUTSIDE the mint copy
+// surface — the token-free specifier survives every mint; this scaffold line is what every
+// future mint inherits). Mounted remove-ENABLED (FM-6); the persisted removal flag gates the
+// render INSIDE the widget, so this mount line remains through removal AND updates.
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
 // EF-3' · 4A · THE PANE PRUNE — the inline Forge pane folded into Suite8Control SIV
 // (the door · the model select · the previous conductions · the engage all live THERE now).
 
@@ -320,6 +325,17 @@ onUnmounted(() => {
            SuiteCascadeDiamondOnyxPane (the empty-slot placeholder) with the live two-pane surface.
            ============================================================ -->
       <Suite8CascadeDocs :designation="suite8Name" />
+
+      <!-- ============================================================
+           D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The commission's
+           first ruling: the Menu spawns on template S8 pages as its OWN widget (the original
+           set-up's shape). :allow-remove="true" = FM-6b's Remove command renders; the persisted
+           removal flag (Cascades/Extended/<designation>/ · per-page per-SCP · outside the update
+           diff surface) gates the render inside the widget — the mount line REMAINS through
+           removal, so the S8 page update never conflicts (the flag IS the sovereignty). The
+           Suite 8 Control drawer remains the always-accessible seat (remove disabled there).
+           ============================================================ -->
+      <S8ForgeMenu :designation="suite8Name" :worked="true" :allow-remove="true" />
 
       <!-- ============================================================
            PRE-EPOCH · WTO TRIPTYCH · ZONE 2 (2nd) · the Shatterite Menu. ShatteriteMenu carries the

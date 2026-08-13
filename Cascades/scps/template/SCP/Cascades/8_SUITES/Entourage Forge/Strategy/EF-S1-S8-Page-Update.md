@@ -37,6 +37,18 @@ UNIQUELY changed is a CONFERENCE — hold it, NEVER clobber, surface both sides 
 let the user choose which aspects adapt over. Divergence REQUIRES resolution, never a
 blind overwrite — the owner's design is sovereign.
 
+## The Widget Removal Law (D-FM · FM-6a — the honor-the-design class, made explicit)
+
+The Forge Menu widget (`src/concepts/vue/components/S8ForgeMenu.vue`, mounted
+remove-enabled on the page) is the OWNER'S to remove. A removed widget — whether by the
+persisted removal flag (`Cascades/Extended/<designation>/ForgeMenuRemoved.json`) anor by
+an owner-deleted mount line — IS the owner's design. The update NEVER re-adds it: never
+restore a deleted mount line, never clear anor rewrite the removal flag. The flag file is
+NEVER part of the update surface — `Cascades/Extended/` is runtime cascade memory, outside
+the standardization diff by construction; leave it untouched. The Suite 8 Control panel
+mount (remove-disabled) remains the standing re-access surface regardless — that is the
+design, not a divergence to resolve.
+
 ## The Restamp (the page's OWN file — never the scaffold)
 
 Once the standardization is applied and the user has implemented the changes, update THE

@@ -1066,6 +1066,119 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
   });
 
+  // FM-6 · THE FORGE MENU WIDGET REMOVAL FLAG (D-FM · the persisted removal sovereignty).
+  // Per-designation + per-SCP + SCP-LEVEL: the flag lives under THIS SCP's OWN
+  // Cascades/Extended/<designation>/ (runtime cascade memory — OUTSIDE the S8 page update's
+  // diff surface by construction, so a removal survives every update). Deliberately NOT the
+  // resolveExtendedDesignationDir walk-up: a CMLS subscription would land the flag on the
+  // TARGET citizen — the removal is the OWNER page's design on THIS SCP only. HONEST-ABSENCE:
+  // absent file anor unreadable = NOT removed. The route prefix `s8-` carries no rename token;
+  // the client literal is held at forgeMenuRemovalEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuRemovalFlagPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const extendedBase = path.resolve(process.cwd(), 'Cascades', 'Extended');
+    const dir = path.resolve(extendedBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's Extended base.
+    if (dir === extendedBase || !dir.startsWith(extendedBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenuRemoved.json');
+  };
+  expressApp.get('/s8-forge-menu-removal/:designation', (req, res) => {
+    try {
+      const flagPath = forgeMenuRemovalFlagPath(req.params.designation ?? '');
+      if (!flagPath || !fs.existsSync(flagPath)) {
+        res.json({ removed: false }); // Honest-Absence — an absent flag IS not-removed.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(flagPath, 'utf8')) as { removed?: unknown };
+      res.json({ removed: parsed.removed === true });
+    } catch {
+      res.json({ removed: false }); // unreadable = not removed (Honest-Absence).
+    }
+  });
+  expressApp.post('/s8-forge-menu-removal/:designation', express.json(), (req, res) => {
+    try {
+      const flagPath = forgeMenuRemovalFlagPath(req.params.designation ?? '');
+      if (!flagPath) {
+        res.status(400).json({ ok: false, error: 'invalid designation' });
+        return;
+      }
+      const body = (req.body ?? {}) as { removed?: unknown };
+      const removed = body.removed === true;
+      if (removed) {
+        fs.mkdirSync(path.dirname(flagPath), { recursive: true });
+        fs.writeFileSync(
+          flagPath,
+          JSON.stringify({ removed: true, at: new Date().toISOString() }, null, 2),
+        );
+      } else if (fs.existsSync(flagPath)) {
+        // The symmetric restore leg (no widget fires it this band — the panel is the
+        // re-access surface; a future re-add control rides this same seat).
+        fs.rmSync(flagPath);
+      }
+      res.json({ ok: true, removed });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
+    }
+  });
+
+  // D-FM · FM-4 · THE FORGE MENU MANIFEST READ (3A — the menu.json idiom extended). The
+  // per-PAGE Build Button manifest the Forge authors when conferring on the page:
+  // Cascades/8_SUITES/<designation>/ForgeMenu.json (the Onboard.md sibling — SCP-local, rides
+  // the S8 transferable package; the mint does NOT create it). HONEST-ABSENCE: absent ·
+  // malformed · guarded-out = `{}` — the widget falls to its factory rows. Traversal-guarded
+  // like the removal flag above; the route prefix `s8-` carries no rename token; the client
+  // literal is held at forgeMenuManifestEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuManifestPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const suitesBase = path.resolve(process.cwd(), 'Cascades', '8_SUITES');
+    const dir = path.resolve(suitesBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's 8_SUITES base.
+    if (dir === suitesBase || !dir.startsWith(suitesBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenu.json');
+  };
+  expressApp.get('/s8-forge-menu/:designation', (req, res) => {
+    try {
+      const manifestPath = forgeMenuManifestPath(req.params.designation ?? '');
+      if (!manifestPath || !fs.existsSync(manifestPath)) {
+        res.json({}); // Honest-Absence — no manifest IS the factory-rows state.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+        schemaVersion?: unknown;
+        entries?: unknown;
+      };
+      if (typeof parsed.schemaVersion !== 'number' || !Array.isArray(parsed.entries)) {
+        res.json({}); // malformed = absent (the factory rows stand — never a forced shape).
+        return;
+      }
+      // Entry-level shape gate — a malformed entry drops; the well-formed remainder serves.
+      const entries = parsed.entries.filter(
+        (e): e is { id: string; label: string; prime: string } =>
+          !!e &&
+          typeof (e as Record<string, unknown>).id === 'string' &&
+          typeof (e as Record<string, unknown>).label === 'string' &&
+          typeof (e as Record<string, unknown>).prime === 'string',
+      );
+      res.json({ schemaVersion: parsed.schemaVersion, entries });
+    } catch {
+      res.json({}); // unreadable = absent (Honest-Absence).
+    }
+  });
+
   // GET — enumerate prior-tier document filenames (DIAMOND-TIER-*.md / ONYX-TIER-*.md) WITHOUT
   // loading their content. The ACTIVE pair (the highest tier of each) is served by the live cascade
   // state; "prior" = every OTHER tier document present in the folder. READ-ONLY · absent → 200 [].
