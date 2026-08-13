@@ -190,7 +190,9 @@ export type GitmJsonShape = {
   // The scsBridgeTurnOverFieldWatcher observes turnOver.at ADVANCE here and writes the local
   // .bridge-restart.json. OPTIONAL at the SCP type level — a LEGACY gitm.json written by a
   // pre-relocation bridge lacks it (the watcher's `parsed.turnOver?.at` guards its absence).
-  turnOver?: { at: number; source: string; hard: boolean };
+  // D-TOH H3 — targetScpName?: the NAME of the SCP the stamp targets; the field watcher skips a
+  // foreign-target stamp (not-own-target). OPTIONAL — a legacy bridge stamps without it (fires as own).
+  turnOver?: { at: number; source: string; hard: boolean; targetScpName?: string };
   // C785 · THE TURN-OVER ALERT (scp_alert_turn_over) — the bridge-requested USER Turn Over A
   // directive. File-held (the GITEP ALERT HOLD carries it write-to-write); SELF-RETIRES once a
   // turnOver stamp NEWER than requestedAt lands. IslandWrapper renders the banner. TQNI: mirror

@@ -386,7 +386,9 @@ export type GitmTurnOverWithSourcePayload = WithOrigin<{
 }>;
 
 // gitmRevertToStable · the failsafe · auto-commit B (if dirty) THEN switch A THEN restart.
-export type GitmRevertToStablePayload = WithOrigin<Record<string, never>>;
+// D-TOH · H1 — the payload IS the origin thread alone: the never-record base rejected the
+// very originScpName the name-first deadline fire now carries.
+export type GitmRevertToStablePayload = { originScpName?: string };
 
 // gitmMergeWorking · switch to A THEN git merge --no-ff <workingBranch>.
 export type GitmMergeWorkingPayload = WithOrigin<Record<string, never>>;

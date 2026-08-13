@@ -46,8 +46,11 @@ import { resolveScpNameToDir } from '../model/gitmOpCwd.model';
 // rehydrated SCP's OWN rail, not just the flat view — the M4 pattern completed).
 import { getSlice, upsertSliceFields } from '../model/gitmSliceStore.model';
 // GITM Dev Epoch (MD-E · THE C318 FOLD · THE BRIDGE-OWNED DEADLINE) — the FLOOR under the observation.
+// D-TOH H1 · THE DEADLINE ORIGIN-THREADING — the disarm goes KEYED (disarmDeadlineFor · the ARMED
+// ORIGIN's boot report only); the fire carries the arm's NAME (never the pointer).
 import {
   disarmDeadline,
+  disarmDeadlineFor,
   isDeadlinePassed,
   readDeadlineArm,
 } from '../model/bridgeOwnedDeadline.model';
@@ -92,13 +95,26 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
       return;
     }
     const activeBranch = typeof report.activeBranch === 'string' ? report.activeBranch : '';
+    // D-TOH H1 — hoisted above the disarm: the report's scpName IS the disarm key (the M5 resolve
+    // below reuses it unchanged).
+    const reportScpName = typeof report.scpName === 'string' ? report.scpName : '';
 
     // MD-E (THE C318 FOLD) — DISARM THE DEADLINE FIRST. A boot-report arriving AT ALL is the proof
     // the SCP booted (the deadline's whole question is "did it boot?"). Disarm on EITHER branch
     // (the B-proof below OR the armed A-return) BEFORE any routing — the deadline's job is done the
     // moment a report lands, regardless of which branch it shows. The seat-law's own arm gate still
     // governs the checkout-return; this only lifts the failure floor.
-    disarmDeadline();
+    // D-TOH H1 · THE KEYED DISARM (THE NAME-FIRST LAW) — ONLY the ARMED ORIGIN's boot report
+    // disarms. The old any-report disarm let a FOREIGN citizen's boot silently kill a legitimate
+    // deadline (the storm's severed-disarm wound). A foreign report leaves the arm STANDING (named
+    // sink); a nameless report anor a nameless legacy arm keeps the old behavior (disarms).
+    if (!disarmDeadlineFor(reportScpName)) {
+      log('gitm.deadline.disarm-held', {
+        reason: 'foreign-boot-report',
+        reportScpName,
+        armOrigin: readDeadlineArm()?.originScpName ?? '',
+      });
+    }
 
     // C326 · THE B-PROOF BRANCH (THE OBSERVED-PROOF CONFIRM + THE UPDATE-CYCLE RESET). The Sword
     // BOOTED on B after a turn-over — the STRUCTURAL proof B works (the boot itself, not a
@@ -114,7 +130,7 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
     // MD-C M5 · THE ORIGIN-SLICE GATE — the report names WHICH SCP booted; a non-pointer origin's
     // proof fields live on ITS slice (the flat view is the pointer's — comparing against it starved
     // every non-pointer confirm). Pointer/unresolved/cold-rail falls through to the flat reads.
-    const reportScpName = typeof report.scpName === 'string' ? report.scpName : '';
+    // D-TOH H1 — reportScpName hoisted above the keyed disarm (declared once, up top).
     const originDir =
       reportScpName !== '' ? resolveScpNameToDir(reportScpName, k_.userCwd.select()) : '';
     const originSlice =
@@ -312,15 +328,19 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
     // roles.b, the arm returned to that same B, AND the checkout-return above verifiably landed
     // (switchExec.ok — the on-B verification). The setStatus above refreshes changesPrimedOnB so
     // the confirm's clean-B gate (~1200ms, the C326 timing) reads the carried committed tree.
-    const carryAttempt = k_.turnOverAttempt.select();
+    // D-TOH H2 · THE PER-SCP ATTEMPT MAP — the carry-A proof reads the BOOTED ORIGIN's rail FIRST
+    // (originSlice · the M5 resolve above; proofRoles/proofAbMode are already the origin-first
+    // reads). The flat k_.turnOverAttempt read here was the LAST singular-authority reader — a
+    // foreign citizen's click evicted the flat slot and starved this gate (the storm's eviction).
+    const carryAttempt = originSlice?.turnOverAttempt ?? k_.turnOverAttempt.select();
     if (
       switchExec.ok &&
       h !== null &&
-      k_.abMode.select() === 'turned-over' &&
+      proofAbMode === 'turned-over' &&
       carryAttempt !== null &&
       carryAttempt.source === 'carry-A' &&
-      carryAttempt.targetBranch === k_.branchRoles.select().b &&
-      arm.workingBranch === k_.branchRoles.select().b
+      carryAttempt.targetBranch === proofRoles.b &&
+      arm.workingBranch === proofRoles.b
     ) {
       setTimeout(() => {
         // M5 — origin-stamped (the carry-A flow is pointer-territory today; the stamp keeps the
@@ -544,40 +564,58 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
   ]);
   void armPlan;
 
-  // MD-E (THE C318 FOLD · THE BRIDGE-OWNED DEADLINE) — the standing FLOOR beat. A source:'A'
-  // turn-over that carried a working B armed BOTH the seat-return arm AND the 45s deadline
-  // (bridgeOwnedDeadline.model). The boot-report watcher above DISARMS the deadline the moment ANY
-  // report lands (the SCP booted). If NO report arrives within 45s — A never booted, the observed
-  // failure — this beat fires the FLOOR: disarm (one-shot · re-entrancy guard), dispatch
-  // gitmRevertToStable via the LIVE handle (commit B if dirty → switch A → restart), stamp the
-  // outcome (updateStatus note · the never-silent rule) + log gitm.deadline.reverted. The C319
-  // client pulse remains the AWARENESS layer; THIS is the floor. Non-concluding stage (a monitoring
-  // beat · never stagePlanner.conclude() so it polls each tick · mirror the location-dial WGHA beat).
+  // MD-E (THE C318 FOLD · THE BRIDGE-OWNED DEADLINE) — the standing beat, now INFORMATIONAL ONLY.
+  // D-TOH TOH-6 · THE AGENCY CURE (the user's ruling): THE BENEFIT OF THE DOUBT BELONGS TO THE
+  // USER. A long boot may be a large SCP honestly recompiling — time proves nothing. The AUTO-REVERT
+  // is RETIRED: this beat NEVER dispatches gitmRevertToStable (nor any turn-over) on a clock (the
+  // TOH-5 field: a healthy ~77s boot outran both 45s arms and the fire RE-FIRED the healthy SCP).
+  // Turning over on A is THE USER'S intended design — their agency, their judgment, their button
+  // (the gitmRevertToStable QUALITY stays whole as that deliberate tool). The system's whole
+  // remaining duty: INFORM HONESTLY — the arm/disarm machinery (armDeadline · disarmDeadlineFor ·
+  // the keyed H1 discipline) STAYS as the informational clock; when the window elapses this beat
+  // logs gitm.deadline.expired-informational + stamps a NEUTRAL note on the ORIGIN's rail (the
+  // never-silent rule) that NEVER claims failure it cannot prove. Non-concluding stage (a
+  // monitoring beat · never stagePlanner.conclude() so it polls each tick).
   const deadlinePlan = plan('Gitm Bridge Owned Deadline', ({ stage }) => [
     stage(() => {
       if (!isDeadlinePassed()) return; // no arm ANOR window not yet elapsed · retry next beat
       const arm = readDeadlineArm();
-      // DISARM FIRST (one-shot · re-entrancy — a second beat must not re-fire the revert).
+      const elapsedMs = arm !== null ? Date.now() - arm.armedAt : 0;
+      // DISARM FIRST (one-shot · re-entrancy — the informational note must not re-fire each beat).
       disarmDeadline();
+      // THE ONE INFORMATIONAL MOTION — the window elapsed; nothing fires. Named sink always.
+      log('gitm.deadline.expired-informational', {
+        originScpName: arm?.originScpName ?? '',
+        stableBranch: arm?.stableBranch ?? '',
+        elapsedMs,
+      });
+      // D-TOH H1 legacy shape kept — a nameless arm has no rail to note onto; SKIP with a named
+      // sink rather than falling to the pointer (the severed fall-through was the storm's wound).
+      if (arm === null || arm.originScpName === '') {
+        log('gitm.deadline.note-skip', {
+          reason: 'arm-origin-absent',
+          stableBranch: arm?.stableBranch ?? '',
+        });
+        return;
+      }
       const bh = getActiveScsBridgeMuxiumHandle();
       if (bh === null) {
-        // No live handle to revert through — log and move on (the arm is already cleared; a later
+        // No live handle to note through — log and move on (the arm is already cleared; a later
         // turn-over re-arms). Never silent.
-        log('gitm.deadline.reverted', { fired: false, reason: 'no-live-handle', stableBranch: arm?.stableBranch ?? '' });
+        log('gitm.deadline.note-skip', { reason: 'no-live-handle', stableBranch: arm.stableBranch });
         return;
       }
       const gitmDeck = bh.muxium.deck.d.gitm;
-      // Stamp the outcome onto the Update rail FIRST (the never-silent rule — the strip/panel shows
-      // WHY the app reverted before the revert restarts it).
+      // The honest note on the ORIGIN's rail (the never-silent updateStatus idiom · RS.4: the note
+      // lands on the ARMED ORIGIN's rail, not the pointer's panel). NEUTRAL wording only — the
+      // overlay may say 'still rebuilding' but never claims failure without a failure fact.
       bh.muxium.dispatch(
         gitmDeck.e.gitmScpUpdateProgress({
-          note: 'B did not boot within the deadline — reverted to ground',
+          note: 'B boot exceeding the watch window — the SCP may still be rebuilding; Turn Over on A remains at your discretion',
+          originScpName: arm.originScpName,
         } as GitmScpUpdateProgressPayload) as never,
       );
-      // Fire the failsafe (commit B if dirty → switch A → restart). Empty payload.
-      bh.muxium.dispatch(gitmDeck.e.gitmRevertToStable({}) as never);
-      log('gitm.deadline.reverted', { fired: true, stableBranch: arm?.stableBranch ?? '' });
-      console.log('[Gitm BootReportWatch] DEADLINE — B did not boot within 45s · reverted to stable ground');
+      console.log('[Gitm BootReportWatch] deadline window elapsed (informational) ·', arm.originScpName, '· the SCP may still be rebuilding');
     }, { beat: 1000 }),
   ]);
   void deadlinePlan;

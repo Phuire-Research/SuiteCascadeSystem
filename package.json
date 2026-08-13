@@ -1,12 +1,12 @@
 {
   "name": "scs-bridge",
-  "version": "0.950.0",
+  "version": "0.950.1",
   "scsMuxameter": {
-    "cli": 12,
-    "scp": 13,
+    "cli": 13,
+    "scp": 14,
     "s8": 1
   },
-  "description": "SCS Bridge CLI — Suite Cascade System command-line interface",
+  "description": "SCS Bridge CLI \u2014 Suite Cascade System command-line interface",
   "keywords": [
     "Suite Cascade",
     "Stratimux",
@@ -56,9 +56,9 @@
   "scripts": {
     "dev": "tsx src/cli.ts",
     "dev:self": "npm run build:all && tsx src/cli.ts dev --self-dev --debug",
-    "build": "rimraf ./dist && tsup",
+    "build": "npm run build:main && npm run build:renderer",
     "build:renderer": "vite build --config vite.electron-renderer.config.ts",
-    "build:all": "npm run build && npm run build:renderer",
+    "build:all": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
     "prettier-format": "run-script-os",
@@ -70,7 +70,8 @@
     "test:watch": "jest --watchAll",
     "postinstall": "node bin/ensure-electron.js",
     "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "release": "npm publish --access public"
+    "release": "npm publish --access public",
+    "build:main": "rimraf ./dist && tsup"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

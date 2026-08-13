@@ -206,7 +206,7 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.950.0 · The Diametric SCP
+## Release Notes — v0.950.1 · The Diametric SCP
 
 ### The Achievement
 
@@ -249,6 +249,12 @@ counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.950.1 — a turn-over that knows its name**: a turn-over now belongs to one app by
+  name — the name resolves the directory, and only then do the branch operations run
+  inside it. The safety deadline remembers which app armed it and stands down only on
+  that app's own boot; two apps turning over in the same window no longer collide; and
+  each app's restart watcher answers only to signals addressed to it by name. One app's
+  turn-over can no longer restart another.
 - **0.950.0 — the SyncLibrary: every page holds a locality**: each Suite 8 page holds a
   locality — stand Local anor observe a Specified app, from right where you are. The
   Locality Register lays it plain: the Local row and the live ring rows beside it, each

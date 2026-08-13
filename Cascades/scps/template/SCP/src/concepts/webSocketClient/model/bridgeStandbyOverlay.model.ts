@@ -19,7 +19,7 @@ const STANDBY_STYLE_ID = 'bridge-turn-over-standby-style';
 // SORD Shield/Sword title glyph — an inline SVG (1.2em · stroke currentColor · the retained
 // blue/fuchsia palette rides the title's own color). The shield precedes the RETURN-TO-STABLE-A
 // (recovery) title; the sword precedes the TURN-OVER-TO-B (carry) title. Non-seat modes (the plain
-// 'turn-over' + the 'b-failed-reverting' failsafe) carry no glyph.
+// 'turn-over' + the 'b-still-rebuilding' informational) carry no glyph.
 const SHIELD_SVG =
   `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" ` +
   `stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ` +
@@ -32,7 +32,7 @@ const SWORD_SVG =
   `<path d="M14.5 3.5 21 3l-.5 6.5-9 9"/><path d="M11.5 18.5 3 21l2.5-8.5 9-9"/>` +
   `<path d="M6.5 15.5 8.5 17.5"/><path d="M4 21l3.5-3.5"/></svg>`;
 
-// The glyph for a given mode — '' for the non-seat (turn-over / failsafe) modes.
+// The glyph for a given mode — '' for the non-seat (turn-over / informational) modes.
 function standbyIconSvg(mode: StandbyMode): string {
   if (mode === 'shield-a') return SHIELD_SVG;
   if (mode === 'sword-b') return SWORD_SVG;
@@ -558,15 +558,18 @@ function suitePolygonShapes(): string {
   return shapes;
 }
 
-// GITM A↔B (#641) — the standby variant. 'turn-over' is the normal connection-turnover
-// notice; 'b-failed-reverting' is the failsafe message the deadline timer swaps in when B
-// never booted (the system is restoring the stable A branch).
+// GITM A↔B (#641 · TOH-6 the agency cure) — the standby variant. 'turn-over' is the normal
+// connection-turnover notice; 'b-still-rebuilding' is the NEUTRAL informational message the
+// deadline timer swaps in when the watch window elapses before B's boot report. THE BENEFIT
+// OF THE DOUBT BELONGS TO THE USER: the wording never claims failure (time proves nothing —
+// a large SCP may honestly still be recompiling); it names the user's own Turn Over on A
+// instead — the system never fires it.
 //
 // SORD Shield/Sword (Macro Diamond · D5/TVOS) — two SORD-routed turn-over variants. 'shield-a'
 // is the recovery/return-to-stable-A overlay (the Shield-A turn-over); 'sword-b' is the
 // carry-changes-onto-B overlay (the Sword-B turn-over). TEXT-ONLY variants — the shield/sword
 // GRAPHIC is deferred polish; the shapes/frame/bracket/CSS are identical across all modes.
-export type StandbyMode = 'turn-over' | 'b-failed-reverting' | 'shield-a' | 'sword-b';
+export type StandbyMode = 'turn-over' | 'b-still-rebuilding' | 'shield-a' | 'sword-b';
 
 const STANDBY_TEXTS: Record<StandbyMode, { title: string; subtitle: string; note: string }> = {
   'turn-over': {
@@ -574,10 +577,10 @@ const STANDBY_TEXTS: Record<StandbyMode, { title: string; subtitle: string; note
     subtitle: 'STAND BY &middot; CEASE ACTIVITY',
     note: 'the system resumes automatically',
   },
-  'b-failed-reverting': {
-    title: 'B FAILED &middot; REVERTING',
-    subtitle: 'RETURNING TO STABLE A',
-    note: 'the system is restoring the stable branch',
+  'b-still-rebuilding': {
+    title: 'B STILL REBUILDING',
+    subtitle: 'LARGE APPS TAKE TIME',
+    note: 'if it does not return, Turn Over on A from the dock',
   },
   'shield-a': {
     title: 'RETURN TO STABLE A',
@@ -608,7 +611,7 @@ const STANDBY_CLASS_NAMES: Record<StandbyTurnClass, string> = {
 // The register a mode implies when no explicit class is passed (the honest default per leg):
 //   'sword-b'            → SWORD  (the carry-onto-B experiment)
 //   'shield-a'           → SHIELD (the recovery/return-to-stable-A)
-//   'b-failed-reverting' → SHIELD (the failsafe reverts TO A)
+//   'b-still-rebuilding' → SHIELD (unthreaded fallback only — the swap keeps the mounted class)
 //   'turn-over'          → SHIELD (the plain restart · the retained scheme · zero regression)
 // The hard turn-over (SPARKS) uses the plain 'turn-over' message but MUST pass 'sparks' explicitly
 // — the mode alone cannot distinguish an A-leg fallback (Shield) from a hard reset (Sparks).
@@ -659,17 +662,16 @@ function buildStandbyMarkup(mode: StandbyMode, turnClass: StandbyTurnClass): str
  * not stack overlays. The overlay is cleared automatically when the page reloads on
  * reconnection.
  *
- * GITM A↔B (#641): when the failsafe fires ('b-failed-reverting') while a plain
- * 'turn-over' standby is ALREADY mounted, the idempotency guard would block the message
+ * GITM A↔B (#641 · TOH-6): when the informational deadline swaps in 'b-still-rebuilding'
+ * while a standby is ALREADY mounted, the idempotency guard would block the message
  * upgrade — so an already-mounted overlay performs an INNER-TEXT SWAP instead of returning
- * (single overlay, no double-mount).
+ * (single overlay, no double-mount). The swap is WORDING ONLY: the mounted register class
+ * stays (the turn-over is still in progress — nothing reverted, so nothing re-tints).
  *
  * STRATIPUNK TURN-OVER EXPRESSIONS (Pewter Tessera · C637): the optional `turnClass` selects the
  * functional color register (SHIELD / SWORD / SPARKS · W3). Absent ⇒ derived from the mode
  * (turnClassForMode) so unthreaded/legacy callers land on SHIELD — the retained scheme, zero
- * visual regression. The failsafe upgrade also flips the root register class to SHIELD (it
- * reverts TO A), re-tinting the accents + the eyebrow of an already-mounted (possibly SWORD)
- * overlay in place.
+ * visual regression.
  */
 export const showBridgeStandby = (
   mode: StandbyMode = 'turn-over',
@@ -696,17 +698,15 @@ export const showBridgeStandby = (
       const badgeEl = existing.querySelector('.standby-logo-badge i');
       if (badgeEl) badgeEl.className = `fa-solid ${STANDBY_CLASS_ICONS[turnClass]}`;
     }
-    // Already mounted — upgrade the message in place when the failsafe fires.
-    if (mode === 'b-failed-reverting') {
+    // Already mounted — upgrade the message in place when the informational deadline elapses.
+    // TOH-6 · WORDING ONLY: the register class the trigger declared STAYS (the turn-over is
+    // still in progress — nothing reverted, so nothing re-tints; the sticky-explicit guard
+    // above already handled any explicit class the caller re-declared).
+    if (mode === 'b-still-rebuilding') {
       const texts = STANDBY_TEXTS[mode];
-      const classEl = existing.querySelector('.standby-class-name');
       const titleEl = existing.querySelector('.standby-title');
       const subtitleEl = existing.querySelector('.standby-subtitle');
       const noteEl = existing.querySelector('.standby-note');
-      // Flip the register class to SHIELD (revert TO A) so the accents + eyebrow re-tint in place.
-      existing.classList.remove('standby-express-shield', 'standby-express-sword', 'standby-express-sparks');
-      existing.classList.add(standbyClassName(resolvedClass));
-      if (classEl) classEl.innerHTML = `${STANDBY_CLASS_NAMES[resolvedClass]} &middot; TURN OVER`;
       if (titleEl) titleEl.innerHTML = texts.title;
       if (subtitleEl) subtitleEl.innerHTML = texts.subtitle;
       if (noteEl) noteEl.innerHTML = texts.note;
