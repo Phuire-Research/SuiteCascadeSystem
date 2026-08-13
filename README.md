@@ -206,7 +206,7 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.950.1 · The Diametric SCP
+## Release Notes — v0.950.2 · The Diametric SCP
 
 ### The Achievement
 
@@ -249,6 +249,16 @@ counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.950.2 — the Method Seed**: the Home page's Tutorial section becomes the Method
+  Seed — the working method this system was built with, shipped as documentation your
+  own project can absorb. Browse the Manual, engage the Dialectics, and spawn the
+  Cinnabar Dialectic to seed the method into your project's memory; the induction is
+  opt-in and performed by the session itself given your set-up, and re-running after an
+  update refreshes rather than duplicates. Following through with the installment gives
+  the best experience utilizing the SCS. The Cinnabar Dialectic advances to a second
+  edition alongside it — its pattern registry doubled into four families — and a
+  turn-over can no longer stall silently: if the restart watcher has quietly died, the
+  app detects the stall by its own survival and completes the turn-over directly.
 - **0.950.1 — a turn-over that knows its name**: a turn-over now belongs to one app by
   name — the name resolves the directory, and only then do the branch operations run
   inside it. The safety deadline remembers which app armed it and stands down only on

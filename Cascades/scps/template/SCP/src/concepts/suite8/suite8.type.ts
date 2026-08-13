@@ -118,7 +118,7 @@ export const S8_PAGE_VERSION = '1.0.0';
 // long title) — `suite8`/`Suite8`/`SUITE8` are NOT rename targets, so `S8_PAGE_COUNTER`
 // (bearing none of the three tokens) survives the twin identically (the C373 S8_ law).
 // The compare `pageS8Counter < installedS8Counter` = out-of-sync (PM-4 colors the S8 toggle).
-export const S8_PAGE_COUNTER = 1;
+export const S8_PAGE_COUNTER = 2;
 
 export type Suite8ClientState = {
   // V-2 · the frozen template version this page was actualized from (S8_PAGE_VERSION at
