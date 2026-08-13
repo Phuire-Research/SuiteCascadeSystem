@@ -56,7 +56,12 @@ import { issueToken, validateToken } from '../model/gitmConfirmToken.model';
 import { armSeatReturn, disarmSeatReturn } from '../model/seatReturnArm.model';
 // GITM Dev Epoch (MD-E · THE C318 FOLD) — the bridge-owned deadline is armed/disarmed ALONGSIDE the
 // seat-return arm (the FLOOR under the observation · composed with the seat-law · never breaks it).
-import { armDeadline, disarmDeadline } from '../model/bridgeOwnedDeadline.model';
+// D-TOH H1 · THE DEADLINE ORIGIN-THREADING — the arm carries THE NAME of the SCP this turn-over
+// operates on; the B-path disarm goes KEYED (a foreign B turn-over never kills another citizen's arm).
+import { armDeadline, disarmDeadlineFor } from '../model/bridgeOwnedDeadline.model';
+// D-TOH H1+H3 · THE NAME-FIRST LAW — the target's identity is read from ITS OWN scp.config.json
+// (the FKIS identity file · the SAME file the SCP server's boot report reads its scpName from).
+import { readScpConfigName } from '../../../scpConfig.model';
 import { log } from '../../../debugLog';
 
 export type { GitmTurnOverWithSource };
@@ -80,7 +85,8 @@ interface TurnOverBucketItem {
   // path (a successful switch + restart write). The reducer writes it into the returned partial so
   // it rides the GITEP snapshot → gitm.json; the SCP field-watcher sees turnOver.at advance. null
   // on every non-advance path (the signal fires only when the turn-over actually landed).
-  turnOver: { at: number; source: string; hard: boolean } | null;
+  // D-TOH H3 — targetScpName rides the stamp (the watcher self-discrimination key).
+  turnOver: { at: number; source: string; hard: boolean; targetScpName: string } | null;
   // MULTI-SCP GITM MUXIFICATION (MC-W2 step 9) — the RESOLVED turn-over cwd (origin-aware) + the ACTIVE
   // dir. The A/B ROLE writes (branchRoles/abMode/turnedOverTo/workingBranch/turnOver) are the CHIMERA's
   // core — the reducer mirrors them onto the CALLING SCP's slice so GITEP fans out its OWN roles (not
@@ -260,6 +266,13 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
       // ITS OWN nodemon-watched dir · SCP-Sovereign fallback (activeScpDir || userCwd) when no origin.
       // RESOLVED ONCE, above the invocation log, so the DECISION reads AND the log both show the ORIGIN.
       const opCwd = resolveGitmTargetCwd(deck, originScpName);
+      // D-TOH H1+H3 · THE NAME-FIRST LAW — the turn-over operates on THE SCP'S NAME SPECIFICALLY.
+      // The identity is read from the resolved dir's OWN scp.config.json (the FKIS identity file —
+      // the SAME source the SCP server's boot report writes its scpName from, so the H1 disarm key
+      // and the H3 watcher self-check compare within ONE naming domain). Payload origin is the
+      // fallback when the config is absent; '' is the honest legacy terminal (the deadline fire
+      // SKIPS on it — never the pointer; the watcher treats a nameless stamp as own).
+      const turnOverTargetScpName = readScpConfigName(opCwd) ?? originScpName ?? '';
       // MULTI-SCP GITM MUXIFICATION (MC-W2 step 9) — the active dir, threaded to the reducer so it can
       // mirror the A/B role writes onto the CALLING SCP's slice + gate the flat-state write (view law).
       const turnOverActiveScpDir = deck.gitm.k.activeScpDir.select();
@@ -700,7 +713,9 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
       // partial → the GITEP snapshot → gitm.json. The SCP field-watcher now observes turnOver.at
       // ADVANCE on gitm.json. The direct .bridge-restart.json write below remains as the blunt
       // transition fallback. The sdia 'field-written' log keeps its semantics with the new target.
-      const turnOverStamp = { at: Date.now(), source, hard: true };
+      // D-TOH H3 — the stamp carries THE TARGET'S NAME (the name the dir was resolved from) so the
+      // SCP field-watcher can discriminate its own stamp from a foreign one (not-own-target skip).
+      const turnOverStamp = { at: Date.now(), source, hard: true, targetScpName: turnOverTargetScpName };
       log('gitm.turnover.field-written', { target: 'gitm.json-state', source });
       let writeOk = true;
       let writeErr = '';
@@ -765,7 +780,9 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
           // FLOOR: if A never boots, the boot-report watcher never observes it, so this deadline is
           // the only thing that reverts). Re-arm overwrites (a later A-prove supersedes). Composes
           // with the seat-law — the boot-report disarms BOTH before 45s on a healthy boot.
-          armDeadline(targetBranch);
+          // D-TOH H1 · THE DEADLINE ORIGIN-THREADING — the arm carries THE NAME; the fire re-resolves
+          // the dir FROM it and the disarm keys on THIS origin's boot report only.
+          armDeadline(targetBranch, turnOverTargetScpName);
         }
       }
       // C300 · the seat is HOME. An effectiveSource:'B' turn-over IS the seat landing on B — disarm any
@@ -776,7 +793,11 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
         disarmSeatReturn();
         // MD-E (THE C318 FOLD) — a B turn-over is the seat home; disarm the deadline too (no A-prove
         // in flight · the seat-law and its floor move together).
-        disarmDeadline();
+        // D-TOH H1 · THE KEYED DISARM — only THIS origin's arm; a foreign citizen's pending deadline
+        // stands (the old unkeyed disarm let one citizen's B turn-over kill another's legitimate arm).
+        if (!disarmDeadlineFor(turnOverTargetScpName)) {
+          log('gitm.deadline.disarm-held', { reason: 'foreign-b-turnover', origin: turnOverTargetScpName });
+        }
       }
 
       // THE-TURN-OVER-A-GUARD: clear the pending token once the confirmed carry+switch landed (call 2

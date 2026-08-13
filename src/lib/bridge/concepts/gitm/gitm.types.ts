@@ -230,6 +230,11 @@ export type GitmState = {
   // C791 · SERVE THE CARRY — 'carry-B' marks the NEW confirmed-carry advance that reboots ONTO the
   // carried B (A stays the guarded stable). It restores 'turned-over' the SAME way 'B'/'carry-A' do
   // (roles.b === attempt.targetBranch → the boot-report proof gate). 'carry-A' is retained for legacy files.
+  // D-TOH H2 · THE PER-SCP ATTEMPT MAP: this FLAT field is the ACTIVE POINTER's PROJECTION ONLY
+  // (display/relay compatibility). The AUTHORITATIVE per-SCP attempt lives on each rail's
+  // GitmRepoSlice.turnOverAttempt (gitmSliceStore · keyed by the canonical scpDir the NAME resolves
+  // to) — a second citizen's turn-over NEVER evicts the first's in-flight attempt. Every
+  // origin-aware reader goes slice-first (selectGitmDecisionFields · the boot-watch carry gate).
   turnOverAttempt: { source: 'A' | 'B' | 'carry-A' | 'carry-B'; targetBranch: string; ts: number } | null;
   // GITM color-cascade (W2 · Counter B) — COMMITS-BETWEEN divergence: `git rev-list --count
   // <stableBranch>..<workingBranch>` (commits on B not yet on A). The "total changes between the
@@ -301,7 +306,11 @@ export type GitmState = {
   // GITEP snapshot; the SCP field-watcher observes turnOver.at ADVANCE and writes the local blunt
   // trigger. Non-optional (KeyedSelector law · empty seed { at:0, source:'', hard:false }). TQNI:
   // mirror in GitmStatusSnapshot + SCP GitmJsonShape (optional there — legacy files).
-  turnOver: { at: number; source: string; hard: boolean };
+  // D-TOH H3 · THE WATCHER SELF-DISCRIMINATION (THE NAME-FIRST LAW): targetScpName = the NAME of
+  // the SCP the turn-over resolved its dir FROM (scp.config.json identity). The SCP field-watcher
+  // compares it against its OWN name and skips a foreign-target stamp — the one-line class that
+  // makes every future shared-value fan regression inert. '' = legacy stamp (treated as own).
+  turnOver: { at: number; source: string; hard: boolean; targetScpName: string };
 };
 
 // GITM 3LOC — the current gitm.json schema version (2 = three-location nested shape).
@@ -383,5 +392,6 @@ export const createGitmState = (userCwd: string): GitmState => ({
   schemaVersion: GITM_SCHEMA_VERSION,
   // D-BN-2 · THE turnOver RELOCATION — the turn-over signal seed (no turn-over yet · the SCP
   // field-watcher's baseline is turnOver.at, so 0 is the never-fired ground).
-  turnOver: { at: 0, source: '', hard: false },
+  // D-TOH H3 — targetScpName '' = the never-fired/legacy ground.
+  turnOver: { at: 0, source: '', hard: false, targetScpName: '' },
 });

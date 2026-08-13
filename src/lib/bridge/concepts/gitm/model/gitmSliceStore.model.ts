@@ -72,7 +72,8 @@ export type GitmRepoSlice = {
   turnedOverTo: 'A' | 'B' | '';
   turnOverAttempt: { source: 'A' | 'B' | 'carry-A' | 'carry-B'; targetBranch: string; ts: number } | null;
   commitsDivergenceCount: number;
-  turnOver: { at: number; source: string; hard: boolean };
+  // D-TOH H3 — targetScpName rides the per-rail stamp (mirror gitm.types.ts).
+  turnOver: { at: number; source: string; hard: boolean; targetScpName: string };
   // ── transient action-error surface (per-repo) ──
   errorCode: string;
   errorMessage: string;
@@ -119,7 +120,7 @@ export const createEmptyGitmRepoSlice = (scpDir: string): GitmRepoSlice => ({
   turnedOverTo: '',
   turnOverAttempt: null,
   commitsDivergenceCount: 0,
-  turnOver: { at: 0, source: '', hard: false },
+  turnOver: { at: 0, source: '', hard: false, targetScpName: '' },
   errorCode: '',
   errorMessage: '',
   activeWarnings: [],

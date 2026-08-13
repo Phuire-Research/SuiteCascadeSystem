@@ -164,7 +164,8 @@ type GitmStatusSnapshot = {
   // bridge.json onto gitm.json. Changes WITHOUT lastReadAt (the turn-over reducer writes it
   // directly), so the writer plan needs its own k_.turnOver witness. TQNI: mirror in SCP
   // GitmJsonShape (optional there — legacy files predate it).
-  turnOver: { at: number; source: string; hard: boolean };
+  // D-TOH H3 — targetScpName rides the stamp (the SCP watcher self-discrimination key).
+  turnOver: { at: number; source: string; hard: boolean; targetScpName: string };
   // C785 · scp_alert_turn_over — the user-directed Turn Over A alert. NOT composed by the
   // fan-out builders: the FILE is its home (scsBridgeAlertTurnOver writes it directly); THE
   // ALERT HOLD in writeGitmJsonUnsafe carries it write-to-write UNTIL a turnOver stamp NEWER

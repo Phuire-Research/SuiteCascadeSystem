@@ -53,9 +53,11 @@ type GitmSelfDeck = {
   gitm: Concept<GitmState, Record<string, unknown>>;
 };
 
+// D-TOH H1 — the payload generic goes honest: the deadline fire now dispatches { originScpName }
+// (the method already selected GitmRevertToStablePayload · WithOrigin — the generic lagged it).
 export const gitmRevertToStable = createQualityCardWithPayload<
   GitmState,
-  Record<string, never>,
+  GitmRevertToStablePayload,
   GitmSelfDeck
 >({
   type: 'Gitm Revert To Stable',

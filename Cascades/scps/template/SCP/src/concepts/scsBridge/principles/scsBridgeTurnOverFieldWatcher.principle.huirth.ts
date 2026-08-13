@@ -15,6 +15,16 @@
  * non-advancing at — each logs its reason and does nothing. A restart can never fire from
  * noise; only a strictly-advancing numeric turnOver.at.
  *
+ * D-TOH H3 · THE WATCHER SELF-DISCRIMINATION (THE NAME-FIRST LAW · defense-in-depth): the bridge
+ * stamps `turnOver.targetScpName` — the NAME the turn-over resolved its dir FROM. This watcher
+ * reads its OWN name ONCE from `<package root>/scp.config.json` (the FKIS identity file — the
+ * SAME file the boot report reads; Honest-Absence: unreadable → no discrimination, legacy
+ * behavior). A stamp carrying a target that is NOT this SCP's own name SKIPS
+ * (reason=not-own-target) with the baseline NOT advanced — an out-of-order own stamp observed
+ * after a foreign one must still fire (advancing on a foreign stamp could wedge the watcher
+ * against its OWN in-flight stamp: the switch-without-stamp class). A stamp WITHOUT
+ * targetScpName (legacy bridge) is treated as OWN — old bridges keep working.
+ *
  * Pattern source: scsBridgeJsonWatcher.principle.huirth.ts (chokidar on the Bridge dir ·
  * ENOENT-safe reads · cleanup order watcher → conclude). This principle dispatches NOTHING —
  * pure fs observation → fs write (the one principle whose output is a file, by design).
@@ -33,7 +43,7 @@ export type ScsBridgeTurnOverFieldWatcherDeck = MuxiumDeck & {
   scsBridge: Concept<ScsBridgeHuirthState, ScsBridgeHuirthQualities>;
 };
 
-type TurnOverField = { at?: unknown; source?: unknown; hard?: unknown };
+type TurnOverField = { at?: unknown; source?: unknown; hard?: unknown; targetScpName?: unknown };
 
 export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
   ScsBridgeHuirthQualities,
@@ -50,25 +60,41 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
   // (anor predates this boot) — only an ADVANCE beyond it triggers.
   let baselineAt = 0;
   let watcher: FSWatcher | null = null;
+  // D-TOH H3 — this SCP's OWN name, read ONCE at arm from <package root>/scp.config.json (the
+  // FKIS identity file · process.cwd() IS the package root — the same root the .bridge-restart.json
+  // write below targets). Honest-Absence: unreadable/absent → null → NO discrimination (legacy).
+  let ownScpName: string | null = null;
 
-  const readTurnOverAt = async (): Promise<number | null> => {
+  const readTurnOverStamp = async (): Promise<{ at: number; targetScpName: string } | null> => {
     try {
       const raw = await readFile(bridgeJsonPath, 'utf8');
       const parsed = JSON.parse(raw) as { turnOver?: TurnOverField | null };
       const at = parsed.turnOver?.at;
-      return typeof at === 'number' ? at : null;
+      if (typeof at !== 'number') return null;
+      // D-TOH H3 — '' = legacy stamp (a pre-discrimination bridge) → treated as own below.
+      const target = parsed.turnOver?.targetScpName;
+      return { at, targetScpName: typeof target === 'string' ? target : '' };
     } catch {
       return null;
     }
   };
 
   void (async () => {
-    baselineAt = (await readTurnOverAt()) ?? 0;
+    try {
+      const cfgRaw = await readFile(path.resolve(process.cwd(), 'scp.config.json'), 'utf8');
+      const cfg = JSON.parse(cfgRaw) as { scpName?: unknown };
+      if (typeof cfg?.scpName === 'string' && cfg.scpName.length > 0) ownScpName = cfg.scpName;
+    } catch {
+      /* Honest-Absence — no scp.config.json (dev:self / pre-install) → legacy behavior, no skip */
+    }
+    baselineAt = (await readTurnOverStamp())?.at ?? 0;
     console.log(
       '[SCS-Bridge TurnOverFieldWatcher] armed · path=',
       bridgeJsonPath,
       '· baselineAt=',
       baselineAt,
+      '· ownScpName=',
+      ownScpName ?? '(none)',
     );
     watcher = chokidarWatch(bridgeJsonPath, {
       ignoreInitial: true,
@@ -79,9 +105,19 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
   })();
 
   const onChange = async (): Promise<void> => {
-    const at = await readTurnOverAt();
-    if (at === null) {
+    const stamp = await readTurnOverStamp();
+    if (stamp === null) {
       console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.skip · reason=absent-or-malformed-field');
+      return;
+    }
+    const { at, targetScpName } = stamp;
+    // D-TOH H3 · THE SELF-DISCRIMINATION GATE — a stamp CARRYING a target that is not OUR name is
+    // a FOREIGN turn-over that leaked onto this rail: skip, and do NOT advance the baseline (our
+    // OWN in-flight stamp may carry an earlier at — advancing past it would wedge us against it;
+    // a Date.now() stamp from our own NEXT turn-over always exceeds the untouched baseline).
+    // A legacy stamp (targetScpName '') anor an unknown own name (Honest-Absence) fires as own.
+    if (targetScpName !== '' && ownScpName !== null && targetScpName !== ownScpName) {
+      console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.skip · reason=not-own-target · target=', targetScpName, '· own=', ownScpName);
       return;
     }
     if (at <= baselineAt) {

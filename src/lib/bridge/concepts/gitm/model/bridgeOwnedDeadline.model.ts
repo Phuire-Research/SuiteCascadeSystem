@@ -29,19 +29,46 @@ export const BRIDGE_DEADLINE_MS = 45_000;
 export type BridgeDeadlineArm = {
   armedAt: number; // Date.now() at arm time — isDeadlinePassed compares against BRIDGE_DEADLINE_MS
   stableBranch: string; // A — the branch the boot-report must show; carried for the revert stamp
+  // D-TOH H1 · THE DEADLINE ORIGIN-THREADING (THE NAME-FIRST LAW): the SCP NAME the arming
+  // turn-over operated on (scp.config.json identity — the SAME name the boot report carries).
+  // THE NAME is the arm's identity; the fire re-resolves the dir FROM it (resolveGitmTargetCwd,
+  // the same name→dir lane the turn-over used). '' = a legacy/no-identity arm — the fire SKIPS
+  // with a named sink rather than falling to the pointer (the severed fall-through IS the wound).
+  originScpName: string;
 };
 
 // Single slot · module-scope. null = disarmed (no A-prove in flight ANOR the boot was observed).
 let deadlineSlot: BridgeDeadlineArm | null = null;
 
-/** Arm the deadline (re-arm OVERWRITES the single slot). Called alongside armSeatReturn. */
-export function armDeadline(stableBranch: string): void {
-  deadlineSlot = { armedAt: Date.now(), stableBranch };
+/** Arm the deadline (re-arm OVERWRITES the single slot). Called alongside armSeatReturn.
+ * D-TOH H1 — the arm carries THE NAME of the SCP the turn-over operated on. */
+export function armDeadline(stableBranch: string, originScpName: string): void {
+  deadlineSlot = { armedAt: Date.now(), stableBranch, originScpName };
 }
 
 /** Disarm — the boot-report arrived (either branch) ANOR the revert has fired. Called alongside disarmSeatReturn. */
 export function disarmDeadline(): void {
   deadlineSlot = null;
+}
+
+/**
+ * D-TOH H1 · THE KEYED DISARM (THE NAME-FIRST LAW): disarm ONLY when the observed boot/turn-over
+ * belongs to THE ARMED ORIGIN. A foreign observation leaves the arm STANDING (the old any-report
+ * disarm silently killed a legitimate deadline). Legacy tolerance: an arm without a name ANOR an
+ * observation without a name disarms (old bridges/reports keep working). Returns true when the
+ * slot was disarmed; false when a foreign observation left it standing (the caller sinks it).
+ */
+export function disarmDeadlineFor(observedScpName: string): boolean {
+  if (deadlineSlot === null) return true; // nothing armed — vacuously disarmed
+  if (
+    deadlineSlot.originScpName !== '' &&
+    observedScpName !== '' &&
+    observedScpName !== deadlineSlot.originScpName
+  ) {
+    return false; // foreign observation — the arm stands
+  }
+  deadlineSlot = null;
+  return true;
 }
 
 /** Read the current deadline arm (null = disarmed). */

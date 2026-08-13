@@ -1,12 +1,34 @@
 {
   "schemaVersion": 1,
-  "current": "0.950.0",
+  "current": "0.950.1",
   "muxameter": {
-    "cli": 12,
-    "scp": 13,
+    "cli": 13,
+    "scp": 14,
     "s8": 1
   },
   "releases": [
+    {
+      "id": "v09501",
+      "version": "0.950.1",
+      "label": "New in 0.950.1",
+      "muxameter": {
+        "cli": 13,
+        "scp": 14,
+        "s8": 1
+      },
+      "magnitude": 1,
+      "features": [
+        {
+          "title": "A turn-over that knows its name",
+          "color": "green",
+          "summary": "A turn-over now belongs to one app by name — the name resolves the directory, and only then do the branch operations run inside it. One app's turn-over can no longer restart another.",
+          "detail": [
+            "The resolution order is absolute: the app's <span class=\"hifi-hl-green\">name</span> identifies the target, the name resolves the directory, and the branch means of the operation run inside it — never the other way around. The safety deadline now remembers <span class=\"hifi-hl-blue\">which app armed it</span>: it fires for that app alone, and only that app's own boot stands it down.",
+            "Two apps turning over in the same window no longer collide — each conversation is held per app, so a second turn-over never displaces one in progress. And each app's restart watcher answers only to signals <span class=\"hifi-hl-purple\">addressed to it by name</span>; anything foreign is skipped with its reason named."
+          ]
+        }
+      ]
+    },
     {
       "id": "v0950",
       "version": "0.950.0",
