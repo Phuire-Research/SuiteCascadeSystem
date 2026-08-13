@@ -10,7 +10,7 @@
     {
       "id": "v0950",
       "version": "0.950.0",
-      "label": "New in 0.950.0",
+      "label": "New in 0.950.0 · The Diametric SCP",
       "muxameter": {
         "cli": 12,
         "scp": 13,
@@ -18,6 +18,16 @@
       },
       "magnitude": 8,
       "features": [
+        {
+          "title": "The Diametric SCP",
+          "color": "purple",
+          "summary": "This release is named for what it proves: three plain measures — the Demometer, the Diameter, the Muxameter — and every system it ships is one of them, proven in operation.",
+          "detail": [
+            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure — a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure — a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure — a part as it actually relays through the others' Diameters, proven by operation.",
+            "The clearest example rides this page's own toolbar. A Suite 8 page is a Demometer — it carries a version of its own, and the third counter, <span class=\"hifi-hl-purple\">s8</span>, debuts at 1 in this release. The page draws a Diameter to the template's page it measures against — the amber signal when a newer page ships, belonging to the page alone. And the update is the NEXT Diameter — drawn to the Base anor the Informative through the <span class=\"hifi-hl-green\">Entourage Forge</span>, conference first, nothing you shaped overwritten without your say. That completion FORMS the Muxameter: the page as it actually relays, proven by the operation itself.",
+            "Every entry below holds the same shape — colors that round-trip through the app's own configuration, textures living in its own library, the Forge menu standing on every page, and beneath them all the locality each page can hold: stand Local anor observe a Specified app, arriving live. Not a feature list — measures that relay."
+          ]
+        },
         {
           "title": "Suite colors travel a full circuit",
           "color": "red",

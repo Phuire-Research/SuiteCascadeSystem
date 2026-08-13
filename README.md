@@ -206,7 +206,37 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.950.0
+## Release Notes — v0.950.0 · The Diametric SCP
+
+### The Achievement
+
+This is a major release, and its title is earned by measure. Three terms carry it, each
+plain on first use. A **Demometer** is a different measure — a distinct part with its own
+measurable identity. A **Diameter** is a through-measure — a similarity drawn between
+unlike parts. A **Muxameter** is the integrated measure — a part as it actually relays
+through the others' Diameters, proven by operation.
+
+The clearest working example ships in this release as the Suite 8 Page Update Mechanism. A
+page is a Demometer: it carries a version of its own, counted apart from the CLI and the
+app template — the third counter, s8, debuts at 1 here. That page draws a Diameter to
+another Demometer — the template's page it measures against — which is how a newer shipped
+page turns that page's own toolbar signal amber, never the main badge. And the update is
+the next Diameter — drawn to the Base anor the Informative: the refresh runs through the
+Entourage Forge with a conference first, and nothing you shaped is overwritten without
+your say. That completion forms the Muxameter — the page as it actually relays: measured
+against the template, updated through the Forge, proven by the operation itself.
+
+Every system in this release holds the same shape. The color round-trip writes to the
+app's own configuration first and paints every window on the return — and crosses apps:
+choose another app's locality from Pewter Tessera and set its colors; its windows re-tint
+live. The texture library lives in each app's own patternLibrary.json — a new texture is
+one JSON entry, no code, no restart, picked up live by open pages. The Entourage Forge
+Menu stands on every Suite 8 page — sessions filtered to that page alone, build actions
+drawn from the page's own documentation. And beneath them all, the locality system: each
+page can stand Local anor observe a Specified app, and what it observes arrives live.
+
+That is the Total this release proves: not a feature list, but measures that relay. The
+counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
