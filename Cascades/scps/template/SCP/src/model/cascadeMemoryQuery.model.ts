@@ -146,6 +146,28 @@ export const registerCascadeMemoryQueryRoutes = (expressApp: MinimalExpressApp):
     }
   });
 
+  // (3b) THE BY-NAME PATTERN-LIBRARY QUERY — the target SCP's per-SCP JSON pattern library.
+  // D-PSVG · PSVG-1 · the /scp-hifi-config sibling VERBATIM: SAME fixed filename discipline
+  // (Cascades/patternLibrary.json — no user-controlled path segment, no traversal guard needed;
+  // the scpName resolution is already ring-guarded by resolveScpRootByName). The foreign
+  // observer's enumerate + preview lane — a Specified locality surfaces the TARGET citizen's
+  // available patterns. Absent / unreadable / malformed → {} (the Honest-Absence Law — the
+  // client treats a non-document {} as null; unknown SCP → an honest 404).
+  expressApp.get('/scp-pattern-library/:scpName', (req, res) => {
+    const scpName = String(req.params.scpName ?? '');
+    const root = resolveScpRootByName(scpName);
+    if (!root) {
+      res.status(404).json({ ok: false, error: `unknown SCP: ${scpName}` });
+      return;
+    }
+    try {
+      const raw = fs.readFileSync(path.resolve(root, 'Cascades', 'patternLibrary.json'), 'utf-8');
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({});
+    }
+  });
+
   // (4) THE BY-NAME PORT QUERY — the target SCP's live WebSocket PORT (bridge-owned truth).
   // D-PXT · PXT-1 · THE PORT LANE · the origin-blind cross-SCP color injection needs the TARGET's
   // port to open the ephemeral second connection (ws://localhost:<port>/muxium · the D-PXT injection).

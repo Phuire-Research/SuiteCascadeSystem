@@ -146,9 +146,14 @@ export const defaultLocalPathsFor = (designation: string): SyncLibraryLocalPaths
 // D-PFR · the default accounted surfaces — hifiConfig.json is SCP-GLOBAL (the package root's
 // Cascades/, not the per-designation Extended shape), observed at whichever root the locality
 // names. The group stays generic; hifiConfig is merely its first citizen.
+// D-PSVG · PSVG-1 · patternLibrary.json is the SECOND accounted citizen — the per-SCP JSON
+// pattern library (patternLibrary.model.ts). Same Cascades/ parent as hifiConfig.json: the
+// usher's ONE accounted watcher basename-SET-gates both.
 export const ACCOUNTED_HIFI_CONFIG_KEY = 'hifiConfig';
+export const ACCOUNTED_PATTERN_LIBRARY_KEY = 'patternLibrary';
 export const defaultAccountedSurfaces = (): Record<string, string> => ({
   [ACCOUNTED_HIFI_CONFIG_KEY]: ['Cascades', 'hifiConfig.json'].join('/'),
+  [ACCOUNTED_PATTERN_LIBRARY_KEY]: ['Cascades', 'patternLibrary.json'].join('/'),
 });
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -436,15 +441,16 @@ export const readAccountedSurfaceRel = (
   return defaultAccountedSurfaces()[surfaceKey] ?? null;
 };
 
-// D-PFR · THE CHANGE-STAMP READ (pure boundary read · Honest-Absence): the TARGET's
-// hifiConfig mtimeMs — null on absence, never a throw. The stamp rides the locality
-// snapshot; the consumer refetches the actual content through its existing read lane on
-// stamp advance (the content never rides the snapshot).
-export const readTargetAccountedHifiStamp = (
+// D-PSVG · THE GENERALIZED CHANGE-STAMP READ (pure boundary read · Honest-Absence): the
+// TARGET's accounted surface mtimeMs by KEY — null on absence, never a throw. The stamp rides
+// the locality snapshot; the consumer refetches the actual content through its existing read
+// lane on stamp advance (the content never rides the snapshot).
+export const readTargetAccountedSurfaceStamp = (
   designation: string,
   targetRoot: string,
+  surfaceKey: string,
 ): number | null => {
-  const rel = readAccountedSurfaceRel(designation, ACCOUNTED_HIFI_CONFIG_KEY);
+  const rel = readAccountedSurfaceRel(designation, surfaceKey);
   if (rel === null) return null;
   try {
     return statSync(path.resolve(targetRoot, rel)).mtimeMs;
@@ -452,6 +458,14 @@ export const readTargetAccountedHifiStamp = (
     return null;
   }
 };
+
+// D-PFR · the hifiConfig change-stamp — now a thin alias of the generalized read (D-PSVG);
+// the existing consumers stand untouched.
+export const readTargetAccountedHifiStamp = (
+  designation: string,
+  targetRoot: string,
+): number | null =>
+  readTargetAccountedSurfaceStamp(designation, targetRoot, ACCOUNTED_HIFI_CONFIG_KEY);
 
 // The specified-key read alone (the re-arm comparator — cheap, no path resolution).
 export const readSpecifiedKey = (designation: string): string | null => {

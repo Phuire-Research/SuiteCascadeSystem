@@ -31,6 +31,9 @@ export type S8LocalityFace = {
   // D-PFR · the TARGET hifiConfig change-stamp (Conference 1A) — the SuiteColorSelection
   // widget watches this through the face and refetches the target palette on advance.
   targetHifiStamp?: number | null;
+  // D-PSVG · PSVG-1 · the TARGET patternLibrary change-stamp — the pattern widget's twin
+  // (Band 2 watches this and refetches the target's library on advance).
+  targetPatternLibraryStamp?: number | null;
 };
 import type { AnyAction, Muxium } from 'stratimux';
 import type {
@@ -253,6 +256,17 @@ export type ScsBridgeController = {
   // sendColorToTarget) hands this to the ephemeral WS so the wire action is the deck-matched shape
   // verbatim (never a hand-rolled literal). Null when no Muxium is bound (the caller reports honestly).
   buildApplyHifiConfigAction: (colors: Record<string, string>) => AnyAction | null;
+
+  // D-PSVG · PSVG-2 · THE PATTERNS LEG — the pattern click's dispatch surface, the applyHifiConfig
+  // sibling verb (same Induction · 'Scs Bridge Apply Hifi Config' · the scsBridgeHifiPatterns leg).
+  // Carries pattern LIBRARY IDS (never css). Does NOT paint — the paint is the return's act.
+  // SuitePatternSelection.vue calls this on tile change under a Local locality.
+  applyHifiPatterns: (patterns: Record<string, string>) => void;
+
+  // D-PSVG · PSVG-2 · THE PATTERN INJECTION DECK-CONSTRUCTOR — buildApplyHifiConfigAction's patterns
+  // twin: builds (does NOT dispatch) the SAME deck-matched Induction carrying the patterns leg, for
+  // the origin-blind cross-SCP push (sendPatternsToTarget). Null when no Muxium is bound.
+  buildApplyHifiPatternsAction: (patterns: Record<string, string>) => AnyAction | null;
 
   // ----------------------------------------
   // D3D Wave-2 · CMIA-Spawn + CMIA-Engage + SAES dispatch API
@@ -2180,6 +2194,55 @@ export function createScsBridgeController(): ScsBridgeController {
     }
   };
 
+  // D-PSVG · PSVG-2 · THE PATTERNS LEG — dispatch the pattern click's Client Induction (the
+  // applyHifiConfig sibling · same GPIM idiom · same Induction quality, the scsBridgeHifiPatterns
+  // leg). Ids only, never css. This method NEVER paints — the paint arrives on the return
+  // (scsBridgeSetHifiConfigRelay → applyHifiConfigWithOverrides applies patterns).
+  const applyHifiPatterns = (patterns: Record<string, string>): void => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] applyHifiPatterns called without bound Muxium · pattern round-trip will NOT fire',
+      );
+      return;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      const action: AnyAction = deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiPatterns: patterns,
+      });
+      mux.dispatch(action);
+      console.log(
+        '[ScsBridgeController] applyHifiPatterns dispatched · spectra=',
+        Object.keys(patterns).length,
+      );
+    } catch (err) {
+      console.error('[ScsBridgeController] applyHifiPatterns dispatch failed:', err);
+    }
+  };
+
+  // D-PSVG · PSVG-2 · THE PATTERN INJECTION DECK-CONSTRUCTOR — builds (does NOT dispatch) the
+  // deck-matched Induction carrying the patterns leg for the origin-blind cross-SCP push. Mirrors
+  // buildApplyHifiConfigAction verbatim (never hand-rolled). Null when no Muxium is bound.
+  const buildApplyHifiPatternsAction = (patterns: Record<string, string>): AnyAction | null => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] buildApplyHifiPatternsAction called without bound Muxium · cross-SCP injection will NOT fire',
+      );
+      return null;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      return deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiPatterns: patterns,
+      }) as AnyAction;
+    } catch (err) {
+      console.error('[ScsBridgeController] buildApplyHifiPatternsAction failed:', err);
+      return null;
+    }
+  };
+
   return {
     toolbarButtons,
     bridgeJson,
@@ -2217,6 +2280,9 @@ export function createScsBridgeController(): ScsBridgeController {
     applyHifiConfig,
     // D-PXT · PXT-2 · the injection deck-constructor (builds the deck-matched Induction · never dispatches)
     buildApplyHifiConfigAction,
+    // D-PSVG · PSVG-2 · the patterns leg (dispatch verb + build twin · same Induction, ids only)
+    applyHifiPatterns,
+    buildApplyHifiPatternsAction,
     triggerSpawnSession,
     getScpName: resolveScpName,
     triggerSpawnSuite8Session,

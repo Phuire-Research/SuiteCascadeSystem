@@ -24,6 +24,13 @@
 // stroke colors stay fixed regardless of any color override. It is one library entry among many —
 // a choice of motif, not a recolor. Its value IS its all-seven-stripes display; it reads coherently
 // on any spectrum. We do NOT attempt to var-drive its internal strokes (out of scope).
+//
+// D-PSVG · PSVG-1 · THE RUNTIME REGISTRY + THE COLLISION LAW: the per-SCP JSON pattern library
+// (Cascades/patternLibrary.json · patternLibrary.model.ts) extends availability beyond the closed
+// in-code map via registerRuntimePatterns below. THE LAW: the in-code PATTERN_LIBRARY is the
+// FACTORY FLOOR and WINS on id collision — applySuitePatternOverrides consults PATTERN_BY_ID
+// FIRST, the runtime registry second; JSON can never override a factory entry. Every runtime
+// entry passes isValidPatternCss (the injection-surface gate) anor skips with a named reason.
 
 import { type SpectrumName, SPECTRUM_NAMES } from './suiteColorOverride.model';
 
@@ -186,6 +193,68 @@ const PATTERN_BY_ID: Record<PatternId, PatternEntry> = PATTERN_LIBRARY.reduce(
   {} as Record<PatternId, PatternEntry>,
 );
 
+// D-PSVG · PSVG-1 · THE CSS SHAPE VALIDATION (the injection-surface law) — a pattern css value
+// is EXACTLY a `url("data:image/svg+xml,…")` tile anor the literal 'none'. Nothing else ever
+// reaches documentElement: the ^…$ anchors forbid trailing declarations (no second url(), no
+// appended properties), the [^"\\] body forbids closing the quoted string anor CSS-escaping out
+// of it — so an external-URL exfiltration vector cannot be smuggled through a library entry.
+// This ONE gate guards BOTH boundaries: registerRuntimePatterns below (the JSON library's
+// runtime intake) and the Band 2 Huirth-side write leg (re-exported via patternLibrary.model.ts).
+export function isValidPatternCss(css: string): boolean {
+  if (css === 'none') return true;
+  return /^url\("data:image\/svg\+xml,[^"\\]*"\)$/.test(css);
+}
+
+// D-PSVG · PSVG-1 · A runtime library entry — the JSON-borne twin of PatternEntry. `id` is an
+// OPEN string: the closed PatternId union stands for the factory entries; JSON-registered
+// patterns extend availability WITHOUT widening the union (the honest minimal widening — the
+// registry/apply boundary accepts string, the factory floor keeps its closed typing).
+export interface RuntimePatternEntry {
+  id: string;
+  label: string;
+  css: string;
+}
+
+// The module-level runtime registry — JSON-registered patterns beyond the closed PATTERN_BY_ID.
+// Consulted by applySuitePatternOverrides AFTER the in-code map (the collision law · header).
+const RUNTIME_PATTERN_REGISTRY = new Map<string, RuntimePatternEntry>();
+
+export type RegisterRuntimePatternsReport = {
+  registered: string[];
+  skipped: { id: string; reason: string }[];
+};
+
+// Register JSON-borne entries into the runtime registry. Invalid entries SKIP with a named
+// reason — never a throw (the loader path must never harm the page). Re-registration of the
+// same id overwrites within the registry (the JSON is the extensible truth; the last read
+// wins there) — but an id colliding with the factory floor simply never resolves (in-code wins).
+export function registerRuntimePatterns(entries: RuntimePatternEntry[]): RegisterRuntimePatternsReport {
+  const report: RegisterRuntimePatternsReport = { registered: [], skipped: [] };
+  for (const entry of entries) {
+    const id = typeof entry?.id === 'string' ? entry.id.trim() : '';
+    if (id.length === 0) {
+      report.skipped.push({ id: String(entry?.id ?? ''), reason: 'invalid-id' });
+      continue;
+    }
+    if (typeof entry.css !== 'string' || !isValidPatternCss(entry.css)) {
+      report.skipped.push({ id, reason: 'invalid-css-shape' });
+      continue;
+    }
+    const label =
+      typeof entry.label === 'string' && entry.label.trim().length > 0 ? entry.label : id;
+    RUNTIME_PATTERN_REGISTRY.set(id, { id, label, css: entry.css });
+    report.registered.push(id);
+  }
+  return report;
+}
+
+// The id → entry resolution the apply consults — in-code FIRST (the collision law), then the
+// runtime registry. Undefined = unknown id (the caller's silent skip stands; Honest-Absence
+// surfaces at the picker — Band 2).
+export function resolvePatternEntryById(id: string): PatternEntry | RuntimePatternEntry | undefined {
+  return (PATTERN_BY_ID as Record<string, PatternEntry | undefined>)[id] ?? RUNTIME_PATTERN_REGISTRY.get(id);
+}
+
 // The `:root` baseline per spectrum suite — the default a Reset restores to (mirrors DEFAULT_HEX).
 // Each maps to that spectrum's own existing tile id (style.css:133-147).
 export const DEFAULT_PATTERN: Record<SpectrumName, PatternId> = {
@@ -202,27 +271,32 @@ export const DEFAULT_PATTERN: Record<SpectrumName, PatternId> = {
 // Apply a sparse map of per-spectrum pattern overrides onto documentElement's :style.
 // For each entry: look up the library by id → set `--pattern-{spectrum}` to its css value.
 // Unmentioned spectrums fall through to their `:root` defaults. SSR-safe.
-export function applySuitePatternOverrides(map: Partial<Record<SpectrumName, PatternId>>): void {
+// D-PSVG · PSVG-1 · the map accepts OPEN string ids (the registry/apply boundary widening):
+// factory PatternId keys resolve first (in-code wins), runtime-registered JSON ids second.
+export function applySuitePatternOverrides(map: Partial<Record<SpectrumName, string>>): void {
   if (typeof document === 'undefined') return;
   const el = document.documentElement.style;
   (Object.keys(map) as SpectrumName[]).forEach((n) => {
     const id = map[n];
     if (!id) return;
-    const entry = PATTERN_BY_ID[id];
+    const entry = resolvePatternEntryById(id);
     if (!entry) return;
     el.setProperty(`--pattern-${n}`, entry.css);
   });
 }
 
 // Load the persisted pattern map from localStorage; `{}` on absent/parse failure. SSR-safe.
-export function loadSuitePatternOverrides(): Partial<Record<SpectrumName, PatternId>> {
+// D-PSVG · PSVG-2 · OPEN string ids (the registry/apply boundary widening applySuitePatternOverrides
+// carries): a persisted intent may name a JSON-registered id beyond the closed factory union; an id
+// the local library cannot resolve simply never paints (apply skips it · Honest-Absence at the picker).
+export function loadSuitePatternOverrides(): Partial<Record<SpectrumName, string>> {
   if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(storageKey());
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return parsed as Partial<Record<SpectrumName, PatternId>>;
+      return parsed as Partial<Record<SpectrumName, string>>;
     }
     return {};
   } catch {
@@ -232,7 +306,8 @@ export function loadSuitePatternOverrides(): Partial<Record<SpectrumName, Patter
 
 // Persist the pattern map to localStorage. SSR-safe; swallows quota/serialization errors.
 // Only library KEYS are stored — never the heavy SVG data-URI (H3 DataClone mitigation).
-export function saveSuitePatternOverrides(map: Partial<Record<SpectrumName, PatternId>>): void {
+// D-PSVG · PSVG-2 · OPEN string ids (the load twin's widening — JSON-registered ids persist too).
+export function saveSuitePatternOverrides(map: Partial<Record<SpectrumName, string>>): void {
   if (typeof localStorage === 'undefined') return;
   try {
     localStorage.setItem(storageKey(), JSON.stringify(map));

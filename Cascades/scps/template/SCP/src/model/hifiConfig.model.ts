@@ -18,7 +18,6 @@ import {
   loadSuiteColorOverrides,
 } from './suiteColorOverride.model';
 import {
-  type PatternId,
   applySuitePatternOverrides,
   loadSuitePatternOverrides,
 } from './suitePatternOverride.model';
@@ -26,7 +25,9 @@ import {
 export interface HifiConfig {
   schemaVersion: string;
   colors?: Partial<Record<SpectrumName, string>>;
-  patterns?: Partial<Record<SpectrumName, PatternId>>;
+  // D-PSVG · PSVG-2 · OPEN string ids — the JSON may name a per-SCP library pattern beyond the
+  // closed factory union (patternLibrary.model.ts); apply resolves in-code first, registry second.
+  patterns?: Partial<Record<SpectrumName, string>>;
 }
 
 // Fetch the SCP's controlling hifiConfig.json via the server endpoint. Null on absent/unreadable/malformed.
@@ -71,9 +72,9 @@ export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
   for (const [k, v] of Object.entries(config.colors ?? {})) {
     if (!(k in colorOverrides)) jsonColors[k as SpectrumName] = v;
   }
-  const jsonPatterns: Partial<Record<SpectrumName, PatternId>> = {};
+  const jsonPatterns: Partial<Record<SpectrumName, string>> = {};
   for (const [k, v] of Object.entries(config.patterns ?? {})) {
-    if (!(k in patternOverrides)) jsonPatterns[k as SpectrumName] = v as PatternId;
+    if (!(k in patternOverrides)) jsonPatterns[k as SpectrumName] = v;
   }
   if (Object.keys(jsonColors).length) applySuiteColorOverrides(jsonColors);
   if (Object.keys(jsonPatterns).length) applySuitePatternOverrides(jsonPatterns);

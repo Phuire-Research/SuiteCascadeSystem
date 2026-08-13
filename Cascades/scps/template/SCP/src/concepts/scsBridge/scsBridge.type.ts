@@ -285,8 +285,13 @@ export type ScsBridgeSetHighlightTargetPayload = {
 
 // PCL-1 (a) · the Client INDUCTION payload — the sparse per-spectrum hex map the click carries.
 // hex values keyed by SpectrumName (base/red/orange/yellow/green/blue/purple/fuchsia).
+// D-PSVG · PSVG-2 · THE PATTERNS LEG: the payload gains `scsBridgeHifiPatterns` — pattern LIBRARY
+// IDS (never css · ids only · the target's own library resolves them) keyed by SpectrumName. BOTH
+// legs are OPTIONAL so a colors-only click and a patterns-only click each ride the SAME circuit
+// honestly; the Huirth Real no-ops an EMPTY payload (neither leg present) with a named skip.
 export type ScsBridgeApplyHifiConfigPayload = {
-  scsBridgeHifiColors: Record<string, string>;
+  scsBridgeHifiColors?: Record<string, string>;
+  scsBridgeHifiPatterns?: Record<string, string>;
 };
 
 // PCL-1 (c) · the RETURN broadcast payload — the FRESH merged hifiConfig the Huirth Real produced.

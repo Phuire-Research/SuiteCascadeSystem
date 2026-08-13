@@ -71,9 +71,10 @@ import {
   readLocalScpName,
   readSpecifiedKey,
   // D-PFR · the accounted-surface reads (observed-not-delivered · the change-stamp lane).
-  readAccountedSurfaceRel,
-  readTargetAccountedHifiStamp,
+  // D-PSVG · PSVG-1 · generalized: the stamp reads by KEY; patternLibrary joins hifiConfig.
+  readTargetAccountedSurfaceStamp,
   ACCOUNTED_HIFI_CONFIG_KEY,
+  ACCOUNTED_PATTERN_LIBRARY_KEY,
   // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
   writeContentOriginStamp,
   readContentOriginStamp,
@@ -222,7 +223,12 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       // at every compose (a page opened already-Specified gets a truthful initial stamp for
       // free). Local anor absent → null (Honest-Absence · the KeyedSelector NON-OPTIONAL law).
       targetHifiStamp: resolution
-        ? readTargetAccountedHifiStamp(designation, resolution.root)
+        ? readTargetAccountedSurfaceStamp(designation, resolution.root, ACCOUNTED_HIFI_CONFIG_KEY)
+        : null,
+      // D-PSVG · PSVG-1 · the SECOND accounted stamp — the TARGET patternLibrary.json's
+      // mtimeMs, the hifiConfig stamp's exact twin (Honest-Absence · NON-OPTIONAL).
+      targetPatternLibraryStamp: resolution
+        ? readTargetAccountedSurfaceStamp(designation, resolution.root, ACCOUNTED_PATTERN_LIBRARY_KEY)
         : null,
       // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET
       // parity) AND the template PRUNED (the r7 invariant: the install substrate is never
@@ -375,34 +381,52 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
   };
 
   // D-PFR · TARGET MODE · arm the ACCOUNTED watcher (observed-not-delivered) — the OBSERVER's
-  // server watching the TARGET's hifiConfig.json. On change: re-compose the locality snapshot
-  // (the compose reads the fresh stamp) → the existing suite8SetLocalityHuirthBase seat → the
+  // server watching the TARGET's accounted surfaces. On change: re-compose the locality snapshot
+  // (the compose reads the fresh stamps) → the existing suite8SetLocalityHuirthBase seat → the
   // SMRP relay carries it. C898 · THE WATCH IDIOM (graphiteScribeLocalityWatch:184-209): the
   // hifiConfig writer uses atomic tmp-write + rename — a single-FILE watch DIES on the inode
-  // swap; watch the PARENT DIR (depth 0) + basename-gate. NEVER delivers, NEVER touches the
-  // vault — the α-firewall's structural half.
+  // swap; watch the PARENT DIR (depth 0) + basename-gate. D-PSVG · PSVG-1 · THE BASENAME-SET
+  // GENERALIZATION: the accounted citizens (hifiConfig.json · patternLibrary.json) share the
+  // SAME Cascades/ parent — ONE watcher, the gate a SET of the accounted map's basenames; an
+  // accounted rel re-registered OUTSIDE the shared parent skips with its reason named (never a
+  // second watcher, never a silent miss). Each matched change rides the EXISTING coalesce +
+  // debounced dispatch. NEVER delivers, NEVER touches the vault — the α-firewall's structural half.
   const armAccounted = (designation: string, targetRoot: string): void => {
     if (accountedWatchers.has(designation)) return;
-    const rel = readAccountedSurfaceRel(designation, ACCOUNTED_HIFI_CONFIG_KEY);
-    if (rel === null) {
+    const { shape } = seedSyncLibraryAdditive(designation);
+    const accountedEntries = Object.entries(shape.accounted);
+    if (accountedEntries.length === 0) {
       sinkSyncLibraryTelemetry('usher.accounted-watch.arm-skip', {
         designation,
         reason: 'no-accounted-rel',
       });
       return;
     }
-    const fileAbs = path.resolve(targetRoot, rel);
-    const gateBasename = path.basename(fileAbs);
+    const watchedDir = path.dirname(path.resolve(targetRoot, accountedEntries[0][1]));
+    const gateBasenames = new Set<string>();
+    for (const [key, rel] of accountedEntries) {
+      const fileAbs = path.resolve(targetRoot, rel);
+      if (path.dirname(fileAbs) !== watchedDir) {
+        sinkSyncLibraryTelemetry('usher.accounted-watch.rel-outside-watched-dir', {
+          designation,
+          key,
+          rel,
+          watchedDir,
+        });
+        continue;
+      }
+      gateBasenames.add(path.basename(fileAbs));
+    }
     try {
-      const w = chokidarWatch(path.dirname(fileAbs), {
+      const w = chokidarWatch(watchedDir, {
         persistent: true,
         ignoreInitial: true,
         depth: 0,
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
       });
       const onChange = (changed: string): void => {
-        // basename-gate — only the accounted surface re-composes (sibling writes ignored).
-        if (path.basename(changed) !== gateBasename) return;
+        // basename-SET gate — only an accounted surface re-composes (sibling writes ignored).
+        if (!gateBasenames.has(path.basename(changed))) return;
         const held = debounceTimers.get(`accounted:${designation}`);
         if (held) clearTimeout(held);
         debounceTimers.set(
@@ -423,8 +447,8 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       accountedWatchers.set(designation, w);
       sinkSyncLibraryTelemetry('usher.accounted-watch.armed', {
         designation,
-        watchedDir: path.dirname(fileAbs),
-        gateBasename,
+        watchedDir,
+        gateBasenames: [...gateBasenames],
       });
     } catch (err) {
       sinkSyncLibraryTelemetry('usher.accounted-watch.arm-skip', {

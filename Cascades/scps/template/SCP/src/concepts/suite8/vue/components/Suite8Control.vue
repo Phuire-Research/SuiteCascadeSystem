@@ -101,6 +101,8 @@ type SyncLocalityInfo = {
   // D-PFR · the target hifiConfig change-stamp — carried through to the face push (a face
   // composed without it would clobber the page owner's stamped face).
   targetHifiStamp: number | null;
+  // D-PSVG · PSVG-1 · the target patternLibrary change-stamp — the exact twin (same clobber law).
+  targetPatternLibraryStamp: number | null;
   ring: { scpName: string; status: string; origin?: string | null }[];
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
@@ -764,6 +766,7 @@ function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
     specified: snap.specified,
     targetScp: snap.targetScp,
     targetHifiStamp: snap.targetHifiStamp,
+    targetPatternLibraryStamp: snap.targetPatternLibraryStamp,
     ring: Array.isArray(snap.ring) ? snap.ring : [],
   };
 }
@@ -783,7 +786,7 @@ function hydrateLocalityOnce(): void {
       // client — they are relay-authoritative; the GET carries the four the component consumes).
       // D-TRL-c · the GET now carries the Scholar fields — map them (the prior defaults
       // poisoned the effective-locality computation on relay-silent pages).
-      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown };
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown; targetPatternLibraryStamp?: unknown };
       const snapshot: Suite8SyncLocalitySnapshot = {
         localScp: typeof j.localScp === 'string' ? j.localScp : null,
         specified: typeof j.specified === 'string' ? j.specified : null,
@@ -792,6 +795,7 @@ function hydrateLocalityOnce(): void {
         targetLive: jx.targetLive === true,
         localLive: jx.localLive === true,
         targetHifiStamp: typeof jx.targetHifiStamp === 'number' ? jx.targetHifiStamp : null,
+        targetPatternLibraryStamp: typeof jx.targetPatternLibraryStamp === 'number' ? jx.targetPatternLibraryStamp : null,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
       // B-RLM-2b · THE DUAL WRITE — the ref sets DIRECTLY (the panel-grade resilient path: the
@@ -943,6 +947,7 @@ watch(
       specified: s.specified ?? null,
       targetScp: s.targetScp ?? null,
       targetHifiStamp: s.targetHifiStamp ?? null,
+      targetPatternLibraryStamp: s.targetPatternLibraryStamp ?? null,
       ring: (s.ring ?? []).map((e) => ({ scpName: e.scpName, status: e.status })),
     });
   },

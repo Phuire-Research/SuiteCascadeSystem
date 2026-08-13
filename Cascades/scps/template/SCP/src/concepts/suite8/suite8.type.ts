@@ -346,6 +346,10 @@ export type Suite8SyncLocalitySnapshot = {
   // widget refetches the actual colors via the existing loadTargetHifiConfig lane on stamp
   // advance — the colors never ride the snapshot.
   targetHifiStamp: number | null;
+  // D-PSVG · PSVG-1 · THE SECOND ACCOUNTED STAMP — the TARGET patternLibrary.json's mtimeMs
+  // (null = Local anor absent · Honest-Absence · NON-OPTIONAL). The pattern widget refetches
+  // via loadTargetPatternLibrary on stamp advance — the patterns never ride the snapshot.
+  targetPatternLibraryStamp: number | null;
   // D-EF-PAGE-PING · origin = the target's browser origin (the client HEAD-probe target).
   ring: { scpName: string; status: string; origin?: string | null }[];
 };

@@ -768,7 +768,7 @@ function hydrateLocalityOnce(): void {
       if (!data || typeof data !== 'object') return;
       const j = data as SyncLocalityInfo;
       // D-TRL-c · the GET now carries the Scholar fields — map them (hydration parity).
-      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown };
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown; targetPatternLibraryStamp?: unknown };
       const snapshot: Suite8SyncLocalitySnapshot = {
         localScp: typeof j.localScp === 'string' ? j.localScp : null,
         specified: typeof j.specified === 'string' ? j.specified : null,
@@ -777,6 +777,7 @@ function hydrateLocalityOnce(): void {
         targetLive: jx.targetLive === true,
         localLive: jx.localLive === true,
         targetHifiStamp: typeof jx.targetHifiStamp === 'number' ? jx.targetHifiStamp : null,
+        targetPatternLibraryStamp: typeof jx.targetPatternLibraryStamp === 'number' ? jx.targetPatternLibraryStamp : null,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
       console.log('[S8-LOC] chip HYDRATE result · designation=', props.suite8Name, '· specified=', snapshot.specified, '· localScp=', snapshot.localScp, '· targetLive=', snapshot.targetLive, '· ring=', JSON.stringify(snapshot.ring));

@@ -207,3 +207,32 @@ export async function sendColorToTarget(
     });
   });
 }
+
+/**
+ * sendPatternsToTarget — the patterns leg of the origin-blind injection (D-PSVG · PSVG-2).
+ *
+ * The transport above is payload-agnostic through its builder param — the action rides whatever the
+ * caller's deck constructor built (here buildApplyHifiPatternsAction · the scsBridgeHifiPatterns leg
+ * carrying pattern LIBRARY IDS, never css). The SAME Induction type string, the SAME receipt relay,
+ * the SAME port lane — so this is a THIN named wrapper, not a second circuit. The inner
+ * `color-write.target` line is the shared transport's own log; the `pattern-write.target` line here
+ * names the leg honestly at the sending side. The target's Huirth validates each id against ITS OWN
+ * library (in-code ∪ its Cascades/patternLibrary.json) — an id the target cannot resolve skips with
+ * a named reason at the target, never a throw.
+ *
+ * @param scpName              the TARGET citizen's name (the Specified locality)
+ * @param patterns             the sparse per-spectrum pattern-id map (the tile click's payload)
+ * @param buildInductionAction the caller's DECK constructor (buildApplyHifiPatternsAction) — the
+ *                             deck-matched Induction verbatim, never a hand-rolled literal.
+ */
+export async function sendPatternsToTarget(
+  scpName: string,
+  patterns: Record<string, string>,
+  buildInductionAction: (patterns: Record<string, string>) => AnyAction,
+): Promise<CrossScpColorInjectionResult> {
+  console.log('[crossScpColorInjection] pattern-write.target', {
+    scp: scpName,
+    spectra: Object.keys(patterns ?? {}).length,
+  });
+  return sendColorToTarget(scpName, patterns, buildInductionAction);
+}

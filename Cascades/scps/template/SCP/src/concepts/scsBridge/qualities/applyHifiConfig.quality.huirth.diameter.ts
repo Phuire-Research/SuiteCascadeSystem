@@ -7,10 +7,17 @@
  * per-spectrum hex map to actionQue; the webSocketClient principle sends it; this Real receives it by
  * type-string lookup ('Scs Bridge Apply Hifi Config' · actionExchange.clientToServer) and:
  *
- *   1. THE SHIP-TRUTH WRITE — merge-writes the color map into <cwd>/Cascades/hifiConfig.json
- *      (merge-NOT-clobber: reads the existing JSON, overlays only the incoming `colors`, preserves
- *      `patterns` + `schemaVersion` + every unknown key). Atomic RMW (read → merge → write tmp →
- *      rename · the applyTerminalRenderMode idiom). The JSON is the durable truth every turn-over reads.
+ *   1. THE SHIP-TRUTH WRITE — merge-writes the color map AND the pattern-id map (D-PSVG · PSVG-2 ·
+ *      the patterns leg) into <cwd>/Cascades/hifiConfig.json (merge-NOT-clobber: reads the existing
+ *      JSON, overlays only the incoming `colors` + `patterns`, preserves `schemaVersion` + every
+ *      unknown key). Atomic RMW (read → merge → write tmp → rename · the applyTerminalRenderMode
+ *      idiom). The JSON is the durable truth every turn-over reads. Pattern VALIDATION: key ∈
+ *      SPECTRUM_KEYS + id RESOLVABLE on THIS server (the in-code factory floor ∪ the JSON library ·
+ *      readPatternLibrary(process.cwd())) — an id in neither SKIPS with a named telemetry reason,
+ *      never a throw. Ids ONLY ride this payload (never css) — the css injection gate
+ *      (isValidPatternCss) fires at the LIBRARY boundaries (seed + registerRuntimePatterns), so an
+ *      id resolving here already names a gated css value. An EMPTY payload (neither leg present)
+ *      no-ops with a named skip — no write, no broadcast.
  *
  *   2. THE BROADCAST LEG (Zero-Knowledge Handoff) — broadcasts the FRESH merged config to ALL
  *      connected clients via the return SET quality (scsBridgeSetHifiConfigRelay), carried IN the
@@ -33,6 +40,11 @@
  * Citation: S4-PCL-GROUND.md §3 (merge-not-clobber · preserve patterns + schemaVersion)
  */
 import { resolveScpCascadesHifiConfigPath } from '../bridgeRoot.model';
+// D-PSVG · PSVG-2 · the patterns leg's id-resolution pair — the in-code factory floor + the JSON
+// library read (both SSR/server-safe: the pattern models guard their browser touches; the vue
+// principle already imports this chain for the boot seed, so the server bundle carries it today).
+import { readPatternLibrary } from '../../../model/patternLibrary.model';
+import { PATTERN_LIBRARY } from '../../../model/suitePatternOverride.model';
 import {
   createQualityCardWithPayload,
   createMethodWithConcepts,
@@ -88,13 +100,27 @@ type ScsBridgeApplyHifiConfigHuirthDeck = {
   };
 };
 
-// THE SHIP-TRUTH WRITE · atomic read-modify-write of hifiConfig.json.colors (mirrors
-// applyTerminalRenderMode's RMW). MERGE-NOT-CLOBBER: overlay only the incoming spectrum hexes onto the
-// existing `colors`, preserve `patterns` + `schemaVersion` + every other key. Returns the MERGED config
-// so the broadcast carries the ship-truth verbatim. On read failure (ENOENT / malformed) start from an
-// empty-colors config so a first write still lands.
-async function mergeWriteHifiColors(
+// D-PSVG · PSVG-2 · THE PATTERN-ID RESOLUTION SET — the ids THIS server can honestly write: the
+// in-code factory floor (PATTERN_LIBRARY) ∪ the SCP's JSON library (Cascades/patternLibrary.json ·
+// read FRESH per write so a just-dropped JSON entry is honored without a restart). An id in neither
+// SKIPS with a named reason — the silent-skip masquerade is the carded risk this validation names.
+function resolvableTargetPatternIds(): Set<string> {
+  const ids = new Set<string>(PATTERN_LIBRARY.map((entry) => entry.id));
+  const library = readPatternLibrary(process.cwd());
+  for (const entry of library?.patterns ?? []) ids.add(entry.id);
+  return ids;
+}
+
+// THE SHIP-TRUTH WRITE · atomic read-modify-write of hifiConfig.json.colors + .patterns (mirrors
+// applyTerminalRenderMode's RMW). MERGE-NOT-CLOBBER: overlay only the incoming spectrum hexes onto
+// the existing `colors` and the incoming pattern ids onto the existing `patterns`; preserve
+// `schemaVersion` + every other key. Returns the MERGED config so the broadcast carries the
+// ship-truth verbatim. On read failure (ENOENT / malformed) start from an empty config so a first
+// write still lands. (D-PSVG · PSVG-2 · renamed from mergeWriteHifiColors — the file-local honest
+// name for a function now carrying BOTH legs; zero external ripple, the function was never exported.)
+async function mergeWriteHifiConfig(
   colors: Record<string, string>,
+  patterns: Record<string, string>,
 ): Promise<HifiConfig> {
   let existing: HifiConfig = { schemaVersion: DEFAULT_SCHEMA_VERSION };
   try {
@@ -115,13 +141,40 @@ async function mergeWriteHifiColors(
     }
   }
 
-  // Merge-not-clobber: existing.colors first, incoming overlaid on top; every other key preserved.
+  // D-PSVG · PSVG-2 · validate + collect the incoming pattern ids — key ∈ SPECTRUM_KEYS + id
+  // resolvable on THIS server (in-code ∪ JSON library). A failing entry SKIPS with a NAMED reason
+  // (never a throw · never a silent drop). css never rides this payload — ids only.
+  const cleanPatterns: Record<string, string> = {};
+  const resolvableIds = resolvableTargetPatternIds();
+  for (const [k, v] of Object.entries(patterns ?? {})) {
+    const id = typeof v === 'string' ? v.trim() : '';
+    if (!SPECTRUM_KEYS.has(k)) {
+      console.warn('[SCS-Bridge applyHifiConfig] pattern.skip', { key: k, id, reason: 'unknown-spectrum-key' });
+      continue;
+    }
+    if (id.length === 0) {
+      console.warn('[SCS-Bridge applyHifiConfig] pattern.skip', { key: k, id, reason: 'empty-id' });
+      continue;
+    }
+    if (!resolvableIds.has(id)) {
+      console.warn('[SCS-Bridge applyHifiConfig] pattern.skip', { key: k, id, reason: 'id-unresolvable-on-this-server' });
+      continue;
+    }
+    cleanPatterns[k] = id;
+  }
+
+  // Merge-not-clobber: existing.colors/.patterns first, incoming overlaid on top; every other key
+  // preserved (the patterns leg mirrors the colors leg shape-for-shape).
   const merged: HifiConfig = {
     ...existing,
     schemaVersion: existing.schemaVersion ?? DEFAULT_SCHEMA_VERSION,
     colors: {
       ...(existing.colors ?? {}),
       ...cleanColors,
+    },
+    patterns: {
+      ...(existing.patterns ?? {}),
+      ...cleanPatterns,
     },
   };
 
@@ -133,6 +186,8 @@ async function mergeWriteHifiColors(
     console.log(
       '[SCS-Bridge applyHifiConfig] hifiConfig.json merge-written · spectra=',
       Object.keys(cleanColors).length,
+      '· patterns=',
+      Object.keys(cleanPatterns).length,
       '· path=',
       HIFI_CONFIG_PATH,
     );
@@ -152,15 +207,29 @@ export const scsBridgeApplyHifiConfig = createQualityCardWithPayload<
     createMethodWithConcepts(({ action, concepts_, deck }) => {
       const huirthDeck = deck as unknown as ScsBridgeApplyHifiConfigHuirthDeck;
       const payload = (selectPayload<ScsBridgeApplyHifiConfigPayload>(action) ??
-        { scsBridgeHifiColors: {} }) as ScsBridgeApplyHifiConfigPayload;
+        {}) as ScsBridgeApplyHifiConfigPayload;
       const colors = payload.scsBridgeHifiColors ?? {};
+      const patterns = payload.scsBridgeHifiPatterns ?? {};
+
+      // D-PSVG · PSVG-2 · THE EMPTY-PAYLOAD NO-OP (both legs optional → the honest guard): neither
+      // colors nor patterns present → NAMED skip, no write, no broadcast (a junk arrival must not
+      // clobber-touch the ship truth anor wake every client for nothing).
+      if (Object.keys(colors).length === 0 && Object.keys(patterns).length === 0) {
+        console.warn(
+          '[SCS-Bridge applyHifiConfig] empty-payload.skip · neither colors nor patterns present · no write, no broadcast',
+        );
+        if (action.strategy) {
+          return strategySuccess(action.strategy);
+        }
+        return action as unknown as Action;
+      }
 
       // 1. THE SHIP-TRUTH WRITE → 2. THE BROADCAST LEG (Zero-Knowledge Handoff · broadcast → halt).
-      // mergeWriteHifiColors returns the FRESH merged config; the broadcast carries it verbatim so
+      // mergeWriteHifiConfig returns the FRESH merged config; the broadcast carries it verbatim so
       // every client applies the identical post-merge truth. muxiumTimeOut (NOT controller.fire) keeps
       // the ActionController open for strategySuccess; the dispatch re-enters the Muxium 30ms later.
       // No routing key on webSocketServerAppendToActionQue = BROADCAST to ALL connected clients.
-      mergeWriteHifiColors(colors)
+      mergeWriteHifiConfig(colors, patterns)
         .then((merged) => {
           const relayAction = huirthDeck.scsBridge.e.scsBridgeSetHifiConfigRelay({
             scsBridgeHifiConfig: merged,

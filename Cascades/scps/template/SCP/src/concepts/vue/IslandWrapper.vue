@@ -121,8 +121,11 @@ import {
 import {
   applySuitePatternOverrides,
   loadSuitePatternOverrides,
+  registerRuntimePatterns,
 } from '../../model/suitePatternOverride.model';
 import { loadHifiConfig, applyHifiConfigUnderOverrides } from '../../model/hifiConfig.model';
+// D-PSVG · PSVG-2 · the per-SCP JSON pattern library boot registration (the fetch half — PSVG-1).
+import { loadOwnPatternLibrary } from '../../model/patternLibraryClientAccess.model';
 
 // ============================================
 // PROPS
@@ -784,9 +787,22 @@ onMounted(() => {
   // P4 boot hook — apply the SCP's controlling hifiConfig.json (the agent-authored SCP HiFi design)
   // UNDER the user's localStorage clicks (precedence: factory :root < hifiConfig.json < localStorage).
   // Async server fetch; fills ONLY spectra the user has NOT overridden → click wins, no flicker.
-  void loadHifiConfig().then((cfg) => {
-    if (cfg) applyHifiConfigUnderOverrides(cfg);
-  });
+  //
+  // D-PSVG · PSVG-2 · THE LIBRARY REGISTRATION LEG (chained BEFORE the JSON-precedence apply): the
+  // own Cascades/patternLibrary.json registers into the runtime registry FIRST, so a hifiConfig
+  // pattern id that lives ONLY in the JSON library resolves at the boot paint (an unregistered id
+  // would silently skip in applySuitePatternOverrides). The localStorage pattern layer re-applies
+  // after registration for the same reason (the sync HIFI.3 hook above ran pre-registry; the
+  // re-apply is idempotent + disjoint-safe — the precedence law holds verbatim).
+  void loadOwnPatternLibrary()
+    .then((library) => {
+      if (library) registerRuntimePatterns(library.patterns);
+      applySuitePatternOverrides(loadSuitePatternOverrides());
+    })
+    .then(() => loadHifiConfig())
+    .then((cfg) => {
+      if (cfg) applyHifiConfigUnderOverrides(cfg);
+    });
 
   // Load initial island if specified
   if ((deepLinkIslandId ?? props.initialIslandId)) {

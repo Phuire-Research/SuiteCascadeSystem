@@ -142,7 +142,12 @@ import {
   readSyncRingFromBridgeJson,
   writeSpecifiedAdditive,
   readTargetAccountedHifiStamp,
+  // D-PSVG · PSVG-1 · the second accounted stamp (patternLibrary.json · the generalized read).
+  readTargetAccountedSurfaceStamp,
+  ACCOUNTED_PATTERN_LIBRARY_KEY,
 } from '../../model/scpSyncLibrary.model';
+// D-PSVG · PSVG-1 · the per-SCP JSON pattern library boot seed (write-if-absent · P4 zone).
+import { seedPatternLibraryIfAbsent } from '../../model/patternLibrary.model';
 // CMLS · CSRS · the ONE seat — the cascade routes (floor · tiers · doc-save) resolve the target
 // dir through this state-projection (replaces the SL-3 consult · the Honest-Absence Law · §3.6).
 import { resolveCascadeSubscriptionDir } from '../../model/cascadeSubscriptionRegistry.model';
@@ -1002,6 +1007,10 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         targetHifiStamp: resolution
           ? readTargetAccountedHifiStamp(designation, resolution.root)
           : null,
+        // D-PSVG · PSVG-1 · the second accounted stamp rides the GET (the exact twin).
+        targetPatternLibraryStamp: resolution
+          ? readTargetAccountedSurfaceStamp(designation, resolution.root, ACCOUNTED_PATTERN_LIBRARY_KEY)
+          : null,
         ring,
       });
     } catch {
@@ -1014,6 +1023,7 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         targetLive: false,
         localLive: false,
         targetHifiStamp: null,
+        targetPatternLibraryStamp: null,
         ring: [],
       });
     }
@@ -2438,6 +2448,24 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   expressApp.get('/hifi-config', (_req, res) => {
     try {
       const raw = fs.readFileSync(hifiConfigPath, 'utf-8');
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({});
+    }
+  });
+
+  // D-PSVG · PSVG-1 · /pattern-library — serve the SCP's per-SCP JSON pattern library.
+  // The /hifi-config sibling (READ-ONLY · absent/unreadable/malformed → {}). The library is
+  // the SyncLibrary's SECOND ACCOUNTED CITIZEN — a NEW pattern is a JSON drop (no code edit,
+  // no Turn Over); the in-code PATTERN_LIBRARY stays the factory floor (seeded below · in-code
+  // wins on id collision). cwd IS the package (the C872/C465 rule — SCP-local, never the workspace).
+  // THE BOOT SEED (write-if-absent · Lambda-event): an absent library seeds VERBATIM from the
+  // in-code factory floor; an existing file is NEVER clobbered (telemetry rides the model's sink).
+  seedPatternLibraryIfAbsent(process.cwd());
+  const patternLibraryPath = path.resolve(process.cwd(), 'Cascades', 'patternLibrary.json');
+  expressApp.get('/pattern-library', (_req, res) => {
+    try {
+      const raw = fs.readFileSync(patternLibraryPath, 'utf-8');
       res.json(JSON.parse(raw));
     } catch {
       res.json({});

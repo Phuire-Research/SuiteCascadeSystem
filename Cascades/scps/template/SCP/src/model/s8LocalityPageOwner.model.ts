@@ -22,7 +22,7 @@ import { getGlobalScsBridgeController, type S8LocalityFace } from '../concepts/s
 
 type AnySnapshot = {
   localScp?: unknown; specified?: unknown; targetScp?: unknown;
-  targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown; ring?: unknown;
+  targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown; targetPatternLibraryStamp?: unknown; ring?: unknown;
 };
 
 const toFace = (snap: AnySnapshot): S8LocalityFace => ({
@@ -31,6 +31,7 @@ const toFace = (snap: AnySnapshot): S8LocalityFace => ({
   targetScp: typeof snap.targetScp === 'string' ? snap.targetScp : null,
   targetLive: snap.targetLive === true,
   targetHifiStamp: typeof snap.targetHifiStamp === 'number' ? snap.targetHifiStamp : null,
+  targetPatternLibraryStamp: typeof snap.targetPatternLibraryStamp === 'number' ? snap.targetPatternLibraryStamp : null,
   ring: Array.isArray(snap.ring)
     ? (snap.ring as { scpName?: unknown; status?: unknown }[])
       .filter((e) => typeof e.scpName === 'string')
@@ -57,6 +58,7 @@ export const armS8LocalityPageOwner = (
           localScp: face.localScp, specified: face.specified, targetScp: face.targetScp,
           targetRoot: null, targetLive: face.targetLive, localLive: (data as AnySnapshot).localLive === true,
           targetHifiStamp: face.targetHifiStamp ?? null,
+          targetPatternLibraryStamp: face.targetPatternLibraryStamp ?? null,
           ring: face.ring,
         });
       })
