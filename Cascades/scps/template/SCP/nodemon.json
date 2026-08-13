@@ -2,7 +2,6 @@
   "watch": [
     ".bridge-restart.json"
   ],
-  "legacyWatch": true,
   "ignore": [],
   "exec": "npm run build:server && npm run build:client && npx ts-node ./src/index.ts --scp-tag=$PWD",
   "spawn": true,
