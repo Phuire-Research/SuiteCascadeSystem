@@ -374,6 +374,7 @@ const buildToolRoster = (): {
         initialDirective: { type: 'string', description: 'RS.2b · THE COMBINED INITIAL ENTRY · a per-run SCS:Vermillion directive composed by the caller at spawn time. Appended after the Onboard seed as ONE initial positional prompt — no post-boot typed delivery to race a mid-turn input (the C285 interleave class). When present the standBy overlay arm is skipped (no pending delivery). Prefer this over scs_deliver_vermillion whenever the directive is known at spawn.' },
         onboard: { type: 'boolean', description: 'THE ONBOARD OPTION · true by DEFAULT (omit = the Onboard seed rides an anchor spawn\'s initial prompt — the current behavior). false = suppress the Onboard placement for THIS spawn; the initialDirective (when present) rides alone as the initial entry. For callers supplying their own seed.' },
         anchor: { type: 'boolean', description: 'THE PLAIN-SPAWN LANE · true by DEFAULT (omit = the anchor lane: liveness guard + claim/re-engage — the page/Shatterite Menu door). false = a PLAIN instance: the whole anchor machinery is skipped while the approval gate stays intact. The Session Manager default (anchor:false + onboard:false); anchoring belongs to the Shatterite Menu first.' },
+        targetSuite8Name: { type: 'string', description: 'EF-3′ · THE TARGET S8 THREAD · the Suite 8 PAGE this spawn is commissioned to formalize (the engaging page\'s own designation — distinct from suite8Name, the Suite being spawned). Persisted on the registry entry; drives the per-page Previous Conductions filter. Omit = target-less conduction.' },
         callerSessionUlid: { type: 'string', description: 'Caller agent session ULID' },
       },
       required: ['suite8Name'],
@@ -881,6 +882,53 @@ const buildToolRoster = (): {
     handlerType: 'quality',        // ← routes through createSCPQualityManifold (quality path)
     strategyName: '',
     relatedActionables: ['scs_spawn_suite8_session'],
+  };
+
+  // EF-5 · suite8_page_transfer · the EXACT-MEANS TRANSFER · sibling of suite8_page_create.
+  // Runs the SAME runSuite8PageCreate engine against the TARGET (scaffold + token-rename + the
+  // 3 AIME wirings + gates), then OVERLAYS the SOURCE SCP's real concept body over the scaffold,
+  // copies Cascades/8_SUITES/<designation>/ source→target, and runs the target tsc gate. On a
+  // nonzero tsc exit it reverts (restore scaffold from temp · remove the copied 8_SUITES).
+  // TQNI invariant: qualityName 'scsBridgeSuite8PageTransfer' byte-matches the scsBridge.e key.
+  // handlerType 'quality' → createSCPQualityManifold; the structured result rides
+  // strategyData_muxifyData out through the SCP manifold tail (mirrors suite8_page_create).
+  const suite8PageTransferMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeSuite8PageTransfer',  // ← TQNI byte-identity with scsBridge.e key
+    toolName: 'suite8_page_transfer',
+    description:
+      'EF-5 · THE EXACT-MEANS TRANSFER · Installs an EXISTING Suite 8 page from a source SCP onto ' +
+      'a target SCP: runs the page-creation engine against the TARGET (scaffold + token-rename + ' +
+      'the 3 AIME wirings + its own gates), then OVERLAYS the source SCP\'s real concept body over ' +
+      'the scaffold, copies Cascades/8_SUITES/<designation>/ from source to target, and runs the ' +
+      'target tsc gate. Returns the changed-file manifest. npm installs, concern judgment, the ' +
+      'install report and the closing motion remain the CALLER\'s (the Entourage\'s).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        designation: {
+          type: 'string',
+          description: 'The EXISTING Suite 8 page\'s PascalCase Suite8Name (e.g. FrontierDiametric).',
+        },
+        sourceScpName: {
+          type: 'string',
+          description: 'The SCP the page currently lives on (validated against Cascades/SCPs.json).',
+        },
+        targetScpName: {
+          type: 'string',
+          description: 'The SCP to install the page onto (validated against Cascades/SCPs.json).',
+        },
+        callerSessionUlid: {
+          type: 'string',
+          description: 'Caller agent session ULID (optional · diagnostics).',
+        },
+      },
+      required: ['designation', 'sourceScpName', 'targetScpName'],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',        // ← routes through createSCPQualityManifold (quality path)
+    strategyName: '',
+    relatedActionables: ['suite8_page_create', 'scp_alert_turn_over'],
   };
 
   // PPLD QMTR · Cycle 160 · Ping-Pong-Liveness-Diameter
@@ -2390,6 +2438,7 @@ const buildToolRoster = (): {
     deliverVermillionMetadata,  // VS · VSDT · scs_deliver_vermillion · SCS:Vermillion directive
     scserBindMetadata,
     suite8PageCreateMetadata,   // S8P-SCP-TOOL · suite8_page_create · runSuite8PageCreate for the calling SCP
+    suite8PageTransferMetadata, // EF-5 · suite8_page_transfer · the exact-means transfer (engine + overlay + gate) source→target
     pingPongMetadata,
     persistLastTurnMetadata,    // DIAGNOSTIC-REENGAGED R2 · TSPK · scs_persist_last_turn · batch
     focusUrlWindowMetadata,     // ASDR · BWRF · scs_focus_bridge_window · anchor refocuses SCS-Bridge UI

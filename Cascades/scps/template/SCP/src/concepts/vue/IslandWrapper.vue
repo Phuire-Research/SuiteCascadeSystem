@@ -83,6 +83,10 @@ import Suite8CreateOverlay from '../suite8/vue/components/Suite8CreateOverlay.vu
 // live). It reproduces the SSR row markup so the delegated mint/collapse listeners still fire.
 import SidebarBarrel from './SidebarBarrel.vue';
 import ScsBridgeSessionsButton from '../scsBridge/vue/components/ScsBridgeSessionsButton.vue';
+// V-3 · THE TOOLBAR BREAKOUT — the S8 locality face (custom componentMap face · always-visible
+// locality readout) + the two right-anchored DUPP drawers (SCP Management · Suite 8 Control).
+import S8DrawerButton from './components/S8DrawerButton.vue';
+import ScsBridgeScpDrawer from '../scsBridge/vue/components/ScsBridgeScpDrawer.vue';
 // GITM A↔B-R (#641-R) — the DUALTURN custom A/B button components + the Sword B-setter.
 // FREEHOP standalone is REMOVED (Sword epoch) — its branch-hop panel is subsumed into the
 // Sword's Mode 2 (Prismatic Free-Hop). The GitmFreehopButton.vue file is retained as the
@@ -96,6 +100,9 @@ import type { ToolbarButtonRegistration } from '../scsBridge/scsBridge.type';
 import {
   TOOLBAR_BUTTON_BRIDGE_SESSIONS,
   TOOLBAR_BUTTON_SEND_MESSAGE,
+  // V-3 · THE TOOLBAR BREAKOUT — the two new reserved drawer buttons (S8 Control · SCP Management).
+  TOOLBAR_BUTTON_S8_DRAWER,
+  TOOLBAR_BUTTON_SCP_DRAWER,
   // RESTORED — the proven sole-fuchsia TOOLBAR_BUTTON_TURN_OVER (additive to the A/B group).
   TOOLBAR_BUTTON_TURN_OVER,
   // GITM A↔B-R (#641-R) — the DUALTURN A/B reserve-mechanism group + the Sword B-setter.
@@ -114,8 +121,11 @@ import {
 import {
   applySuitePatternOverrides,
   loadSuitePatternOverrides,
+  registerRuntimePatterns,
 } from '../../model/suitePatternOverride.model';
 import { loadHifiConfig, applyHifiConfigUnderOverrides } from '../../model/hifiConfig.model';
+// D-PSVG · PSVG-2 · the per-SCP JSON pattern library boot registration (the fetch half — PSVG-1).
+import { loadOwnPatternLibrary } from '../../model/patternLibraryClientAccess.model';
 
 // ============================================
 // PROPS
@@ -290,6 +300,12 @@ watch(
 
 const bridgeSessionsPopupOpen = ref<boolean>(false);
 
+// V-3 · THE TOOLBAR BREAKOUT — the two new drawer open-states. THE THREE-SURFACE MUTUAL
+// EXCLUSION (handleTaskBarButtonClicked): opening any one of the Sessions popup / SCP drawer /
+// S8 Control drawer closes the other two — only one quick-access surface stands at a time.
+const scpDrawerOpen = ref<boolean>(false);
+const s8DrawerOpen = ref<boolean>(false);
+
 // ============================================
 // MD-8 D-NM-2 · THE CREATE OVERLAY — open-state + delegated sidebar click (E13 law)
 // ============================================
@@ -358,6 +374,11 @@ let turnOverAConfirmInFlight = false;
 
 const taskBarComponentMap: Record<string, Component> = {
   'bridge-sessions': ScsBridgeSessionsButton,
+  // V-3 · THE TOOLBAR BREAKOUT · R3 THE S8 LOCALITY FACE — the S8 button is a CUSTOM face
+  // (resolved by id 's8-drawer' in TaskBar.resolveComponent), NOT a plain fallback button; it
+  // renders the current page's locality readout. The 'scp-drawer' button is a plain fallback
+  // (no map entry · routes through handleTaskBarButtonClicked by id).
+  's8-drawer': S8DrawerButton,
   // RESTORED — the proven sole-fuchsia button (resolved by id 'turn-over' · no componentName).
   'turn-over': ScsBridgeTurnOverButton,
   // GITM A↔B-R (#641-R) — the DUALTURN custom A/B button components (resolved by componentName).
@@ -375,6 +396,11 @@ const taskBarComponentMap: Record<string, Component> = {
 // ?-badge explainer link — the registration-level enabled patch is retired with it.
 
 const DEFAULT_TOOLBAR_BUTTONS: ToolbarButtonRegistration[] = [
+  // V-3 · THE TOOLBAR BREAKOUT · R1 THE ORDER — S8 Control then SCP Management lead, directly
+  // before Session Management (sortToolbarButtonsForRender re-sorts by RESERVED index anyway; this
+  // fallback array mirrors that render order for the no-registration boot).
+  TOOLBAR_BUTTON_S8_DRAWER,
+  TOOLBAR_BUTTON_SCP_DRAWER,
   TOOLBAR_BUTTON_BRIDGE_SESSIONS,
   TOOLBAR_BUTTON_SEND_MESSAGE,
   // RESTORED — the proven sole-fuchsia Turn Over (the de-risk base; additive to the A/B group).
@@ -393,15 +419,64 @@ const toolbarButtonsForRender = computed<ToolbarButtonRegistration[]>(() => {
     scsBridgeController.toolbarButtons.value.length > 0
       ? scsBridgeController.toolbarButtons.value
       : DEFAULT_TOOLBAR_BUTTONS;
-  return sortToolbarButtonsForRender(buttons);
+  // V-3 · THE TOOLBAR BREAKOUT · R3 THE S8 PRESENCE PREDICATE — the S8 locality face is present
+  // ONLY on a Suite 8 page; when currentS8Page is null (the mounted page is not a Suite 8 page)
+  // the 's8-drawer' button is filtered out entirely. The 'scp-drawer' is always present.
+  // V-4b · the LENT drawer is the predicate — a page that lends no drawer gets no S8 button
+  // (a suite8-keyed fallback would be inert on a renamed twin island anor GraphiteScribe).
+  const s8Present = scsBridgeController.currentS8Page.value?.drawer != null;
+  const gated = s8Present ? buttons : buttons.filter((b) => b.id !== 's8-drawer');
+  return sortToolbarButtonsForRender(gated);
 });
+
+// V-3 · THE TOOLBAR BREAKOUT · R3 — when the current page ceases to be a Suite 8 page
+// (currentS8Page → null · e.g. navigating off an S8 page while the drawer is open) the S8 Control
+// drawer closes: the S8 button is filtered out and the drawer has no designation to render.
+watch(
+  () => scsBridgeController.currentS8Page.value,
+  (page) => {
+    if (page === null && s8DrawerOpen.value) {
+      s8DrawerOpen.value = false;
+    }
+  },
+);
 
 function handleTaskBarButtonClicked(id: string): void {
   console.log('[IslandWrapper] handleTaskBarButtonClicked · id:', id);
   if (id === 'bridge-sessions') {
     // Toggle behavior · Cycle 160 R3 Wave 2A+ · click again to close
-    bridgeSessionsPopupOpen.value = !bridgeSessionsPopupOpen.value;
+    const next = !bridgeSessionsPopupOpen.value;
+    // V-3 · THREE-SURFACE MUTUAL EXCLUSION — opening Sessions closes the two drawers.
+    if (next) {
+      scpDrawerOpen.value = false;
+      s8DrawerOpen.value = false;
+    }
+    bridgeSessionsPopupOpen.value = next;
     console.log('[IslandWrapper] Sessions popup toggled →', bridgeSessionsPopupOpen.value ? 'OPEN' : 'CLOSED');
+    return;
+  }
+  // V-3 · THE TOOLBAR BREAKOUT · the S8 Control drawer toggle (custom S8 face → buttonClicked
+  // 's8-drawer'). THREE-SURFACE MUTUAL EXCLUSION — opening it closes Sessions + the SCP drawer.
+  if (id === 's8-drawer') {
+    const next = !s8DrawerOpen.value;
+    if (next) {
+      bridgeSessionsPopupOpen.value = false;
+      scpDrawerOpen.value = false;
+    }
+    s8DrawerOpen.value = next;
+    console.log('[IslandWrapper] S8 Control drawer toggled →', s8DrawerOpen.value ? 'OPEN' : 'CLOSED');
+    return;
+  }
+  // V-3 · THE TOOLBAR BREAKOUT · the SCP Management drawer toggle (plain fallback button →
+  // buttonClicked 'scp-drawer'). THREE-SURFACE MUTUAL EXCLUSION — opening it closes the other two.
+  if (id === 'scp-drawer') {
+    const next = !scpDrawerOpen.value;
+    if (next) {
+      bridgeSessionsPopupOpen.value = false;
+      s8DrawerOpen.value = false;
+    }
+    scpDrawerOpen.value = next;
+    console.log('[IslandWrapper] SCP Management drawer toggled →', scpDrawerOpen.value ? 'OPEN' : 'CLOSED');
     return;
   }
   // RESTORED — the proven sole-fuchsia turn-over: TaskBar maps the button's 'turn-over-triggered'
@@ -712,9 +787,22 @@ onMounted(() => {
   // P4 boot hook — apply the SCP's controlling hifiConfig.json (the agent-authored SCP HiFi design)
   // UNDER the user's localStorage clicks (precedence: factory :root < hifiConfig.json < localStorage).
   // Async server fetch; fills ONLY spectra the user has NOT overridden → click wins, no flicker.
-  void loadHifiConfig().then((cfg) => {
-    if (cfg) applyHifiConfigUnderOverrides(cfg);
-  });
+  //
+  // D-PSVG · PSVG-2 · THE LIBRARY REGISTRATION LEG (chained BEFORE the JSON-precedence apply): the
+  // own Cascades/patternLibrary.json registers into the runtime registry FIRST, so a hifiConfig
+  // pattern id that lives ONLY in the JSON library resolves at the boot paint (an unregistered id
+  // would silently skip in applySuitePatternOverrides). The localStorage pattern layer re-applies
+  // after registration for the same reason (the sync HIFI.3 hook above ran pre-registry; the
+  // re-apply is idempotent + disjoint-safe — the precedence law holds verbatim).
+  void loadOwnPatternLibrary()
+    .then((library) => {
+      if (library) registerRuntimePatterns(library.patterns);
+      applySuitePatternOverrides(loadSuitePatternOverrides());
+    })
+    .then(() => loadHifiConfig())
+    .then((cfg) => {
+      if (cfg) applyHifiConfigUnderOverrides(cfg);
+    });
 
   // Load initial island if specified
   if ((deepLinkIslandId ?? props.initialIslandId)) {
@@ -900,6 +988,24 @@ defineExpose({
       :bridge-json="scsBridgeController.bridgeJson.value"
       :sessions-list="scsBridgeController.sessionsList.value"
       @close="bridgeSessionsPopupOpen = false"
+    />
+
+    <!-- V-3 · THE TOOLBAR BREAKOUT · THE SCP MANAGEMENT DRAWER (cobalt · right-anchored DUPP) -->
+    <ScsBridgeScpDrawer
+      v-if="scpDrawerOpen"
+      :is-open="scpDrawerOpen"
+      @close="scpDrawerOpen = false"
+    />
+
+    <!-- V-3 · THE TOOLBAR BREAKOUT · THE SUITE 8 CONTROL DRAWER (viridian · right-anchored DUPP) —
+         the null-guard: currentS8Page must be present (a Suite 8 page) for the drawer to carry a
+         designation. The presence filter + the currentS8Page watch keep this consistent with the
+         S8 button's own gating. -->
+    <component
+      :is="scsBridgeController.currentS8Page.value.drawer"
+      v-if="s8DrawerOpen && scsBridgeController.currentS8Page.value && scsBridgeController.currentS8Page.value.drawer"
+      :designation="scsBridgeController.currentS8Page.value.designation"
+      @close="s8DrawerOpen = false"
     />
 
     <!-- THE-TURN-OVER-A-GUARD (THE C302 CONSOLIDATION · the SOLE confirmation surface) — the intrusive
@@ -1111,9 +1217,15 @@ defineExpose({
 .dock-readout {
   position: fixed;
   z-index: 2000;
-  max-width: 320px;
+  /* C814 · THE WRAP CURE (image 183 — nowrap inside a max-width ran the text past the
+     border): the pill WRAPS within its clamp; the measure-then-clamp still reads the
+     wrapped box's real width. */
+  max-width: min(380px, 80vw);
   padding: 4px 8px;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  line-height: 1.4;
   font-family: 'Courier New', monospace;
   font-size: 0.62rem;
   font-weight: 700;

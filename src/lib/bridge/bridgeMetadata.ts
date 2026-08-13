@@ -132,8 +132,9 @@ export type BridgeMetadata = {
   // field), and the classed verdict ('cli' → the npm CLI update · 'scp' → the Update circuit ·
   // 'both' → both · 'unknown' → a pre-counter publish, treat as both). All ride the
   // ...getNpmVersionCheck() composer spread — nothing else to thread.
-  installedMuxameter?: { cli: number; scp: number } | null;
-  remoteMuxameter?: { cli: number; scp: number } | null;
+  // MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — a pre-s8 bridge.json omits it).
+  installedMuxameter?: { cli: number; scp: number; s8?: number } | null;
+  remoteMuxameter?: { cli: number; scp: number; s8?: number } | null;
   updateClass?: 'none' | 'cli' | 'scp' | 'both' | 'unknown';
   // Model Control · the PUBLISHED model catalog (the shared model · modelCatalog.model.ts) —
   // written on every bridge.json write (mirrors availableRenderModes · no drift between surfaces).
@@ -184,6 +185,21 @@ export type BridgeMetadata = {
   // has completed yet this run (the honest degraded state · the advisory invariant). Carried FREE
   // to each per-SCP copy by the spread below (mirrors archivedScps).
   releaseManifest?: UpdateManifest | null;
+  // SL-2 · THE BRIDGE KEY RING (DIAMOND-SYNC-LIBRARY.md) — the key values of the SCPs
+  // available through the SCS-Bridge: every INSTALLED SCP's {scpName, root, status}
+  // (archived EXCLUDED — the vault is not composable; status from the bound entry anor
+  // 'offline'). The SCP-side Sync Library seed resolves each key's composable paths from
+  // its root. Carried FREE to each per-SCP copy by the spread below (mirrors releaseManifest).
+  syncRing?: SyncRingEntry[];
+};
+
+// SL-2 · one composable key — the SCP's designation + its absolute install root + the
+// bound status ('offline' when not currently bound). The ring is roster truth, not
+// liveness truth: an offline SCP's paths remain composable (its JSONs stand on disk).
+export type SyncRingEntry = {
+  scpName: string;
+  root: string;
+  status: string;
 };
 
 export type BridgeMetadataState = {
@@ -445,6 +461,14 @@ async function writeBridgeMetadataUnsafe(
     // inline network fetch · the non-blocking mandate). null until the model's timer completes
     // its first refresh (the advisory invariant). Carried FREE to each per-SCP copy by the spread.
     releaseManifest: getCachedReleaseManifest(),
+    // SL-2 · THE BRIDGE KEY RING — composed from the SAME scpInstallDirs the per-SCP fan-out
+    // walks (installed only · archived already excluded by resolution); status projects the
+    // bound entry when present. Carried FREE to each per-SCP copy by the spread below.
+    syncRing: Object.entries(scpInstallDirs).map(([name, dir]) => ({
+      scpName: name,
+      root: dir,
+      status: boundScps[name]?.status ?? 'offline',
+    })),
   };
 
   // Cobalt-FSGT · Cycle 160 R14 · log every bridge.json write site.

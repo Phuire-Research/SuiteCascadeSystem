@@ -27,6 +27,8 @@ import { suite8SetMenuStageHuirthBase } from './qualities/suite8SetMenuStageHuir
 // watcher's SBIS dispatch carries the designation key (Base FIRST, then the keyed relay).
 import { suite8SetDesignationMenuStage } from './qualities/suite8SetDesignationMenuStage.quality.client';
 import { suite8SetDesignationMenuStageHuirthBase } from './qualities/suite8SetDesignationMenuStageHuirthBase.quality.huirth';
+// SL-3 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+import { resolveSyncLocality } from '../../model/scpSyncLibrary.model';
 
 // SCS root — mirrors the cadmium menu relay SCS_ROOT (the live Cascades/). The menu.json path
 // lands at Cascades/Extended/<Template Suite 8>/menu.json (the install Opus retargets the
@@ -225,13 +227,28 @@ const resolveDesignationExtendedRoot = (designation: string): string => {
 export const createSuite8DesignationRelayConfig = (
   designation: string,
 ): StcpComponentRelayConfig<MenuDocument> => {
-  const designationMenuJsonPath = path.resolve(
-    resolveDesignationExtendedRoot(designation),
-    'Cascades',
-    'Extended',
-    designation,
-    SUITE8_MENU_JSON_BASENAME,
-  );
+  // SL-3 · LEG 2 · THE THREADED CONFIG — the Sync Library's resolution seam is consulted
+  // FIRST: a Specified locality pins the menu.json path to the TARGET SCP's surface (the
+  // Specified representation overrides the immediate). null (the default anor the guarded
+  // fall-through) → the local two-roots walk, byte-identical to today. Resolution runs at
+  // ARM time; a `specified` change re-arms through suite8MenuWatch (SL-3 Leg 3).
+  const syncLocality = resolveSyncLocality(designation);
+  if (syncLocality) {
+    sinkMenuRelayTelemetry('sync-locality.specified', {
+      designation,
+      targetScp: syncLocality.targetScp,
+      menuAbs: syncLocality.menuAbs,
+    });
+  }
+  const designationMenuJsonPath = syncLocality
+    ? syncLocality.menuAbs
+    : path.resolve(
+      resolveDesignationExtendedRoot(designation),
+      'Cascades',
+      'Extended',
+      designation,
+      SUITE8_MENU_JSON_BASENAME,
+    );
   return {
     jsonPath: designationMenuJsonPath,
     basename: SUITE8_MENU_JSON_BASENAME,

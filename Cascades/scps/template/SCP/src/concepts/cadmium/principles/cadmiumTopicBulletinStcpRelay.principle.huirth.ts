@@ -71,10 +71,10 @@ export const cadmiumTopicBulletinStcpRelayPrinciple: CadmiumTopicBulletinStcpRel
     stage(
       ({ d, dispatch }) => {
         const current = d.cadmium.k.topicBulletin.select() as CadmiumArticle[];
-        if (current.length === 0) {
-          // Boot-skip · EMPTY_TOPIC_BULLETIN · no Idle re-broadcast storm.
-          return;
-        }
+        // DSP-B3b · the EMPTY broadcast is a first-class citizen: the prior length===0
+        // boot-skip also swallowed the genuine 5→0 clear after a Sync Usher restore — the
+        // clients held the pre-restore bulletin forever. The selector gate already prevents
+        // any storm (the stage fires on CHANGE only); one [] relay at boot is not a storm.
         // DTBP · { throttle: 0 } — selector-persistent low-beat plan must re-fire on every
         // topicBulletin change. Citation: feedback_stratimux_dispatch_throttle_discipline.md.
         const broadcast: StcpBroadcastFn = (payload) =>

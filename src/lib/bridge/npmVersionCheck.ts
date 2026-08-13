@@ -108,7 +108,7 @@ export async function checkNpmLatestVersion(currentVersion: string): Promise<Npm
     }
     const body = (await res.json()) as {
       version?: unknown;
-      scsMuxameter?: { cli?: unknown; scp?: unknown };
+      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown };
     };
     const latest = typeof body.version === 'string' ? body.version.trim() : '';
     if (latest === '') {
@@ -122,9 +122,14 @@ export async function checkNpmLatestVersion(currentVersion: string): Promise<Npm
     // package.json fields survive publish); the installed counters ride the grandparent
     // parse; the verdict is pure comparison.
     const rm = body.scsMuxameter;
+    // The pair is the gate; `s8` is OPTIONAL-TOLERANT — present-as-number flows, absent on a
+    // pre-s8 publish omits (the reader's `?? 0` floor supplies it · PM-1). Nothing consumes s8
+    // in the verdict yet (THE NO-RED LAW — s8 never enters deriveUpdateClass); it lands as data.
     cache.remoteMuxameter =
       rm && typeof rm.cli === 'number' && typeof rm.scp === 'number'
-        ? { cli: rm.cli, scp: rm.scp }
+        ? typeof rm.s8 === 'number'
+          ? { cli: rm.cli, scp: rm.scp, s8: rm.s8 }
+          : { cli: rm.cli, scp: rm.scp }
         : null;
     cache.installedMuxameter = getBridgeMuxameter();
     cache.updateClass = deriveUpdateClass(

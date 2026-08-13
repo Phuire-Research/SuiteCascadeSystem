@@ -23,6 +23,10 @@ import { scsBridgeSetActiveSubPage } from './qualities/setActiveSubPage.quality.
 import { scsBridgeSetRenderSettings } from './qualities/setRenderSettings.quality.client';
 // GITM color-cascade (W4) · Vermillion Focus+Highlight — the transient highlight reducer (relay + auto-reset)
 import { scsBridgeSetHighlightTarget } from './qualities/setHighlightTarget.quality.client';
+// D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the Client INDUCTION (color click → actionQue) + the RETURN
+// SET (received via actionExchange.serverToClient · the round trip's paint).
+import { scsBridgeApplyHifiConfigInduction } from './qualities/applyHifiConfig.quality.client.diameter';
+import { scsBridgeSetHifiConfigRelay } from './qualities/setHifiConfigRelay.quality';
 import { scsBridgeSetInstallMenuOpen } from './qualities/setInstallMenuOpen.quality.client';
 import { scsBridgeAdvanceInstallWizardStep } from './qualities/advanceInstallWizardStep.quality.client';
 import { scsBridgeSetInstalledScps } from './qualities/setInstalledScps.quality.client';
@@ -80,6 +84,9 @@ const scsBridgeQualities: ScsBridgeClientQualities = {
   scsBridgeSetRenderSettings,
   // GITM color-cascade (W4) · Vermillion Focus+Highlight — the transient highlight reducer
   scsBridgeSetHighlightTarget,
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — Client INDUCTION (routes to Huirth) + RETURN SET (paints)
+  scsBridgeApplyHifiConfig: scsBridgeApplyHifiConfigInduction,
+  scsBridgeSetHifiConfigRelay,
   // M2-A1-D1 · Install Menu Foundation + AJMI Mirror consumer
   scsBridgeSetInstallMenuOpen,
   scsBridgeAdvanceInstallWizardStep,

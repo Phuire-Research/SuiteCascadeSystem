@@ -59,11 +59,11 @@ import { suite8Muxonomic } from '../suite8.muxonomy';
 import { SUITE8_SUB_PAGE_OPTIONS } from '../suite8.subPageRegistry';
 // GPIM · Vue-layer Muxium binding into universal scsBridge controller
 import { getGlobalScsBridgeController } from '../../scsBridge/scsBridgeController';
-import Suite8SubPageNav from './components/Suite8SubPageNav.vue';
+import Suite8SubPageNav from '../../vue/components/S8SubPageNav.vue';
 import Suite8ComponentSubPage from './components/Suite8ComponentSubPage.vue';
 import Suite8DocumentationSubPage from './components/Suite8DocumentationSubPage.vue';
 // MD-5 · THE CHARACTER-FORWARD CARD — the roster surface renders one card per Suite 8.
-import Suite8Card from './components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 // MD-6 · THE BIPLANE PAGE STANDARD — the expanded detail becomes the two-subpage biplane (HOME | CARD).
 import Suite8Biplane from './components/Suite8Biplane.vue';
 

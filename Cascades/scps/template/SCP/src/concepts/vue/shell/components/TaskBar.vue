@@ -26,6 +26,15 @@ import { RESERVED_TOOLBAR_BUTTON_IDS } from '../../../../model/toolbarRegistrati
 // the user WHO IT IS. loadScpConfig is the 3s-abort-bounded /scp-config fetch (null-tolerant:
 // no name → no chip, never a placeholder).
 import { loadScpConfig } from '../../../../model/scpConfig.model';
+// MD-S8PM · PM-4 · THE RELAY FEED — TaskBar is the always-mounted toolbar that co-hosts the
+// S8DrawerButton AND already polls /scs-bridge-version + parses the s8 leg (installedCounters).
+// It hands the parsed INSTALLED s8 to the controller's token-free relayInstalledS8Counter (no new
+// poll): the controller then answers s8PageBehind for the S8 toggle border + the panel version row.
+// THE UPDATE-ORDER LAW: the installed bridge package.json IS the source of truth for the S8 system
+// counter — the S8 page cannot update until the bridge update lands the new package.json, so the
+// S8 lane reads installedMuxameter.s8 (served locally off disk), never npm directly.
+// Token-free reach (the S8DrawerButton idiom) — a bare number in, no suite8-token coupling.
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 
 interface Props {
   buttons: ToolbarButtonRegistration[];
@@ -71,7 +80,9 @@ const bridgeUpdateClass = ref<'none' | 'cli' | 'scp' | 'both' | 'unknown'>('none
 // THE FULL MUXAMETER LINE — the two Demometers' counters, installed → remote, rendered in
 // the pop over once available (installed rides bridge.json; remote rides the npm /latest
 // custom field — absent until a counter-carrying publish).
-type CounterPair = { cli: number; scp: number };
+// MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — old bridge data omits it;
+// nothing here consumes it yet · THE NO-RED LAW leaves the badge verdict untouched — PM-2/PM-4).
+type CounterPair = { cli: number; scp: number; s8?: number };
 const installedCounters = ref<CounterPair | null>(null);
 const remoteCounters = ref<CounterPair | null>(null);
 const muxameterLine = computed<string | null>(() => {
@@ -83,10 +94,17 @@ const muxameterLine = computed<string | null>(() => {
     if (rv === undefined || iv === rv) return `${label} #${iv ?? rv}`;
     return `${label} #${iv ?? '—'} → #${rv}`;
   };
-  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}`;
+  // MD-S8PM · PM-2 · THE s8 INFORMATION LEG — the INSTALLED S8 Page System counter appended to
+  // the muxameter hover line as pure INFORMATION (THE NO-RED LAW: this never enters the badge
+  // verdict — versionState/bridgeUpdateClass read only cli/scp). THE UPDATE-ORDER LAW: the tip
+  // informs the system's LOCAL truth — the installed bridge package.json's s8 (installedMuxameter.s8,
+  // read from disk by the SCP's own answer); it rides no extra fetch and never reads npm directly.
+  const s8Leg = typeof i?.s8 === 'number' ? ` · S8 #${i.s8}` : '';
+  return `${side('CLI', i?.cli, r?.cli)} · ${side('App', i?.scp, r?.scp)}${s8Leg}`;
 });
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
+
 
 // THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
 // island's Update tab is the one destination for every update class.
@@ -164,14 +182,26 @@ onMounted(() => {
         bridgeUpdateClass.value = body.updateClass as 'none' | 'cli' | 'scp' | 'both' | 'unknown';
       }
       const pair = (m: unknown): CounterPair | null => {
-        const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+        const o = m as { cli?: unknown; scp?: unknown; s8?: unknown } | null | undefined;
         return o && typeof o.cli === 'number' && typeof o.scp === 'number'
-          ? { cli: o.cli, scp: o.scp }
+          ? typeof o.s8 === 'number'
+            ? { cli: o.cli, scp: o.scp, s8: o.s8 }
+            : { cli: o.cli, scp: o.scp }
           : null;
       };
       if (body) {
         installedCounters.value = pair(body.installedMuxameter);
         remoteCounters.value = pair(body.remoteMuxameter);
+        // MD-S8PM · PM-4 · relay the INSTALLED s8 to the controller (null when absent — never
+        // signals on unknown). THE UPDATE-ORDER LAW: the installed bridge's package.json IS the
+        // source of truth for the S8 system counter (installedMuxameter.s8 · read from disk by the
+        // SCP's own /scs-bridge-version answer). The S8 page cannot update until the bridge update
+        // lands the new package.json — so the S8 lane reads the INSTALLED side, never npm directly.
+        // THE NO-RED LAW: this feeds only the s8 toggle border / panel row, never the badge verdict
+        // (bridgeUpdateClass is set above from body.updateClass alone).
+        getGlobalScsBridgeController()?.relayInstalledS8Counter(
+          typeof installedCounters.value?.s8 === 'number' ? installedCounters.value.s8 : null,
+        );
       }
     })
     .catch(() => { /* absent server route (an older SCP) — no label, never a placeholder */ })
@@ -212,6 +242,17 @@ const FALLBACK_TIP_CONTENT: Record<string, { title: string; body: string }> = {
     title: 'Working Branch (B)',
     body: 'Branches a new working version from A and checks it out — develop on B while A stays safe.',
   },
+  // V-3 · THE TOOLBAR BREAKOUT — the two new drawer buttons' hover tips (the S8 face carries its
+  // own tip inside S8DrawerButton.vue; this covers the plain 'scp-drawer' fallback + a safety tip
+  // for 's8-drawer' should it ever render as a fallback).
+  's8-drawer': {
+    title: 'Suite 8 Control',
+    body: "This page's locality + the Suite 8 helm. Opens the Suite 8 Control drawer.",
+  },
+  'scp-drawer': {
+    title: 'SCP Management',
+    body: 'The full SCP helm — Spawn, Focus, Multiply, and manage every installed SCP. Opens the SCP Management drawer.',
+  },
   'merge-b-a': {
     title: 'Merge B → A · Land the Proven Work',
     body: 'Merges proven working Branch B into the guarded stable A. Available after you confirm B successful. A fresh B is auto-forked on the next bind — you stay on B, always working ahead of stable.',
@@ -224,6 +265,12 @@ function fallbackTipTitle(btn: ToolbarButtonRegistration): string {
 
 function fallbackTipBody(btn: ToolbarButtonRegistration): string {
   return FALLBACK_TIP_CONTENT[btn.id]?.body ?? '';
+}
+
+// C813 · the one-line readout the body-level portal renders (title · body).
+function fallbackReadout(btn: ToolbarButtonRegistration): string {
+  const tip = FALLBACK_TIP_CONTENT[btn.id];
+  return tip ? `${tip.title} · ${tip.body}` : btn.label;
 }
 
 function handleTurnOverTriggered(): void {
@@ -295,10 +342,12 @@ function handleTurnOverTriggered(): void {
             class="taskbar-btn-wrap"
             :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
           >
+            <!-- C813 · the readout portal (the pair-arm sweep — the left lane's twin). -->
             <button
               :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
               :disabled="!btn.enabled"
               :aria-label="btn.label"
+              :data-readout="fallbackReadout(btn)"
               @click="handleFallbackClick(btn)"
             >
               <i :class="['taskbar-btn-icon', btn.icon]"></i>
@@ -306,10 +355,6 @@ function handleTurnOverTriggered(): void {
                 {{ btn.badgeCount }}
               </span>
             </button>
-            <span class="btn-tip" role="tooltip">
-              <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
-              <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
-            </span>
           </span>
         </template>
       </div>
@@ -318,38 +363,45 @@ function handleTurnOverTriggered(): void {
         <!-- WAVE 4: future expansion (Sessions button center-mount) -->
       </div>
 
+      <!-- V-3 · THE TOOLBAR BREAKOUT · R2 THE PREEMPTIVE X-SCROLL — ONLY the right BUTTON ROW
+           scrolls (the inner row no longer owns overflow, so the SCP identity label in the LEFT
+           zone stays fixed / never clips). The scroll region carries overflow-x:auto preemptively
+           with a thin/hidden scrollbar so an overflow never clips a button; its flex children
+           (taskbar-btn-wrap) carry flex-shrink:0 so the scroll ENGAGES instead of squashing. -->
       <div class="taskbar-zone taskbar-zone--right">
-        <template v-for="btn in rightButtons" :key="btn.id">
-          <component
-            :is="resolveComponent(btn)"
-            v-if="resolveComponent(btn)"
-            v-bind="componentPropsFor(btn)"
-            :disabled="!btn.enabled"
-            @turn-over-triggered="handleTurnOverTriggered"
-            @click="$emit('buttonClicked', btn.id)"
-          />
-          <span
-            v-else
-            class="taskbar-btn-wrap"
-            :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
-          >
-            <button
-              :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
+        <div class="taskbar-right-scroll">
+          <template v-for="btn in rightButtons" :key="btn.id">
+            <component
+              :is="resolveComponent(btn)"
+              v-if="resolveComponent(btn)"
+              v-bind="componentPropsFor(btn)"
               :disabled="!btn.enabled"
-              :aria-label="btn.label"
-              @click="handleFallbackClick(btn)"
+              @turn-over-triggered="handleTurnOverTriggered"
+              @click="$emit('buttonClicked', btn.id)"
+            />
+            <span
+              v-else
+              class="taskbar-btn-wrap"
+              :style="{ '--btn-neon': `var(--color-${btn.suiteColor})` }"
             >
-              <i :class="['taskbar-btn-icon', btn.icon]"></i>
-              <span v-if="btn.badgeCount && btn.badgeCount > 0" class="taskbar-btn-badge">
-                {{ btn.badgeCount }}
-              </span>
-            </button>
-            <span class="btn-tip" role="tooltip">
-              <span class="btn-tip-title">{{ fallbackTipTitle(btn) }}</span>
-              <span class="btn-tip-body">{{ fallbackTipBody(btn) }}</span>
+              <!-- C813 · THE ON-HOVER READOUT (the Reference Design · the Tactical Bridge
+                   pattern): data-readout → the ONE body-level portal (fixed · measured ·
+                   viewport-clamped · NEVER clipped) — the per-element tip retired. -->
+              <button
+                :class="['taskbar-btn', 'btn-base', { 'taskbar-btn--disabled': !btn.enabled }]"
+                :disabled="!btn.enabled"
+                :aria-label="btn.label"
+                :data-readout="fallbackReadout(btn)"
+                @click="handleFallbackClick(btn)"
+              >
+                <i :class="['taskbar-btn-icon', btn.icon]"></i>
+                <span v-if="btn.badgeCount && btn.badgeCount > 0" class="taskbar-btn-badge">
+                  {{ btn.badgeCount }}
+                </span>
+              </button>
             </span>
-          </span>
-        </template>
+          </template>
+        </div>
       </div>
 
     </div>
@@ -382,15 +434,12 @@ function handleTurnOverTriggered(): void {
   padding: 0 0.5rem;
   gap: 0.5rem;
   /* BO-5 (C454) · THE X-SCROLL CURE: the inner row overflowed the viewport (1280 vs 1200)
-     and pushed the PAGE wide. The taskbar governs its own overflow — the page never scrolls
-     horizontally for it. min-width:0 lets flex children shrink instead of summing past. */
+     and pushed the PAGE wide. min-width:0 lets flex children shrink instead of summing past.
+     V-3 · R2 THE PREEMPTIVE X-SCROLL: the overflow moved DOWN to .taskbar-right-scroll (only
+     the right BUTTON ROW scrolls) so the SCP identity label in the left zone stays FIXED and
+     never clips. The inner itself no longer scrolls — it clips to guard the page width. */
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-}
-.taskbar-inner::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 /* The bottom spectrum band — the INVERSE of the top bar's order (pink → red), 8px. */
@@ -455,16 +504,63 @@ function handleTurnOverTriggered(): void {
 }
 
 .taskbar-zone--center {
-  flex: 1;
+  /* C812 · THE GAP CURE — the center zone is EMPTY today (Wave-4 future seat); flex:1 was
+     fighting the right zone for the free space, opening the strange gap between the version
+     badge and the button area. Restore flex:1 when Wave-4 mounts content here. */
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .taskbar-zone--right {
+  /* V-3 · R2 — the right zone takes the remaining width and lets its scroll child clip+scroll
+     (min-width:0 is the flex law that lets a flex child shrink below its content size so the
+     inner overflow ENGAGES instead of pushing the page wide). */
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+/* V-3 · R2 · THE PREEMPTIVE X-SCROLL REGION — ONLY the right button row scrolls. overflow-x:auto
+   is preemptive so an overflow never clips a button; the button wraps carry flex-shrink:0 so the
+   scroll engages instead of squashing them. The 4px thin/hidden scrollbar recipe (the codebase
+   precedent · ScsBridgeSessionsPopup body) keeps the bar clean. */
+.taskbar-right-scroll {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  /* C812 · overflow-y:visible COMPUTES to auto when overflow-x is auto (the CSS law) — the
+     wrapper WILL clip vertically. The badge pills overhang the button tops, so the wrapper
+     carries HEADROOM (padding-top + negative margin) keeping them inside the scrollable box.
+     The hover panels ESCAPE separately (position:fixed · set on mouseenter). */
+  padding-top: 14px;
+  margin-top: -14px;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.taskbar-right-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.taskbar-right-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.taskbar-right-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.taskbar-right-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+/* THE FLEX-CHILD MIN-WIDTH GUARD — the button wraps must NOT shrink; the scroll engages instead. */
+.taskbar-right-scroll > .taskbar-btn-wrap,
+.taskbar-right-scroll > * {
   flex-shrink: 0;
 }
 
@@ -532,52 +628,10 @@ function handleTurnOverTriggered(): void {
   cursor: not-allowed;
 }
 
-/* The Pewter HiFi hover panel — an explanatory micro-pane above the button. Lives as a
-   SIBLING of the clipped body (under .taskbar-btn-wrap) so the chamfer never cuts it. */
-.taskbar-btn-wrap .btn-tip {
-  position: absolute;
-  bottom: calc(100% + 11px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  width: 220px;
-  padding: 8px 11px;
-  white-space: normal;
-  text-align: left;
-  background: rgba(10, 12, 18, 0.97);
-  border: 1px solid color-mix(in srgb, var(--btn-neon) 50%, transparent);
-  border-radius: 5px;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--btn-neon) 32%, transparent), 0 6px 16px rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease, transform 0.16s ease;
-  z-index: 220;
-}
 
-.taskbar-btn-wrap .btn-tip-title {
-  font-family: var(--font-heading, 'Orbitron', system-ui, sans-serif);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--btn-neon);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--btn-neon) 45%, transparent), 0.5px 0.5px 0 #fff;
-}
 
-.taskbar-btn-wrap .btn-tip-body {
-  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
-  font-size: 0.64rem;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
-  color: rgba(228, 232, 240, 0.82);
-  text-shadow: 0.5px 0.5px 0 #fff;
-}
 
-.taskbar-btn-wrap:hover .btn-tip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+
 
 .taskbar-btn-badge {
   position: absolute;

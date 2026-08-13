@@ -45,6 +45,13 @@ export const RESERVED_TOOLBAR_BUTTON_IDS: readonly string[] = [
   'send-message',
   'install-scp',
   'log-dump',
+  // V-3 · THE TOOLBAR BREAKOUT · R1 THE ORDER (the user's ruling): the visual left→right order is
+  //   [S8] [SCP] [Session Management (bridge-sessions)] [the Bridge/GitM controls AS-IS].
+  // sortToolbarButtonsForRender orders reserved buttons by their INDEX here, so 's8-drawer' then
+  // 'scp-drawer' are inserted DIRECTLY BEFORE 'bridge-sessions' — S8 first, SCP second, Sessions
+  // third, then the GitM dock group unchanged.
+  's8-drawer',
+  'scp-drawer',
   // Session Management onto the Bridge Dock — 'bridge-sessions' moved from the head of the list
   // to lead the FINAL DOCK GROUP (user · the Session Manager rides beside the bridge controls).
   // sortToolbarButtonsForRender orders reserved buttons by their index here, so this position

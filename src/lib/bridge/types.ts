@@ -186,6 +186,12 @@ export type RegistryEntry = {
   // compose reads it; a resume never re-fires it.
   // Optional · additive · undefined = no directive (the default).
   initialDirective?: string;
+  // EF-3′ · THE TARGET S8 THREAD · the Suite 8 PAGE this conduction was commissioned to
+  // formalize (the engaging page's own designation — distinct from suite8Name, the Suite
+  // spawned). Persisted at spawn time (setSessionTargetSuite8Name · the initialDirective
+  // rail); carried FREE to clients by the field-agnostic full-entry relay — drives the
+  // per-page Previous Conductions filter. Optional · additive · undefined = target-less.
+  targetSuite8Name?: string;
   // THE ONBOARD OPTION · true iff the spawn asked to SUPPRESS the Onboard seed
   // (payload.onboard === false). cli-handler's open-session skips the Onboard
   // compose when set; the initialDirective (if present) rides alone.

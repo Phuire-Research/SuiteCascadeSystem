@@ -376,6 +376,14 @@ export function createStcpComponentRelay<TPayload>(
         // Any child unlink → re-merge remaining (the removed file simply drops from the merge).
         void readAndDispatchFolderTree(nextA);
       });
+      watcher.on('unlinkDir', (changedPath: string) => {
+        // DSP-B3b · a recursive rmSync coalesces to ONE unlinkDir on FSEvents (no per-child
+        // unlink events) — the Sync Usher restore's topic-tree removals were invisible to
+        // this watcher without the handler; the Huirth state held the pre-restore merge.
+        const resolved = path.resolve(changedPath);
+        if (path.dirname(resolved) !== path.resolve(watchDir)) return; // slug-level only.
+        void readAndDispatchFolderTree(nextA);
+      });
       watcher.on('error', (err) => {
         console.warn(`${tag} folder-tree chokidar error · err=`, err);
       });

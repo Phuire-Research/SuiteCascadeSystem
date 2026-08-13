@@ -5,6 +5,7 @@
  * Citation: STRATIMUX-REFERENCE.md "🧠 Strategic State Management"
  */
 import type { Suite8ClientState } from './suite8.type';
+import { S8_PAGE_VERSION } from './suite8.type';
 import { DEFAULT_SUITE8_ACTIVE_TAB, DEFAULT_SUITE8_SUB_PAGE } from './suite8.type';
 import { EMPTY_MENU_STAGE } from '../../model/shatteriteMenu.model';
 
@@ -42,6 +43,22 @@ export function createSuite8ClientState(): Suite8ClientState {
     // PRE-EPOCH · BSSM keyed Record — one MenuStage per designation. Always {} at boot
     // (KeyedSelector · the N-watcher SMRP relay populates per-designation keys at runtime).
     shatteriteMenus: {},
+
+    // EF-5 · THE INSTALL REQUIREMENTS RECORD (client · relay-fed) — one gate-file snapshot per
+    // designation. Always {} at boot (KeyedSelector · the install-watcher SMRP relay populates
+    // per-designation keys at runtime; the Suite8 Control's dual-write also seeds keys).
+    installRequirementsMap: {},
+    // V-2 · the hard-set page version (frozen at actualization · massed into the Muxium).
+    pageVersion: S8_PAGE_VERSION,
+
+    // B-RLM-2 · THE LOCALITIES RECORD (client · relay-fed) — one snapshot per designation. Always
+    // {} at boot (KeyedSelector). suite8LocalityStcpRelay broadcasts suite8SetSyncLocalityClient;
+    // Suite8Control + ShatteriteMenu read localities[suite8Name] into their syncLocality ref.
+    localities: {},
+
+    // B-RLM-2/B-RLM-3 · THE CLOSURE GRACES RECORD (client · relay-fed) — the grace slice rides the
+    // same relay (Scholar AMENDMENT 2) for the future countdown render. Always {} at boot.
+    closureGraces: {},
   };
 }
 
@@ -64,4 +81,9 @@ export const SUITE8_FILTER_KEYS: string[] = [
   'menuStage',
   // PRE-EPOCH · BSSM keyed Record of per-designation Shatterite Menu stages.
   'shatteriteMenus',
+  // EF-5 · keyed Record of per-designation install-requirements gate-file snapshots (relay-fed).
+  'installRequirementsMap',
+  // B-RLM-2 · the relay-fed locality + closure-grace Records (local-only · never ascend to server).
+  'localities',
+  'closureGraces',
 ];

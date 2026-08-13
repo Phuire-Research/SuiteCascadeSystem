@@ -28,6 +28,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import express from 'express';
 import type { Application, Request, Response } from 'express';
+// GLW-4 · the SCP-local Bridge rail the write-lane telemetry sinks onto (the doc-save write-lane.target
+// precedent · vue.principle §3.8 · same suitecascade-watcher.json rail the watcher/drives grep).
+import { resolveScpLocalBridgeDir } from '../concepts/scsBridge/bridgeRoot.model';
 
 // The template registers json parsing PER-ROUTE (the `${prefix}/create` precedent) —
 // no global body parser exists; every POST here carries its own.
@@ -37,6 +40,55 @@ const READ_CAP_BYTES = 2_000_000; // the transfer cap — larger files are viewe
 const SEARCH_HIT_CAP = 200;
 const SEARCH_FILE_CAP = 4000;
 const IGNORE_NAMES = new Set(['node_modules', '.git', 'dist', '.DS_Store']);
+
+// ============================================
+// GLW-4 · THE OBSERVED-ROOT PUBLISHED GETTER (the editor-locality re-point seat)
+// ============================================
+//
+// The lanes below NO LONGER close over a frozen `const root = process.cwd()`. They resolve their
+// root per-request from THIS module-published getter — the SAME honest lane the scsBridgeController
+// precedent uses (a module-scope closure variable + a getter/setter). The graphiteScribe
+// locality-watch principle (GLW-3) OWNS the state (observedRoot) and PUBLISHES it here on its boot
+// pass + on every SyncLibrary change, so the express routes + the MCP tools serve from the Selected
+// Locality's TARGET tree under a Specified locality, and byte-identically from process.cwd() (LOCAL)
+// otherwise. The registration functions (registerEditorFsRoutes / buildEditorScpTools) run inside
+// the vue.principle / scpExpressTransport Huirth principles whose Deck is plain MuxiumDeck — it does
+// NOT carry d.graphiteScribe — so the DECK-K read the ground first proposed is unavailable at those
+// seats; the module-published getter is the honest lane (S4 ground-vs-reality correction · GLW-4).
+//
+// Seeded to process.cwd() so a boot BEFORE the principle's first publish (and any lane that never
+// re-points) resolves EXACTLY as the frozen constant did — the LOCAL default is never dark.
+let publishedObservedRoot: string = process.cwd();
+/** GLW-4 · the lanes read this per-request. Fallback to process.cwd() if a caller ever unsets it. */
+export function getEditorObservedRoot(): string {
+  return publishedObservedRoot && publishedObservedRoot.length > 0 ? publishedObservedRoot : process.cwd();
+}
+/** GLW-4 · GLW-3's locality-watch principle publishes the resolved observedRoot here (LOCAL anor target). */
+export function setEditorObservedRoot(root: string): void {
+  publishedObservedRoot = root && root.length > 0 ? root : process.cwd();
+}
+/** GLW-4 · the write-lane telemetry seat — mirrors the doc-save write-lane.target sink (vue.principle
+ *  §3.8). A write under a Specified locality (observedRoot !== process.cwd()) sinks WHERE the bytes
+ *  landed onto the SCP-local Bridge rail so a foreign-tree write is always Concluder-visible (grep). */
+function sinkEditorWriteTarget(rel: string, scp: string): void {
+  try {
+    const sinkPath = path.join(resolveScpLocalBridgeDir(), 'suitecascade-watcher.json');
+    fs.mkdirSync(path.dirname(sinkPath), { recursive: true });
+    fs.appendFileSync(
+      sinkPath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        seat: 'editor-write.target',
+        scp,
+        path: rel,
+        writer: 'editor-fs',
+      }) + '\n',
+      'utf8',
+    );
+  } catch {
+    /* telemetry must never harm the write · skip */
+  }
+}
 
 function ignored(name: string): boolean {
   return IGNORE_NAMES.has(name) || name.startsWith('.bridge-');
@@ -70,11 +122,12 @@ function refuse(res: Response, error: string, code = 400): void {
 import type { SCPToolDefinition } from '../concepts/scp/scp.types';
 
 export function buildEditorScpTools(): SCPToolDefinition[] {
-  const root = process.cwd();
+  // GLW-4 · NO frozen root — every helper resolves against the CURRENT observed root (LOCAL cwd anor
+  // the Selected Locality's target tree), read per-call from the module-published getter (GLW-3 sets it).
   const now = Date.now();
 
   const listDir = (dir: string) => {
-    const abs = resolveWithin(root, dir);
+    const abs = resolveWithin(getEditorObservedRoot(), dir);
     if (!abs) return { ok: false, error: 'path-refused' };
     try {
       const entries = fs
@@ -88,7 +141,7 @@ export function buildEditorScpTools(): SCPToolDefinition[] {
   };
 
   const readFile = (rel: string) => {
-    const abs = rel ? resolveWithin(root, rel) : null;
+    const abs = rel ? resolveWithin(getEditorObservedRoot(), rel) : null;
     if (!abs) return { ok: false, error: 'path-refused' };
     try {
       const stat = fs.statSync(abs);
@@ -159,11 +212,17 @@ export function buildEditorScpTools(): SCPToolDefinition[] {
         const rel = typeof params.path === 'string' ? params.path : '';
         const content = typeof params.content === 'string' ? params.content : null;
         if (!rel || content === null) return { ok: false, error: 'bad-request' };
-        const abs = resolveWithin(root, rel);
+        // GLW-4 · resolve against the CURRENT observed root (Option A · writes land at the target).
+        const observedRoot = getEditorObservedRoot();
+        const abs = resolveWithin(observedRoot, rel);
         if (!abs) return { ok: false, error: 'path-refused' };
         try {
           fs.mkdirSync(path.dirname(abs), { recursive: true });
           fs.writeFileSync(abs, content, 'utf-8');
+          // GLW-4 · THE WRITE TELEMETRY (Option A's guard) — a write under a Specified locality
+          // (observed root NOT process.cwd()) sinks WHERE the bytes landed so a foreign-tree write
+          // is always Concluder-visible (the guard-telemetry law · doc-save write-lane.target twin).
+          if (observedRoot !== process.cwd()) sinkEditorWriteTarget(rel, observedRoot);
           return { ok: true, path: rel, bytes: Buffer.byteLength(content, 'utf-8') };
         } catch (err) {
           return { ok: false, error: 'write-failed: ' + String(err) };
@@ -225,7 +284,8 @@ export function buildEditorScpTools(): SCPToolDefinition[] {
             }
           }
         };
-        walk(root, '.');
+        // GLW-4 · walk the CURRENT observed root (LOCAL cwd anor the Specified target tree).
+        walk(getEditorObservedRoot(), '.');
         return { ok: true, q, hits, capped };
       },
     },
@@ -233,17 +293,17 @@ export function buildEditorScpTools(): SCPToolDefinition[] {
 }
 
 export function registerEditorFsRoutes(expressApp: Application): void {
-  const root = process.cwd();
+  // GLW-4 · NO frozen root — every route resolves against the CURRENT observed root, read
+  // per-request from the module-published getter (GLW-3's locality-watch principle sets it). Under a
+  // Specified locality the SAME relative paths the client sends land under the TARGET SCP's tree
+  // (Option A · full read+write re-point · the Truth Law); LOCAL resolves byte-identically to cwd.
 
-  // MD-CE-6 · /editor-config — serve the SCP's shipped editor settings (the /hifi-config
-  // precedent: factory defaults < editorConfig.json < localStorage · the client boot-read
-  // applies this UNDER the user's localStorage overrides). editorConfig.json lives at the
-  // SCP PACKAGE ROOT so the editor can open/edit it as a first-class buffer through
-  // /editor-fs (the C418 'the editor IS its settings GUI'). Writes ride /editor-fs/write.
-  // Absent / malformed → {} (the client treats {} as no-file-overrides).
-  const editorConfigPath = path.resolve(root, 'editorConfig.json');
+  // MD-CE-6 · /editor-config — serve the shipped editor settings (the /hifi-config precedent). Under a
+  // Specified locality the editor opens/edits the TARGET's editorConfig.json (the C418 'the editor IS
+  // its settings GUI' · the settings GUI follows the observed tree). Absent / malformed → {}.
   expressApp.get('/editor-config', (_req: Request, res: Response) => {
     try {
+      const editorConfigPath = path.resolve(getEditorObservedRoot(), 'editorConfig.json');
       const raw = fs.readFileSync(editorConfigPath, 'utf-8');
       res.json(JSON.parse(raw));
     } catch {
@@ -253,7 +313,7 @@ export function registerEditorFsRoutes(expressApp: Application): void {
 
   expressApp.get('/editor-fs/list', (req: Request, res: Response) => {
     const dir = typeof req.query.dir === 'string' ? req.query.dir : '.';
-    const abs = resolveWithin(root, dir);
+    const abs = resolveWithin(getEditorObservedRoot(), dir);
     if (!abs) return refuse(res, 'path-refused', 403);
     try {
       const entries = fs
@@ -269,7 +329,7 @@ export function registerEditorFsRoutes(expressApp: Application): void {
 
   expressApp.get('/editor-fs/read', (req: Request, res: Response) => {
     const rel = typeof req.query.path === 'string' ? req.query.path : '';
-    const abs = rel ? resolveWithin(root, rel) : null;
+    const abs = rel ? resolveWithin(getEditorObservedRoot(), rel) : null;
     if (!abs) return refuse(res, 'path-refused', 403);
     try {
       const stat = fs.statSync(abs);
@@ -285,11 +345,17 @@ export function registerEditorFsRoutes(expressApp: Application): void {
   expressApp.post('/editor-fs/write', jsonBody, (req: Request, res: Response) => {
     const { path: rel, content } = (req.body ?? {}) as { path?: unknown; content?: unknown };
     if (typeof rel !== 'string' || typeof content !== 'string') return refuse(res, 'bad-request');
-    const abs = resolveWithin(root, rel);
+    // GLW-4 · resolve against the CURRENT observed root (Option A · writes land at the target).
+    const observedRoot = getEditorObservedRoot();
+    const abs = resolveWithin(observedRoot, rel);
     if (!abs) return refuse(res, 'path-refused', 403);
     try {
       fs.mkdirSync(path.dirname(abs), { recursive: true });
       fs.writeFileSync(abs, content, 'utf-8');
+      // GLW-4 · THE WRITE TELEMETRY (Option A's guard) — a write under a Specified locality
+      // (observed root NOT process.cwd()) sinks WHERE the bytes landed (the doc-save write-lane.target
+      // twin · a foreign-tree write under the pen deserves a Concluder-visible record).
+      if (observedRoot !== process.cwd()) sinkEditorWriteTarget(rel, observedRoot);
       res.json({ ok: true, path: rel, bytes: Buffer.byteLength(content, 'utf-8') });
     } catch (err) {
       refuse(res, 'write-failed: ' + String(err), 500);
@@ -299,12 +365,15 @@ export function registerEditorFsRoutes(expressApp: Application): void {
   expressApp.post('/editor-fs/rename', jsonBody, (req: Request, res: Response) => {
     const { from, to } = (req.body ?? {}) as { from?: unknown; to?: unknown };
     if (typeof from !== 'string' || typeof to !== 'string') return refuse(res, 'bad-request');
-    const absFrom = resolveWithin(root, from);
-    const absTo = resolveWithin(root, to);
+    // GLW-4 · resolve against the CURRENT observed root (Option A · structural writes land at the target).
+    const observedRoot = getEditorObservedRoot();
+    const absFrom = resolveWithin(observedRoot, from);
+    const absTo = resolveWithin(observedRoot, to);
     if (!absFrom || !absTo) return refuse(res, 'path-refused', 403);
     try {
       if (fs.existsSync(absTo)) return refuse(res, 'target-exists', 409);
       fs.renameSync(absFrom, absTo);
+      if (observedRoot !== process.cwd()) sinkEditorWriteTarget(to, observedRoot);
       res.json({ ok: true });
     } catch {
       refuse(res, 'rename-failed', 500);
@@ -314,15 +383,18 @@ export function registerEditorFsRoutes(expressApp: Application): void {
   expressApp.post('/editor-fs/move', jsonBody, (req: Request, res: Response) => {
     const { from, toDir } = (req.body ?? {}) as { from?: unknown; toDir?: unknown };
     if (typeof from !== 'string' || typeof toDir !== 'string') return refuse(res, 'bad-request');
-    const absFrom = resolveWithin(root, from);
-    const absDir = resolveWithin(root, toDir);
+    // GLW-4 · resolve against the CURRENT observed root (Option A · structural writes land at the target).
+    const observedRoot = getEditorObservedRoot();
+    const absFrom = resolveWithin(observedRoot, from);
+    const absDir = resolveWithin(observedRoot, toDir);
     if (!absFrom || !absDir) return refuse(res, 'path-refused', 403);
     try {
       const to = path.join(toDir, path.basename(from));
-      const absTo = resolveWithin(root, to);
+      const absTo = resolveWithin(observedRoot, to);
       if (!absTo) return refuse(res, 'path-refused', 403);
       if (fs.existsSync(absTo)) return refuse(res, 'target-exists', 409);
       fs.renameSync(absFrom, absTo);
+      if (observedRoot !== process.cwd()) sinkEditorWriteTarget(to, observedRoot);
       res.json({ ok: true, to });
     } catch {
       refuse(res, 'move-failed', 500);
@@ -332,7 +404,9 @@ export function registerEditorFsRoutes(expressApp: Application): void {
   expressApp.post('/editor-fs/delete', jsonBody, (req: Request, res: Response) => {
     const { path: rel } = (req.body ?? {}) as { path?: unknown };
     if (typeof rel !== 'string') return refuse(res, 'bad-request');
-    const abs = resolveWithin(root, rel);
+    // GLW-4 · resolve against the CURRENT observed root (Option A · structural writes land at the target).
+    const observedRoot = getEditorObservedRoot();
+    const abs = resolveWithin(observedRoot, rel);
     if (!abs) return refuse(res, 'path-refused', 403);
     try {
       const stat = fs.statSync(abs);
@@ -342,6 +416,7 @@ export function registerEditorFsRoutes(expressApp: Application): void {
       } else {
         fs.unlinkSync(abs);
       }
+      if (observedRoot !== process.cwd()) sinkEditorWriteTarget(rel, observedRoot);
       res.json({ ok: true });
     } catch (err) {
       const msg = String(err);
@@ -352,10 +427,13 @@ export function registerEditorFsRoutes(expressApp: Application): void {
   expressApp.post('/editor-fs/mkdir', jsonBody, (req: Request, res: Response) => {
     const { path: rel } = (req.body ?? {}) as { path?: unknown };
     if (typeof rel !== 'string') return refuse(res, 'bad-request');
-    const abs = resolveWithin(root, rel);
+    // GLW-4 · resolve against the CURRENT observed root (Option A · structural writes land at the target).
+    const observedRoot = getEditorObservedRoot();
+    const abs = resolveWithin(observedRoot, rel);
     if (!abs) return refuse(res, 'path-refused', 403);
     try {
       fs.mkdirSync(abs, { recursive: true });
+      if (observedRoot !== process.cwd()) sinkEditorWriteTarget(rel, observedRoot);
       res.json({ ok: true });
     } catch {
       refuse(res, 'mkdir-failed', 500);
@@ -407,7 +485,8 @@ export function registerEditorFsRoutes(expressApp: Application): void {
         }
       }
     };
-    walk(root, '.');
+    // GLW-4 · walk the CURRENT observed root (LOCAL cwd anor the Specified target tree).
+    walk(getEditorObservedRoot(), '.');
     // No silent caps (the completeness law): capped is part of the contract.
     res.json({ ok: true, q, hits, capped });
   });

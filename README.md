@@ -206,11 +206,108 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.944.1
+## Release Notes — v0.950.0 · The Diametric SCP
+
+### The Achievement
+
+This is a major release, and its title is earned by measure. Three terms carry it, each
+plain on first use. A **Demometer** is a different measure — a distinct part with its own
+measurable identity. A **Diameter** is a through-measure — a similarity drawn between
+unlike parts. A **Muxameter** is the integrated measure — a part as it relays through the
+others' Diameters, proven by operation.
+
+The worked example is the Suite 8 page itself. The page is the Demometer — and what makes
+two Demometers unlike is the locations of the pages: the same page standing on different
+SCPs. The Diameter is the locality — either location can perform from the immediate SCP:
+stand Local anor observe and act upon a Specified app, from right where you are. And the
+Muxameter forms when you work an S8 page on one SCP and cascade its advances — back into
+the Base the page may be formalized from, anor out to the Informatives where you find use
+for the page across your projects. The page as it relays, proven by the operation itself.
+
+The foundation of that proof is the SyncLibrary — the locality system. Each Suite 8 page
+holds a locality; the Locality Register lays it plain — the Local row and the live ring
+rows beside it, each with its status, chosen anor released and re-armed with no reload. A
+fire under a Specified locality reaches the target app, never a silent local fire; content
+moves under fixed paths while only the library carries the intelligence; and the failure
+mode is always preservation of your last local truth, never adoption. On that foundation
+stand the teeth: Suite 8 Page Transfer — install a page onto another SCP from the page's
+own panel, four stations, Requirements → Target → Gate → Update, proven twice in the
+field — and the update from any location, cascading a page's advances into the Base anor
+the Informatives, divergence held with both sides quoted for you to decide. Around them, a
+page's cascade memory renders live in an observing app within about 100ms of the write,
+colors round-trip, textures live in each app's own library, and the Forge Menu stands on
+every page — all on the same locality ground.
+
+One notation carries through this piece and the product alike: **anor** — the Gradient
+Conjunctive within a Range: And anor Or anor Everything-In-Between. The working example is a
+gradient band of Blue and Yellow — and Green is within Blue anor Yellow: the range held
+whole rather than a choice forced between its ends.
+
+That is the Total this release proves: not a feature list, but measures that relay. The
+counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.950.0 — the SyncLibrary: every page holds a locality**: each Suite 8 page holds a
+  locality — stand Local anor observe a Specified app, from right where you are. The
+  Locality Register lays it plain: the Local row and the live ring rows beside it, each
+  with its status — choose anor release a locality and re-arm it with no reload; localities
+  are only ever live. A fire under a Specified locality reaches the target app, never a
+  silent local fire; content moves under fixed paths while only the library carries the
+  intelligence; and failure always preserves your last local truth, never adopts.
+  Everything else in this release stands on this ground.
+- **0.950.0 — Suite 8 Page Transfer, the Install Circuit**: install a Suite 8 page onto
+  another SCP from the page's own panel — four stations, Requirements → Target → Gate →
+  Update. A Requirements pass writes the page's needs and concerns into the package
+  itself, so they travel with the page; the transfer lands the real page with a report
+  written into the receiving app's own working record, and a failed gate restores
+  everything honestly. Proven twice in the field.
+- **0.950.0 — the update from any location**: work an S8 page wherever you stand, and
+  cascade its advances — back into the Base the page was formalized from, anor out to the
+  Informatives where you use it across your projects. Divergence never overwrites:
+  differences are held with both sides quoted and you decide; the resolved page becomes
+  the new Base. The panel names the concrete relation — Base:Name ← Informative:Name —
+  and dispatches role-correctly. Field-proven across two live apps.
+- **0.950.0 — cascade memory, live across apps**: a page's own working memory — its
+  cascade documents — renders in an observing app within about 100ms of the write. No
+  reload, honest empty states, and a removal is honestly cleared.
+- **0.950.0 — suite colors travel a full circuit**: a color choice completes a round trip
+  before it paints — written to the app's own configuration first, then returned to every
+  open window at once. And the circuit reaches across apps: from Pewter Tessera, choose
+  another app's locality and set its colors — its windows re-tint live, your own styling
+  stays untouched.
+- **0.950.0 — suite textures become a living library**: the SVG textures behind every pane
+  now live in each app's own patternLibrary.json. A new texture is one small JSON entry —
+  no code change, no restart — and open pages pick it up live. Rapid changes settle to the
+  final value before they land.
+- **0.950.0 — the Entourage Forge Menu on every page**: the Forge menu stands as its own
+  widget on each Suite 8 page — sessions filtered to that page alone, build actions drawn
+  from the page's own documentation, one motion to reach the live Forge. Remove it from any
+  page and it stays removed, even through a page update; the Suite 8 panel always keeps the
+  full menu within reach, and a freshly authored page opens with it expanded.
+
+- **0.945.0 — every page carries its own version**: a Suite 8 page now holds a version of
+  its own, counted apart from the CLI and the app template. When a newer page ships, that
+  page's own Suite 8 toolbar button turns amber — a signal that belongs to the page alone;
+  the main version badge never turns amber for a page update, and the amber toggle never
+  turns the badge red. Two signals, two meanings.
+- **0.945.0 — the page update, always within reach**: the Suite 8 Control panel carries a
+  standing PAGE #N · NPM #M readout with an update control beside it, always available.
+  Matching numbers mean the page is current; a higher NPM number is the invitation to
+  refresh a single page when the moment suits you — page by page, never all-at-once.
+- **0.945.0 — a page update that honors your design**: a page refresh runs through the
+  Entourage Forge with a conference first — where the new page and your version differ, you
+  decide; nothing you shaped is overwritten without your say. The same preservation
+  discipline the SCP update circuit stands on now guards the single page.
+- **0.945.0 — the Forge's Reference Designs, renewed**: two join the Entourage Forge's
+  list. Prepared Agent Dispatch prepares any number of agents in sequence, dispatched
+  straight from your page, each carrying its own directive. OnBoard.md lets a page ship
+  with its own onboarding written alongside it — the page arrives already knowing how to
+  introduce itself.
+- **0.945.0 — Pewter Tessera joins as a full page**: Pewter Tessera ships as a full Suite 8
+  page — pick a locality to preview that SCP's shipped colors in place, held entirely apart
+  from your own styling. Nothing you preview ever lands; your look stays yours.
 - **0.944.1 — the bridge never hangs on git**: a remote git operation stalling on
   credentials could freeze the whole bridge with it. Git is now told never to prompt
   (it fails fast with its own reason), and a two-minute backstop ends any transport

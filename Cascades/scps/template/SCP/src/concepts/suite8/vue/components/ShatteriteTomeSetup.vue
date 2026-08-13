@@ -34,6 +34,7 @@
 import { ref, computed } from 'vue';
 import type { SetupFieldSchema, SetupFieldDeliveryResult } from '../../setupFieldSchema.type';
 import type { ScsBridgeSessionEntry } from '../../../scsBridge/scsBridge.type';
+import { filterS8Sessions } from '../../../scsBridge/model/s8Anchor.model';
 import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
 import SetupFormRenderer from './SetupFormRenderer.vue';
 
@@ -86,8 +87,8 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
 // PAOLR · the page's Anchor for this suite8Name. Keys on isAnchor (authoritative
 // page-bound session), NOT "any alive suite8 match" — mirror CadmiumLanding.
 const anchor = computed<ScsBridgeSessionEntry | undefined>(() =>
-  sessionsList.value.find(
-    (s) => s.suite8Name === props.suite8Name && s.isAnchor === true,
+  filterS8Sessions(sessionsList.value, props.suite8Name).find(
+    (s) => s.isAnchor === true,
   ),
 );
 

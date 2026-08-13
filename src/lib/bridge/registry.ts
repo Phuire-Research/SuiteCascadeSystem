@@ -864,6 +864,29 @@ export async function setSessionInitialDirective(ulid: string, directive: string
 }
 
 /**
+ * EF-3′ · THE TARGET S8 THREAD · setSessionTargetSuite8Name — records the Suite 8 PAGE
+ * this conduction was commissioned to formalize (the setSessionInitialDirective rail
+ * exactly: persisted at spawn time, carried to clients by the field-agnostic full-entry
+ * relay). Drives the per-page Previous Conductions filter on the Suite 8 Control.
+ *
+ * Callers: scsBridgeSpawnSuite8Session quality (payload.targetSuite8Name → set).
+ */
+export async function setSessionTargetSuite8Name(ulid: string, targetSuite8Name: string): Promise<void> {
+  return chainWrite('setSessionTargetSuite8Name', async () => {
+    const registry = await loadRegistry();
+    const entry = registry.sessions.find((s) => s.id === ulid);
+    if (!entry) return;
+    if (entry.targetSuite8Name === targetSuite8Name) {
+      log('registry.target-suite8.noop', { ulid, reason: 'already-set' });
+      return;
+    }
+    entry.targetSuite8Name = targetSuite8Name;
+    await saveRegistry(registry);
+    log('registry.target-suite8.set', { ulid, targetSuite8Name });
+  });
+}
+
+/**
  * THE ONBOARD OPTION · setSessionSuppressOnboard — the seed-suppression marker.
  * Persisted at spawn time (payload.onboard === false) on the setSessionStandBy rail
  * so the detached open-session skips the Onboard compose for THIS spawn. Default

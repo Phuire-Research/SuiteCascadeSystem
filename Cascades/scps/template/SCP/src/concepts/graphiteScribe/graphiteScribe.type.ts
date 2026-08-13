@@ -238,6 +238,14 @@ export type GraphiteScribeSetDesignationMenuStageHuirthBasePayload = {
   menuStage: MenuDocument;
 };
 
+// GLW-2 · the observed-root pair Base payload (DISTINCT type · VERBOSE('SetObservedRootHuirthBase') ·
+// Huirth-only · NOT in actionExchange · TQNI byte-match discipline). The locality-watch principle
+// (GLW-3) dispatches this with the resolveSyncLocality result (Specified) anor the LOCAL fall.
+export type GraphiteScribeSetObservedRootHuirthBasePayload = {
+  observedScpName: string;
+  observedRoot: string;
+};
+
 // MD-CE-3 · THE EDITOR-HOLDING PAYLOADS (the six mutations over openFiles/tabOrder/
 // activeFilePath/editorSettings — every one a partial-state reducer return).
 export type GraphiteScribeOpenFilePayload = {
@@ -305,6 +313,15 @@ export type GraphiteScribeHuirthState = {
   // a per-designation stage here via the keyed Base quality (Base-maintenance · Seam 2); the SMRP
   // relay reads this Record selector + broadcasts the keyed relay. Always {} at boot (KeyedSelector).
   shatteriteMenus: Record<string, MenuDocument>;
+
+  // GLW-1 · THE EDITOR-LOCALITY OBSERVED-ROOT PAIR (the CMLS re-point · the editor observes the
+  // Selected Locality's TARGET tree). NON-OPTIONAL (KeyedSelector discipline) — seeded '' + the
+  // package root in createGraphiteScribeHuirthState. The graphiteScribeLocalityWatch principle
+  // (GLW-3) resolves the designation's SyncLibrary → resolveSyncLocality → dispatches the pair via
+  // graphiteScribeSetObservedRootHuirthBase (GLW-2); the editorFs lanes (GLW-4) serve from
+  // observedRoot through the module-published getter the principle sets.
+  observedScpName: string; // '' = LOCAL (own SCP); a name = the Specified target SCP.
+  observedRoot: string;    // the absolute root the /editor-fs lanes resolve against. Seeded to the package root.
 };
 export type GraphiteScribeHuirthQualities = {
   graphiteScribeSetMenuStageHuirthBase: Quality<GraphiteScribeHuirthState, GraphiteScribeSetMenuStageHuirthBasePayload>;
@@ -312,6 +329,12 @@ export type GraphiteScribeHuirthQualities = {
   graphiteScribeSetDesignationMenuStageHuirthBase: Quality<
     GraphiteScribeHuirthState,
     GraphiteScribeSetDesignationMenuStageHuirthBasePayload
+  >;
+  // GLW-2 · the observed-root pair Base quality (the locality-watch principle dispatches this ·
+  // Base-maintenance · Huirth-only). Sets observedScpName + observedRoot for the editorFs lanes.
+  graphiteScribeSetObservedRootHuirthBase: Quality<
+    GraphiteScribeHuirthState,
+    GraphiteScribeSetObservedRootHuirthBasePayload
   >;
 };
 export type GraphiteScribeHuirthConcept = Concept<GraphiteScribeHuirthState, GraphiteScribeHuirthQualities>;

@@ -32,7 +32,7 @@
  * Pattern precedent: Suite8Landing.vue (Tier-2 cascades subscription) ·
  *                    SuiteCascadeDiamondOnyxPane.vue (marked render + Pewter hifi-* panes).
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { createAction } from 'stratimux';
 import type { Action, Muxium } from 'stratimux';
 import { marked } from 'marked';
@@ -43,8 +43,11 @@ import { suiteCascadeMuxonomic } from '../../../suiteCascade/suiteCascade.muxono
 import { suite8Muxonomic } from '../../suite8.muxonomy';
 // W1 (C758) · REWRITE-PROOF ROUTES — the /suite8-* literals live ONLY in the never-copied
 // scsBridge s8Routes model; the mint's suite8-token rewrite cannot break these fetch paths.
-import { s8CascadePath, s8DocTiersPath, S8_DOC_SAVE_PATH } from '../../../scsBridge/model/s8Routes.model';
-import type { Cascade, CascadeFileEntry } from '../../../suiteCascade/suiteCascade.type';
+import { s8CascadePath, s8DocTiersPath, S8_DOC_SAVE_PATH, scpCascadeMemoryPath } from '../../../scsBridge/model/s8Routes.model';
+// CMLS-R · the face is the switch's FAST signal (the Control pushes it right after the POST);
+// the on-demand fetch rides it — a SPEED lane only, the truth still confirmed by the relay.
+import { getGlobalScsBridgeController } from '../../../scsBridge/scsBridgeController';
+import type { Cascade, CascadeFileEntry, CascadeSubscriptionTarget } from '../../../suiteCascade/suiteCascade.type';
 // SCRR sentinel constants (the client request leg) — reused by the on-mount re-request.
 import {
   SUITE_CASCADE_REQUEST_ACTION_TYPE,
@@ -95,6 +98,17 @@ function toggleSection(): void {
 // Live cascade state for THIS designation (the extended auto-registration relay lands here).
 const cascade = ref<Cascade | null>(null);
 
+// CMLS · the relayed subscription target for THIS designation (the cascade lane's own state ·
+// set beside cascade.value in the subscription stage). null = Local. Feeds the C836 record-leg
+// label + the flip-watch (the page keys off the cascade lane, not the bridge controller's face).
+const subscriptionTargetForDesignation = ref<CascadeSubscriptionTarget | null>(null);
+// CMLS · the floor route's serving echo (the SERVER's truth · C837 fix 2) — feeds the C836
+// floor-leg label so the label reads the server's resolution, not the client's ask.
+const floorServing = ref<string | null>(null);
+// C833 · the race-guard epoch — re-keyed to the subscription-target change (the CMLS re-point
+// boundary), replacing the prior locality-epoch.
+const subscriptionEpoch = ref(0);
+
 // Prior-tier filenames (enumerated WITHOUT loading their content — the tier menu).
 const priorTierNames = ref<string[]>([]);
 
@@ -116,10 +130,53 @@ let mountHydrationPlanner: { conclude: () => void } | null = null;
 // the fetch only floors the boot — an empty registration relay never blanks a filled floor,
 // and a filled relay always overrides the floor (the fetch never blocks the relay).
 const bootCascade = ref<Cascade | null>(null);
+// CHECKPOINT PRECEDENCE — the Record WINS whenever it fills (non-empty activeCascadeFiles);
+// the floor holds the boot when the Record is empty. Trust is STRUCTURAL: the relayed entry
+// IS this designation's content by construction (the subscription re-point makes stamp
+// adjudication unreachable). The registration-stub blink is still guarded (a filled floor is
+// not blanked by an empty relay).
 const effectiveCascade = computed<Cascade | null>(() => {
   const live = cascade.value;
   if (live && live.activeCascadeFiles.length > 0) return live;
   return bootCascade.value ?? live;
+});
+// C835 · THE EMPTY-GROUND UNIFICATION (empty is a state) — EVERY 0-file ground states
+// itself plainly; the pane branch renders only when files exist. One truth, one render,
+// no locality conditional in the branch (Wave 4 re-feeds the label from the state-held
+// target).
+const emptyGround = computed<boolean>(() =>
+  effectiveCascade.value !== null
+  && effectiveCascade.value.activeCascadeFiles.length === 0,
+);
+// C836 · THE MEMORY SOURCE LABEL (troubleshooting surface · re-fed by the state-held target ·
+// the commission's letter). Record leg: Serving = the relayed subscription target's specifiedScp
+// (anor Local). Floor leg: Serving = the route's serving echo (the SERVER's truth · C837 fix 2).
+// Locality tracks the same state-held target (the page-owner face import is gone). via leg +
+// files unchanged.
+const memorySourceLabel = computed<string>(() => {
+  const target = subscriptionTargetForDesignation.value;
+  const locality = target?.specifiedScp ?? 'Local';
+  const eff = effectiveCascade.value;
+  if (!eff) return `Locality: ${locality} · Serving: — (no ground)`;
+  const onFloor = eff === bootCascade.value;
+  const serving = onFloor
+    ? (floorServing.value ?? 'Local')            // floor leg — the route's server truth.
+    : (target?.specifiedScp ?? 'Local');         // record leg — the state-held target.
+  const leg = onFloor ? 'floor' : 'record';
+  return `Locality: ${locality} · Serving: ${serving} · via ${leg} · files: ${eff.activeCascadeFiles.length}`;
+});
+
+// CMLS · §3.7.2 · THE SUBSCRIPTION FLIP-WATCH (the ONE replacement watch) — a flip re-floors from
+// the NEW resolution (the server seat) + re-fetches the tier menu. Compare absoluteDir (F6 guard:
+// a target reinstall changes the root even at the same specifiedScp — the absoluteDir is the true
+// identity). C833 re-keyed: the epoch bump discards any floor fetch in flight across the flip.
+watch(subscriptionTargetForDesignation, (now, prior) => {
+  if ((now?.absoluteDir ?? null) === (prior?.absoluteDir ?? null)) return;
+  console.log('[Suite8CascadeDocs] subscription flip · target=', now?.specifiedScp ?? 'Local');
+  subscriptionEpoch.value += 1;   // C833 re-keyed — the race-guard epoch.
+  bootCascade.value = null;       // the stale floor dies at the flip boundary.
+  void hydrateCascadeBootFloor(); // re-floor from the NEW resolution (server seat).
+  void refreshPriorTiers();       // the tier menu is HTTP-only — light re-fetch.
 });
 
 // ── Diamond / Onyx split from the finite activeCascadeFiles list ──────────────────
@@ -207,21 +264,51 @@ async function refreshPriorTiers(): Promise<void> {
 // active files straight from disk (two-roots resolved · own-root-first) and floors the
 // panes IMMEDIATELY. The live Record still WINS when it fills (effectiveCascade
 // precedence) — the fetch never blocks anor clobbers the relay.
-async function hydrateCascadeBootFloor(): Promise<void> {
+// CMLS-R · THE ON-DEMAND ARM — the owner face's specified is the fastest observable switch
+// signal; on change the floor fetches the TARGET's memory DIRECTLY (the by-name query) while
+// the server re-point places the change detection in parallel. Same epoch guard; the relay
+// leg confirms/updates behind it.
+const onDemandTargetScp = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
+watch(onDemandTargetScp, (now, prior) => {
+  if (now === prior) return;
+  subscriptionEpoch.value += 1;
+  console.log('[Suite8CascadeDocs] on-demand switch fetch · target=', now ?? 'Local');
+  void hydrateCascadeBootFloor(now);
+});
+
+async function hydrateCascadeBootFloor(onDemandTarget?: string | null): Promise<void> {
+  // C833 · THE IN-FLIGHT RACE GUARD (re-keyed to subscriptionEpoch): a query launched under the
+  // PRIOR subscription can land AFTER a flip and overwrite the new ground; the response's identity
+  // is the epoch AT FETCH START — a flip mid-flight discards the landing.
+  const fetchEpoch = subscriptionEpoch.value;
   try {
-    const r = await fetch(s8CascadePath(props.designation), {
+    // the on-demand arm queries the TARGET by name; the RELEASE (explicit null) queries the
+    // OWN ground via the reserved Local name (seat-free — the C847 release-race cure); the
+    // bare mount rides the seat route (the standing subscription's truth).
+    const floorUrl = onDemandTarget
+      ? scpCascadeMemoryPath(onDemandTarget, props.designation)
+      : (onDemandTarget === null
+        ? scpCascadeMemoryPath('Local', props.designation)
+        : s8CascadePath(props.designation));
+    const r = await fetch(floorUrl, {
       headers: { Accept: 'application/json' },
     });
+    if (fetchEpoch !== subscriptionEpoch.value) return; // stale in-flight — a flip occurred.
     if (!r.ok) return; // 404 honest → no floor (the relay legs still stand)
     const body = (await r.json()) as {
       name?: string;
       cascadeJson?: Record<string, unknown> | null;
       activeCascadeFiles?: { filePath?: string; content?: string }[];
+      serving?: string | null;
     };
+    if (fetchEpoch !== subscriptionEpoch.value) return; // stale — flip during the body parse.
     const entries: CascadeFileEntry[] = (body.activeCascadeFiles ?? [])
       .filter((f) => typeof f.filePath === 'string' && typeof f.content === 'string')
       .map((f) => ({ filePath: f.filePath as string, markdown: f.content as string }));
-    if (entries.length === 0) return;
+    // C835 · EMPTY IS A STATE (the standing law) — a memory-less ground floors an EMPTY
+    // cascade so the render is honest (always set the floor, even for 0 files).
     bootCascade.value = {
       name: body.name ?? props.designation,
       cascadeDirectory: '',
@@ -229,6 +316,8 @@ async function hydrateCascadeBootFloor(): Promise<void> {
       activeCascadeFiles: entries,
       missingCascadeJson: false,
     };
+    // C837 fix 2 · the floor-leg label reads the SERVER's serving truth (not the client's ask).
+    floorServing.value = typeof body.serving === 'string' ? body.serving : null;
     console.log('[Suite8CascadeDocs] on-boot self-query floored · files=', entries.length);
   } catch {
     /* unreachable anor malformed → no floor (AFPR · the relay legs still stand) */
@@ -254,7 +343,9 @@ onMounted(() => {
   );
 
   // Tier-2 subscription — the shared suiteCascade member's cascades Record (Suite8Landing.vue:311
-  // precedent). Reads THIS designation's key.
+  // precedent) + the CMLS cascadeSubscriptionTargets Record (the flip-watch source). Reads THIS
+  // designation's key from BOTH — one stage, one selector list. The relayed target IS the cascade
+  // lane's own state (the page keys off it, not the bridge controller's face).
   stagePlanner = muxium.plan<ClientMuxiumDeck>(
     'suite8CascadeDocsSubscription',
     ({ staging, stage, d__ }) =>
@@ -266,9 +357,17 @@ onMounted(() => {
               Cascade
             >;
             cascade.value = cascades[props.designation] ?? null;
+            const targets = d.client.d.suiteCascade.k.cascadeSubscriptionTargets.select() as Record<
+              string,
+              CascadeSubscriptionTarget
+            >;
+            subscriptionTargetForDesignation.value = targets[props.designation] ?? null;
           },
           {
-            selectors: [d__.client.d.suiteCascade.k.cascades],
+            selectors: [
+              d__.client.d.suiteCascade.k.cascades,
+              d__.client.d.suiteCascade.k.cascadeSubscriptionTargets,
+            ],
           },
         ),
       ]),
@@ -354,8 +453,16 @@ onUnmounted(() => {
     </button>
 
     <template v-if="sectionExpanded">
+      <!-- C836 · the memory source label — always visible while expanded -->
+      <div class="s8cd-source-label hifi-mono hifi-label">{{ memorySourceLabel }}</div>
+
       <div v-if="!hasCascade" class="hifi-pane-base s8cd-empty">
         <span class="hifi-label s8cd-placeholder">Cascade memory is loading…</span>
+      </div>
+
+      <!-- C835 · the unified honest empty state — every 0-file ground, Local included -->
+      <div v-else-if="emptyGround" class="hifi-pane-base s8cd-empty">
+        <span class="hifi-label s8cd-placeholder">No cascade memory for this designation.</span>
       </div>
 
       <template v-else>
@@ -508,6 +615,15 @@ onUnmounted(() => {
   font-size: 0.65rem;
   color: rgba(200, 200, 200, 0.3);
   font-style: italic;
+}
+
+/* C836 · the memory source label (the troubleshooting surface) */
+.s8cd-source-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  padding: 2px 6px 6px;
+  text-transform: none;
 }
 
 .s8cd-empty {

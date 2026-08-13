@@ -13,7 +13,7 @@
  * Patterns: SBASC · CSMI · PPOL · SCSF
  * Citation: REFINE-DIAMOND-CADMIUM.md §R-D3
  */
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, markRaw, onMounted, onUnmounted } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 import type {
@@ -37,8 +37,9 @@ import ScsBridgeSessionManagement from '../../scsBridge/vue/components/ScsBridge
 // Macro SU · STSC · importable Shatterite Tome Setup component (Setup zone · feeds the Anchor)
 // Macro SM · SMSP · importable Shatterite Menu (agent-authored stage progression · IAJW relay)
 import ShatteriteMenu from '../../suite8/vue/components/ShatteriteMenu.vue';
+// DSP-2 · THE SUITE 8 CONTROL — held under suite8, mounted DIRECTLY (the holding law).
 // MD-6 · D-BP-2 · the CARD subpage mounts the MD-5 Character-Forward Card for Cadmium.
-import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 // Macro SU · Cadmium's SFSD instance (Research Topics) + page-usage overview
 // Macro TR · RP · the TPRI Vermillion-per-topic GENERATOR (pure string builder · object input).
 // deriveResearchSlug · slugify a topic label when the topic has no kebab id (frontier subdir fallback).
@@ -48,6 +49,12 @@ import type { ScsBridgeSessionEntry } from '../../scsBridge/scsBridge.type';
 // Cycle 159 D1 · IUPA · cadmium + suite8 muxified per-page (no longer base)
 import { createCadmiumClientConcept } from '../cadmium.concept.client';
 import { createSuite8ClientConcept } from '../../suite8/suite8.concept.client';
+// D-SLE · the locality snapshot type — the relay-fed suite8 localities slice the Effective
+// Locality Law reads to resolve the effective SCP for the research spawn stamp.
+import type { Suite8SyncLocalitySnapshot } from '../../suite8/suite8.type';
+// MD-USP · US-2 · TO-STANDARD — the shared page-counter axis rides slot 3 (undefined → the counter);
+// value-import (not type) since the counter is an export const — the US-1 precedent's separate line.
+import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
 import { cadmiumMuxonomic } from '../cadmium.muxonomy';
 import { suite8Muxonomic } from '../../suite8/suite8.muxonomy';
 // Cycle 159 D1 · GPIM · Vue-layer Muxium binding into universal scsBridge controller
@@ -61,6 +68,12 @@ import { createSuiteCascadeConcept } from '../../suiteCascade/suiteCascade.conce
 import { suiteCascadeMuxonomic } from '../../suiteCascade/suiteCascade.muxonomy';
 import { suiteFromCascadeFilePath } from '../../suiteCascade/model/suiteCascade.suiteDerivation';
 import Suite8CascadeDocs from '../../suite8/vue/components/Suite8CascadeDocs.vue';
+// V-4b · THE LENT DRAWER — Cadmium lends the suite8 Control drawer (valid HERE: this island
+// composes the suite8 concept, so the drawer's slice exists).
+import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
 import type { Cascade } from '../../suiteCascade/suiteCascade.type';
 
 const cadmiumDesignationName = ref<string>('');
@@ -105,6 +118,28 @@ const targetedMenuStage = ref<MenuStage>(EMPTY_MENU_STAGE);
 
 // S8RI · the cascades Record (muxified suiteCascade state · serverToClient relay lands here).
 const cascades = ref<Record<string, Cascade>>({});
+
+// D-SLE · THE EFFECTIVE LOCALITY STAMP — the SCP a research worker must spawn against so its
+// Extended writes land in the effective SCP's tree. Sourced from the relay-fed suite8
+// `localities` slice (the same slice ShatteriteMenu reads · no new fetch). Mirrors the
+// Effective Locality Law: the specified target counts ONLY when LIVE (snapshot.targetLive) —
+// then the resolved TARGET SCP; otherwise the own citizen (localScp). undefined = degrade
+// (the bridge spawns the own citizen as today via resolveScpName).
+const researchLocalityScp = ref<string | undefined>(undefined);
+// D-TRL · THE TARGET-ROOT SNAPSHOT — the resolved TARGET SCP root (snap.targetRoot) when a live
+// target is specified, else null. Fed by the SAME D-SLE seat that resolves researchLocalityScp (the
+// relay-fed localities snapshot ALREADY carries targetRoot · Scholar fields · D-SLE landed). When
+// non-null AND the effective SCP differs from the own citizen, runResearchSweep roots the RI read at
+// this ABSOLUTE target root (never the caller's same-origin /scp-config).
+const researchLocalityRoot = ref<string | null>(null);
+// D-TRL · THE OWN-CITIZEN NAME (snap.localScp) — the page's own SCP, distinct from the RESOLVED
+// effective (researchLocalityScp, which for a targeted page = the target). The effectiveResearchScp
+// filter falls back to this when no target is live; the riBase target-branch compares against it.
+const researchLocalScpName = ref<string | undefined>(undefined);
+// D-TRL · THE SWEEP-LAUNCH SCP SNAPSHOT — the effective SCP captured at sweep fire time. The
+// page-local sweep progress text renders ONLY while this === the current effective SCP (a swap-back
+// hides the progress on a page whose target the sweep no longer matches · r6 doc §B).
+const sweepTargetScp = ref<string | undefined>(undefined);
 // S8RI · zone-0 collapsible toggle for the Cadmium Diamond/Onyx pane (collapsed by default).
 
 // ============================================================
@@ -312,14 +347,23 @@ const sweepRunning = computed<boolean>(() => sweepPhase.value === 'running');
 // shallowRef — no principle, no poll; the display principle's sync() drives reactivity.
 // Citation: DIAMOND-CADMIUM-FORGE.md §MD-CF-3 · s8Anchor.model (the lookup idiom inverted).
 // ============================================================
-const dispatchLedger = ref<Map<string, { firstSeen: number }>>(new Map());
+const dispatchLedger = ref<Map<string, { firstSeen: number; firedHere?: boolean }>>(new Map());
 
+// D-TRL-b · THE VISIBILITY LAW (the user's ruling — losing sight of an in-flight worker is
+// CRITICAL): the designation set stays BROAD (suite8 + non-anchor); ATTRIBUTION filters at the
+// ROSTER, and the page that FIRED a worker keeps sight of it ALWAYS (firedHere) — the strict
+// D-TRL filter met the 0.944.1 bridge's scpName strip and a mislabeled worker went invisible
+// on EVERY page (the field find). Attribution drives the cross-page view; firedHere is the
+// firing page's inalienable record.
 const workerSessions = computed(() => {
   const designation = cadmiumDesignationName.value;
   if (!designation) return [];
   const sessions = getGlobalScsBridgeController()?.sessionsList.value ?? [];
   return sessions.filter((s) => s.suite8Name === designation && s.isAnchor !== true);
 });
+const effectiveResearchScp = computed<string | null>(
+  () => researchLocalityScp.value ?? researchLocalScpName.value ?? null,
+);
 
 // First-sight upsert — ONLY a worker observed ALIVE enters the ledger (C464 · user refinement:
 // after a bridge turn-over sessions.json still lists old OFFLINE researchers — those are history,
@@ -329,8 +373,17 @@ watch(workerSessions, (workers) => {
   let grew = false;
   for (const w of workers) {
     if (w.status === 'offline' || w.status === 'archived') continue;
+    // D-TRL-c · ADMISSION BY BREADTH, RENDER BY LOCALITY (the r0 Summation's 0-D — the
+    // prior mechanism restored at the LEDGER): any alive designation worker is admitted
+    // on first sight (the pre-C760 pickup IE relied on); the dispatchRoster's render
+    // filter (attributed anor fired-here) is the SOLE locality discriminator. A page
+    // arriving mid-flight admits then renders by attribution — cross-page persistence
+    // through the session record, honesty at the view.
     if (!dispatchLedger.value.has(w.id)) {
-      dispatchLedger.value.set(w.id, { firstSeen: Date.now() });
+      dispatchLedger.value.set(w.id, {
+        firstSeen: Date.now(),
+        firedHere: sweepPhase.value === 'running',
+      });
       grew = true;
     }
   }
@@ -339,11 +392,20 @@ watch(workerSessions, (workers) => {
 
 const dispatchRoster = computed<Array<{ id: string; closed: boolean; status: string }>>(() => {
   const sessions = getGlobalScsBridgeController()?.sessionsList.value ?? [];
-  return Array.from(dispatchLedger.value.keys()).map((id) => {
-    const live = sessions.find((s) => s.id === id);
-    const closed = !live || live.status === 'offline' || live.status === 'archived';
-    return { id, closed, status: live?.status ?? 'gone' };
-  });
+  const effective = effectiveResearchScp.value;
+  // D-TRL-b · the RENDER filter: attributed-to-effective anor fired-here — never invisible
+  // everywhere; the cross-page view stays attribution-honest.
+  return Array.from(dispatchLedger.value.entries())
+    .filter(([id, rec]) => {
+      if (rec.firedHere === true) return true;
+      const live = sessions.find((s) => s.id === id);
+      return (live?.scpName ?? null) === effective;
+    })
+    .map(([id]) => {
+      const live = sessions.find((s) => s.id === id);
+      const closed = !live || live.status === 'offline' || live.status === 'archived';
+      return { id, closed, status: live?.status ?? 'gone' };
+    });
 });
 
 // THE ALL CLEAR (C463 · user refinement) — when EVERY dispatched agent has closed, the roster
@@ -386,6 +448,46 @@ const sweepStatusText = computed<string>(() => {
     default:
       return '';
   }
+});
+
+// D-TRL · THE FIRING-PAGE GUARD — the page-local sweep progress text (running/scanning) belongs to
+// the page that FIRED the sweep, and only while its snapshotted target still matches the current
+// effective SCP. A swap-back (effective SCP shifts off the launch target) hides the local progress —
+// the worker is no longer this view's (r6 doc §B · sweepIsForThisScp).
+const sweepIsForThisScp = computed<boolean>(
+  () => sweepPhase.value !== 'idle'
+    && sweepTargetScp.value === (researchLocalityScp.value ?? researchLocalScpName.value ?? undefined),
+);
+
+// D-TRL · THE DERIVED-FIRST PHASE — the label corresponds to the DISPATCH, not the firing page (the
+// user's ruling). It renders on ANY page whose effective SCP owns workers: an active (SCP-filtered)
+// dispatchRoster drives 'running'/'done' EVEN when this page never fired the sweep (IE's page shows
+// its own sweep this way). The page-local sweepPhase only lifts the label when the sweep is BOTH
+// running AND for this SCP (the firing page's live progress). Child's v-if="sweepPhase !== 'idle'"
+// consumes this derived value.
+const sweepPhaseDerived = computed<SweepPhase>(() => {
+  const roster = dispatchRoster.value;
+  if (roster.length > 0) return roster.every((r) => r.closed) ? 'done' : 'running';
+  return sweepIsForThisScp.value ? sweepPhase.value : 'idle';
+});
+
+// D-TRL · THE DERIVED-FIRST LABEL — dispatch activity is the FIRST source of truth. With workers in
+// the (SCP-filtered) roster the label reads the dispatch ('Research sweep · N in dispatch' anor
+// 'complete · N dispatched' when all closed); the firing-page progress text (sweepStatusText) shows
+// through ONLY when this page fired the sweep AND its target still matches (sweepIsForThisScp) — a
+// swap-back falls back to the derived dispatch label. Idle everywhere else.
+const sweepStatusTextDerived = computed<string>(() => {
+  const roster = dispatchRoster.value;
+  if (roster.length > 0) {
+    // D-TRL-b · the user's format ruling: the label corresponds to the LIST — completed
+    // versus in-process, where CLOSED IS COMPLETED.
+    const completed = roster.filter((r) => r.closed).length;
+    const inProcess = roster.length - completed;
+    return inProcess > 0
+      ? `Research sweep · ${inProcess} in process · ${completed} completed`
+      : `Research sweep complete · ${roster.length} dispatched`;
+  }
+  return sweepIsForThisScp.value ? sweepStatusText.value : '';
 });
 
 // FKIS stagger helper (mirror STSC's wait).
@@ -455,6 +557,10 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
     return;
   }
 
+  // D-TRL · snapshot the effective SCP at fire time — the firing-page progress guard (sweepIsForThisScp)
+  // compares the CURRENT effective SCP against this launch-time value; a later swap-back hides the
+  // page-local progress text (the derived dispatch label still surfaces where the workers actually run).
+  sweepTargetScp.value = researchLocalityScp.value ?? researchLocalScpName.value ?? undefined;
   sweepPhase.value = 'running';
   sweepTotal.value = sweepTopics.length;
   sweepIndex.value = 0;
@@ -480,17 +586,33 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
   // {{SCS_WORKER_ULID}}: the worker's OWN ULID is born inside the relay body — the
   // bridge substitutes the placeholder at prime time (the CWDC self-dissipate leg).
   sweepStatusDetail.value = 'building the stepped batch';
-  // C466 · the SERVER-declared absolute Extended base (the browser has no process.cwd()).
-  // Fetched fresh per sweep — one GET against the same-origin /scp-config (AFPR: absent field
-  // → undefined → the Vermillion falls back to the legacy relative path).
+  // D-TRL · THE TARGET-ROOTED riBase — when this page targets a DIFFERENT citizen (effective SCP ≠
+  // own) AND the relay-fed snapshot carried the target's root, the RI read roots at the TARGET's tree
+  // (target-rooted ABSOLUTE) — never the caller's same-origin /scp-config (workers spawn at the
+  // WORKSPACE root, not an SCP root · r7 field finding · so cwd-relative would be wrong). The
+  // extendedRoot the server serves = <scpRoot>/Cascades/Extended (vue.principle scpExtendedRoot);
+  // the target equivalent is <targetRoot>/Cascades/Extended (POSIX join · strip trailing slashes).
+  // Otherwise (the local case · own citizen) the existing /scp-config fetch stands.
+  const effectiveResearchScpAtFire = researchLocalityScp.value ?? researchLocalScpName.value ?? null;
+  const targetsForeignCitizen =
+    researchLocalityScp.value !== undefined
+    && researchLocalityScp.value !== researchLocalScpName.value
+    && researchLocalityRoot.value !== null;
   let riBase: string | undefined;
-  try {
-    const cfg = (await (await fetch('/scp-config')).json()) as { extendedRoot?: string };
-    if (typeof cfg.extendedRoot === 'string' && cfg.extendedRoot.length > 0) {
-      riBase = cfg.extendedRoot;
+  if (targetsForeignCitizen && researchLocalityRoot.value) {
+    riBase = `${researchLocalityRoot.value.replace(/\/+$/, '')}/Cascades/Extended`;
+  } else {
+    // C466 · the SERVER-declared absolute Extended base (the browser has no process.cwd()).
+    // Fetched fresh per sweep — one GET against the same-origin /scp-config (AFPR: absent field
+    // → undefined → the Vermillion falls back to the legacy relative path).
+    try {
+      const cfg = (await (await fetch('/scp-config')).json()) as { extendedRoot?: string };
+      if (typeof cfg.extendedRoot === 'string' && cfg.extendedRoot.length > 0) {
+        riBase = cfg.extendedRoot;
+      }
+    } catch {
+      /* unreachable /scp-config — legacy relative fallback */
     }
-  } catch {
-    /* unreachable /scp-config — legacy relative fallback */
   }
   const specs: ScsBridgeRelaySpec[] = sweepTopics.map((topic) => {
     const topicSlug = topic.id || deriveResearchSlug(topic.label);
@@ -498,6 +620,10 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
       topic: topic.query || topic.label,
       suite8Name,
       riBase,
+      // D-TRL · the diagnostic label — the TARGET SCP name when this sweep targets a foreign citizen
+      // (the Vermillion header renders it beside the RI Path so the worker's operator can diagnose the
+      // cross-SCP dispatch). NO path-logic change — riBase already carries the right root above.
+      targetScpName: effectiveResearchScpAtFire ?? undefined,
       outputSubdir: `${CADMIUM_FRONTIER_SUBDIR_BASENAME}/${topicSlug}`,
       workerSessionId: '{{SCS_WORKER_ULID}}',
     });
@@ -506,6 +632,9 @@ async function runResearchSweep(sweepTopics: CadmiumTopic[]): Promise<void> {
       sessionId: '',
       suite8Name,
       text: `SCS:Vermillion\n${vermillion}`,
+      // D-SLE · stamp the EFFECTIVE LOCALITY (specified-live target ?? own citizen). Absent a
+      // resolved locality the field is omitted — the bridge spawns the own citizen as today.
+      ...(researchLocalityScp.value ? { scpName: researchLocalityScp.value } : {}),
     };
   });
   sweepIndex.value = sweepTopics.length;
@@ -552,6 +681,17 @@ function handleResearchAll(): void {
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
+
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — register this page as the current
+  // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
+  // locality. Cadmium is NOT the suite8 concept and has NO version constant of its own, so we
+  // register with the assumed '0.0.0' (the field is a frozen pageVersion the S8 face does not
+  // display; the V-5 update detection · not in scope here · would read it). The designation ref
+  // (cadmiumDesignationName) hydrates async — the S8 face's designation-arrival re-arm follows it.
+  // MD-S8PM · PM-3 · a wild page never saw the s8 counter: the counter arg is OMITTED (undefined),
+  // floored to 0 at readPageS8Counter (C856) — the owner-who-never-saw surfaces the update. The
+  // drawer moves to the 4th slot under the new signature (designation · version · counter · drawer).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(cadmiumDesignationName.value || 'Cadmium Researcher', '0.0.0', S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
 
   // MD-6 · D-BP-2 · seed the name-filtered Cascade Documents list (the SCP-local read).
   void loadCadmiumWorkingDocs();
@@ -605,6 +745,30 @@ onMounted(() => {
             targetedMenuStage.value = d.client.d.cadmium.k.targetedMenuStage.select();
             // S8RI · muxified suiteCascade cascades Record (Tier-2 DECK-K · serverToClient relay)
             cascades.value = d.client.d.suiteCascade.k.cascades.select();
+            // D-SLE · the effective locality read — resolve the research spawn stamp from the
+            // relay-fed suite8 localities Record (Effective Locality Law: specified counts only
+            // when targetLive → the resolved target; else the own citizen; else undefined).
+            {
+              const localities = d.client.d.suite8.k.localities.select() as Record<
+                string,
+                Suite8SyncLocalitySnapshot
+              >;
+              const snap = localities[cadmiumDesignationName.value || 'Cadmium Researcher'];
+              researchLocalityScp.value = snap
+                ? snap.specified && snap.targetLive
+                  ? snap.targetScp ?? snap.specified ?? undefined
+                  : snap.localScp ?? undefined
+                : undefined;
+              // D-TRL · the target root + own-citizen name ride the SAME snapshot. targetRoot counts
+              // ONLY when a live target is specified (else null → runResearchSweep uses same-origin
+              // /scp-config); localScp is the own citizen (the effective-SCP filter fallback).
+              researchLocalityRoot.value = snap
+                ? snap.specified && snap.targetLive
+                  ? snap.targetRoot ?? null
+                  : null
+                : null;
+              researchLocalScpName.value = snap ? snap.localScp ?? undefined : undefined;
+            }
           },
           {
             selectors: [
@@ -625,6 +789,9 @@ onMounted(() => {
               d__.client.d.cadmium.k.targetedMenuStage,
               // S8RI · muxified suiteCascade cascades selector (Tier-2 muxified access)
               d__.client.d.suiteCascade.k.cascades,
+              // D-SLE · the suite8 localities selector — the effective locality drives the
+              // research spawn stamp (relay-fed · re-resolves on any locality change).
+              d__.client.d.suite8.k.localities,
             ],
           },
         ),
@@ -678,7 +845,10 @@ onMounted(() => {
     void fetch('/cadmium-research-bulletin')
       .then((r) => (r.ok ? r.json() : []))
       .then((bulletin) => {
-        if (Array.isArray(bulletin) && bulletin.length > 0) {
+        // DSP-B3b · dispatch ANY valid array INCLUDING [] — the length>0 guard froze the
+        // display on the pre-restore content after a Sync Usher clear (empty is a state,
+        // not an absence).
+        if (Array.isArray(bulletin)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetResearchBulletin({
               researchBulletin: bulletin as CadmiumArticle[],
@@ -708,7 +878,9 @@ onMounted(() => {
     void fetch('/cadmium-topic-bulletin')
       .then((r) => (r.ok ? r.json() : []))
       .then((bulletin) => {
-        if (Array.isArray(bulletin) && bulletin.length > 0) {
+        // DSP-B3b · empty is a state, not an absence — dispatch [] so a restored-clean
+        // bulletin actually clears the slot (the guard made even a hard refresh hold 5).
+        if (Array.isArray(bulletin)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetTopicBulletin({
               topicBulletin: bulletin as CadmiumArticle[],
@@ -735,7 +907,8 @@ onMounted(() => {
     void fetch('/cadmium-topics')
       .then((r) => (r.ok ? r.json() : []))
       .then((topics) => {
-        if (Array.isArray(topics) && topics.length > 0) {
+        // DSP-B3b · same class — dispatch [] so a cleared topics registry clears the view.
+        if (Array.isArray(topics)) {
           muxium?.dispatch(
             (muxium as Muxium<ClientMuxiumDeck>).deck.d.client.d.cadmium.e.cadmiumSetTopics({
               topics: topics as CadmiumTopic[],
@@ -757,6 +930,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
+  // the toolbar's S8 face + drawer fall away when leaving Cadmium (mirrors Suite8HomeLanding).
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);
@@ -814,6 +990,18 @@ onUnmounted(() => {
            wrapper tab + the working-docs extension are retired with it. -->
       <Suite8CascadeDocs designation="Cadmium Researcher" />
 
+      <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The designation
+           expr mirrors the registerCurrentS8Page fallback idiom (the async-hydrating ref). The
+           persisted removal flag gates the render inside the widget; this mount line remains. -->
+      <S8ForgeMenu
+        :designation="cadmiumDesignationName || 'Cadmium Researcher'"
+        :worked="true"
+        :allow-remove="true"
+      />
+
+      <!-- V-4 · THE PAGE PRUNE — the DSP-2 inline Suite8Control retired; the S8 toolbar
+           drawer carries the Control on this page (registerCurrentS8Page seats the
+           presence predicate). -->
       <!-- Macro SM · SMSP · Shatterite Menu zone — FIRST aspect the user sees (ASDR · above
            the Research Frontier / Bulletin). The agent-authored guidance/onboarding leads.
            Renders the live menuStage (IAJW relay · menu.json watcher). S6 GUARD stub. -->
@@ -830,8 +1018,8 @@ onUnmounted(() => {
       <CadmiumResearchFrontier
         :topics="topics"
         :topic-bulletin="topicBulletin"
-        :sweep-phase="sweepPhase"
-        :sweep-status-text="sweepStatusText"
+        :sweep-phase="sweepPhaseDerived"
+        :sweep-status-text="sweepStatusTextDerived"
         :dispatch-roster="dispatchRoster"
         @focus-worker="handleFocusWorker"
         @research-topic="handleResearchTopic"

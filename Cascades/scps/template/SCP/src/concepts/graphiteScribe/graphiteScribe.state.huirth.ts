@@ -25,5 +25,14 @@ export function createGraphiteScribeHuirthState(): GraphiteScribeHuirthState {
     // dir-watch writes per-designation stages via graphiteScribeSetDesignationMenuStageHuirthBase; the SMRP
     // relay reads this Record + broadcasts the keyed relay.
     shatteriteMenus: {},
+
+    // GLW-1 · THE EDITOR-LOCALITY OBSERVED-ROOT PAIR (NON-OPTIONAL · KeyedSelector). Seeded to the
+    // honest LOCAL default: '' (own SCP) + process.cwd() (the SCP PACKAGE ROOT · the /scp-config +
+    // editorFs precedent). The graphiteScribeLocalityWatch principle (GLW-3) re-points this on its
+    // boot pass + on every SyncLibrary change; a Specified locality writes the target's name + root.
+    // The state factory is server-side (Node context) — process.cwd() is the same seed the editorFs
+    // lanes bind today, so the LOCAL fall is byte-identical to the frozen constant they replace.
+    observedScpName: '',
+    observedRoot: process.cwd(),
   };
 }

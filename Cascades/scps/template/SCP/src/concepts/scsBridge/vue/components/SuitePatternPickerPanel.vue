@@ -12,31 +12,49 @@
  * (`var(--color-{suite})`), so the preview reads in context — a dot-field on the Blue suite previews
  * blue-on-blue, exactly as it will tile live once chosen.
  *
+ * D-PSVG · PSVG-2 · THE OPEN GALLERY: the thumbnail grid renders the optional `entries` prop — the
+ * LOCALITY's available library (Local: factory ∪ the own JSON library; Specified: the TARGET's
+ * library, whose css data-URIs let thumbnails render honestly even for ids the local bundle lacks).
+ * Absent prop → the in-code factory floor (the pre-D-PSVG behavior verbatim). modelValue widened to
+ * an OPEN string id. HONEST-ABSENCE: a current selection the gallery cannot resolve renders a NAMED
+ * absent notice — never a silent blank-tile masquerade.
+ *
  * Output Firewall: motif labels only — no profession/cascade names, no scare-quotes.
  */
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   type SpectrumName,
-  type PatternId,
+  type RuntimePatternEntry,
   PATTERN_LIBRARY,
 } from '../../../../model/suitePatternOverride.model';
 
 const props = defineProps<{
   suite: SpectrumName;
-  modelValue: PatternId;
-  defaultPattern: PatternId;
+  modelValue: string;
+  defaultPattern: string;
   hasCustomPattern: boolean;
+  // D-PSVG · PSVG-2 · the locality's available entries (see header). Absent → factory floor.
+  entries?: RuntimePatternEntry[];
 }>();
 
 const emit = defineEmits<{
-  'update:modelValue': [id: PatternId];
+  'update:modelValue': [id: string];
   reset: [];
   close: [];
 }>();
 
 const panelRef = ref<HTMLDivElement | null>(null);
 
-function selectPattern(id: PatternId): void {
+// The gallery the grid renders — the locality's entries anor the factory floor.
+const gallery = computed<readonly RuntimePatternEntry[]>(() => props.entries ?? PATTERN_LIBRARY);
+
+// D-PSVG · PSVG-2 · HONEST-ABSENCE — the current selection is not in this gallery (a JSON-only id
+// this locality's library lacks). Named, never silent.
+const modelValueAbsent = computed<boolean>(
+  () => !gallery.value.some((entry) => entry.id === props.modelValue),
+);
+
+function selectPattern(id: string): void {
   emit('update:modelValue', id);
 }
 
@@ -70,9 +88,16 @@ onUnmounted(() => {
       <button type="button" class="scp-picker-close" aria-label="Close" @click="$emit('close')">×</button>
     </div>
 
+    <!-- D-PSVG · PSVG-2 · HONEST-ABSENCE — the named notice for a selection this gallery lacks
+         (never a silent blank tile). The id is named so the user reads WHAT is absent. -->
+    <div v-if="modelValueAbsent" class="scp-pattern-absent">
+      Current texture <strong>{{ modelValue }}</strong> is not in this library — pick an available
+      texture below.
+    </div>
+
     <div class="scp-pattern-grid">
       <button
-        v-for="entry in PATTERN_LIBRARY"
+        v-for="entry in gallery"
         :key="entry.id"
         type="button"
         class="scp-pattern-tile"
@@ -145,6 +170,22 @@ onUnmounted(() => {
   font-size: 0.95rem;
   line-height: 1;
   padding: 0.05rem 0.4rem;
+}
+
+/* D-PSVG · PSVG-2 · the Honest-Absence notice — quiet amber alert voice (an absence is a fact to
+   read, not an error to fear). */
+.scp-pattern-absent {
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.3rem;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  color: rgba(234, 179, 8, 0.85);
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+.scp-pattern-absent strong {
+  font-weight: 700;
 }
 
 .scp-pattern-grid {

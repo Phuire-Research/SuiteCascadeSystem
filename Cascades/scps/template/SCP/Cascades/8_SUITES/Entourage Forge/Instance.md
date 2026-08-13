@@ -46,3 +46,45 @@ entry point and hands the Suite 8 to its user.
 
 **The user can deviate as needed** — the Banded Vermillion is the default conduction,
 never a cage. See Conductor.md for the Band assignments; Strategy/EF-S1 for the flow.
+
+## The PGED Pattern — the Capability the Forge Cascades
+
+**PGED — Page-Grounded Entourage Dispatch**: the ability to prepare, by way of UI, the
+dispatch of any number of agents in sequence, grounded on a given Suite 8 page. This is
+the general capability a Forge cascades into a page — and the same rail that dispatched
+the Forge itself (`triggerSpawnS8Session`), so the Forge can say plainly: the capability
+I lay into your page is the capability that dispatched me.
+
+A page instantiates PGED by AUTHORING exactly two Demometers and INHERITING four:
+
+| | Demometer | Authored anor Inherited |
+|---|---|---|
+| 1 | The Prepare Surface — the domain unit list + fire controls | AUTHORED |
+| 2 | The Directive — a pure Vermillion builder + output contract; the Primed Vermillion, crafted through install/update/onboard utilization | AUTHORED |
+| 3 | The Dispatch Rail — the spawn-spec batch enqueue | INHERITED |
+| 4 | The Sequence Law — the bridge ASTO serialization (MISO) | INHERITED |
+| 5 | The Grounding — TPRI path-not-content · CMLS locality | INHERITED |
+| 6 | The Observation Lane — the registry ledger + relay lanes | INHERITED |
+
+**The Conception Pair** (PGED's content law): a Seeded Concept in, an Actualized Artifact
+out — `A ⊗ B`, where A is the governing abstraction the page holds and B is ANY text-based
+artifact the agent is trained on (code · specs · fiction · ADRs · tests · migrations ·
+lessons · copy · clause drafts — and a Vermillion itself). THE GUARD: the general claim
+NEVER appears without the worked instance beside it — Concept in, Artifact out, a Topic
+becoming an Article is the shape.
+
+**The Worked Instance**: the Cadmium Researcher is the field-proven instance of PGED — Topic
+in, Article out. Its Inspirant docs (`Cascades/8_SUITES/Cadmium Researcher/Onboard.md`,
+Instance.md) teach the GENERAL pattern through the specific research case — read them as the
+example that proves the class, not as a research-only feature.
+
+**The Ship Path (the Directive as Primed Vermillion)**: row 2's Primed Vermillion SHIPS
+at `Cascades/8_SUITES/<designation>/Onboard.md` — the SCP-local stratum the
+`suite8_page_transfer` motion carries with the page. The receiving citizen's anchor spawns
+WITH it: the cli-handler reads the file at fire time via the C378 two-ground resolver
+(SCP-local first, workspace second), hydrates the STVI runtime tokens, and delivers it as
+the anchor's first turn. A page that ships an Onboard.md is a First-Class Intelligent
+Application — its anchor onboards the page's own user. The **F5 Actualization Close** authors
+the first Onboard.md for a newly minted page; the author refines it thereafter (a page
+without one spawns a graceful bare anchor). The worked instance is the Cadmium
+Researcher/Onboard.md ASDR named above.

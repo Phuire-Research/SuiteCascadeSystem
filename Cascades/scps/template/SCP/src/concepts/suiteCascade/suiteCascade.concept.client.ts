@@ -40,6 +40,8 @@ import { suiteCascadeSetCascadeRelay } from './qualities/suiteCascadeSetCascadeR
 import { suiteCascadeSetActiveCascadeFilesRelay } from './qualities/suiteCascadeSetActiveCascadeFilesRelay.quality';
 // B-5 SDCR + GRID · Relay receiver — the active dir broadcast (GRID vs docked Suite8).
 import { suiteCascadeSetActiveCascadeDirectoryRelay } from './qualities/suiteCascadeSetActiveCascadeDirectoryRelay.quality';
+// CMLS · Relay receiver — the subscription-target broadcast (the C836 label + the flip-watch).
+import { suiteCascadeSetCascadeSubscriptionTargetRelay } from './qualities/suiteCascadeSetCascadeSubscriptionTargetRelay.quality';
 import { getSuiteCascadePrinciples } from './principles/suiteCascade.principles.model';
 // SCRR · client leg — fire-once on boot to request the current cascade from Huirth.
 import { suiteCascadeRequestOnLoadPrinciple } from './principles/suiteCascadeRequestOnLoad.principle.client';
@@ -54,6 +56,8 @@ const suiteCascadeQualities: SuiteCascadeQualities = {
   suiteCascadeSetCascadeRelay,
   suiteCascadeSetActiveCascadeFilesRelay,
   suiteCascadeSetActiveCascadeDirectoryRelay,
+  // CMLS · Relay receiver — the subscription-target broadcast lands the target Record client-side.
+  suiteCascadeSetCascadeSubscriptionTargetRelay,
 };
 
 export const createSuiteCascadeConcept = () => {

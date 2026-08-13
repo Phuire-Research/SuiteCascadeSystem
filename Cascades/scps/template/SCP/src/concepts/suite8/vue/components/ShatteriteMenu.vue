@@ -51,6 +51,23 @@
  * Citation: EPOCH-SR-S4-GREEN-SCULPT.md §H5 (NCEC nextA) + S6 anchor-alive guard
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import type { Muxium } from 'stratimux';
+// B-RLM-2 · THE LOCALITY RELAY (the poll retirement) — the page muxium (GPIM-bound into the
+// controller by the parent Landing) carries the suite8 client concept whose relay-fed `localities`
+// Record this menu subscribes to (keyed by props.suite8Name). getCurrentMuxium() is the same held
+// reference the controller's triggers dispatch through; a keyed stage-planner feeds syncLocality.
+import type { ClientMuxiumDeck } from '../../../client/client.muxonomy';
+import type { Suite8SyncLocalitySnapshot } from '../../suite8.type';
+// D-MINT-SURFACE · THE HELD LOCALITY ACCESS — every suite8-tokened locality access (the
+// concept path · the endpoint · the dispatch target) routes through the held model so a
+// minted twin's token-renamed copy keeps reading the ONE true slice + the ONE true endpoint.
+import {
+  syncLocalityEndpoint,
+  readClientSyncLocalities,
+  clientSyncLocalitiesSelector,
+  dispatchClientSyncLocalitySnapshot,
+  debugS8LocalityDeckKeys,
+} from '../../../../model/scpLocalityClientAccess.model';
 
 // C473 · THE DOUBLE-ENGAGE GUARD (r7: two menu instances on one page fired engage twice within
 // 40ms on every restart). Module-scoped — shared by every ShatteriteMenu instance in the bundle:
@@ -65,7 +82,7 @@ import { getGlobalScsBridgeController, type ScsBridgeController } from '../../..
 // BO-1 · the rename-proof anchor contract (the C373 s8 law) — the session-field lookup and
 // the anchor-spawn route live in a NEVER-COPIED scsBridge model so the suite8:page token
 // rewrite cannot break them in mints (s.suite8Name → s.{domain}Name was the BO-1 kill).
-import { resolveS8Anchor, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
+import { resolveS8Anchor, filterS8Sessions, s8AnchorSpawnPath } from '../../../scsBridge/model/s8Anchor.model';
 // W1 (C758) · REWRITE-PROOF ROUTES (the BO-1 law) — the menu-floor path survives the mint rewrite.
 import { s8MenuPath, S8_MENU_STAGE_SET_PATH } from '../../../scsBridge/model/s8Routes.model';
 import ScsInput from '../../../vue/components/ScsInput.vue';
@@ -122,20 +139,68 @@ const sessionsList = computed<ScsBridgeSessionEntry[]>(
 
 // C880 ref hoisted above the D-AFS block — the focus watchers evaluate their source at registration (TDZ guard).
 const originScpName = ref<string>('');
+// U4B-fix · C880 CLASS — the SL-5 locality type + refs HOISTED above the induction
+// computed (focusedAnchorScpName reads syncLocality; anything evaluating that computed
+// at setup registration hits the TDZ — the field ReferenceError that killed the menu).
+type SyncLocalityInfo = {
+  localScp: string | null;
+  specified: string | null;
+  targetScp: string | null;
+  ring: { scpName: string; status: string }[];
+  // C822 · the Scholar liveness (server-computed) — localityDark honors it alongside the
+  // raw ring (a stale-ring GET no longer darkens a genuinely-live specified target).
+  targetLive?: boolean;
+};
+const syncLocality = ref<SyncLocalityInfo | null>(null);
+// DSP-B2d · THE EFFECTIVE LOCALITY LAW (the user's ruling) — the DISK holds the selection
+// (grace-protected · survives a bridge turn-over); the SURFACES render and ROUTE by the
+// EFFECTIVE locality: specified-if-live, else the real SCP this Suite 8 is composed on.
+// Preventative — a command must never target a dead locality while the disk waits out the
+// grace. (Hoisted with the refs — the C880 TDZ law; the induction below reads these.)
+// V-4g · the page-owner's shared face is the primary truth (always live · panel-mount
+// independent); the component's own lanes remain as fallback until their retirement.
+const effectiveSyncLocality = computed<SyncLocalityInfo | null>(() => {
+  const f = getGlobalScsBridgeController()?.currentS8Locality.value;
+  if (f) {
+    return {
+      localScp: f.localScp,
+      specified: f.specified,
+      targetScp: f.targetScp ?? null,
+      ring: f.ring,
+      targetLive: f.targetLive,
+    };
+  }
+  return syncLocality.value;
+});
+const localityDark = computed<boolean>(() => {
+  const s = effectiveSyncLocality.value;
+  if (!s?.specified) return false;
+  const ringLive = s.ring.some((e) => e.scpName === s.specified && e.status !== 'offline');
+  return !(ringLive || s.targetLive === true);
+});
+const effectiveTargetScp = computed<string | null>(() =>
+  effectiveSyncLocality.value?.targetScp && !localityDark.value ? effectiveSyncLocality.value.targetScp : null,
+);
 // ============================================================
 // D-AFS · THE ANCHOR FOCUS — SPECIFIED (the own citizen · the Anchor Scope Law client
 // half · ACTIVE). The LOCAL cross-citizen tabbing is PRUNED to a disabled teaser chip —
 // the full design holds at Cascades/Working/RD-ANCHOR-FOCUS-LOCAL.md for re-entry
 // (the server record fields + the ?scpName= proxy + listS8AnchorsByScp remain landed).
 // ============================================================
-// The focused citizen = the page's OWN citizen (originScpName · C880 — resolves via
-// /scp-config; '' pre-resolve → undefined = transitional designation-wide match).
-const focusedAnchorScpName = computed<string | undefined>(() => originScpName.value || undefined);
-// Own-citizen session matcher for the SOE/re-engage polls (spawn machinery is ALWAYS
-// own-citizen; a poll must never settle on another SCP's row).
+// U4B · THE LOCALITY INDUCTION (the user's ruling — supersedes the prior Anchor-Scope
+// hold): the focused citizen INDUCTS the CHOSEN LOCALITY when set (syncLocality.targetScp
+// — the Register's resolved target); otherwise it defaults to the page's OWN citizen
+// (originScpName · C880 — resolves via /scp-config; '' pre-resolve → undefined =
+// transitional designation-wide match). ALL the anchor means transfer over through this
+// one seat — the anchor computed · anchorAlive · re-engage · focus · the fire seats.
+const focusedAnchorScpName = computed<string | undefined>(
+  () => effectiveTargetScp.value || originScpName.value || undefined,
+);
+// The FOCUSED-citizen session matcher for the re-engage polls — follows the induction
+// (the poll watches the CHOSEN locality's citizen; under Local that is the own citizen).
 function matchesOwnCitizen(s: ScsBridgeSessionEntry): boolean {
-  const own = originScpName.value;
-  return own ? (s.scpName ?? null) === own : true;
+  const focused = focusedAnchorScpName.value;
+  return focused ? (s.scpName ?? null) === focused : true;
 }
 
 // PAOLR · the page's Anchor for this suite8Name — scoped to the FOCUSED citizen (D-AFS).
@@ -166,8 +231,24 @@ const autoModeEnabled = ref<boolean>(false);
 // OFF ('prompt'). `anchor` (NOT anchorAlive) is the gate: an allocated/offline anchor already owns
 // the page → no new spawn (the existing options stay inert until it relaunches). Once a live anchor
 // appears, anchor.value flips truthy → this falls false → the normal options render (no extra wiring).
+// U4B · SPAWN SUPPRESSION UNDER A SPECIFIED LOCALITY: spawning creates a NEW own-citizen
+// session (the bridge has no cross-SCP spawn routing) — under a specified locality that
+// would mint a MIS-ANCHORED origin citizen the target-scoped anchor can never see (the r4
+// hazard). The honest posture: no spawn while viewing another's locality; ENGAGE the
+// target's anchor (present anor re-engage) anor release to Local to spawn.
+// C850 · THE ANCHOR ENABLEMENT — the U4B suppression RETIRED (its rationale, 'the bridge
+// has no cross-SCP spawn routing', was obsoleted by the C373 scpName thread + the C390
+// birth-stamp + the pair-scoped anchor): under a SPECIFIED locality the affordance now
+// stands and ROUTES TO THE TARGET. The Hard Live Gate holds it DISABLED (with the reason)
+// while the specified target is dark — never a silent own-citizen fall-through.
+const spawnTargetDark = computed<boolean>(
+  () => !!effectiveSyncLocality.value?.specified && localityDark.value,
+);
 const showSpawnOption = computed<boolean>(
-  () => isAnchorAuthority.value && !anchor.value && anchorSpawnMode.value === 'prompt',
+  () =>
+    isAnchorAuthority.value &&
+    !anchor.value &&
+    anchorSpawnMode.value === 'prompt',
 );
 
 // P1 RE-ENGAGE GATE · the ORPHAN-ANCHOR case: an anchor entry EXISTS (isAnchor=true) but is NOT
@@ -407,6 +488,24 @@ onMounted(() => {
   document.addEventListener('visibilitychange', refreshS8ModeOnVisible);
   // D-AFS · resolve the own citizen early — the focused-anchor scope needs it at render.
   void ensureOriginScpName();
+  // B-RLM-2 · THE LOCALITY RELAY — subscribe the page muxium's suite8 localities Record (the poll
+  // retirement) + ODCF-hydrate the chip once at mount (the ring + the choice). The relay keeps the
+  // mirror chip AND the focused-anchor scope live thereafter — a server-side Closure Revert reaches
+  // them within a beat of the Huirth state change, no 10s poll, no tab-in dependency.
+  settleLocalitySubscription();
+  hydrateLocalityOnce();
+  // V-4d · THE FACE-CHANGE RE-HYDRATE — the slice subscription only feeds where the suite8
+  // concept composes (a twin island's Record is a dead read); the Control PUSHES the shared
+  // controller face after every locality change, so a face change here re-runs the token-free
+  // HTTP hydration and this menu's chip + focused-anchor scope follow on ANY island.
+  watch(
+    () => controller.value?.currentS8Locality.value,
+    (face, prior) => {
+      if (face === prior) return;
+      console.log('[S8-LOC] chip V-4d face-watch fire · face=', face ? JSON.stringify({ specified: face.specified, localScp: face.localScp }) : 'null');
+      hydrateLocalityOnce();
+    },
+  );
   void fetch(s8AnchorSpawnPath(props.suite8Name))
     .then((r) => (r.ok ? r.json() : { anchorSpawn: 'prompt' }))
     .then((j: { anchorSpawn?: string }) => {
@@ -482,6 +581,12 @@ function autoDecideAnchor(): void {
       // (3) NO anchor after the FULL settle window → genuine first run. C470: the spawn fires
       // ONLY on 'auto' (the toggle); 'prompt' no-ops — the Spawn + Anchor button renders.
       resolveOnce(() => {
+        // U4B · the spawn suppression extends to the AUTO path — never mint an
+        // own-citizen session while a specified locality is in view.
+        if (effectiveTargetScp.value) {
+          console.log('[ShatteriteMenu U4B] NO anchor after settle · locality SPECIFIED · no auto-spawn · suite8Name=', props.suite8Name);
+          return;
+        }
         if (anchorSpawnMode.value === 'auto' && !spawning.value) {
           // C471 · THE SPAWN DOUBLE-CHECK — re-verify the SERVER truth at fire time (the ref may
           // be the localStorage seed): only a server-confirmed 'auto' spawns.
@@ -569,7 +674,131 @@ onBeforeUnmount(() => {
     window.removeEventListener('focus', refreshS8ModeFromDisk);
     document.removeEventListener('visibilitychange', refreshS8ModeOnVisible);
   }
+  // B-RLM-2 · conclude the locality subscription plan (mirror CadmiumLanding's stagePlanner cleanup ·
+  // the no-leak invariant — the plan holds a WebSocket-fed selector; it must not outlive the mount).
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
+  }
+  if (localitySubSettleTimer !== null) {
+    clearTimeout(localitySubSettleTimer);
+    localitySubSettleTimer = null;
+  }
 });
+
+// B-RLM-2 · THE LOCALITY RELAY SUBSCRIPTION (the 10s poll retirement) — a keyed stage-planner on
+// the page muxium's suite8 localities Record. The selector fires on any relay-fed change; we read
+// THIS menu's designation key (props.suite8Name) into syncLocality (the hoisted ref the Effective
+// Locality Law computeds already consume). Concludes on unmount (mirror CadmiumLanding cleanup).
+let localityPlanner: { conclude: () => void } | null = null;
+let armedMuxium: unknown = null;
+// B-RLM-2b · ARM-ON-BIND — Vue mounts children BEFORE the parent Landing's onMounted binds the
+// muxium (setMuxium :577), so a mount-time arm finds null and MUST retry: a bounded 250ms settle
+// (the SOE boot-coalescer class · stops the beat it arms · ~10s cap) covers the binding window,
+// and every hydrate re-attempts opportunistically. Without this the subscription silently never
+// arms and the locality goes uncontrollable (the field find).
+let localitySubSettleTimer: ReturnType<typeof setTimeout> | null = null;
+let localitySubSettleTries = 0;
+function ensureLocalitySubscription(): boolean {
+  const muxium = getGlobalScsBridgeController()?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+  if (!muxium) return false;
+  // C823 · THE MUXIUM-IDENTITY RE-ARM — armed-once was deaf to a REPLACED page muxium
+  // (GPIM re-bind); a planner concluded against a dead muxium never hears the live one.
+  if (localityPlanner && armedMuxium === muxium) return true;
+  if (localityPlanner) {
+    localityPlanner.conclude();
+    localityPlanner = null;
+  }
+  armedMuxium = muxium;
+  console.log('[S8-LOC] chip ARM · designation=', props.suite8Name, '· deck=', JSON.stringify(debugS8LocalityDeckKeys(muxium)));
+  localityPlanner = muxium.plan<ClientMuxiumDeck>(
+    'shatteriteMenuLocalitySubscription',
+    ({ staging, stage, d__ }) =>
+      staging(() => [
+        stage(
+          ({ d }) => {
+            const record = readClientSyncLocalities(d) as Record<
+              string,
+              Suite8SyncLocalitySnapshot
+            >;
+            const snap = record[props.suite8Name];
+            console.log('[S8-LOC] chip STAGE fire · recordKeys=', JSON.stringify(Object.keys(record)), '· mine=', snap ? `specified=${(snap as { specified?: unknown }).specified} targetLive=${(snap as { targetLive?: unknown }).targetLive}` : 'ABSENT');
+            // B-RLM-2c · ABSENCE IS NOT EMPTINESS — no key = not-yet-relayed; writing null
+            // clobbers the ODCF dual-write (the chip + the anchor scope would blank until a
+            // POST round-trips). Only a real snapshot assigns.
+            if (snap) {
+              syncLocality.value = {
+                localScp: snap.localScp,
+                specified: snap.specified,
+                targetScp: snap.targetScp,
+                ring: Array.isArray(snap.ring) ? snap.ring : [],
+                targetLive: (snap as { targetLive?: unknown }).targetLive === true,
+              };
+            }
+          },
+          { selectors: [clientSyncLocalitiesSelector(d__)] },
+        ),
+      ]),
+  );
+  return true;
+}
+function settleLocalitySubscription(): void {
+  if (ensureLocalitySubscription()) return;
+  if (localitySubSettleTries >= 40) {
+    if (localitySubSettleTries === 40) {
+      localitySubSettleTries += 1;
+      console.warn('[S8-LOC] chip subscription settle EXHAUSTED (40×250ms) · designation=', props.suite8Name);
+    }
+    return;
+  }
+  localitySubSettleTries += 1;
+  localitySubSettleTimer = setTimeout(settleLocalitySubscription, 250);
+}
+
+// B-RLM-2 · ODCF — one-shot mount hydration (the two-phase pattern). The relay only reaches
+// connected clients; a cold mount before any relay fire sees the empty default. B-RLM-2b · THE
+// DUAL WRITE: the ref sets DIRECTLY (the panel-grade resilient path — the component owns its
+// truth even muxium-less), AND the snapshot dispatches into the muxium when bound (the shared
+// state + every other subscriber). B3b · even the Local/empty snapshot lands (empty is a state).
+function hydrateLocalityOnce(): void {
+  if (!props.suite8Name) return; // pre-designation mount — the C486 arrival watch re-fires this.
+  void fetch(syncLocalityEndpoint(props.suite8Name))
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data || typeof data !== 'object') return;
+      const j = data as SyncLocalityInfo;
+      // D-TRL-c · the GET now carries the Scholar fields — map them (hydration parity).
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown; targetPatternLibraryStamp?: unknown };
+      const snapshot: Suite8SyncLocalitySnapshot = {
+        localScp: typeof j.localScp === 'string' ? j.localScp : null,
+        specified: typeof j.specified === 'string' ? j.specified : null,
+        targetScp: typeof j.targetScp === 'string' ? j.targetScp : null,
+        targetRoot: typeof jx.targetRoot === 'string' ? jx.targetRoot : null,
+        targetLive: jx.targetLive === true,
+        localLive: jx.localLive === true,
+        targetHifiStamp: typeof jx.targetHifiStamp === 'number' ? jx.targetHifiStamp : null,
+        targetPatternLibraryStamp: typeof jx.targetPatternLibraryStamp === 'number' ? jx.targetPatternLibraryStamp : null,
+        ring: Array.isArray(j.ring) ? j.ring : [],
+      };
+      console.log('[S8-LOC] chip HYDRATE result · designation=', props.suite8Name, '· specified=', snapshot.specified, '· localScp=', snapshot.localScp, '· targetLive=', snapshot.targetLive, '· ring=', JSON.stringify(snapshot.ring));
+      syncLocality.value = {
+        localScp: snapshot.localScp,
+        specified: snapshot.specified,
+        targetScp: snapshot.targetScp,
+        ring: snapshot.ring,
+        targetLive: snapshot.targetLive,
+      };
+      ensureLocalitySubscription();
+      const muxium = controller.value?.getCurrentMuxium() as Muxium<ClientMuxiumDeck> | null;
+      if (!muxium) return;
+      dispatchClientSyncLocalitySnapshot(muxium, props.suite8Name, snapshot);
+    })
+    .catch((err) => {
+      // C822 · F4 — the silently-swallowed hydrate was the unobservable leg of the stale-chip
+      // diagnosis; the failure now names itself.
+      console.warn('[ShatteriteMenu] locality hydrate failed · designation=', props.suite8Name, err);
+    });
+}
 
 // C482 · THE TAB-IN FOLLOW — re-read the S8 truth (S8.json mode via GET + the tombstone via
 // localStorage) whenever this window returns to the user. The refs RENDER; the file DECIDES.
@@ -580,6 +809,10 @@ function refreshS8ModeFromDisk(): void {
       if (j) anchorSpawnMode.value = j.anchorSpawn === 'auto' ? 'auto' : 'prompt';
     })
     .catch(() => { /* unreachable — the ref stands */ });
+  // B-RLM-2 · the locality follows the same tab-in truth-refresh (cheap resilience · KEPT) — it
+  // re-hydrates via the relay slot (ODCF dispatch into the muxium · the subscription flows it). The
+  // relay otherwise keeps it live; this only covers a change that landed while the tab was hidden.
+  hydrateLocalityOnce();
   }
 // C486 · THE DESIGNATION-ARRIVAL RE-ARM (the Cadmium residue): pages whose designation
 // hydrates ASYNC over the relay (cadmiumDesignationName starts EMPTY) mount this menu before
@@ -686,14 +919,24 @@ async function handleSpawnAnchor(): Promise<void> {
   // at spawn stands server-side).
   const priorSessionIds = new Set(sessionsList.value.map((s) => s.id));
 
+  // C850 · THE PRESS-TIME SNAPSHOT — the spawn's citizen scope is fixed AT THE PRESS (the
+  // live matcher flips if the locality changes mid-poll); under a specified locality the
+  // spawn ROUTES TO THE TARGET (the C373 scpName thread — the session provisions under the
+  // target citizen and the pair-scoped anchor lands there; the induction then finds it).
+  const targetAtPress = effectiveTargetScp.value;
+  const matchesPressCitizen = (s: ScsBridgeSessionEntry): boolean =>
+    targetAtPress ? (s.scpName ?? null) === targetAtPress : matchesOwnCitizen(s);
+
   // Spawn — the bridge claimAnchorIfUnclaimed auto-anchors the new session to this page.
   // C373 · triggerSpawnS8Session (rename-proof alias) — survives the suite8:page domain-token rewrite.
   const origin = await ensureOriginScpName();
-  ctrl.triggerSpawnS8Session(props.suite8Name, origin || undefined);
+  ctrl.triggerSpawnS8Session(props.suite8Name, targetAtPress || origin || undefined);
 
   // Readiness poll — settle on the launched anchor, else fall back to an explicit set-anchor.
   const SOE_STEP_MS = 250;
-  const SOE_MAX_MS = 3000;
+  // C821 · S7 field find: the session's hook-fires-start latency floor is ~3.0-3.2s — a
+  // 3s poll ceiling settled BEFORE the registry row could exist. 6s clears the floor.
+  const SOE_MAX_MS = 6000;
   let elapsedMs = 0;
   if (spawnPoll) clearInterval(spawnPoll);
   spawnPoll = setInterval(() => {
@@ -703,8 +946,10 @@ async function handleSpawnAnchor(): Promise<void> {
       // (1) launched anchor present → focus the Terminal, clear the poll, done.
       // D-AFS · own-citizen scoped — the poll must never settle on another SCP's row.
       // D-AFS2 · newborn scoped — nor on any session that predates this spawn.
-      const live = sessions.find(
-        (s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
+      // C821 · BO-1 LAW — the ENTRY field access rides the held helper (an inline
+      // `s.suite8Name` mint-renames into a dead field; props.suite8Name renames FINE).
+      const live = filterS8Sessions(sessions, props.suite8Name).find(
+        (s) => matchesPressCitizen(s) && !priorSessionIds.has(s.id) && s.isAnchor === true && s.status === 'launched',
       );
       if (live) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
@@ -719,10 +964,10 @@ async function handleSpawnAnchor(): Promise<void> {
       // scope-clear wipes the prior). Only set-anchor when there is genuinely NO existing anchor.
       if (elapsedMs >= SOE_MAX_MS) {
         if (spawnPoll) { clearInterval(spawnPoll); spawnPoll = null; }
-        const existingAnchor = sessions.find((s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && s.isAnchor === true);
+        const existingAnchor = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesPressCitizen(s) && s.isAnchor === true);
         // D-AFS2 · the fallback set-anchor candidate MUST be the newborn — an elder plain
         // session is never promoted (the anchor-steal wound). No newborn → no action.
-        const unanchored = sessions.find((s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
+        const unanchored = filterS8Sessions(sessions, props.suite8Name).find((s) => matchesPressCitizen(s) && !priorSessionIds.has(s.id) && !s.isAnchor);
         if (existingAnchor) {
           console.log('[ShatteriteMenu SOE] fallback · existing anchor present → re-engage (NO steal) · anchorId=', existingAnchor.id);
           ctrl.triggerEngageSession(existingAnchor.id);
@@ -787,8 +1032,8 @@ async function handleReengageAnchor(): Promise<void> {
   if (reengagePoll) clearInterval(reengagePoll);
   reengagePoll = setInterval(() => {
     elapsedMs += REENGAGE_STEP_MS;
-    const live = sessionsList.value.find(
-      (s) => s.suite8Name === props.suite8Name && matchesOwnCitizen(s) && s.isAnchor === true && s.status === 'launched',
+    const live = filterS8Sessions(sessionsList.value, props.suite8Name).find(
+      (s) => matchesOwnCitizen(s) && s.isAnchor === true && s.status === 'launched',
     );
     if (live) {
       if (reengagePoll) { clearInterval(reengagePoll); reengagePoll = null; }
@@ -866,12 +1111,54 @@ async function primeSend(
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// SL-5 · THE LOCALITY REGISTER (D-SL5-PEWTER-LOCALITY-RD · fulfills the D-AFS teaser)
+// ════════════════════════════════════════════════════════════════════════════
+// The chosen-feature door: the chip renders the current locality (Local · <scp> anor the
+// specified target); the expansion lists Local + the ring (SL-2 · archived never appear);
+// choosing POSTs `specified` — the SL-3 library watcher re-arms the menu and the SL-4
+// fire resolution reads fresh: the page follows LIVE, no reload. An offline target is
+// choosable (a registration, not a call) — the chip dims + the blocked-fire warn carries
+// the honesty until it comes live. Never touches anchor lifecycle (the Anchor-Scope Law).
+// (the SyncLocalityInfo type + syncLocality/localityOpen refs are HOISTED above the
+// D-AFS induction — the C880 TDZ law; the machinery stays here.)
+// B-RLM-2 · fetchSyncLocality REMOVED — the 10s poll + tab-in fetch are RETIRED. syncLocality is
+// now FED BY the relay subscription (subscribeLocality · d.client.d.suite8.k.localities) + the ODCF
+// one-shot hydrate (hydrateLocalityOnce, above). The chip renders the same syncLocality ref, only
+// the feed changed (relay-pushed, not polled). chooseLocality's write still POSTs the endpoint; the
+// relay then delivers the resolved result — no local re-fetch needed.
+
+// DSP-B2d · the chip renders the EFFECTIVE locality (the fold lives hoisted with the refs —
+// localityDark + effectiveTargetScp). A dead specified never rests on the chip: the label
+// falls back to the composed-on SCP the moment the ring reads not-live, while the disk holds
+// the selection through the grace (a returning target flips the chip back with no user act).
+const localityLabel = computed<string>(() => {
+  const s = effectiveSyncLocality.value;
+  // C821 · THE SPECIFIC-CHIP LAW (the user's ruling) — bare 'Local' is NO information;
+  // the chip ALWAYS names the SCP (localScp when the snapshot carries it, else the
+  // resolved own citizen — originScpName via /scp-config).
+  const ownScp = s?.localScp || originScpName.value;
+  if (!s) return `Locality: Local${originScpName.value ? ` · ${originScpName.value}` : ''}`;
+  if (s.specified && !localityDark.value) return `Locality: ${s.specified}`;
+  return `Locality: Local${ownScp ? ` · ${ownScp}` : ''}`;
+});
+
+// U4B · THE SL-4 PRUNE — resolveDispatchAnchor (the fire-time double-fetch) is RETIRED:
+// the LOCALITY INDUCTION at focusedAnchorScpName makes the `anchor` computed ITSELF the
+// resolved dispatch target (the specified citizen's anchor when a locality is chosen; the
+// own citizen's otherwise). The fire seats read `anchor.value` synchronously — no per-fire
+// fetch latency, no divergence between two resolutions. The honest block survives free:
+// a specified locality with no alive target anchor ⇒ anchor undefined ⇒ the seats' own
+// "no alive Anchor" warn + ok:false. originScpName stays LOCAL inside triggerSendMessage
+// (the Firing-Vantage Name — the M7 cross-rail law, unchanged).
+
 async function handleOption(option: MenuOption): Promise<void> {
   // SMUP: ANY option engagement means the user has noticed the menu — clear the ping.
   clearPing();
   if (!optionsEnabled.value || dispatchingLabel.value) return;
 
   const ctrl = controller.value;
+  // U4B · the anchor IS the resolved dispatch target (the locality induction).
   const target = anchor.value;
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu SMSP] no alive Anchor for option · suite8Name=', props.suite8Name);
@@ -1076,6 +1363,7 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   const pairDirective = option.inputConfig?.pairDirective;
   if (typeof pairDirective === 'string' && pairDirective.length > 0) {
     const ctrl = controller.value;
+    // U4B · the anchor IS the resolved dispatch target (the locality induction).
     const target = anchor.value;
     if (!ctrl || !target) {
       console.warn('[ShatteriteMenu TRP] no alive Anchor for pairing submit · suite8Name=', props.suite8Name);
@@ -1111,6 +1399,7 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   if (!categories) return; // nothing to submit
 
   const ctrl = controller.value;
+  // U4B · the anchor IS the resolved dispatch target (the locality induction).
   const target = anchor.value;
   if (!ctrl || !target) {
     console.warn('[ShatteriteMenu MOIS] no alive Anchor for submit · suite8Name=', props.suite8Name);
@@ -1185,19 +1474,24 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       >
         Auto Mode: {{ autoModeEnabled ? 'ON' : 'OFF' }}
       </button>
-      <!-- D-AFS · THE ANCHOR FOCUS TEASER — the disabled fixture. Specified (the own
-           citizen) is the active law; LOCAL cross-citizen tabbing is a coming refinement
-           (the design holds at RD-ANCHOR-FOCUS-LOCAL). Standard :disabled idiom — the
-           virtual cursor carries no disabled variant yet (seated in the RD). -->
-      <button
+      <!-- SL-5 · THE LOCALITY REGISTER (fulfills the D-AFS teaser · D-SL5-PEWTER-LOCALITY-RD).
+           The chip shows the chosen locality; the expansion lists Local + the ring; choosing
+           POSTs `specified` and the page follows LIVE (the SL-3 re-arm · the SL-4 resolution). -->
+      <!-- B2b · THE MIRROR CHIP (the coupling law · one operational surface): the locality
+           SELECTION lives in the Suite 8 Control (DSP-2); this chip is a READ-ONLY mirror
+           of the same truth (the shared GET) — the two surfaces can never diverge on
+           operation because only ONE operates. -->
+      <span
         v-if="isAnchorAuthority"
-        class="menu-anchorfocus-toggle"
-        data-testid="menu-anchorfocus-toggle"
-        disabled
-        title="Anchor focus — Specified (this page's own citizen). LOCAL cross-citizen tabbing is a coming refinement."
+        class="menu-locality-chip menu-locality-mirror"
+        data-testid="menu-locality-chip"
+        :class="{ 'locality-specified': !!effectiveTargetScp, 'locality-dark': localityDark }"
+        :title="syncLocality?.specified
+          ? `This page pertains to ${syncLocality.specified}'s locality — managed in the Suite 8 Control`
+          : 'This page pertains to its own Local aspect — the locality is managed in the Suite 8 Control'"
       >
-        Anchor: Specified
-      </button>
+        {{ localityLabel }}
+      </span>
       <p v-if="hasStage && effectiveStage.prompt" class="menu-prompt">{{ effectiveStage.prompt }}</p>
       <span :class="['menu-status', anchorAlive ? 'menu-status-alive' : 'menu-status-waiting']">
         {{ statusText }}
@@ -1230,13 +1524,15 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
       <button
         type="button"
         class="menu-option-btn menu-spawn-btn"
-        :disabled="spawning"
+        :disabled="spawning || spawnTargetDark"
+        :title="spawnTargetDark ? 'The specified locality is offline — spawn its SCP to enable (the Live Locality Law)' : ''"
         @click="handleSpawnAnchor"
       >
         <span class="menu-option-kind">SPAWN</span>
-        <span class="menu-option-label">Spawn + Anchor this domain</span>
+        <span class="menu-option-label">Spawn + Anchor {{ effectiveTargetScp ? `at ${effectiveTargetScp}` : 'this domain' }}</span>
         <span v-if="spawning" class="menu-option-spinner">…</span>
       </button>
+      <span v-if="spawnTargetDark" class="hifi-label menu-stub-text">The specified locality is offline — the launch waits for it.</span>
     </div>
 
     <!-- P1 · ORPHAN-ANCHOR RE-ENGAGE · an anchor exists but is offline (status !== 'launched').
@@ -1880,24 +2176,86 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
   border-color: var(--color-yellow);
   color: var(--color-yellow);
 }
-/* D-AFS · the Anchor Focus TEASER chip (the toggle family's shape · disabled fixture —
-   the standard :disabled idiom per style.css .hifi-btn:disabled; the Local design holds
-   at RD-ANCHOR-FOCUS-LOCAL for re-entry). */
-.menu-anchorfocus-toggle {
+/* SL-5 · THE LOCALITY REGISTER (D-SL5-PEWTER-LOCALITY-RD · fulfills the D-AFS teaser —
+   its style seat inherited). The pewter frame holds; the color informs via the GLOW,
+   never a flooded fill: GREEN edge-glow = Local (grounded · the own citizen); FUCHSIA
+   edge-glow = Specified (the calibration color — measuring another's aspect); the glow
+   DIMS when the specified target is offline (the honest dark state). */
+.menu-locality-chip {
   margin-left: auto;
   margin-top: 0.25rem;
   padding: 0.2rem 0.6rem;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.35);
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.12);
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.menu-locality-chip:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+.menu-locality-chip.locality-specified {
+  border-color: rgba(232, 121, 249, 0.5);
+  box-shadow: 0 0 8px rgba(232, 121, 249, 0.22);
+  color: #e879f9;
+}
+.menu-locality-chip.locality-specified.locality-dark {
+  border-color: rgba(232, 121, 249, 0.22);
+  box-shadow: none;
+  color: rgba(232, 121, 249, 0.5);
+}
+/* The expansion — a compact D5 closed-box column; rows stay pewter, the bead is the glow. */
+.menu-locality-drop {
+  margin-left: auto;
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+}
+.menu-locality-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: left;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.menu-anchorfocus-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.menu-locality-row:hover {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.menu-locality-row.locality-row-current {
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.14);
+}
+.locality-bead {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.locality-bead-live {
+  background: #4ade80;
+  box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+}
+.locality-bead-dim {
+  background: rgba(255, 255, 255, 0.22);
 }
 </style>

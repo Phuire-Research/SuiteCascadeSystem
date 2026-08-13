@@ -16,7 +16,25 @@
  * Citation: ADMIN_ICP claudeBridgeBarController.ts (CSCM template)
  * Citation: notificationController.ts (Global Vue Component Pattern · ZKHB sibling)
  */
-import { shallowRef, computed, type ShallowRef, type ComputedRef, type InjectionKey } from 'vue';
+import { shallowRef, computed, type Component, type ShallowRef, type ComputedRef, type InjectionKey } from 'vue';
+
+// V-4c · the face-grade locality snapshot the toolbar S8 button renders (pushed by the
+// page-owned Control anor seeded over the token-free HTTP endpoint — never a slice read).
+export type S8LocalityFace = {
+  localScp: string | null;
+  specified: string | null;
+  ring: { scpName: string; status: string }[];
+  // V-4g · the page-owner publishes the FULL snapshot face (the Shatterite's anchor scope
+  // reads targetScp; localityDark honors targetLive).
+  targetScp?: string | null;
+  targetLive?: boolean;
+  // D-PFR · the TARGET hifiConfig change-stamp (Conference 1A) — the SuiteColorSelection
+  // widget watches this through the face and refetches the target palette on advance.
+  targetHifiStamp?: number | null;
+  // D-PSVG · PSVG-1 · the TARGET patternLibrary change-stamp — the pattern widget's twin
+  // (Band 2 watches this and refetches the target's library on advance).
+  targetPatternLibraryStamp?: number | null;
+};
 import type { AnyAction, Muxium } from 'stratimux';
 import type {
   AnchorConfig,
@@ -88,6 +106,9 @@ export type ScsBridgeRelaySpec = {
   suite8Name?: string; // spawn only
   asWorker?: boolean;  // spawn only · defaults TRUE bridge-side
   model?: string;      // spawn only
+  scpName?: string;    // D-SLE · spawn only · the EFFECTIVE LOCALITY stamp — rides to the
+                       // bridge spawn leg so the worker's Extended writes land in the
+                       // effective SCP's tree (specified-live target ?? own citizen).
 };
 
 // W6d · THE CONTROLLER SPAWN-PROGRESS STATE (SCM W6 · Spawn Window Focus + Simulated Loading Bar).
@@ -117,6 +138,56 @@ export type ScsBridgeController = {
 
   toolbarButtons: ShallowRef<ToolbarButtonRegistration[]>;
   bridgeJson: ShallowRef<BridgeJsonShape | null>;
+  // V-2 · the mounted Suite 8 page's registration (null = not an S8 page). V-4b · the page
+  // LENDS its own Control drawer component (the twin's drawer reads the twin's OWN muxium
+  // slice — the suite8-keyed drawer is inert on a renamed island); drawer null = no S8 button.
+  // MD-S8PM · PM-3 · `counter` carries the s8-AXIS value (S8_PAGE_COUNTER · a number) ALONGSIDE
+  // the human-readable `version` string. It is OPTIONAL on the registration shape (NOT a Stratimux
+  // state slice — a plain Vue ref object, so the KeyedSelector no-optional law does not bind here):
+  // wild pages (GraphiteScribe/Cadmium) that never saw a counter register WITHOUT it; the floor-law
+  // helper readPageS8Counter normalizes absent/non-number → the floor 0 at the READ seat (C856).
+  currentS8Page: ShallowRef<{ designation: string; version: string; counter?: number; drawer: Component | null } | null>;
+  registerCurrentS8Page: (designation: string, version: string, counter?: number, drawer?: Component) => void;
+  clearCurrentS8Page: () => void;
+  // MD-S8PM · PM-2 · THE READ SEAT (the s8 pair · THE NO-RED LAW — never a verdict input).
+  // installedS8Counter · the INSTALLED bridge's s8 counter from the served /scs-bridge-version
+  // answer (installedMuxameter.s8 · read from the installed package.json on disk · null until an
+  // s8-carrying bridge is installed + relayed). THE UPDATE-ORDER LAW: the installed bridge
+  // package.json IS the source of truth for the S8 system counter — the S8 page cannot update
+  // until the bridge update lands the new package.json, so this counter is the LOCAL truth, never
+  // npm directly. Token-free: a bare number, no color. Fed by the EXISTING /scs-bridge-version
+  // poller via relayInstalledS8Counter (no new poll — the TaskBar/GitM fetch already lands the
+  // served answer). PM-4 reads it against pageS8Counter to color the S8 toggle border; PM-2 only seats it.
+  installedS8Counter: ShallowRef<number | null>;
+  // pageS8Counter · the CURRENT page's s8 counter — the axis value the page carried when minted.
+  // MD-S8PM · PM-3 · THE REAL AXIS: reads the registration's `counter` (S8_PAGE_COUNTER for the
+  // home page · the floor 0 for pre-counter wild pages via readPageS8Counter · C856). null only
+  // when NO S8 page is mounted. The '1.0.0'/'0.0.0' version string is NEVER coerced (would fake it).
+  pageS8Counter: ComputedRef<number | null>;
+  // s8PageBehind · MD-S8PM · PM-3 · THE COMPARE (token-free · null-tolerant). pageS8Counter <
+  // installedS8Counter = out-of-sync. null when either half is unknown. PM-4 reads it for the S8
+  // toggle border + panel version row; never a TaskBar-badge input (THE NO-RED LAW holds).
+  s8PageBehind: ComputedRef<boolean | null>;
+  // relayInstalledS8Counter · the token-free relay setter. The single existing /scs-bridge-version
+  // poller (TaskBar/GitM/Suite8 landing — whoever holds both the served answer AND the controller)
+  // hands the parsed installedMuxameter.s8 here (the installed bridge package.json's s8 · the source
+  // of truth per the update-order law). A bare number in; no duplicate polling opens.
+  relayInstalledS8Counter: (s8: number | null) => void;
+  // V-4c · the current page's locality FACE — pushed by the page-owned Control (whose HTTP
+  // lanes work on ANY island); the held toolbar face reads THIS, never a concept slice.
+  currentS8Locality: ShallowRef<S8LocalityFace | null>;
+  setCurrentS8Locality: (face: S8LocalityFace | null) => void;
+  // V-4g · the page-owner registers its hydrate here; the panel triggers it after a POST.
+  registerS8LocalityRefresh: (fn: (() => void) | null) => void;
+  triggerS8LocalityRefresh: () => void;
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE HOOK — Pewter's US-3 preview owns the by-name target-hifi
+  // fetch (loadTargetHifiConfig · reactive on the target NAME, not on a same-target push). After a
+  // cross-SCP color injection settles (the receipt anor a bounded timeout), SuiteColorSelection fires
+  // THIS so the preview re-fetches the TARGET's now-pushed hifiConfig.json — the preview reflects the
+  // pushed state. Pewter registers its refetch; a page without a preview registers nothing (the trigger
+  // no-ops honestly). Distinct from the locality-refresh hook (which re-hydrates the WHOLE face).
+  registerTargetHifiPreviewRefresh: (fn: (() => void) | null) => void;
+  triggerTargetHifiPreviewRefresh: () => void;
   bridgeStatus: ShallowRef<string>;
   sessionsList: ShallowRef<ScsBridgeSessionEntry[]>;
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (mirrors sessionsList shape)
@@ -173,6 +244,30 @@ export type ScsBridgeController = {
   // route is removed. State returns via the gitm.json watcher relay (ACK-ONLY · SORD §10).
   triggerGitmAction: (tool: string, args: Record<string, unknown>) => void;
 
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's dispatch surface. Constructs
+  // scsBridgeApplyHifiConfig (the Client Induction) via deck.d.client.d.scsBridge.e and dispatches via
+  // the held Muxium (GPIM · mirrors triggerSpawnSession). Does NOT paint — the paint is the return's
+  // act (scsBridgeSetHifiConfigRelay). SuiteColorSelection.vue calls this on swatch change.
+  applyHifiConfig: (colors: Record<string, string>) => void;
+
+  // D-PXT · PXT-2 · THE INJECTION DECK-CONSTRUCTOR — builds the SAME deck-matched Induction action
+  // applyHifiConfig dispatches (deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig), but RETURNS it
+  // instead of dispatching. The origin-blind cross-SCP injection (crossScpColorInjection.model
+  // sendColorToTarget) hands this to the ephemeral WS so the wire action is the deck-matched shape
+  // verbatim (never a hand-rolled literal). Null when no Muxium is bound (the caller reports honestly).
+  buildApplyHifiConfigAction: (colors: Record<string, string>) => AnyAction | null;
+
+  // D-PSVG · PSVG-2 · THE PATTERNS LEG — the pattern click's dispatch surface, the applyHifiConfig
+  // sibling verb (same Induction · 'Scs Bridge Apply Hifi Config' · the scsBridgeHifiPatterns leg).
+  // Carries pattern LIBRARY IDS (never css). Does NOT paint — the paint is the return's act.
+  // SuitePatternSelection.vue calls this on tile change under a Local locality.
+  applyHifiPatterns: (patterns: Record<string, string>) => void;
+
+  // D-PSVG · PSVG-2 · THE PATTERN INJECTION DECK-CONSTRUCTOR — buildApplyHifiConfigAction's patterns
+  // twin: builds (does NOT dispatch) the SAME deck-matched Induction carrying the patterns leg, for
+  // the origin-blind cross-SCP push (sendPatternsToTarget). Null when no Muxium is bound.
+  buildApplyHifiPatternsAction: (patterns: Record<string, string>) => AnyAction | null;
+
   // ----------------------------------------
   // D3D Wave-2 · CMIA-Spawn + CMIA-Engage + SAES dispatch API
   // ScsBridgeSessionManagement.vue calls these from button click handlers.
@@ -205,7 +300,7 @@ export type ScsBridgeController = {
   // THE SOVEREIGN SPAWN BINDING · scpName omitted/null → the controller resolves the OWN
   // citizen (/scp-config · cached) before threading — the C857 first-found probe never fires
   // from a page-side spawn.
-  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean) => void;
+  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
   // C373 · THE RENAME-PROOF ALIAS · same signature as triggerSpawnSuite8Session; ONE implementation,
   // two names. The `suite8:page` pipeline recursively find-replaces `Suite8`→`{Domain}` /
   // `suite8`→`{domainLower}` across EVERY .ts/.vue in the copied concept dir (suite8PageCreate.ts
@@ -215,7 +310,7 @@ export type ScsBridgeController = {
   // has no `Suite8`/`suite8` substring → SURVIVES the rename intact (the proven /s8/ URL-alias idiom).
   // Copied suite8-concept call sites MUST call THIS name; shared surfaces keep triggerSpawnSuite8Session.
   // C386 · fresh (4th arg) rides the same signature — the Forge's Engage passes fresh:true.
-  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean) => void;
+  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
   // MD-9 · D-MC-3 · Per-Instance Model Control · set the model the NEXT spawn (general anor S8)
   // pins. Persistent selection the Session Management dropdown owns; both spawn principles read
   // pendingSpawnModel FRESH at fire-time. undefined = clear the pin (spawn → global default).
@@ -397,6 +492,74 @@ export function createScsBridgeController(): ScsBridgeController {
   // Vue-owned refs · mirrors of Stratimux scsBridge state
   const toolbarButtons = shallowRef<ToolbarButtonRegistration[]>([]);
   const bridgeJson = shallowRef<BridgeJsonShape | null>(null);
+  // V-2 · THE CURRENT S8 PAGE REGISTRATION — the mounted Suite 8 page registers its
+  // designation + frozen pageVersion here (the Landing's onMounted); null = the current
+  // page is NOT a Suite 8 page (V-3's toolbar S8-button presence predicate rides this).
+  const currentS8Page = shallowRef<{ designation: string; version: string; counter?: number; drawer: Component | null } | null>(null);
+  // MD-S8PM · PM-3 · the s8-AXIS `counter` rides ALONGSIDE the `version` string (the S8 home page
+  // passes S8_PAGE_COUNTER; wild pages omit it — floored to 0 at readPageS8Counter).
+  const registerCurrentS8Page = (designation: string, version: string, counter?: number, drawer?: Component): void => {
+    currentS8Page.value = { designation, version, counter, drawer: drawer ?? null };
+  };
+  const clearCurrentS8Page = (): void => {
+    currentS8Page.value = null;
+    currentS8Locality.value = null;
+  };
+  // MD-S8PM · PM-2 · THE READ SEAT — the s8 pair (installed-system · current-page). THE UPDATE-ORDER
+  // LAW: the installed bridge package.json IS the source of truth for the S8 system counter (the S8
+  // page cannot update until the bridge update lands the new package.json). THE NO-RED LAW: neither
+  // ref feeds a verdict; PM-4 reads them to color the S8 toggle border, never the badge.
+  const installedS8Counter = shallowRef<number | null>(null);
+  const relayInstalledS8Counter = (s8: number | null): void => {
+    installedS8Counter.value = typeof s8 === 'number' ? s8 : null;
+  };
+  // MD-S8PM · PM-3 · THE FLOOR-LAW HELPER (C856 · normalize at the READ seat · token-free).
+  // A page's s8-axis counter reads from its registration's `counter` field. Pre-counter pages
+  // (wild pages minted before this band · or any registration without a number) read the FLOOR 0
+  // — the owner-who-never-saw-a-counter surfaces the update honestly. The '1.0.0'/'0.0.0' version
+  // STRING is NEVER coerced (that would fake the axis); only the real number axis is read.
+  const readPageS8Counter = (
+    entry: { counter?: number } | null | undefined,
+  ): number => (typeof entry?.counter === 'number' ? entry.counter : 0);
+  // pageS8Counter · THE REAL AXIS (PM-3). On any mounted S8 page it reads the page's counter
+  // (S8_PAGE_COUNTER for the home page · floor 0 for wild pages); null only when NO S8 page is
+  // mounted (currentS8Page null · not an S8 page). THE NO-RED LAW holds: this feeds no verdict.
+  const pageS8Counter = computed<number | null>(() =>
+    currentS8Page.value === null ? null : readPageS8Counter(currentS8Page.value),
+  );
+  // MD-S8PM · PM-3 · THE COMPARE SEAT (token-free). s8PageBehind = the current page's counter is
+  // strictly below the INSTALLED system's s8 → out-of-sync. Null when either half is unknown (no S8
+  // page mounted · or the installed s8 not yet fetched+relayed). THE UPDATE-ORDER LAW: the installed
+  // bridge package.json's s8 is the source of truth — the S8 page unlocks its update only after the
+  // bridge update lands the new counter. PM-4 reads this for the S8 toggle border / panel version
+  // row; PM-3 only exposes it. THE NO-RED LAW: never a TaskBar-badge input.
+  const s8PageBehind = computed<boolean | null>(() => {
+    const page = pageS8Counter.value;
+    const installed = installedS8Counter.value;
+    if (page === null || installed === null) return null;
+    return page < installed;
+  });
+  const currentS8Locality = shallowRef<S8LocalityFace | null>(null);
+  const setCurrentS8Locality = (face: S8LocalityFace | null): void => {
+    currentS8Locality.value = face;
+  };
+  let s8LocalityRefreshFn: (() => void) | null = null;
+  const registerS8LocalityRefresh = (fn: (() => void) | null): void => {
+    s8LocalityRefreshFn = fn;
+  };
+  const triggerS8LocalityRefresh = (): void => {
+    s8LocalityRefreshFn?.();
+  };
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE HOOK — Pewter registers its target-hifi refetch; the cross-SCP
+  // injection settle fires it so the preview reflects the pushed state. A page with no preview registers
+  // nothing — the trigger no-ops (honest skip). Distinct fn from the locality-refresh above.
+  let targetHifiPreviewRefreshFn: (() => void) | null = null;
+  const registerTargetHifiPreviewRefresh = (fn: (() => void) | null): void => {
+    targetHifiPreviewRefreshFn = fn;
+  };
+  const triggerTargetHifiPreviewRefresh = (): void => {
+    targetHifiPreviewRefreshFn?.();
+  };
   const bridgeStatus = shallowRef<string>('');
   const sessionsList = shallowRef<ScsBridgeSessionEntry[]>([]);
   // SE · Epoch Extension · ASMQ/UFRT · archive-manifest reactive ref (full-replaced by the relay)
@@ -598,7 +761,7 @@ export function createScsBridgeController(): ScsBridgeController {
   // is reserved for a future SCP-bound spawn lane (C1 spawns Template SCP default).
   // D-UP · manualMode (5th param) = fresh-worker spawn WITHOUT the auto-permission marker —
   // approval gate intact + the Stand By overlay on the primed session (the Gitm Resolver's flag).
-  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true): void => {
+  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true, targetSuite8Name?: string): void => {
     console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode, '· initialDirectiveChars=', initialDirective?.length ?? 0, '· onboard=', onboard, '· anchor=', anchor);
     // C375 · THE ENGAGE AWAIT HARDENING · the S4 prescription — one loud line naming the Muxium state
     // BEFORE the try, so the relay pins whether the Engage reached a LIVE controller or a detached one.
@@ -641,6 +804,9 @@ export function createScsBridgeController(): ScsBridgeController {
           // THE PLAIN-SPAWN LANE · thread ONLY the explicit false (default true = omit → the
           // anchor lane, unchanged — the page/Shatterite Menu door).
           ...(anchor === false ? { anchor: false } : {}),
+          // EF-3′ · THE TARGET S8 THREAD · thread ONLY when supplied (→ the InvokeSpawnSuite8
+          // principle → MCP targetSuite8Name → the bridge persists it on the registry entry).
+          ...(targetSuite8Name ? { targetSuite8Name } : {}),
         });
         mux.dispatch(action);
         console.log('[ScsBridgeController] triggerSpawnSuite8Session dispatched · trigger field set · asWorker=', asWorker, '· scpName=', sovereignScpName, '· fresh=', fresh, '· anchor=', anchor);
@@ -1978,9 +2144,122 @@ export function createScsBridgeController(): ScsBridgeController {
     void triggerGitmMean(tool, args);
   };
 
+  // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — dispatch the color click's Client Induction (GPIM · mirrors
+  // triggerSpawnSession). Routes the sparse per-spectrum hex map to actionQue → the webSocketClient
+  // principle sends it → the Huirth Real merge-writes hifiConfig.json + broadcasts the fresh config
+  // back. This method NEVER paints — the paint arrives on the return (scsBridgeSetHifiConfigRelay).
+  const applyHifiConfig = (colors: Record<string, string>): void => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] applyHifiConfig called without bound Muxium · color round-trip will NOT fire',
+      );
+      return;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      const action: AnyAction = deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiColors: colors,
+      });
+      mux.dispatch(action);
+      console.log(
+        '[ScsBridgeController] applyHifiConfig dispatched · spectra=',
+        Object.keys(colors).length,
+      );
+    } catch (err) {
+      console.error('[ScsBridgeController] applyHifiConfig dispatch failed:', err);
+    }
+  };
+
+  // D-PXT · PXT-2 · THE INJECTION DECK-CONSTRUCTOR — builds (does NOT dispatch) the deck-matched
+  // Induction the origin-blind cross-SCP injection sends to the TARGET's ephemeral WS. Mirrors
+  // applyHifiConfig's action construction verbatim (the deck-matched shape · never hand-rolled), but
+  // returns it for crossScpColorInjection.model to serialize + inject. Null when no Muxium is bound.
+  const buildApplyHifiConfigAction = (colors: Record<string, string>): AnyAction | null => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] buildApplyHifiConfigAction called without bound Muxium · cross-SCP injection will NOT fire',
+      );
+      return null;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      return deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiColors: colors,
+      }) as AnyAction;
+    } catch (err) {
+      console.error('[ScsBridgeController] buildApplyHifiConfigAction failed:', err);
+      return null;
+    }
+  };
+
+  // D-PSVG · PSVG-2 · THE PATTERNS LEG — dispatch the pattern click's Client Induction (the
+  // applyHifiConfig sibling · same GPIM idiom · same Induction quality, the scsBridgeHifiPatterns
+  // leg). Ids only, never css. This method NEVER paints — the paint arrives on the return
+  // (scsBridgeSetHifiConfigRelay → applyHifiConfigWithOverrides applies patterns).
+  const applyHifiPatterns = (patterns: Record<string, string>): void => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] applyHifiPatterns called without bound Muxium · pattern round-trip will NOT fire',
+      );
+      return;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      const action: AnyAction = deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiPatterns: patterns,
+      });
+      mux.dispatch(action);
+      console.log(
+        '[ScsBridgeController] applyHifiPatterns dispatched · spectra=',
+        Object.keys(patterns).length,
+      );
+    } catch (err) {
+      console.error('[ScsBridgeController] applyHifiPatterns dispatch failed:', err);
+    }
+  };
+
+  // D-PSVG · PSVG-2 · THE PATTERN INJECTION DECK-CONSTRUCTOR — builds (does NOT dispatch) the
+  // deck-matched Induction carrying the patterns leg for the origin-blind cross-SCP push. Mirrors
+  // buildApplyHifiConfigAction verbatim (never hand-rolled). Null when no Muxium is bound.
+  const buildApplyHifiPatternsAction = (patterns: Record<string, string>): AnyAction | null => {
+    if (!currentMuxium) {
+      console.warn(
+        '[ScsBridgeController] buildApplyHifiPatternsAction called without bound Muxium · cross-SCP injection will NOT fire',
+      );
+      return null;
+    }
+    try {
+      const mux = currentMuxium as Muxium<any>;
+      const deck: any = (mux as any).deck;
+      return deck.d.client.d.scsBridge.e.scsBridgeApplyHifiConfig({
+        scsBridgeHifiPatterns: patterns,
+      }) as AnyAction;
+    } catch (err) {
+      console.error('[ScsBridgeController] buildApplyHifiPatternsAction failed:', err);
+      return null;
+    }
+  };
+
   return {
     toolbarButtons,
     bridgeJson,
+    currentS8Page,
+    registerCurrentS8Page,
+    clearCurrentS8Page,
+    installedS8Counter,
+    pageS8Counter,
+    s8PageBehind,
+    relayInstalledS8Counter,
+    currentS8Locality,
+    setCurrentS8Locality,
+    registerS8LocalityRefresh,
+    triggerS8LocalityRefresh,
+    // D-PXT · PXT-4 · the preview coherence hook (Pewter registers its target-hifi refetch)
+    registerTargetHifiPreviewRefresh,
+    triggerTargetHifiPreviewRefresh,
     bridgeStatus,
     sessionsList,
     archiveManifest,
@@ -1997,6 +2276,13 @@ export function createScsBridgeController(): ScsBridgeController {
     closeDefaultMuxium,
     triggerHardTurnOver,
     triggerGitmAction,
+    // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's dispatch surface (no paint · return paints)
+    applyHifiConfig,
+    // D-PXT · PXT-2 · the injection deck-constructor (builds the deck-matched Induction · never dispatches)
+    buildApplyHifiConfigAction,
+    // D-PSVG · PSVG-2 · the patterns leg (dispatch verb + build twin · same Induction, ids only)
+    applyHifiPatterns,
+    buildApplyHifiPatternsAction,
     triggerSpawnSession,
     getScpName: resolveScpName,
     triggerSpawnSuite8Session,
@@ -2070,10 +2356,16 @@ export function isScsBridgeController(obj: unknown): obj is ScsBridgeController 
 //
 // Pattern matches ADMIN_ICP claudeBridgeBarController.ts L536-549.
 
-let globalController: ScsBridgeController | null = null;
+// C823 · THE REACTIVE GLOBAL — a plain `let` gave consumers' computeds/watch getters ZERO
+// reactive dependency: a child component evaluating before the landing registered the
+// controller cached null FOREVER (the deaf-chip class — subscription settles + face watches
+// all read through the dead cache). Backing the holder with a shallowRef makes every
+// existing `getGlobalScsBridgeController()` read inside a computed anor watch getter a REAL
+// dependency — the signature is unchanged; every consumer revives without edits.
+const globalControllerRef = shallowRef<ScsBridgeController | null>(null);
 
 export function setGlobalScsBridgeController(controller: ScsBridgeController | null): void {
-  globalController = controller;
+  globalControllerRef.value = controller;
   console.log(
     '[ScsBridgeController] Global controller',
     controller ? 'registered' : 'cleared',
@@ -2081,10 +2373,10 @@ export function setGlobalScsBridgeController(controller: ScsBridgeController | n
 }
 
 export function getGlobalScsBridgeController(): ScsBridgeController | null {
-  return globalController;
+  return globalControllerRef.value;
 }
 
 export function clearGlobalScsBridgeController(): void {
-  globalController = null;
+  globalControllerRef.value = null;
   console.log('[ScsBridgeController] Global controller cleared');
 }

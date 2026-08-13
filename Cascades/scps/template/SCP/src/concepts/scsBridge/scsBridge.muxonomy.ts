@@ -168,6 +168,23 @@ export const scsBridgeMuxonomic: MuxonomicConfig<'scsBridge'> = {
         location: DeploymentTarget.Client,
         diameter: false,
       },
+      // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the Diameter Real lives on Huirth (Client owns the
+      // Induction · shared type string 'Scs Bridge Apply Hifi Config'); the relay is dual-deployment
+      // (broadcast by Huirth · applied by Client · mirrors setBridgeJsonRelay).
+      {
+        name: 'scsBridgeApplyHifiConfig',
+        type: 'Scs Bridge Apply Hifi Config',
+        filePath: 'qualities/applyHifiConfig.quality.huirth.diameter.ts',
+        location: DeploymentTarget.Huirth,
+        diameter: true,
+      },
+      {
+        name: 'scsBridgeSetHifiConfigRelay',
+        type: 'Scs Bridge Set Hifi Config Relay',
+        filePath: 'qualities/setHifiConfigRelay.quality.ts',
+        location: DeploymentTarget.All,
+        diameter: false,
+      },
       // ============================================
       // M2 EXTENSION BACKFILL (Cycle 155 · MSDT completion · Foundation A Wave 0)
       // Previously unlisted Client qualities now registered for StratiVERSE
@@ -346,6 +363,14 @@ export const scsBridgeMuxonomic: MuxonomicConfig<'scsBridge'> = {
         actionType: 'Scs Bridge Trigger Hard Turn Over',
         direction: ExchangeDirection.ClientToServer,
       },
+      // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the color click's Client INDUCTION crosses the WS
+      // boundary to the Huirth Real (merge-writes hifiConfig.json + broadcasts). Type-string byte-match
+      // to applyHifiConfig.quality.{client,huirth}.diameter.ts ('Scs Bridge Apply Hifi Config').
+      {
+        qualityName: 'scsBridgeApplyHifiConfig',
+        actionType: 'Scs Bridge Apply Hifi Config',
+        direction: ExchangeDirection.ClientToServer,
+      },
     ],
     serverToClient: [
       {
@@ -371,6 +396,15 @@ export const scsBridgeMuxonomic: MuxonomicConfig<'scsBridge'> = {
       {
         qualityName: 'scsBridgeSetHighlightTarget',
         actionType: 'Scs Bridge Set Highlight Target',
+        direction: ExchangeDirection.ServerToClient,
+      },
+      // D-PCL · THE ROUND-TRIP COLOR CIRCUIT — the RETURN broadcast. The Huirth Real broadcasts the
+      // FRESH merged hifiConfig to ALL clients; each client's setHifiConfigRelay re-runs the boot
+      // precedence and re-tints. Self-routing (receiver is the client-side scsBridge concept · the
+      // setBridgeJsonRelay precedent). Byte-match to setHifiConfigRelay.quality.ts.
+      {
+        qualityName: 'scsBridgeSetHifiConfigRelay',
+        actionType: 'Scs Bridge Set Hifi Config Relay',
         direction: ExchangeDirection.ServerToClient,
       },
       // SE · Epoch Extension · ASMQ · archive-manifest relay (BCMC channel · the AMWP watcher

@@ -206,6 +206,23 @@ function writeGitmJson(scpDir: string, userCwd: string, snapshot: GitmStatusSnap
   return link;
 }
 
+// E-ALERT-RACE (C888) — the field wound: scsBridgeAlertTurnOver wrote gitm.json with a BARE
+// writeFileSync OUTSIDE this per-rail chain; a chained fan-out write in flight (prior-read
+// before the alert's direct write · rename after) ERASED the alert before the user's UI
+// armed it (the 19:33:38 alert absent while its retire condition was never met — the field
+// conviction). This export lets ANY read-modify-write mutation of a rail's gitm.json JOIN
+// the serialization — the mutator runs with NO chained write in flight, so its own fresh
+// read IS the true prior. The mutator must re-read + re-guard inside (the queue delay may
+// have advanced the baseline).
+export function enqueueGitmRailMutation(railBase: string, mutate: () => void | Promise<void>): Promise<void> {
+  const prior = gitmWriteChainByRail.get(railBase) ?? Promise.resolve();
+  const link = prior.then(async () => {
+    await mutate();
+  });
+  gitmWriteChainByRail.set(railBase, link.catch(() => undefined));
+  return link;
+}
+
 // W2b (the Turn-Over Disconnect Guard) — the DECISION-FIELD HOLD. The persisted A/B decision fields
 // {workingBranch, stableBranch, branchRoles} MUST survive the dark hour: the writer NEVER regresses
 // the on-disk gitm.json to blank decision fields as a side effect of a crash/turn-over/restart. The

@@ -18,6 +18,11 @@
  * comparisons or route literals.
  */
 
+// FM-2 · the conduction-target read is the SAME shared-stratum law: the registry field
+// (targetSuite8Name) is read ONLY through the held model — a twin's token-rename can never
+// touch it. No import cycle: scpLocalityClientAccess.model imports nothing.
+import { readConductionTarget } from '../../../model/scpLocalityClientAccess.model';
+
 // Structural session shape — the fields the anchor contract reads. Kept structural so
 // copies compile against whatever session type their rewrite produced.
 export type S8SessionLike = {
@@ -69,6 +74,28 @@ export function findLiveS8Session<T extends S8SessionLike>(
       s.suite8Name === designation &&
       (scpName === undefined || s.scpName === scpName) &&
       s.status === 'launched',
+  );
+}
+
+/** FM-2 · 2A · A LIVE conduction COMMISSIONED to the given PAGE — the target-aware ONE MOTION
+ *  find. Sits BESIDE the stable `findLiveS8Session` (whose signature stays byte-unchanged —
+ *  its existing callers key SCP-scoped liveness); this keys the registry's `targetSuite8Name`
+ *  via the HELD `readConductionTarget`, so a page-scoped pool never collides an update-Forge
+ *  with another page's build-Forge (the Suite8Control ONE MOTION verdict, cured). A target-less
+ *  (legacy) session can NEVER match — the page widget's legacy exclusion falls out here. */
+export function findLiveS8ConductionForTarget<T extends S8SessionLike>(
+  sessions: T[] | null | undefined,
+  designation: string,
+  scpName: string | undefined,
+  targetSuite8Name: string,
+): T | undefined {
+  if (!sessions || !designation || !targetSuite8Name) return undefined;
+  return sessions.find(
+    (s) =>
+      s.suite8Name === designation &&
+      (scpName === undefined || s.scpName === scpName) &&
+      s.status === 'launched' &&
+      readConductionTarget(s) === targetSuite8Name,
   );
 }
 

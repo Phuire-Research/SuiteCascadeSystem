@@ -22,7 +22,7 @@ import {
 // observes the shared Record on the GraphiteScribe Landing (without aggregation the muxified
 // suiteCascade's properties are not registered as non-synced filterKeys on the page base).
 import { suiteCascadeMuxonomic } from '../suiteCascade/suiteCascade.muxonomy';
-import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
+import { S8_MENU_STAGE_RELAY_TYPE, S8_DESIGNATION_MENU_STAGE_RELAY_TYPE, S8_SYNC_LOCALITY_RELAY_TYPE } from '../scsBridge/model/s8RelayTypes.model';
 
 const graphiteScribeLandingPage: PageEntry = {
   path: '/graphiteScribe',
@@ -244,6 +244,18 @@ export const graphiteScribeMuxonomic: MuxonomicConfig<'graphiteScribe'> = {
         location: DeploymentTarget.Client,
         diameter: false,
       },
+      // MD-USP · US-3 · LOCALITY · the locality relay-reception quality (suite8LocalityStcpRelay SMRP
+      // broadcasts this). GraphiteScribeHomeLanding mounts the suite8 CLIENT concept as a second muxium
+      // member (CadmiumLanding array-shape precedent), so the reducer lives in the suite8 concept slice
+      // (d.client.d.suite8.k.localities) — this demometer references the SAME suite8-concept quality file
+      // (never-copied · the ground's GS-1 idiom · S4-LOCALITY-MEANS-DELTA §GS-1). Byte-matches suite8.muxonomy.
+      {
+        name: 'suite8SetSyncLocalityClient',
+        type: 'Suite8 Set Sync Locality Client',  // = VERBOSE('SetSyncLocalityClient') · TQNI byte-match
+        filePath: 'qualities/suite8SetSyncLocalityClient.quality.client.ts',
+        location: DeploymentTarget.Client,
+        diameter: false,
+      },
     ],
     strategies: [],
     principles: [],
@@ -271,6 +283,15 @@ export const graphiteScribeMuxonomic: MuxonomicConfig<'graphiteScribe'> = {
       {
         qualityName: 'graphiteScribeSetDesignationMenuStage',
         actionType: S8_DESIGNATION_MENU_STAGE_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetDesignationMenuStage') · byte-match
+        direction: ExchangeDirection.ServerToClient,
+      },
+      // MD-USP · US-3 · LOCALITY · the locality relay — the suite8LocalityStcpRelay SMRP broadcasts this
+      // type; the exchange routes the SERVER dialect into the mounted suite8 concept's OWN local quality
+      // (the never-copied wire type · the BO-1 law). The HuirthBase is ABSENT here (Huirth-only). Byte-matches
+      // suite8.muxonomy · this was the US-3 Missing Rung 3 (relay never reached the muxium · S4 §GS Rung 3).
+      {
+        qualityName: 'suite8SetSyncLocalityClient',
+        actionType: S8_SYNC_LOCALITY_RELAY_TYPE,  // the SERVER'S wire dialect (never-copied · C760)  // = VERBOSE('SetSyncLocalityClient') · byte-match
         direction: ExchangeDirection.ServerToClient,
       },
     ],

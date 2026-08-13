@@ -4,7 +4,7 @@ import { ulid } from 'ulid';
 import { sessionRegistry } from './session-registry';
 import { Session, getActiveDefaultModel } from './session';
 import { injectKeystrokes } from './input-bridge';
-import { openUrlWindow, closeUrlWindow, focusUrlWindow, focusWindowById, closeWindowById , getVisibleScpWindowId, getVisibleUrlWindow } from './electronWindow';
+import { openUrlWindow, closeUrlWindow, focusUrlWindow, focusWindowById, closeWindowById , getVisibleScpWindowId, getVisibleUrlWindow, getOsrSourceIdForPresenter } from './electronWindow';
 // SWFB · bind the SCP page window's Electron windowId in Cascades/SCPs.json.
 import { setScpWindowId, lookupScpWindowId } from '../lib/bridge/scpSessionRegistry';
 import { BrowserWindow } from 'electron';
@@ -938,11 +938,38 @@ export function createCliHandler(ctx: CliHandlerContext) {
           sdia('cli-handler.focus-suite8-page.miss', { id, navUrl });
           return { ok: false, error: 'focus-suite8-page: no window resolved' };
         }
-        void win.webContents.loadURL(navUrl);
+        // C795 · THE PRESENTER-BLIND loadURL CURE (field: IE window · nav to
+        // '?island=frontierDiametric' · presenter hijacked · shader dead while the OSR
+        // source painted unacked). The shader stack is a two-window pair: an OFFSCREEN OSR
+        // SOURCE (paints the real SCP) + a VISIBLE PRESENTER (loads presenter.html · draws
+        // the shader). `win` here is the resolved VISIBLE window — which, when shader-wrapped,
+        // IS the presenter (scpPresenterByWinId maps OSR-source-id → presenter). loadURL against
+        // the presenter REPLACES presenter.html and kills the shader. So: if `win` is a
+        // presenter, re-target the loadURL to its OSR SOURCE window (the map KEY whose
+        // webContents actually renders the SCP) and NEVER navigate the presenter. Focus/show
+        // stay on the VISIBLE window (the presenter) so the user sees the shaded page come front.
+        const osrSourceId = getOsrSourceIdForPresenter(win.id);
+        const navTarget =
+          osrSourceId !== null ? BrowserWindow.fromId(osrSourceId) : null;
+        if (navTarget && !navTarget.isDestroyed()) {
+          void navTarget.webContents.loadURL(navUrl);
+          sdia('cli-handler.focus-suite8-page.retarget', {
+            presenterId: win.id,
+            osrSourceId,
+            navUrl,
+          });
+        } else {
+          // Not a presenter (flat/unwrapped window) → nav it directly, as before.
+          void win.webContents.loadURL(navUrl);
+        }
         win.show();
         win.focus();
         win.moveTop();
-        sdia('cli-handler.focus-suite8-page.done', { id: win.id, navUrl });
+        sdia('cli-handler.focus-suite8-page.done', {
+          id: win.id,
+          osrSourceId,
+          navUrl,
+        });
         return { ok: true };
       }
       case 'focus-url': {

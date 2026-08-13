@@ -21,7 +21,7 @@
  * Citation: TU-ARC-S2-ORANGE-NAMING.md (DSSLS · SSMC · SAMLS) · TU-ARC-S1-RED-CURATION.md §4 (ISMC)
  * Reference model: CadmiumLanding.vue (the populated domain page this scaffold pares down)
  */
-import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
+import { ref, computed, markRaw, onMounted, onUnmounted } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 // IUPA · the suite8 CLIENT concept supplies this landing's page Muxium (mirrors CadmiumLanding
@@ -32,9 +32,8 @@ import { suite8Muxonomic } from '../suite8.muxonomy';
 // import + props CadmiumLanding.vue:37 uses. This binds the session list to the domain Suite 8.
 import ScsBridgeSessionManagement from '../../scsBridge/vue/components/ScsBridgeSessionManagement.vue';
 // GPIM · Vue-layer Muxium binding into the universal scsBridge controller (the SSMC reads its
-// bridgeJson + sessionsList shallowRefs through this controller). SCS_BRIDGE_CONTROLLER_KEY = the
-// W2 forge-door inject key (the branch-aware turn-over leg · inject-with-getGlobal fallback).
-import { getGlobalScsBridgeController, SCS_BRIDGE_CONTROLLER_KEY } from '../../scsBridge/scsBridgeController';
+// bridgeJson + sessionsList shallowRefs through this controller).
+import { getGlobalScsBridgeController } from '../../scsBridge/scsBridgeController';
 // GTMS8C · the FS-parsed Base Cascade Menu — the shared MenuStage contract + the generic menu
 // component (the renderer · carries its OWN anchor-alive guard internally · S4 Risk-2).
 import type { MenuStage, MenuDocument } from '../../../model/shatteriteMenu.model';
@@ -49,25 +48,19 @@ import Suite8CascadeDocs from './components/Suite8CascadeDocs.vue';
 import { SUITE8_DEFAULT_MENU_STAGE } from '../model/suite8DefaultMenu.model';
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the Suite8Card by this page's display name.
 import type { Suite8Entry } from '../suite8.type';
-import Suite8Card from './components/Suite8Card.vue';
-// W2 · THE FORGE MENU DOOR — the branch-aware two-state door reused VERBATIM from Suite8Biplane
-// (the forge-door idiom · the .shatterite-menu Pewter family). The turn-over leg reads the live git
-// branch (gitm.json relay · inject-with-getGlobal fallback), the engage leg anchor-spawns Entourage Forge.
-import { getGlobalGitmController, GITM_CONTROLLER_KEY } from '../../gitm/gitmController';
-import { isWorkingBranchPer } from '../../gitm/gitm.type';
-import {
-  writeGitmTurnoverProgress,
-  GITM_TURNOVER_DEADLINE_MS,
-} from '../../../model/gitmTurnover.model';
-import { showBridgeStandby } from '../../webSocketClient/model/bridgeStandbyOverlay.model';
-// MD-9 · D-MC-3 · Per-Instance Model Control · the Forge Actualization model selection. The catalog
-// mirror (labels/tiers/blurbs) + the offscreen-safe in-DOM dropdown (native <select> popups are
-// OS-anchored and can NEVER open on the offscreen SCP surface). The Session Management spawn-model-row
-// idiom, brought into the Forge launch pane so the user picks WHICH model the Actualization uses.
-import { SCS_AVAILABLE_MODELS, SCS_DEFAULT_MODEL, scsModelLabel } from '../../scsBridge/model/scsModelCatalog.model';
-// BO-1 · the rename-proof anchor contract (the C373 s8 law · never-copied scsBridge model).
-import { resolveS8Anchor, findLiveS8Session, filterS8Sessions } from '../../scsBridge/model/s8Anchor.model';
-import ScsDropdown from '../../vue/components/ScsDropdown.vue';
+import { S8_PAGE_VERSION, S8_PAGE_COUNTER } from '../suite8.type';
+import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
+// V-4b · THE LENT DRAWER — this page lends its OWN Control drawer to the toolbar seat (in a
+// minted twin the rename converts this to the twin's drawer, which reads the twin's own slice).
+import Suite8ControlDrawer from './components/Suite8ControlDrawer.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · OUTSIDE the mint copy
+// surface — the token-free specifier survives every mint; this scaffold line is what every
+// future mint inherits). Mounted remove-ENABLED (FM-6); the persisted removal flag gates the
+// render INSIDE the widget, so this mount line remains through removal AND updates.
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
+// EF-3' · 4A · THE PANE PRUNE — the inline Forge pane folded into Suite8Control SIV
+// (the door · the model select · the previous conductions · the engage all live THERE now).
 
 // ============================================================
 // ADAPT: DOMAIN IDENTITY
@@ -174,176 +167,6 @@ async function refreshSelfForgeState(): Promise<void> {
   }
 }
 
-// ============================================================
-// W2 · THE FORGE'S DOOR — Engage Entourage Forge (ANCHOR spawn · reused from Suite8Biplane VERBATIM).
-// NO asWorker → the bridge quality runs claimAnchorIfUnclaimed → the Forge binds THIS page's anchor.
-// ============================================================
-const forgeSpawning = ref<boolean>(false);
-const forgeSpawnNote = ref<string>('');
-
-// W1 · THE PULSE — the prismatic launch pane PULSES (a soft spectrum glow) to draw the eye UNTIL the
-// user first engages it (first hover anor first click/utilization). A simple session ref (no storage):
-// once true, the pulse class drops for the rest of the session. Both mouseenter and any door action
-// settle it — the invitation is answered the moment it is acknowledged.
-const forgeLaunchEngaged = ref<boolean>(false);
-function settleForgeLaunchPulse(): void {
-  if (!forgeLaunchEngaged.value) forgeLaunchEngaged.value = true;
-}
-
-async function engageEntourageForge(): Promise<void> {
-  // C375 · THE ENGAGE AWAIT HARDENING · THE GUARD-TELEMETRY LAW — log at ENTRY so the relay names
-  // this exact drop on any future failure (the click reached the handler).
-  console.log('[Forge Engage] clicked');
-  const ctrl = getGlobalScsBridgeController();
-  if (!ctrl || forgeSpawning.value) return;
-  settleForgeLaunchPulse(); // W1 · utilization drops the pulse
-  forgeSpawning.value = true;
-  forgeSpawnNote.value = '';
-  try {
-    // C375 · THE ENGAGE AWAIT HARDENING · THE TIMEOUT RACE. The C373 addition `await ctrl.getScpName()`
-    // could hang forever if the /scp-config fetch never settled (a never-settling getScpName hangs the
-    // await; the finally never runs; the dispatch is never reached; silence). Race it against a 3s
-    // timeout so the await can NEVER hang the dispatch — a null/timeout proceeds with undefined and the
-    // bridge resolves the default SCP dir. (loadScpConfig is now 3s-abort-bounded at source too; the
-    // race is belt-and-braces against ANY future getScpName stall.)
-    console.log('[Forge Engage] before scpName resolve');
-    const scpName = (await Promise.race([
-      ctrl.getScpName(),
-      new Promise<string | null>((r) => setTimeout(() => r(null), 3000)),
-    ])) ?? undefined;
-    if (scpName === undefined) {
-      console.log('[Forge Engage] scpName resolve fell back to undefined (null/timeout) · proceeding with bridge default');
-    }
-    console.log('[Forge Engage] after scpName resolve · scpName=', scpName ?? null);
-    // C386 · THE ONE MOTION — a LIVE Forge conduction for THIS SCP is FOCUSED, never duplicated. Read
-    // the live sessionsList (the Session Management source · the controller relay) for an Entourage Forge
-    // session scoped to this SCP whose liveness read says alive (status==='launched' · the PPOL alive
-    // idiom). Found → triggerFocusSession(that ulid) + settle. ELSE → a NEW conduction (fresh:true) so
-    // the bridge, on an OFFLINE prior anchor, creates a fresh session + re-claims the anchor (never a
-    // resume). The pane is mortal — it dissolves on completion (isUnactualized · untouched).
-    const liveForge = findLiveS8Session(ctrl.sessionsList.value ?? [], 'Entourage Forge', scpName);
-    if (liveForge) {
-      console.log('[Forge Engage] ONE MOTION · live Forge found · focusing · ulid=', liveForge.id);
-      ctrl.triggerFocusSession(liveForge.id);
-      forgeSpawnNote.value = 'Focused the running Forge.';
-      return;
-    }
-    // ANCHOR spawn — the forge-door idiom (Suite8Biplane.engageEntourageForge). The Forge researches
-    // + builds this domain, writing the real Domain into the minted Instance.md. C373 · triggerSpawnS8Session
-    // (the rename-proof alias) — the `suite8:page` domain-token rewrite leaves `s8` intact against the
-    // shared controller, unlike the dangling triggerSpawn{Domain}Session the old name would produce.
-    // C386 · fresh:true (4th arg) — a NEW conduction (never resume a prior one): on an OFFLINE anchor
-    // the bridge creates a fresh session + re-claims the anchor rather than re-engaging the dead one.
-    ctrl.triggerSpawnS8Session('Entourage Forge', scpName, false, true);
-    console.log('[Forge Engage] after triggerSpawnS8Session (fresh)');
-    forgeSpawnNote.value = 'Entourage Forge engaged. It will research and build out this Suite.';
-  } catch {
-    forgeSpawnNote.value = 'Could not engage the Entourage Forge — is the Bridge running?';
-  } finally {
-    setTimeout(() => {
-      forgeSpawning.value = false;
-    }, 1200);
-  }
-}
-
-// ============================================================
-// MD-9 · D-MC-3 · Per-Instance Model Control · THE ACTUALIZATION MODEL SELECT — the user picks WHICH
-// model the Forge's Actualization uses. Seeded to the default (Opus 4.8); on change we push it to the
-// controller (→ pendingSpawnModel state) so the NEXT spawn (the Entourage Forge anchor) pins it. The
-// selection is PERSISTENT (not a per-click trigger) — the Session Management spawn-model-row idiom.
-// The Engage-button label notes the choice; the Turn-Over leg restarts the SCP (no session spawn), so
-// the model does not thread there — no note on that leg.
-// ============================================================
-const selectedModel = ref<string>(SCS_DEFAULT_MODEL);
-const selectedModelLabel = computed<string>(
-  () => scsModelLabel(selectedModel.value) ?? selectedModel.value,
-);
-
-// ============================================================
-// C386 · W3 · THE PREVIOUS-CONDUCTIONS ROW — beneath the Engage button, list this SCP's OFFLINE
-// Entourage Forge sessions (up to 3) so the user can DELIBERATELY re-open one (the resume leg the
-// Session Management rows use · triggerEngageSession). Modest, muted, no ceremony — the pane is
-// mortal. resolvedScpName is filled on mount (best-effort · null → match by suite8Name alone).
-// ============================================================
-const resolvedScpName = ref<string | null>(null);
-const previousForgeConductions = computed(() => {
-  const list = getGlobalScsBridgeController()?.sessionsList.value ?? [];
-  const scp = resolvedScpName.value;
-  return filterS8Sessions(list, 'Entourage Forge')
-    .filter((s) => (scp === null || s.scpName === scp) && s.status === 'offline')
-    .slice(0, 3);
-});
-function shortUlid(id: string): string {
-  return id.length > 8 ? id.slice(-8) : id;
-}
-function conductionModelLabel(model: string | undefined): string {
-  return model ? scsModelLabel(model) ?? model : 'default model';
-}
-function reopenConduction(id: string): void {
-  console.log('[Forge Previous] re-opening conduction · ulid=', id);
-  getGlobalScsBridgeController()?.triggerEngageSession(id);
-}
-const modelDropdownOptions = computed(() =>
-  SCS_AVAILABLE_MODELS.map((m) => ({ value: m.id, label: m.label, hint: m.tier, title: m.blurb })),
-);
-function handleForgeModelChange(): void {
-  getGlobalScsBridgeController()?.setSpawnModel(selectedModel.value);
-}
-
-// ============================================================
-// W2 · THE TWO-STATE DOOR — branch-aware (reused from Suite8Biplane VERBATIM). Forging modifies this
-// Suite's ground, so the work moves onto a working (B) branch first. On a NON-'b/' branch (the A side ·
-// the safe default when the branch read is absent) the door is the TURN OVER REQUEST; on a 'b/' branch
-// it is the Engage-the-Forge anchor spawn.
-// ============================================================
-const gitmController = inject(GITM_CONTROLLER_KEY) ?? getGlobalGitmController();
-const scsBridgeControllerForDoor =
-  inject(SCS_BRIDGE_CONTROLLER_KEY) ?? getGlobalScsBridgeController();
-
-const currentBranch = computed<string>(() => gitmController?.gitmJson.value?.currentBranch ?? '');
-// D-BN · THE branchRoles SWEEP — the working-B identity is the canonical roles.b (isWorkingBranchPer),
-// NOT the `b/` prefix (the prefix is the legacy fallback inside the helper).
-const onWorkingB = computed<boolean>(() =>
-  isWorkingBranchPer(currentBranch.value, gitmController?.gitmJson.value),
-);
-const showTurnOverDoor = computed<boolean>(() => !onWorkingB.value);
-
-const turnOverSpawning = ref<boolean>(false);
-const turnOverNote = ref<string>('');
-
-async function requestTurnOverToB(): Promise<void> {
-  const sb = scsBridgeControllerForDoor;
-  if (!sb || turnOverSpawning.value) return;
-  settleForgeLaunchPulse(); // W1 · utilization drops the pulse
-  turnOverSpawning.value = true;
-  turnOverNote.value = '';
-  try {
-    const fromBranch = currentBranch.value.length > 0 ? currentBranch.value : 'a';
-    // D-BN · THE branchRoles SWEEP · THE CANONICAL MINT — `b/<fromBranch>-<uuid>`, fromBranch VERBATIM
-    // (no prefix stripping) + crypto.randomUUID() (browser global · unique · replaces the legacy Date.now()).
-    const newBranch = `b/${fromBranch}-${crypto.randomUUID()}`;
-    showBridgeStandby('sword-b');
-    writeGitmTurnoverProgress({
-      source: 'B',
-      overlayVariant: 'sword-b',
-    turnClass: 'sword',
-      deadline: Date.now() + GITM_TURNOVER_DEADLINE_MS,
-      stableA: fromBranch,
-      bridgeEndpoint: sb.bridgeJson.value?.endpoint ?? '',
-      scpName: (await sb.getScpName()) ?? undefined,
-    });
-    // ONE dispatch — git switch -c carries the dirty tree onto B; nodemon restarts on B.
-    sb.triggerHardTurnOver('B', newBranch, true);
-    turnOverNote.value = 'Turning over to B — the SCP restarts on your working branch…';
-  } catch {
-    turnOverNote.value = 'Could not turn over to B — is the Bridge running?';
-  } finally {
-    setTimeout(() => {
-      turnOverSpawning.value = false;
-    }, 1200);
-  }
-}
-
 // WIRE.1 · SOE · the anchor-spawn PROMPT is now owned by the ShatteriteMenu (the origin of
 // engagement) — it reads this Suite 8's anchorSpawn mode itself in onMounted and surfaces its own
 // Spawn + Anchor button when there is no live anchor. The page no longer renders a spawn-prompt row
@@ -352,16 +175,12 @@ async function requestTurnOverToB(): Promise<void> {
 
 let muxium: Muxium<ClientMuxiumDeck> | null = null;
 
-// C376 · THE CLICK-PATH PROBE (capture phase on the prismatic pane): logs the exact element
-// every click lands on INSIDE the pane — the relay then names whatever swallows the pointer.
-function logForgeClickPath(e: MouseEvent): void {
-  const t = e.target as HTMLElement | null;
-  console.log(
-    '[Forge ClickPath] target=', t?.tagName, '· class=', (t?.className ?? '').toString().slice(0, 80),
-  );
-}
-
 onMounted(() => {
+  // V-2 · register this page's designation + frozen version into the shared controller seat
+  // (the toolbar's presence predicate + the V-5 update detection read THIS).
+  // MD-S8PM · PM-3 · the s8-AXIS counter (S8_PAGE_COUNTER) rides ALONGSIDE the version string —
+  // 3rd arg = counter, 4th = the lent drawer (the version stamp is UNCHANGED).
+  getGlobalScsBridgeController()?.registerCurrentS8Page(suite8Name.value, S8_PAGE_VERSION, S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
   if (typeof window === 'undefined') return;
 
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
@@ -382,6 +201,11 @@ onMounted(() => {
   // spawn/engage/focus actions route through it · mirrors CadmiumLanding onMounted).
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(muxium);
+
+  // V-4g · THE PAGE-OWNED LOCALITY — the page's muxium is created HERE, so the page arms
+  // the ONE locality subscription (no bind race) and publishes the shared face every
+  // surface reads; the drawer panel is a reader+writer, never an owner.
+  localityOwner = armS8LocalityPageOwner(muxium, suite8Name.value);
 
   // ============================================================
   // ADAPT: DOMAIN WORK SURFACE — onMounted wiring
@@ -436,23 +260,14 @@ onMounted(() => {
   // suite8Name). Runs once on mount; the Forge menu shows only while isUnactualized === true.
   void refreshSelfForgeState();
 
-  // MD-9 · seed pendingSpawnModel with the picker's initial default so the FIRST Forge spawn threads
-  // it (the Session Management onMounted idiom). The controller was bound to this page's Muxium above
-  // (setMuxium) — setSpawnModel needs a bound Muxium, so this runs after that binding.
-  getGlobalScsBridgeController()?.setSpawnModel(selectedModel.value);
-
-  // C386 · W3 · resolve THIS SCP's name (best-effort) so the previous-conductions row filters to this
-  // SCP's OFFLINE Forge sessions. Null on failure → the row matches by suite8Name alone (safe superset).
-  void (async () => {
-    try {
-      resolvedScpName.value = (await getGlobalScsBridgeController()?.getScpName()) ?? null;
-    } catch {
-      resolvedScpName.value = null;
-    }
-  })();
 });
 
+let localityOwner: { conclude: () => void } | null = null;
+
 onUnmounted(() => {
+  localityOwner?.conclude();
+  localityOwner = null;
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium (mirror CadmiumLanding onUnmounted).
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);
@@ -501,110 +316,6 @@ onUnmounted(() => {
     <!-- ===================== HOME SUBPAGE ===================== -->
     <main v-if="activeTab === 'home'" class="domain-content">
       <!-- ============================================================
-           W1 · THE PRISMATIC FORGE LAUNCH — a HiFi PRISMATIC variant of the Shatterite Menu pane
-           (the .shatterite-menu skeleton · a spectrum prismatic border + glow · PULSING until first
-           hover anor first utilization) at the TOP of Home, beneath the header. Directs that this
-           Suite has a name awaiting its build-out; Entourage Forge researches, builds, and hands the
-           Suite back ready. Shows while the Suite is UNACTUALIZED (isUnactualized · robust predicate:
-           default TRUE · a real non-TBD roster self-entry is the ONLY thing that clears it · the
-           renamed-route SPA-HTML fallback is treated as ABSENT → the launch stays). The Forge writes
-           the real Domain → the next roster load flips the predicate false → this launch DISSOLVES.
-           Two-state: on a NON-'b/' branch (A side) the Turn Over request; on a 'b/' branch the Engage.
-           ============================================================ -->
-      <div
-        v-if="isUnactualized"
-        :class="['forge-launch-prismatic', { 'forge-launch--pulsing': !forgeLaunchEngaged }]"
-        @mouseenter="settleForgeLaunchPulse"
-        @click.capture="logForgeClickPath"
-      >
-        <div class="forge-launch-glow" aria-hidden="true"></div>
-        <div class="forge-launch-body">
-          <h3 class="forge-launch-heading spectrum-text">Forge this Suite</h3>
-
-          <!-- MD-9 · D-MC-3 · THE ACTUALIZATION MODEL SELECT — the user picks WHICH model the Forge's
-               Actualization uses. Seeded to Opus 4.8; the choice pins to the NEXT Entourage Forge spawn
-               (→ pendingSpawnModel · read fresh at fire-time). The Session Management spawn-model-row
-               idiom (label + ScsDropdown · offscreen-safe in-DOM). Rides the pane's own spacing. -->
-          <div class="forge-model-row">
-            <label class="forge-model-label">Model</label>
-            <ScsDropdown
-              :options="modelDropdownOptions"
-              :model-value="selectedModel"
-              class="forge-model-dropdown"
-              @update:model-value="(v) => { selectedModel = v; handleForgeModelChange(); }"
-            />
-          </div>
-
-          <template v-if="showTurnOverDoor">
-            <p class="forge-launch-intro">
-              This Suite has a name, but its page still awaits its build-out. Engaging the Entourage
-              Forge researches your domain, builds the page, and hands the Suite back ready to use.
-            </p>
-            <p class="forge-launch-intro forge-launch-intro--muted">
-              Forging works on a fresh working branch — turn over first, so nothing on your main line
-              is touched. You can keep the branch or revert it.
-            </p>
-            <button
-              type="button"
-              class="forge-launch-btn forge-launch-btn--sword-b"
-              :disabled="turnOverSpawning"
-              @click="requestTurnOverToB"
-            >
-              <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
-              <span>{{ turnOverSpawning ? 'Turning over…' : 'Turn Over · Forge on B' }}</span>
-            </button>
-            <p v-if="turnOverSpawning" class="forge-launch-note">
-              Turning over to B — the SCP restarts on your working branch…
-            </p>
-            <p v-else-if="turnOverNote" class="forge-launch-note">{{ turnOverNote }}</p>
-          </template>
-
-          <template v-else>
-            <p class="forge-launch-intro">
-              This Suite has a name, but its page still awaits its build-out. Engage the Entourage
-              Forge: it researches your domain, builds the page, and hands the Suite back ready to use.
-            </p>
-            <p class="forge-launch-intro forge-launch-intro--muted">
-              The work runs here on your working branch. When the Forge writes the real domain, this
-              launch clears itself.
-            </p>
-            <button
-              type="button"
-              class="forge-launch-btn"
-              :disabled="forgeSpawning"
-              @click="engageEntourageForge"
-            >
-              <i class="fa-solid fa-hammer" aria-hidden="true"></i>
-              <span>{{
-                forgeSpawning
-                  ? 'Engaging…'
-                  : `Engage Entourage Forge · ${selectedModelLabel}`
-              }}</span>
-            </button>
-            <p v-if="forgeSpawning" class="forge-launch-note">Engaging the Entourage Forge…</p>
-            <p v-else-if="forgeSpawnNote" class="forge-launch-note">{{ forgeSpawnNote }}</p>
-
-            <!-- C386 · W3 · THE PREVIOUS-CONDUCTIONS ROW — modest, muted. When OFFLINE Forge sessions
-                 exist for this SCP, up to 3 re-openable entries (short ulid + model label). Each button
-                 re-opens THAT conduction (triggerEngageSession · the Session Management resume leg). -->
-            <div v-if="previousForgeConductions.length > 0" class="forge-previous-row">
-              <span class="forge-previous-label">Previous conductions:</span>
-              <button
-                v-for="c in previousForgeConductions"
-                :key="c.id"
-                type="button"
-                class="forge-previous-btn"
-                @click="reopenConduction(c.id)"
-              >
-                <span class="forge-previous-ulid mono">{{ shortUlid(c.id) }}</span>
-                <span class="forge-previous-model">{{ conductionModelLabel(c.model) }}</span>
-              </button>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <!-- ============================================================
            IE-D4 · WTO TRIPTYCH · ZONE 1 (1st) · the LIVE RI widget — Suite8CascadeDocs.
            Leads the triptych (context-first · user-binding order RI → Menu → Session Manager ·
            decision 4). Reads THIS designation's Cascades/Extended/<suite8Name>/ Diamond+Onyx pair
@@ -614,6 +325,17 @@ onUnmounted(() => {
            SuiteCascadeDiamondOnyxPane (the empty-slot placeholder) with the live two-pane surface.
            ============================================================ -->
       <Suite8CascadeDocs :designation="suite8Name" />
+
+      <!-- ============================================================
+           D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The commission's
+           first ruling: the Menu spawns on template S8 pages as its OWN widget (the original
+           set-up's shape). :allow-remove="true" = FM-6b's Remove command renders; the persisted
+           removal flag (Cascades/Extended/<designation>/ · per-page per-SCP · outside the update
+           diff surface) gates the render inside the widget — the mount line REMAINS through
+           removal, so the S8 page update never conflicts (the flag IS the sovereignty). The
+           Suite 8 Control drawer remains the always-accessible seat (remove disabled there).
+           ============================================================ -->
+      <S8ForgeMenu :designation="suite8Name" :worked="true" :allow-remove="true" />
 
       <!-- ============================================================
            PRE-EPOCH · WTO TRIPTYCH · ZONE 2 (2nd) · the Shatterite Menu. ShatteriteMenu carries the
@@ -628,6 +350,9 @@ onUnmounted(() => {
            engagement): with no live anchor + anchorSpawn 'prompt' the menu surfaces its own Spawn +
            Anchor button; the page no longer renders a separate spawn-prompt row.
            ============================================================ -->
+      <!-- V-4 · THE PAGE PRUNE — the inline Suite8Control mount retired; the S8 toolbar
+           drawer is the sole Control surface (presence-predicated on this page's
+           registerCurrentS8Page). -->
       <div class="domain-menu-zone">
         <ShatteriteMenu
           :menu-stage="EMPTY_MENU_STAGE"

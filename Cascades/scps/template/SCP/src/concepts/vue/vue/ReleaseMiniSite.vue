@@ -46,7 +46,10 @@ type SpectrumColor =
   | 'green'
   | 'blue'
   | 'purple'
-  | 'fuchsia';
+  | 'fuchsia'
+  // The Diametric SCP crown — the HiFi Mux Base head pane (.hifi-pane-mux · the Ego anor Lambda
+  // parity ground); accent = the Mux pane's own light border pair, no spectrum var.
+  | 'mux';
 
 interface ReleaseFeature {
   title: string;
@@ -66,7 +69,7 @@ interface ReleaseCategory {
 // and the authored magnitude (1-5). The evergreen tour categories carry none of these.
 interface ReleaseWing extends ReleaseCategory {
   version?: string;
-  muxameter?: { cli: number; scp: number };
+  muxameter?: { cli: number; scp: number; s8?: number };
   magnitude?: number;
 }
 
@@ -76,7 +79,7 @@ interface ReleaseWing extends ReleaseCategory {
 interface UpdateManifest {
   schemaVersion: number;
   current: string;
-  muxameter: { cli: number; scp: number };
+  muxameter: { cli: number; scp: number; s8?: number };
   releases: ReleaseWing[];
 }
 
@@ -94,7 +97,7 @@ interface IncomingRelease {
   id: string;
   version?: string;
   label: string;
-  muxameter?: { cli: number; scp: number };
+  muxameter?: { cli: number; scp: number; s8?: number };
   magnitude?: number;
   features: IncomingReleaseFeature[];
 }
@@ -1425,6 +1428,7 @@ const magnitudeChips = (mag: number | undefined): boolean[] => {
 .rms-accent-green   { --rms-accent: var(--color-green);   --rms-accent-light: var(--color-green-light); }
 .rms-accent-blue    { --rms-accent: var(--color-blue);    --rms-accent-light: var(--color-blue-light); }
 .rms-accent-purple  { --rms-accent: var(--color-purple);  --rms-accent-light: var(--color-purple-light); }
+.rms-accent-mux     { --rms-accent: rgb(196, 190, 220); --rms-accent-light: rgb(226, 220, 244); }
 .rms-accent-fuchsia { --rms-accent: var(--color-fuchsia); --rms-accent-light: var(--color-fuchsia-light); }
 
 /* Narrow viewports · stack the nav over the content but keep the viewheight frame. */

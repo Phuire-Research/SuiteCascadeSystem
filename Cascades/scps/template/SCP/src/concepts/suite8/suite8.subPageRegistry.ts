@@ -23,26 +23,11 @@
  */
 import type { Suite8SubPage } from './suite8.type';
 
-export type SuiteColor =
-  | 'base'
-  | 'red'
-  | 'orange'
-  | 'yellow'
-  | 'green'
-  | 'blue'
-  | 'purple'
-  | 'fuchsia'
-  | 'maroon'
-  | 'viridian'
-  | 'cobalt'
-  | 'amethyst';
-
-export interface Suite8SubPageOption {
-  value: Suite8SubPage;
-  label: string;
-  deferred: boolean;
-  suite?: SuiteColor;
-}
+// V-1 · THE LENT SHAPES — held in s8Shared.model (token-free); aliased for concept-local
+// (and twin-renamed) imports.
+import type { S8SuiteColor, S8SubPageOption } from '../../model/s8Shared.model';
+export type SuiteColor = S8SuiteColor;
+export type Suite8SubPageOption = S8SubPageOption;
 
 export const SUITE8_SUB_PAGE_OPTIONS: Suite8SubPageOption[] = [
   { value: 'home',          label: 'Home',          deferred: false, suite: 'amethyst' },

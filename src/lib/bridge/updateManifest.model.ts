@@ -67,7 +67,8 @@ export interface ManifestRelease {
   id: string;
   version?: string;
   label: string;
-  muxameter?: { cli: number; scp: number };
+  // MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — a pre-s8 manifest omits it).
+  muxameter?: { cli: number; scp: number; s8?: number };
   magnitude?: number;
   features: ManifestReleaseFeature[];
 }
@@ -75,7 +76,8 @@ export interface ManifestRelease {
 export interface UpdateManifest {
   schemaVersion: number;
   current: string;
-  muxameter: { cli: number; scp: number };
+  // MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — a pre-s8 manifest omits it).
+  muxameter: { cli: number; scp: number; s8?: number };
   releases: ManifestRelease[];
 }
 

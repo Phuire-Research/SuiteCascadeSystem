@@ -66,11 +66,35 @@ export type Cascade = {
 };
 
 // ============================================
+// CMLS · THE SUBSCRIPTION TARGET (Cascade-Memory-Locality-Subscription)
+// ============================================
+//
+// Where a designation's Cascade Memory subscription POINTS. An ABSENT key in the
+// cascadeSubscriptionTargets Record = the Local ground (the registered directory serves).
+// All properties non-optional (the KeyedSelector law · no `?`) — this is a state-held
+// resolution the watcher sweep, the routes, and the write lane all read from ONE seat.
+export type CascadeSubscriptionTarget = {
+  name: string;          // the designation (mirrors the Record key · explicit, never derived)
+  absoluteDir: string;   // <targetRoot>/Cascades/Extended/<name> — the watched/read/written dir
+  specifiedScp: string;  // the serving SCP key (the C836 label's 'Serving' feed)
+  targetRoot: string;    // the target SCP's root (the cross-aware manifest fallback root)
+};
+
+// Set (anor release) a designation's subscription target. `target: null` = release → Local
+// (the entry is removed from the Record).
+export type SuiteCascadeSetCascadeSubscriptionTargetPayload = {
+  name: string;
+  target: CascadeSubscriptionTarget | null;
+};
+
+// ============================================
 // STATE DEFINITION (Client-Side)
 // ============================================
 
 export type SuiteCascadeState = {
   cascades: Record<string, Cascade>;            // keyed by Name; 'General' always present
+  // CMLS · the subscription target registry — keyed by designation; {} default; absent = Local.
+  cascadeSubscriptionTargets: Record<string, CascadeSubscriptionTarget>;
   // B-5 SDCR + GRID — the single active watched Cascade directory. DEFAULT = GRID
   // (`GENERAL_CASCADE_DIRECTORY`, the General RI, always the assumed default). When
   // a Suite8 docks, this re-points to `Cascades/8_SUITES/<Name>/Cascades/`; on
@@ -140,6 +164,11 @@ export type SuiteCascadeQualities = {
   // active dir so the Client knows which cascade context is currently watched (GRID
   // vs a docked Suite8). The Client face registers it for the HCD Home context selector.
   suiteCascadeSetActiveCascadeDirectoryRelay: Quality<SuiteCascadeState, SuiteCascadeSetActiveCascadeDirectoryRelayPayload>;
+  // CMLS · the subscription-target receiver (Client) — the dual-deployment Relay quality file
+  // (no .client suffix · byte-patterned on suiteCascadeSetCascadeRelay) doubles as the Client
+  // face: the Huirth watcher's edge relay lands the target Record client-side (via
+  // actionExchange.serverToClient) for the C836 label + the flip-watch.
+  suiteCascadeSetCascadeSubscriptionTargetRelay: Quality<SuiteCascadeState, SuiteCascadeSetCascadeSubscriptionTargetPayload>;
 };
 
 // ============================================
@@ -188,6 +217,9 @@ export type SuiteCascadeHuirthState = {
   // on the new dir's Cascade.json (setStage serialization). DEFAULT = GRID
   // (GENERAL_CASCADE_DIRECTORY). Mirrors the Client state shape exactly (SBIS).
   activeCascadeDirectory: string;
+  // CMLS · the subscription target registry (server-side Base) — the CSS sweep selects on
+  // this alongside `cascades`; keyed by designation; {} default; absent = Local.
+  cascadeSubscriptionTargets: Record<string, CascadeSubscriptionTarget>;
 };
 
 // --- Relay payloads (cross the WS boundary · registered in actionExchange.serverToClient)
@@ -240,6 +272,11 @@ export type SuiteCascadeHuirthQualities = {
   suiteCascadeSetActiveCascadeFilesRelay: Quality<SuiteCascadeHuirthState, SuiteCascadeSetActiveCascadeFilesRelayPayload>;
   // B-5 SDCR + GRID · Relay (broadcast the active dir to the Client).
   suiteCascadeSetActiveCascadeDirectoryRelay: Quality<SuiteCascadeHuirthState, SuiteCascadeSetActiveCascadeDirectoryRelayPayload>;
+  // CMLS · Base (Huirth-only · SBIS first) — the edge handler lands the subscription target
+  // into the server-side Record so the CSS sweep's [k_.cascadeSubscriptionTargets] selector fires.
+  suiteCascadeSetCascadeSubscriptionTargetHuirthBase: Quality<SuiteCascadeHuirthState, SuiteCascadeSetCascadeSubscriptionTargetPayload>;
+  // CMLS · Relay (dual-deployment · broadcast the subscription target to the Client · Path B).
+  suiteCascadeSetCascadeSubscriptionTargetRelay: Quality<SuiteCascadeHuirthState, SuiteCascadeSetCascadeSubscriptionTargetPayload>;
   // SCRR · Diametric Real — receives the client sentinel request and responds
   // with the current Huirth cascades state (Backfill-On-Request).
   suiteCascadeSendCascadeRequest: Quality<SuiteCascadeHuirthState, { sentinel?: string }>;

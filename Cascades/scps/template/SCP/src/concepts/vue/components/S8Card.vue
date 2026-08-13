@@ -38,16 +38,18 @@
  * Citation: deriveSuiteFromDomain.model.ts (the D9 derivation → `var(--color-{suite})` accent).
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import type { Suite8Entry } from '../../suite8.type';
+import type { S8Entry } from '../../../model/s8Shared.model';
+// C807 · the page-version badge source (the V-2 registration seat · own-page match only).
+import { getGlobalScsBridgeController } from '../../scsBridge/scsBridgeController';
 import {
   deriveSuiteFromDomain,
   suitePaneClass,
   type SpectrumSuite,
-} from '../../../../model/deriveSuiteFromDomain.model';
+} from '../../../model/deriveSuiteFromDomain.model';
 
 const props = withDefaults(
   defineProps<{
-    entry: Suite8Entry;
+    entry: S8Entry;
     /** Optional domain word (the meaning source · overrides entry.description when meaningful). */
     domain?: string;
     /** Optional snippet carried from the roster (the first meaningful Instance.md line). */
@@ -57,6 +59,17 @@ const props = withDefaults(
   }>(),
   { domain: '', snippet: '', compact: false },
 );
+
+// C807 · THE VERSION BADGE — the S8 Page Version renders when determinable: the mounted
+// page's own registration (V-2's currentS8Page seat) matching THIS entry; undefined → '-'.
+const pageVersionLabel = computed<string>(() => {
+  const reg = getGlobalScsBridgeController()?.currentS8Page.value;
+  return reg && reg.designation === props.entry.name ? reg.version : '-';
+});
+
+// C808 · Pewter readability — long PascalCase designations step the name size DOWN so the
+// name FITS before any break; overflow-wrap stays the last-resort guard (never a hard clip).
+const nameIsLong = computed<boolean>(() => props.entry.name.length > 14);
 
 // W3 · the 'collapse' emit is pruned with the Close card button — the Card tab owns closing now.
 const emit = defineEmits<{
@@ -726,7 +739,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div :class="['card-head', textShadowClass]">
-        <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+        <h3 :class="['card-name', 'hifi-heading', { 'card-name--long': nameIsLong }]">{{ entry.name }}</h3>
+          <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
         <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
         <p v-if="displaySnippet" class="card-snippet">{{ displaySnippet }}</p>
       </div>
@@ -797,7 +811,8 @@ onBeforeUnmount(() => {
 
         <!-- RIGHT · THE CO-PANEL (identity content · the Definitions idiom · no share controls) -->
         <aside :class="['co-panel', textShadowClass]">
-          <h3 class="card-name hifi-heading">{{ entry.name }}</h3>
+          <h3 :class="['card-name', 'hifi-heading', { 'card-name--long': nameIsLong }]">{{ entry.name }}</h3>
+          <span class="card-version hifi-mono">{{ pageVersionLabel }}</span>
           <p v-if="domainWord" class="card-domain hifi-label">{{ domainWord }}</p>
           <p v-if="protocolLine" class="identity-content">{{ protocolLine }}</p>
           <p v-if="displaySnippet" class="identity-content identity-snippet">{{ displaySnippet }}</p>
@@ -1035,15 +1050,30 @@ onBeforeUnmount(() => {
 }
 
 .card-head {
+  min-width: 0;
+  overflow-wrap: anywhere;
   position: relative;
   z-index: 2;
   max-width: 62%;
 }
 
+.card-version {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: rgba(240, 246, 252, 0.85);
+}
 .card-name {
   font-size: 1.05rem;
   margin: 0 0 0.15rem;
   line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+/* C808 · the long-designation step — fit before break (FrontierTransferTest-class names). */
+.card-name--long {
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
 }
 
 .card-domain {
@@ -1193,6 +1223,8 @@ onBeforeUnmount(() => {
 
 /* RIGHT · THE CO-PANEL (Definitions IDENTITY CONTENT idiom) */
 .co-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;

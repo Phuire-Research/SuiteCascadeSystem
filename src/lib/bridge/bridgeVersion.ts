@@ -21,7 +21,10 @@ let cachedVersion: string | null = null;
 // (the Routine's mechanical classification). Monotonic integers — comparison is the whole
 // verdict: remote.cli > installed.cli → the CLI update · remote.scp > installed.scp → the
 // SCP Update circuit · both → both. null = the package.json predates the counters.
-export type ScsMuxameter = { cli: number; scp: number };
+// MD-S8PM · PM-1 · THE THIRD COUNTER: `s8` joins the pair — the S8 Page System version the
+// DevCascade increments when the TEMPLATE SUITE 8 PAGE SURFACE changes. Optional at the seat
+// (a grandparent package.json that predates the field → the reader's `?? 0` floor).
+export type ScsMuxameter = { cli: number; scp: number; s8?: number };
 
 let cachedMuxameter: ScsMuxameter | null | undefined;
 
@@ -47,12 +50,16 @@ export function getBridgeMuxameter(cliPathOverride?: string, fresh = false): Scs
     const pkgPath = path.resolve(path.dirname(cliPath), '..', 'package.json');
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
       version?: string;
-      scsMuxameter?: { cli?: unknown; scp?: unknown };
+      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown };
     };
     const m = pkg.scsMuxameter;
+    // The pair is the gate; `s8` is OPTIONAL-TOLERANT (present-as-number flows, absent on an
+    // older grandparent package.json omits — the reader's `?? 0` floor supplies it · PM-1).
     const parsed =
       m && typeof m.cli === 'number' && typeof m.scp === 'number'
-        ? { cli: m.cli, scp: m.scp }
+        ? typeof m.s8 === 'number'
+          ? { cli: m.cli, scp: m.scp, s8: m.s8 }
+          : { cli: m.cli, scp: m.scp }
         : null;
     if (!fresh) cachedMuxameter = parsed;
     return parsed;

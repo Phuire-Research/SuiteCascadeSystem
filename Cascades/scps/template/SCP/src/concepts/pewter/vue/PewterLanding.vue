@@ -34,7 +34,7 @@
  * Citation: ShatteriteTomeSetup.vue (STSC · :suite8Name + :sfsd setup feed)
  * Citation: SuiteColorSelection.vue (HIFI.2 · reused self-contained control)
  */
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, markRaw, onMounted, onUnmounted } from 'vue';
 import type { Muxium } from 'stratimux';
 import type { MenuStage, MenuDocument } from '../../../model/shatteriteMenu.model';
 import { EMPTY_MENU_STAGE, EMPTY_MENU_DOCUMENT } from '../../../model/shatteriteMenu.model';
@@ -51,8 +51,31 @@ import ShatteriteMenu from '../../suite8/vue/components/ShatteriteMenu.vue';
 import SuiteColorSelection from '../../scsBridge/vue/components/SuiteColorSelection.vue';
 import SuitePatternSelection from '../../scsBridge/vue/components/SuitePatternSelection.vue';
 // MD-6 · D-BP-3 · the CARD subpage mounts the MD-5 Character-Forward Card for Pewter.
-import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 import Suite8CascadeDocs from '../../suite8/vue/components/Suite8CascadeDocs.vue';
+// MD-USP · US-3 · THE PAGE INDUCTION — Pewter becomes a registered standard S8 page (the #670 INDUCT
+// gap). The LENT drawer (markRaw(Suite8ControlDrawer) · slot 4) seats the toolbar S8 button + Control
+// panel; the s8-AXIS counter (S8_PAGE_COUNTER · slot 3) is the rename-proof shared axis value (C373 S8_
+// law). Cross-concept imports to the suite8 concept — the SAME paths Suite8HomeLanding.vue:52,178 and
+// CadmiumLanding.vue:70 walk (the wild-class precedent). Shape matches Suite8HomeLanding.vue:178 exactly.
+import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
+import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
+// MD-USP · US-3 · THE PAGE-OWNED LOCALITY — the page's muxium is the page's, so the page arms the ONE
+// locality subscription (V-4g) and publishes the shared S8LocalityFace every surface reads. Pewter's
+// preview binding reads currentS8Locality.value?.specified (the target citizen's name) to drive the
+// COLOR-locality adaptation. Held model import (s8LocalityPageOwner.model · Suite8HomeLanding.vue:52).
+import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
+// MD-USP · US-3 · THE COLOR-LOCALITY ADAPTATION — when a Specified locality names a target, Pewter's
+// preview surfaces the TARGET citizen's shipped colors (the hifiConfig relay), NOT its documents. The
+// by-name fetch is the read-only cross-SCP twin of the local /hifi-config boot-read.
+import { loadTargetHifiConfig, type HifiConfig } from '../../../model/hifiConfig.model';
+// MD-USP · US-3 · deriveVariants expands each target hex into the five HiFi variants (base/dark/light/
+// fade/shadow · RD §6 law) — the SAME expansion applySuiteColorOverrides writes to documentElement, but
+// here bound to a SCOPED wrapper element's inline style so the re-tint stays inside the preview surface.
+import { deriveVariants } from '../../../model/suiteColorOverride.model';
 
 // The page's Suite 8 designation — the literal Cascades/8_SUITES/<name>/ key the
 // spawn-anchor + ShatteriteMenu + Tome all resolve against.
@@ -96,6 +119,74 @@ function selectSubPage(value: PewterSubPage): void {
 }
 
 // ============================================================
+// MD-USP · US-3 · THE COLOR-LOCALITY ADAPTATION (preview binding · PREVIEW-ONLY · S4-V5 Seat 4 law)
+// ============================================================
+//
+// When a Specified locality names a TARGET citizen (currentS8Locality.value.specified !== null), the
+// preview surface adapts to show the TARGET's SHIPPED COLORS (the hifiConfig relay — NOT its documents;
+// that is Pewter's transposition of the locality drawer's meaning). PREVIEW-ONLY, by the S4 ground's
+// ruling: the target's colors render as SCOPED CSS custom properties on the preview WRAPPER element ONLY
+// — documentElement is NEVER written from this path, so the user's OWN runtime overrides stand
+// undisturbed (a user opens a locality to SEE, not to ADOPT). Honest-Absence: the fetch returning null
+// (target offline / absent hifiConfig) shows a named "no color design" state, never a silent local
+// masquerade. A locality FLIP anor CLEAR returns the preview to LOCAL (reactive · the watch below).
+
+const SPECTRUM_NAMES = ['base', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'fuchsia'] as const;
+
+// The reactive target name — reads the shared locality face the page-owned owner publishes. null = LOCAL.
+const targetScpName = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
+
+// The fetched target design + the honest fetch state (idle | loading | loaded | absent).
+const targetHifiConfig = ref<HifiConfig | null>(null);
+const targetFetchState = ref<'idle' | 'loading' | 'loaded' | 'absent'>('idle');
+
+// The preview surfaces the target's colors ONLY when a target is named AND its design loaded.
+const previewIsTarget = computed<boolean>(() => targetScpName.value !== null && targetFetchState.value === 'loaded');
+
+// SCOPED inline style: the target's colors expanded into the SAME CSS custom properties
+// applySuiteColorOverrides writes (--color-{n} / -dark / -light / --fade-{n} / --shadow-{n} non-base),
+// bound to the preview WRAPPER's :style so the grid inside re-tints from the wrapper scope alone. Empty
+// object when LOCAL — the wrapper then inherits documentElement's :root (the user's own live tokens).
+const previewOverrideStyle = computed<Record<string, string>>(() => {
+  if (!previewIsTarget.value || !targetHifiConfig.value) return {};
+  const style: Record<string, string> = {};
+  const colors = targetHifiConfig.value.colors ?? {};
+  for (const n of SPECTRUM_NAMES) {
+    const hex = colors[n];
+    if (!hex) continue;
+    const v = deriveVariants(hex);
+    style[`--color-${n}`] = v.base;
+    style[`--color-${n}-dark`] = v.dark;
+    style[`--color-${n}-light`] = v.light;
+    style[`--fade-${n}`] = v.fade;
+    if (n !== 'base') style[`--shadow-${n}`] = v.shadow;
+  }
+  return style;
+});
+
+// The by-name target-hifi fetch — extracted so BOTH the reactive watch (target CHANGE) and the D-PXT
+// PXT-4 preview-coherence hook (a same-target color PUSH settling) can invoke it. Idempotent + stale-safe.
+async function refetchTargetHifiConfig(): Promise<void> {
+  const name = targetScpName.value;
+  if (!name) {
+    targetHifiConfig.value = null;
+    targetFetchState.value = 'idle';
+    return;
+  }
+  targetFetchState.value = 'loading';
+  const cfg = await loadTargetHifiConfig(name);
+  // Guard against a stale resolve — the target may have flipped again while this fetch was in flight.
+  if (targetScpName.value !== name) return;
+  targetHifiConfig.value = cfg;
+  targetFetchState.value = cfg ? 'loaded' : 'absent';
+}
+
+// The reactive fetch: a locality flip anor clear re-runs this. null target → LOCAL (idle · no fetch).
+watch(targetScpName, () => void refetchTargetHifiConfig(), { immediate: true });
+
+// ============================================================
 // SHATTERITE MENU (Cadmium pattern · default static stage fallback)
 // ============================================================
 //
@@ -133,6 +224,9 @@ function onMenuOption(payload: { label: string; kind: string; ok: boolean }): vo
 // is last-write-win; restored to the principle shim on unmount (setMuxium(null) + muxium.close()).
 
 let muxium: Muxium<ClientMuxiumDeck> | null = null;
+// MD-USP · US-3 · the page-owned locality subscription handle (armed after setMuxium, concluded on
+// unmount) — Suite8HomeLanding.vue:260 shape exactly.
+let localityOwner: { conclude: () => void } | null = null;
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
@@ -157,6 +251,25 @@ onMounted(() => {
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(muxium);
 
+  // D-PXT · PXT-4 · THE PREVIEW COHERENCE — register Pewter's target-hifi refetch so a cross-SCP color
+  // injection settling (SuiteColorSelection's Specified fork · the receipt anor bounded timeout) nudges
+  // the preview to reflect the TARGET's now-pushed hifiConfig.json. A same-target push does not change
+  // targetScpName, so the watch alone would not re-fire — this hook closes that gap.
+  sbController?.registerTargetHifiPreviewRefresh(() => void refetchTargetHifiConfig());
+
+  // MD-USP · US-3 · THE PAGE INDUCTION — register Pewter as the current standard S8 page (the #670
+  // INDUCT gap cured): the toolbar S8 button + drawer appear (slot 4 = markRaw(Suite8ControlDrawer) ·
+  // IslandWrapper.vue reads currentS8Page.value.drawer), the counter axis contributes (slot 3 =
+  // S8_PAGE_COUNTER), the '0.0.0' version stamp is the frozen field the S8 face does not display.
+  // Shape matches Suite8HomeLanding.vue:178 exactly.
+  sbController?.registerCurrentS8Page(PEWTER_SUITE_8_NAME, '0.0.0', S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
+
+  // MD-USP · US-3 · THE PAGE-OWNED LOCALITY (V-4g) — the page's muxium was just created + bound, so the
+  // page arms the ONE locality subscription (no bind race) and publishes the shared S8LocalityFace. The
+  // preview binding reads currentS8Locality.value?.specified to drive the color-locality adaptation.
+  // Suite8HomeLanding.vue:203 shape exactly.
+  localityOwner = armS8LocalityPageOwner(muxium, PEWTER_SUITE_8_NAME);
+
   // C870 · BSSM parity (Suite8HomeLanding:393) — flow the keyed relay Record into the live ref.
   muxium.plan<ClientMuxiumDeck>(
     'pewterMenuStageSubscription',
@@ -174,6 +287,13 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // MD-USP · US-3 · conclude the page-owned locality subscription + clear the current S8 page seat so
+  // the toolbar S8 face + drawer fall away when leaving this page (Suite8HomeLanding.vue:263-265).
+  localityOwner?.conclude();
+  localityOwner = null;
+  // D-PXT · PXT-4 · unregister the preview-coherence hook (the page leaves · no dangling refetch).
+  getGlobalScsBridgeController()?.registerTargetHifiPreviewRefresh(null);
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind the controller from this landing's Muxium (restores the principle shim)
   // and close the page Muxium so it is not leaked across navigation (GitmLanding :100-106).
   const sbController = getGlobalScsBridgeController();
@@ -236,6 +356,11 @@ onUnmounted(() => {
              Pewter's design cycles record onto its Diamond/Onyx tiers the same as any domain. -->
         <Suite8CascadeDocs designation="Pewter Tessera" />
 
+        <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The persisted
+             removal flag gates the render inside the widget; this mount line remains through
+             removal anor updates. The Suite 8 Control drawer stays the always-accessible seat. -->
+        <S8ForgeMenu :designation="PEWTER_SUITE_8_NAME" :worked="true" :allow-remove="true" />
+
         <ShatteriteMenu
           :menu-stage="menuStage"
           :menu-document="menuDocument"
@@ -260,34 +385,61 @@ onUnmounted(() => {
 
       <!-- SUB · components-preview gallery (re-tints live as the Main selection changes) -->
       <section v-else-if="activeSubPage === 'preview'" class="pewter-preview">
-        <p class="pewter-preview-note hifi-label">
+        <!-- MD-USP · US-3 · THE COLOR-LOCALITY SOURCE LABEL — honest about WHOSE colors the preview shows.
+             LOCAL (no target) → the standing re-tint note; TARGET loaded → the target's shipped design;
+             TARGET absent → the Honest-Absence "no color design" state (never a silent local masquerade). -->
+        <p v-if="!targetScpName" class="pewter-preview-note hifi-label">
           Each pane + button reads the live spectrum tokens — change a color on the
           Suite Colors tab and watch every surface re-tint.
         </p>
+        <p
+          v-else-if="targetFetchState === 'loaded'"
+          class="pewter-preview-note pewter-preview-source hifi-label"
+        >
+          Previewing {{ targetScpName }}'s shipped design — colors, not documents. Your own runtime
+          colors are untouched.
+        </p>
+        <p
+          v-else-if="targetFetchState === 'loading'"
+          class="pewter-preview-note hifi-label"
+        >
+          Loading {{ targetScpName }}'s shipped design…
+        </p>
+        <p
+          v-else
+          class="pewter-preview-note pewter-preview-absent hifi-label"
+        >
+          No color design from {{ targetScpName }}.
+        </p>
 
-        <div class="pewter-preview-grid">
-          <div
-            v-for="s in ['base', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'fuchsia']"
-            :key="s"
-            :class="`hifi-pane-${s}`"
-            class="pewter-preview-pane"
-          >
-            <h3 class="hifi-heading pewter-preview-title">{{ s }}</h3>
-            <button type="button" :class="`hifi-btn hifi-btn-${s}`" class="pewter-preview-btn">
-              {{ s }}
-            </button>
+        <!-- MD-USP · US-3 · THE SCOPED PREVIEW WRAPPER — the target's colors apply as CSS custom
+             properties on THIS element's :style ONLY (previewOverrideStyle); the grid inside re-tints
+             from the wrapper scope. documentElement is never written — LOCAL colors persist outside. -->
+        <div class="pewter-preview-scope" :style="previewOverrideStyle">
+          <div class="pewter-preview-grid">
+            <div
+              v-for="s in SPECTRUM_NAMES"
+              :key="s"
+              :class="`hifi-pane-${s}`"
+              class="pewter-preview-pane"
+            >
+              <h3 class="hifi-heading pewter-preview-title">{{ s }}</h3>
+              <button type="button" :class="`hifi-btn hifi-btn-${s}`" class="pewter-preview-btn">
+                {{ s }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- The full spectrum strip (the framing-chrome reference) -->
-        <div class="spectrum-bar pewter-preview-spectrum" aria-hidden="true">
-          <span class="spectrum-bar--red"></span>
-          <span class="spectrum-bar--orange"></span>
-          <span class="spectrum-bar--yellow"></span>
-          <span class="spectrum-bar--green"></span>
-          <span class="spectrum-bar--blue"></span>
-          <span class="spectrum-bar--purple"></span>
-          <span class="spectrum-bar--fuchsia"></span>
+          <!-- The full spectrum strip (the framing-chrome reference) -->
+          <div class="spectrum-bar pewter-preview-spectrum" aria-hidden="true">
+            <span class="spectrum-bar--red"></span>
+            <span class="spectrum-bar--orange"></span>
+            <span class="spectrum-bar--yellow"></span>
+            <span class="spectrum-bar--green"></span>
+            <span class="spectrum-bar--blue"></span>
+            <span class="spectrum-bar--purple"></span>
+            <span class="spectrum-bar--fuchsia"></span>
+          </div>
         </div>
       </section>
     </main>
@@ -392,6 +544,24 @@ onUnmounted(() => {
   margin: 0;
   font-size: 0.8rem;
   opacity: 0.7;
+}
+/* MD-USP · US-3 · the color-locality source label — the target-loaded voice reads confident (opaque). */
+.pewter-preview-source {
+  opacity: 0.9;
+  color: var(--color-blue-light, #93c5fd);
+}
+/* MD-USP · US-3 · the Honest-Absence state — the "no color design" voice reads muted + honest. */
+.pewter-preview-absent {
+  opacity: 0.9;
+  color: var(--color-white-muted, #a0a0a8);
+  font-style: italic;
+}
+/* MD-USP · US-3 · the scoped preview wrapper carries the target's CSS-var overrides (or none = LOCAL).
+   A plain flow container — it re-tints only its own subtree; documentElement is never touched. */
+.pewter-preview-scope {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 .pewter-preview-grid {
   display: grid;

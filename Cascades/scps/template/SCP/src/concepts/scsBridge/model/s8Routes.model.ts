@@ -32,6 +32,13 @@ export const s8DocTiersPath = (designation: string): string =>
 /** POST — the Diamond-only page-edit save (ONYX 403 by nature · body carries designation). */
 export const S8_DOC_SAVE_PATH = '/suite8-doc-save';
 
+// CMLS-R · THE QUERY SURFACE (fetch on demand) — the roster of an SCP's Suite 8s + a named
+// Suite 8's Cascade Memory at that SCP (the switch's immediate arm beside the re-point).
+export const scpSuite8sPath = (scpName: string): string =>
+  `/scp-suite8s/${encodeURIComponent(scpName)}`;
+export const scpCascadeMemoryPath = (scpName: string, designation: string): string =>
+  `/scp-cascade-memory/${encodeURIComponent(scpName)}/${encodeURIComponent(designation)}`;
+
 /** POST — the client-persisted stage iteration (2A): body { designation, currentStageIndex };
  *  read-modify-writes ONLY currentStageIndex into the designation's menu.json — the watcher
  *  then relays the converged document to every client (the file stays the authority). */

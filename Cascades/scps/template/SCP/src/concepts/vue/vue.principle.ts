@@ -132,6 +132,27 @@ const DEFAULT_LANDING_MUXONOMIC: MuxonomicConfig<'default'> = {
 };
 
 import { graphiteScribeMuxonomic } from '../graphiteScribe/graphiteScribe.muxonomy';
+// SL-4/SL-5 · the Sync Library resolution seam (Specified anor Local · DIAMOND-SYNC-LIBRARY.md).
+// The SL-3 cascade-route consult is RETIRED (CMLS · Wave 3) — the cascade routes resolve through
+// the ONE seat; only the SL-4/SL-5 locality routes (the Signal's own surface) keep these imports.
+import {
+  resolveSyncLocality,
+  readSpecifiedKey,
+  readLocalScpName,
+  readSyncRingFromBridgeJson,
+  writeSpecifiedAdditive,
+  readTargetAccountedHifiStamp,
+  // D-PSVG · PSVG-1 · the second accounted stamp (patternLibrary.json · the generalized read).
+  readTargetAccountedSurfaceStamp,
+  ACCOUNTED_PATTERN_LIBRARY_KEY,
+} from '../../model/scpSyncLibrary.model';
+// D-PSVG · PSVG-1 · the per-SCP JSON pattern library boot seed (write-if-absent · P4 zone).
+import { seedPatternLibraryIfAbsent } from '../../model/patternLibrary.model';
+// CMLS · CSRS · the ONE seat — the cascade routes (floor · tiers · doc-save) resolve the target
+// dir through this state-projection (replaces the SL-3 consult · the Honest-Absence Law · §3.6).
+import { resolveCascadeSubscriptionDir } from '../../model/cascadeSubscriptionRegistry.model';
+// CMLS-R · the fetch-on-demand query surface (roster + by-name memory · held registration).
+import { registerCascadeMemoryQueryRoutes } from '../../model/cascadeMemoryQuery.model';
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -912,6 +933,21 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     ) {
       return null;
     }
+    // CMLS · §3.6 · THE ONE SEAT + THE HONEST-ABSENCE LAW (HAL). The SL-3 per-read SyncLibrary
+    // consult is RETIRED: a standing subscription resolves through the ONE seat the CSS sweep
+    // publishes (the routes + the watcher can never disagree). HAL — a standing subscription serves
+    // the TARGET anor honest absence, NEVER a silent local fall-through (the as-built existence-gated
+    // fall-through IS the C837b disguise class: local content masquerading as the target). An absent
+    // target dir is an honest 404/empty — the C835 surface renders it plainly. Existence NOT required.
+    const resolution = resolveCascadeSubscriptionDir(designation);
+    if (resolution && resolution.target !== null) {
+      const targetExtendedBase = path.resolve(resolution.target.targetRoot, 'Cascades', 'Extended');
+      const dir = resolution.effectiveDir;
+      // Traversal guard — the resolved dir must stay inside the target's Extended base.
+      if (dir === targetExtendedBase || !dir.startsWith(targetExtendedBase + path.sep)) return null;
+      return { extendedBase: targetExtendedBase, dir }; // existence NOT required — honest absence.
+    }
+    // no subscription → the local two-roots walk-up, byte-identical to today.
     const roots: string[] = [process.cwd()];
     let walk = process.cwd();
     for (let i = 0; i < 6; i += 1) {
@@ -933,6 +969,274 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
     return null;
   };
+
+  // SL-4 · S1 · THE SYNC-LOCALITY ENDPOINT (the /scp-config idiom · read-at-fire · SRAFB).
+  // The ShatteriteMenu fetches this AT FIRE TIME: `targetScp` non-null = the RESOLVED landing
+  // vantage (the dispatch targets that SCP's anchor session by (suite8Name, targetScp) —
+  // originScpName stays LOCAL, the Vantage Law / M7). `specified` echoes the raw key (a ghost
+  // key shows specified non-null + targetScp null — the read paths fell back Local, so a Local
+  // fire is CONSISTENT with what the user sees). NEVER throws — any failure = the Local shape.
+  expressApp.get('/suite8-sync-locality/:designation', (req, res) => {
+    try {
+      const designation = req.params.designation ?? '';
+      const resolution = resolveSyncLocality(designation);
+      const localScp = readLocalScpName();
+      const specifiedKey = readSpecifiedKey(designation);
+      const fullRing = readSyncRingFromBridgeJson();
+      // SL-5 · the ring rides the GET (the Locality Register's choosable rows) — the
+      // local key excluded (its row is the Local row, rendered from localScp).
+      const ring = fullRing
+        .filter((e) => e.scpName !== localScp && e.scpName !== 'template')
+        .map((e) => ({ scpName: e.scpName, status: e.status, origin: e.origin ?? null }));
+      // D-TRL-c · THE SCHOLAR FIELDS RIDE THE GET — the ODCF snapshot defaulted
+      // targetLive:false/targetRoot:null, so a page whose relay never fired computed the
+      // effective locality as LOCAL and STAMPED THE WRONG CITIZEN on the research spawn
+      // (the field find: workers labeled the caller under a live specified target). The
+      // GET now carries the same truths the relay composes — hydration parity.
+      const targetEntry = specifiedKey ? fullRing.find((e) => e.scpName === specifiedKey) : undefined;
+      const localEntry = localScp ? fullRing.find((e) => e.scpName === localScp) : undefined;
+      res.json({
+        ok: true,
+        localScp,
+        specified: specifiedKey,
+        targetScp: resolution ? resolution.targetScp : null,
+        targetRoot: resolution ? resolution.root : null,
+        targetLive: !!targetEntry && targetEntry.status !== 'offline',
+        localLive: !!localEntry && localEntry.status !== 'offline',
+        // D-PFR · the change-stamp rides the GET (hydration parity with the relay's compose).
+        targetHifiStamp: resolution
+          ? readTargetAccountedHifiStamp(designation, resolution.root)
+          : null,
+        // D-PSVG · PSVG-1 · the second accounted stamp rides the GET (the exact twin).
+        targetPatternLibraryStamp: resolution
+          ? readTargetAccountedSurfaceStamp(designation, resolution.root, ACCOUNTED_PATTERN_LIBRARY_KEY)
+          : null,
+        ring,
+      });
+    } catch {
+      res.json({
+        ok: true,
+        localScp: null,
+        specified: null,
+        targetScp: null,
+        targetRoot: null,
+        targetLive: false,
+        localLive: false,
+        targetHifiStamp: null,
+        targetPatternLibraryStamp: null,
+        ring: [],
+      });
+    }
+  });
+
+  // SL-5 · POST — THE CHOSEN LOCALITY WRITE (the registration motion · D-SL5-PEWTER-LOCALITY-RD).
+  // Body { specified: string | null }. The model refuses an unknown key with its reason (never a
+  // dark write); the Truth Law holds (`local` untouched). The SL-3 library watcher re-arms the
+  // menu on this write; the SL-4 fire resolution reads fresh — the page follows LIVE.
+  expressApp.post('/suite8-sync-locality/:designation', express.json(), (req, res) => {
+    try {
+      const designation = req.params.designation ?? '';
+      const body = (req.body ?? {}) as { specified?: unknown };
+      const specified =
+        typeof body.specified === 'string' && body.specified.trim().length > 0
+          ? body.specified.trim()
+          : null;
+      // DSP-1 · THE HARD LIVE GATE (the Live Locality Law · C738/C739): setting a locality
+      // REQUIRES the target SCP SPAWNED — the ring's status is the truth; absent anor
+      // offline → REFUSED with the reason (the client rows gate too; this is the second
+      // face — never a soft write). Release (null) always passes.
+      if (specified !== null) {
+        const ringEntry = readSyncRingFromBridgeJson().find((e) => e.scpName === specified);
+        if (!ringEntry || ringEntry.status === 'offline') {
+          res.status(409).json({
+            ok: false,
+            error: `locality target must be live (spawned) to set: ${specified}`,
+          });
+          return;
+        }
+      }
+      const result = writeSpecifiedAdditive(designation, specified);
+      if (!result.ok) {
+        res.status(400).json({ ok: false, error: result.error });
+        return;
+      }
+      res.json({ ok: true, specified: result.shape?.specified ?? null });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
+    }
+  });
+
+  // FM-6 · THE FORGE MENU WIDGET REMOVAL FLAG (D-FM · the persisted removal sovereignty).
+  // Per-designation + per-SCP + SCP-LEVEL: the flag lives under THIS SCP's OWN
+  // Cascades/Extended/<designation>/ (runtime cascade memory — OUTSIDE the S8 page update's
+  // diff surface by construction, so a removal survives every update). Deliberately NOT the
+  // resolveExtendedDesignationDir walk-up: a CMLS subscription would land the flag on the
+  // TARGET citizen — the removal is the OWNER page's design on THIS SCP only. HONEST-ABSENCE:
+  // absent file anor unreadable = NOT removed. The route prefix `s8-` carries no rename token;
+  // the client literal is held at forgeMenuRemovalEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuRemovalFlagPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const extendedBase = path.resolve(process.cwd(), 'Cascades', 'Extended');
+    const dir = path.resolve(extendedBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's Extended base.
+    if (dir === extendedBase || !dir.startsWith(extendedBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenuRemoved.json');
+  };
+  expressApp.get('/s8-forge-menu-removal/:designation', (req, res) => {
+    try {
+      const flagPath = forgeMenuRemovalFlagPath(req.params.designation ?? '');
+      if (!flagPath || !fs.existsSync(flagPath)) {
+        res.json({ removed: false }); // Honest-Absence — an absent flag IS not-removed.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(flagPath, 'utf8')) as { removed?: unknown };
+      res.json({ removed: parsed.removed === true });
+    } catch {
+      res.json({ removed: false }); // unreadable = not removed (Honest-Absence).
+    }
+  });
+  expressApp.post('/s8-forge-menu-removal/:designation', express.json(), (req, res) => {
+    try {
+      const flagPath = forgeMenuRemovalFlagPath(req.params.designation ?? '');
+      if (!flagPath) {
+        res.status(400).json({ ok: false, error: 'invalid designation' });
+        return;
+      }
+      const body = (req.body ?? {}) as { removed?: unknown };
+      const removed = body.removed === true;
+      if (removed) {
+        fs.mkdirSync(path.dirname(flagPath), { recursive: true });
+        fs.writeFileSync(
+          flagPath,
+          JSON.stringify({ removed: true, at: new Date().toISOString() }, null, 2),
+        );
+      } else if (fs.existsSync(flagPath)) {
+        // The symmetric restore leg (no widget fires it this band — the panel is the
+        // re-access surface; a future re-add control rides this same seat).
+        fs.rmSync(flagPath);
+      }
+      res.json({ ok: true, removed });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
+    }
+  });
+
+  // FM-5 · THE FORGE MENU COLLAPSED STATE (D-FM · the persisted open-state — the removal
+  // flag's SIBLING). Per-designation + per-SCP + SCP-LEVEL: the state lives under THIS SCP's
+  // OWN Cascades/Extended/<designation>/ (runtime cascade memory — OUTSIDE the S8 page
+  // update's diff surface by construction, so a saved collapse survives every update; the
+  // same seat law as the removal flag above, same deliberate non-walk-up). HONEST-ABSENCE:
+  // absent file anor unreadable = NOT collapsed = EXPANDED — the first-authored page greets
+  // open (the hard-coded default). The route prefix `s8-` carries no rename token; the
+  // client literal is held at forgeMenuCollapsedEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuCollapsedFlagPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const extendedBase = path.resolve(process.cwd(), 'Cascades', 'Extended');
+    const dir = path.resolve(extendedBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's Extended base.
+    if (dir === extendedBase || !dir.startsWith(extendedBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenuCollapsed.json');
+  };
+  expressApp.get('/s8-forge-menu-collapsed/:designation', (req, res) => {
+    try {
+      const flagPath = forgeMenuCollapsedFlagPath(req.params.designation ?? '');
+      if (!flagPath || !fs.existsSync(flagPath)) {
+        res.json({ collapsed: false }); // Honest-Absence — an absent state IS expanded.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(flagPath, 'utf8')) as { collapsed?: unknown };
+      res.json({ collapsed: parsed.collapsed === true });
+    } catch {
+      res.json({ collapsed: false }); // unreadable = expanded (Honest-Absence).
+    }
+  });
+  expressApp.post('/s8-forge-menu-collapsed/:designation', express.json(), (req, res) => {
+    try {
+      const flagPath = forgeMenuCollapsedFlagPath(req.params.designation ?? '');
+      if (!flagPath) {
+        res.status(400).json({ ok: false, error: 'invalid designation' });
+        return;
+      }
+      const body = (req.body ?? {}) as { collapsed?: unknown };
+      const collapsed = body.collapsed === true;
+      // BOTH directions write (the toggle is the writer — a collapse is SAVED anor a
+      // re-expand is SAVED): a written {collapsed:false} reads EXPANDED, indistinguishable
+      // from absence by design (Honest-Absence holds either way).
+      fs.mkdirSync(path.dirname(flagPath), { recursive: true });
+      fs.writeFileSync(
+        flagPath,
+        JSON.stringify({ collapsed, at: new Date().toISOString() }, null, 2),
+      );
+      res.json({ ok: true, collapsed });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
+    }
+  });
+
+  // D-FM · FM-4 · THE FORGE MENU MANIFEST READ (3A — the menu.json idiom extended). The
+  // per-PAGE Build Button manifest the Forge authors when conferring on the page:
+  // Cascades/8_SUITES/<designation>/ForgeMenu.json (the Onboard.md sibling — SCP-local, rides
+  // the S8 transferable package; the mint does NOT create it). HONEST-ABSENCE: absent ·
+  // malformed · guarded-out = `{}` — the widget falls to its factory rows. Traversal-guarded
+  // like the removal flag above; the route prefix `s8-` carries no rename token; the client
+  // literal is held at forgeMenuManifestEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuManifestPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const suitesBase = path.resolve(process.cwd(), 'Cascades', '8_SUITES');
+    const dir = path.resolve(suitesBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's 8_SUITES base.
+    if (dir === suitesBase || !dir.startsWith(suitesBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenu.json');
+  };
+  expressApp.get('/s8-forge-menu/:designation', (req, res) => {
+    try {
+      const manifestPath = forgeMenuManifestPath(req.params.designation ?? '');
+      if (!manifestPath || !fs.existsSync(manifestPath)) {
+        res.json({}); // Honest-Absence — no manifest IS the factory-rows state.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+        schemaVersion?: unknown;
+        entries?: unknown;
+      };
+      if (typeof parsed.schemaVersion !== 'number' || !Array.isArray(parsed.entries)) {
+        res.json({}); // malformed = absent (the factory rows stand — never a forced shape).
+        return;
+      }
+      // Entry-level shape gate — a malformed entry drops; the well-formed remainder serves.
+      const entries = parsed.entries.filter(
+        (e): e is { id: string; label: string; prime: string } =>
+          !!e &&
+          typeof (e as Record<string, unknown>).id === 'string' &&
+          typeof (e as Record<string, unknown>).label === 'string' &&
+          typeof (e as Record<string, unknown>).prime === 'string',
+      );
+      res.json({ schemaVersion: parsed.schemaVersion, entries });
+    } catch {
+      res.json({}); // unreadable = absent (Honest-Absence).
+    }
+  });
 
   // GET — enumerate prior-tier document filenames (DIAMOND-TIER-*.md / ONYX-TIER-*.md) WITHOUT
   // loading their content. The ACTIVE pair (the highest tier of each) is served by the live cascade
@@ -975,12 +1279,28 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // doc routes; the manifest's filePaths resolve OWN-ROOT-FIRST (a Working/-relative path lands
   // inside Extended/<designation>/), falling back to the SCP cwd (the repo-relative case).
   // NEVER throws: absent designation → 404 honest; an unreadable manifest file → skipped.
+  // CMLS-R · the query surface registers beside the floor (the switch's immediate arm).
+  registerCascadeMemoryQueryRoutes(expressApp);
+
   expressApp.get('/suite8-cascade/:designation', (req, res) => {
     const resolved = resolveExtendedDesignationDir(req.params.designation);
     if (!resolved) {
       res.status(404).json({ ok: false, error: 'designation cascade not found' });
       return;
     }
+    // CMLS · §3.6 · the seat's own resolution for THIS designation — the floor reads the ONE
+    // state-held target (the floor + the relay can never disagree). serving = the C836 label's
+    // SERVER truth (C837 fix 2 · the label reads the server's truth, not the client's ask).
+    const seatResolution = resolveCascadeSubscriptionDir(req.params.designation);
+    const serving = seatResolution && seatResolution.target !== null
+      ? seatResolution.target.specifiedScp
+      : null;
+    // CMLS · C837 fix 1 (route leg) — the file-read fallback root: under a subscribed resolution
+    // the process.cwd() fallback is INVALID (it would serve LOCAL bytes for a re-pointed dir); the
+    // fallback must be the TARGET root anor nothing. Local resolution keeps process.cwd().
+    const fileReadFallbackRoot = seatResolution && seatResolution.target !== null
+      ? seatResolution.target.targetRoot
+      : process.cwd();
     let cascadeJson: Record<string, unknown> | null = null;
     try {
       cascadeJson = JSON.parse(
@@ -1000,9 +1320,9 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         if (typeof value !== 'string' || value.length === 0 || seen.has(value)) continue;
         seen.add(value);
         // OWN-ROOT-FIRST (the watcher's C712/IE-D4e resolution): a founded dir's Working/-relative
-        // anor bare-basename path lives beside the manifest; fall back to the cwd-relative
-        // (repo-relative) interpretation when the dir-local file is absent.
-        for (const candidate of [path.resolve(resolved.dir, value), path.resolve(process.cwd(), value)]) {
+        // anor bare-basename path lives beside the manifest; fall back to the CROSS-AWARE root
+        // (the target root under a subscription · cwd for Local) when the dir-local file is absent.
+        for (const candidate of [path.resolve(resolved.dir, value), path.resolve(fileReadFallbackRoot, value)]) {
           try {
             activeCascadeFiles.push({ filePath: value, content: fs.readFileSync(candidate, 'utf-8') });
             break;
@@ -1012,7 +1332,8 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         }
       }
     }
-    res.json({ name: req.params.designation, cascadeJson, activeCascadeFiles });
+    // CMLS · the serving echo (the C836 label reads this) + the resolved dir (the server's truth).
+    res.json({ name: req.params.designation, cascadeJson, activeCascadeFiles, serving, resolvedDir: resolved.dir });
   });
 
   // GET — THE MENU FLOOR (1A-prime · the ODCF doctrine lifted from CadmiumLanding into the
@@ -1196,6 +1517,27 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
     try {
       fs.writeFileSync(target, markdown, 'utf-8');
+      // CMLS · WLD · §3.8 · THE WRITE-LANE-DISCIPLINE note (the in-process arm of the 22:08 cure):
+      // doc-save resolves through the ONE seat, so it NAMES ITS TARGET by construction. Sink the
+      // resolved target onto the same Bridge rail the watcher/drives grep — every in-repo writer
+      // that crosses this route logs where the bytes landed (never a silent foreign-tree write).
+      try {
+        const writeLaneSinkPath = path.join(resolveScpLocalBridgeDir(), 'suitecascade-watcher.json');
+        fs.mkdirSync(path.dirname(writeLaneSinkPath), { recursive: true });
+        fs.appendFileSync(
+          writeLaneSinkPath,
+          JSON.stringify({
+            ts: new Date().toISOString(),
+            seat: 'write-lane.target',
+            name: designation,
+            dir: target,
+            writer: 'doc-save',
+          }) + '\n',
+          'utf8',
+        );
+      } catch {
+        /* telemetry must never harm the write · skip */
+      }
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ ok: false, error: `write failed: ${String(err)}` });
@@ -1286,6 +1628,42 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       return { ok: false, error: `Bridge /mcp unreachable: ${String(err)}` };
     }
   };
+
+  // EF-5a · THE GATE FILE READ — the Install Requirements for a designation (the Requirements
+  // Mapper's durable artifact · Cascades/8_SUITES/<designation>/Install.Requirements.json).
+  // READ-ONLY · AFPR → 200 { present:false } (absence is a STATE — the workflow renders the
+  // GENERATE station). The route carries the token-free `s8` prefix (the C373 rename law).
+  expressApp.get('/s8-install-requirements/:designation', (req, res) => {
+    try {
+      const designation = String(req.params.designation ?? '').trim();
+      if (designation.length === 0) {
+        res.json({ present: false, homeScp: null, installedIn: null });
+        return;
+      }
+      const suiteDir = path.resolve(process.cwd(), 'Cascades', '8_SUITES', designation);
+      // C798 · THE SOVEREIGNTY READ — the Base IS stored (Maintainer.md's Sovereignty
+      // Boundary · the Entourage maintains it through installs): Home SCP names the Base;
+      // each page derives its own role (Home == self → Base · else → Informative).
+      let homeScp: string | null = null;
+      let installedIn: string | null = null;
+      try {
+        const maintainer = fs.readFileSync(path.join(suiteDir, 'Maintainer.md'), 'utf-8');
+        homeScp = maintainer.match(/\*\*Home SCP\*\*:\s*(.+)/)?.[1]?.trim() ?? null;
+        installedIn = maintainer.match(/\*\*Installed-in\*\*:\s*(.+)/)?.[1]?.trim() ?? null;
+      } catch {
+        /* absent Maintainer → nulls (self stands as Base) */
+      }
+      const gatePath = path.join(suiteDir, 'Install.Requirements.json');
+      if (!fs.existsSync(gatePath)) {
+        res.json({ present: false, homeScp, installedIn });
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(gatePath, 'utf-8')) as Record<string, unknown>;
+      res.json({ present: true, requirements: parsed, homeScp, installedIn });
+    } catch {
+      res.json({ present: false, homeScp: null, installedIn: null });
+    }
+  });
 
   // The roster — installed (SCPs.json-registered, broadcast on bridge.json) + active
   // (boundScps · the live spawnsByScp projection). READ-ONLY · AFPR → 200 null shape.
@@ -1646,10 +2024,13 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // traversal or sibling resolves outside base → 403.
   // Template Citizenship (BO-2-C · Edit 1.1): re-anchor via resolveBridgeRoot()
   // walk-up instead of the SCS_BRIDGE_ROOT_OVERRIDE ?? cwd env read.
-  // resolveBridgeRoot() returns <scsRoot>/Cascades/Bridge; two '..' ascents yield
-  // <scsRoot>. It still honors SCS_BRIDGE_ROOT_OVERRIDE first-priority (back-compat)
-  // and walks up from a spawned SCP's cwd when the override is absent.
-  const suite8RiScsRoot = path.resolve(resolveBridgeRoot(), '..', '..');
+  // C803 · THE TWO-ROOTS SPLIT CURED (the V-1 audit · the user's Base-Informative ruling):
+  // the MINT writes SCP-LOCAL (process.cwd()/Cascades/8_SUITES) while this reader family
+  // walked UP to the workspace root — installs invisible · Instance reads 404. THE LAW:
+  // the workspace = the BASE (the canonical Suite 8 set · mirrored additively into every
+  // SCP-local tree); the SCP resolves its OWN (Informative) tree — the SessionManager's
+  // standing pattern. The roster + every /s8 reader now serve the SCP-local truth.
+  const suite8RiScsRoot = process.cwd();
   const suite8RiBase = path.resolve(suite8RiScsRoot, 'Cascades', '8_SUITES');
   expressApp.get('/suite8-anchor-spawn/:designation', (req, res) => {
     const designation = req.params.designation;
@@ -2245,6 +2626,24 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
   });
 
+  // D-PSVG · PSVG-1 · /pattern-library — serve the SCP's per-SCP JSON pattern library.
+  // The /hifi-config sibling (READ-ONLY · absent/unreadable/malformed → {}). The library is
+  // the SyncLibrary's SECOND ACCOUNTED CITIZEN — a NEW pattern is a JSON drop (no code edit,
+  // no Turn Over); the in-code PATTERN_LIBRARY stays the factory floor (seeded below · in-code
+  // wins on id collision). cwd IS the package (the C872/C465 rule — SCP-local, never the workspace).
+  // THE BOOT SEED (write-if-absent · Lambda-event): an absent library seeds VERBATIM from the
+  // in-code factory floor; an existing file is NEVER clobbered (telemetry rides the model's sink).
+  seedPatternLibraryIfAbsent(process.cwd());
+  const patternLibraryPath = path.resolve(process.cwd(), 'Cascades', 'patternLibrary.json');
+  expressApp.get('/pattern-library', (_req, res) => {
+    try {
+      const raw = fs.readFileSync(patternLibraryPath, 'utf-8');
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({});
+    }
+  });
+
   // ============================================
   // /scp-config — serve THIS SCP's declarative identity (Per-SCP-Identity-Config · FKIS Origin)
   // ============================================
@@ -2396,7 +2795,10 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   // — even when the npm VERSION is newer (counters equal = nothing of value → no nag).
   // `syncAvailable` (version differs remote-newer) drives the install button independently
   // of the class — the double bind (button hidden while red persists) is dissolved.
-  type ScsCounterPair = { cli: number; scp: number };
+  // MD-S8PM · PM-1 · THE THIRD COUNTER: `s8` joins the pair — the S8 Page System version
+  // the DevCascade increments when the TEMPLATE SUITE 8 PAGE SURFACE changes. Optional at
+  // the seat (old npm data anor old bridge.json predate it → the `?? 0` floor reads honestly).
+  type ScsCounterPair = { cli: number; scp: number; s8?: number };
   // MD-UM · LEG 3 · THE DIFFERENTIAL RELAY — the release manifest shape the bridge writes into
   // bridge.json (updateManifest.model.ts · getCachedReleaseManifest). Carried alongside the verdict
   // so the Update Page's differential mount reads the incoming releases the SAME way it reads the
@@ -2437,9 +2839,14 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     releaseManifest: null,
   };
   const parseCounterPair = (m: unknown): ScsCounterPair | null => {
-    const o = m as { cli?: unknown; scp?: unknown } | null | undefined;
+    const o = m as { cli?: unknown; scp?: unknown; s8?: unknown } | null | undefined;
+    // The pair is the gate (cli + scp both required — the pre-counter floor); `s8` is
+    // OPTIONAL-TOLERANT: present-as-number flows, absent (old npm/bridge.json) omits — the
+    // reader's `?? 0` supplies the floor. Nothing consumes s8 yet; it lands as data (PM-1).
     return o && typeof o.cli === 'number' && typeof o.scp === 'number'
-      ? { cli: o.cli, scp: o.scp }
+      ? typeof o.s8 === 'number'
+        ? { cli: o.cli, scp: o.scp, s8: o.s8 }
+        : { cli: o.cli, scp: o.scp }
       : null;
   };
   const readInstalledBridgeVersion = (): void => {
@@ -2645,6 +3052,21 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
       res.status(500).send('Server Error');
     }
   };
+
+  // D-EF-PAGE-PING · HEAD ON A BASE PATH ANSWERS THE ISLAND TRUTH (the user's design:
+  // window.location's most base path + a HEAD fetch — the status code reveals whether
+  // THIS SCP carries the page). The SSR catch-all otherwise 200s every path, so HEAD
+  // becomes the honest probe: 200 = the island is registered here · 404 = it is not.
+  // The static CORS * already rides every response — the cross-origin status is readable.
+  const registeredPagePaths = new Set<string>();
+  for (const m of REGISTERED_MUXONOMICS) {
+    for (const p of m.navigation?.pages ?? []) {
+      if (typeof p.path === 'string' && p.path.length > 0) registeredPagePaths.add(p.path);
+    }
+  }
+  expressApp.head('/:seg', (req, res) => {
+    res.sendStatus(registeredPagePaths.has(`/${req.params.seg}`) ? 200 : 404);
+  });
 
   // Register routes
   expressApp.get('/', createHandler());

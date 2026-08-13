@@ -24,14 +24,19 @@ import { createGraphiteScribeHuirthState } from './graphiteScribe.state.huirth';
 import { graphiteScribeSetMenuStageHuirthBase } from './qualities/graphiteScribeSetMenuStageHuirthBase.quality.huirth';
 // PRE-EPOCH · BSSM keyed Huirth Base quality (the N-watcher dispatches this FIRST · Base-maintenance).
 import { graphiteScribeSetDesignationMenuStageHuirthBase } from './qualities/graphiteScribeSetDesignationMenuStageHuirthBase.quality.huirth';
+// GLW-2 · the editor-locality observed-root pair Base quality (the locality-watch principle dispatches this).
+import { graphiteScribeSetObservedRootHuirthBase } from './qualities/graphiteScribeSetObservedRootHuirthBase.quality.huirth';
 import { graphiteScribeMenuStcpRelayPrinciple } from './principles/graphiteScribeMenuStcpRelay.principle.huirth';
 import { graphiteScribeMenuWatchPrinciple } from './principles/graphiteScribeMenuWatch.principle.huirth';
+// GLW-3 · the editor-locality SyncLibrary watch (Lane B · re-points the observed root on change + at arm).
+import { graphiteScribeLocalityWatchPrinciple } from './principles/graphiteScribeLocalityWatch.principle.huirth';
 
-// Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base (both
-// Huirth-only · local reducers · neither in actionExchange).
+// Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base + the GLW
+// observed-root Base (all Huirth-only · local reducers · none in actionExchange).
 const graphiteScribeHuirthQualities: GraphiteScribeHuirthQualities = {
   graphiteScribeSetMenuStageHuirthBase,
   graphiteScribeSetDesignationMenuStageHuirthBase,
+  graphiteScribeSetObservedRootHuirthBase,
 };
 
 export const createGraphiteScribeHuirthConcept = () =>
@@ -40,6 +45,11 @@ export const createGraphiteScribeHuirthConcept = () =>
     createGraphiteScribeHuirthState(),
     graphiteScribeHuirthQualities,
     // The thin menu-watch dir-watch (arms the menu.json relay) + the SMRP+BOCR relay principle
-    // (reads graphiteScribe.k.menuStage · broadcasts graphiteScribeSetMenuStage).
-    [graphiteScribeMenuWatchPrinciple, graphiteScribeMenuStcpRelayPrinciple],
+    // (reads graphiteScribe.k.menuStage · broadcasts graphiteScribeSetMenuStage) + the GLW-3
+    // editor-locality SyncLibrary watch (Lane B · resolveSyncLocality → observed-root pair set).
+    [
+      graphiteScribeMenuWatchPrinciple,
+      graphiteScribeMenuStcpRelayPrinciple,
+      graphiteScribeLocalityWatchPrinciple,
+    ],
   );

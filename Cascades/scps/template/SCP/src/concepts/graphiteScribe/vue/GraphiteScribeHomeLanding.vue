@@ -21,13 +21,24 @@
  * Citation: TU-ARC-S2-ORANGE-NAMING.md (DSSLS · SSMC · SAMLS) · TU-ARC-S1-RED-CURATION.md §4 (ISMC)
  * Reference model: CadmiumLanding.vue (the populated domain page this scaffold pares down)
  */
-import { ref, shallowRef, computed, onMounted, onUnmounted, inject } from 'vue';
+import { ref, shallowRef, computed, markRaw, onMounted, onUnmounted, inject, watch } from 'vue';
 import type { Muxium } from 'stratimux';
 import { createClientMuxiumInstance, type ClientMuxiumDeck } from '../../client/client.muxonomy';
 // IUPA · the graphiteScribe CLIENT concept supplies this landing's page Muxium (mirrors CadmiumLanding
 // supplying createCadmiumClientConcept). The SSMC's GPIM controller binding needs a live Muxium.
 import { createGraphiteScribeClientConcept } from '../graphiteScribe.concept.client';
 import { graphiteScribeMuxonomic } from '../graphiteScribe.muxonomy';
+// MD-USP · US-3 · LOCALITY · the suite8 CLIENT concept + its muxonomy — mounted as a SECOND muxium
+// member so d.client.d.suite8.k.localities exists for armS8LocalityPageOwner + the Suite8Control drawer
+// subscription (this was US-3 Missing Rung 2 · S4-LOCALITY-MEANS-DELTA §GS Rung 2). Cross-concept import
+// to the suite8 concept, the SAME array-shape CadmiumLanding.vue:51/59/699 walks (the wild-class precedent).
+import { createSuite8ClientConcept } from '../../suite8/suite8.concept.client';
+import { suite8Muxonomic } from '../../suite8/suite8.muxonomy';
+// MD-USP · US-3 · LOCALITY · the page-owned locality arm (the held model · the SAME path Suite8HomeLanding.vue:52
+// walks). The page's muxium is created HERE, so the page arms the ONE locality subscription (no bind race) and
+// publishes the shared face every surface reads (Pewter's targetScpName · the toolbar S8 face). This was US-3
+// Missing Rung 1 (no owner → currentS8Locality never pushed from this page · S4-LOCALITY-MEANS-DELTA §GS Rung 3).
+import { armS8LocalityPageOwner } from '../../../model/s8LocalityPageOwner.model';
 // SSMC · the importable Session Management component (mode=specific · graphiteScribeName) — the SAME
 // import + props CadmiumLanding.vue:37 uses. This binds the session list to the domain Suite 8.
 // GPIM · Vue-layer Muxium binding into the universal scsBridge controller (the SSMC reads its
@@ -49,6 +60,19 @@ import { GRAPHITESCRIBE_DEFAULT_MENU_STAGE } from '../model/graphiteScribeDefaul
 // W3 · THE ONE-BAR SUBNAV (D-EF-0) · the Card subpage mounts the GraphiteScribeCard by this page's display name.
 import type { GraphiteScribeEntry } from '../graphiteScribe.type';
 import GraphiteScribeCard from './components/GraphiteScribeCard.vue';
+// MD-USP · US-1 · TO-STANDARD · V-4b THE LENT DRAWER — this page lends the shared Suite8ControlDrawer
+// to the toolbar seat (the rung-2 blocker cure). Cross-concept import to the suite8 concept, the SAME
+// path CadmiumLanding.vue:70 walks (the wild-class precedent); GraphiteScribe carries no drawer of its
+// own, so the standard drawer is shared verbatim.
+import Suite8ControlDrawer from '../../suite8/vue/components/Suite8ControlDrawer.vue';
+// D-FM · FM-3 · THE FORGE MENU WIDGET (the shared S8-class widget · the page mount is
+// remove-enabled; the persisted removal flag gates the render inside the widget).
+import S8ForgeMenu from '../../vue/components/S8ForgeMenu.vue';
+// MD-USP · US-1 · TO-STANDARD · PM-3 THE s8-AXIS COUNTER — the rename-proof shared axis value (the
+// C373 S8_ law: `S8_PAGE_COUNTER` bears none of the three rename tokens, so it survives every twin
+// identically — it is the template's single canonical counter, NOT a per-page constant). Cross-concept
+// import to suite8.type, the SAME boundary CadmiumLanding.vue:54 crosses for Suite8SyncLocalitySnapshot.
+import { S8_PAGE_COUNTER } from '../../suite8/suite8.type';
 // W2 · THE FORGE MENU DOOR — the branch-aware two-state door reused VERBATIM from GraphiteScribeBiplane
 // (the forge-door idiom · the .shatterite-menu Pewter family). The turn-over leg reads the live git
 // branch (gitm.json relay · inject-with-getGlobal fallback), the engage leg anchor-spawns Entourage Forge.
@@ -302,6 +326,65 @@ const scsBridgeControllerForDoor =
 
 const currentBranch = computed<string>(() => gitmController?.gitmJson.value?.currentBranch ?? '');
 
+// GLW-5 · THE OBSERVING NOTIFY (C836 self-diagnosing label idiom · the ground's letter). The editor's
+// observed folder tracks the Selected Locality (the CMLS re-point · GLW-3 re-points the server-side
+// /editor-fs lanes). The client reads the SAME state's CLIENT truth from the locality face
+// (currentS8Locality.specified · already armed C894) — NO new fetch. observingSpecified = a Specified
+// target name (a foreign tree under the pen · the Pewter alert accent) anor null (LOCAL · quiet muted).
+const observingSpecified = computed<string | null>(
+  () => getGlobalScsBridgeController()?.currentS8Locality.value?.specified ?? null,
+);
+const observingLabel = computed<string>(() =>
+  observingSpecified.value ? `OBSERVING ${observingSpecified.value}` : 'OBSERVING Local',
+);
+
+// C898 · THE LIVE LOCALITY-CHANGE REACTION (the client half of the messaging cure). The editor's
+// tree serves from the SERVER'S observed root (setEditorObservedRoot · re-pointed by
+// graphiteScribeLocalityWatch · now LIVE on the same disk write via the B1 F4 cure). The client's
+// live carrier is the already-live locality face (observingSpecified · driven by the drawer→hydrate
+// refresh coupling + the suite8LocalityStcpRelay SMRP broadcast · GROUND 2) — NO new relay needed;
+// the manifold the ruling names already exists and is race-honest (the server speaks the re-point
+// AFTER publishing the getter). Two effects on a locality edge:
+//   B4 · DESELECT — a tab from the OLD tree must not linger against the NEW root. Close every open
+//        tab through the EXISTING close idiom (graphiteScribeCloseFile · the same × the tab strip
+//        fires), clearing openFiles + tabOrder + activeFilePath to empty.
+//   B3 · REFETCH — bump treeReloadKey to force the FileTree root to unmount+remount, re-firing every
+//        level's onMounted(loadLevel) against the re-pointed /editor-fs root. A short settle
+//        (TREE_REFETCH_SETTLE_MS) exceeds the server re-point debounce (100ms) + awaitWriteFinish
+//        (100ms) so the refetch never out-races the server serving the OLD tree (the ruling's race).
+const treeReloadKey = ref<number>(0);
+const TREE_REFETCH_SETTLE_MS = 260;
+let localityReactionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function deselectOpenEditorFiles(): void {
+  const m = muxium as unknown as {
+    dispatch: (a: unknown) => void;
+    deck: { d: { client: { d: { graphiteScribe: {
+      e: Record<string, (p: unknown) => unknown>;
+      k: { tabOrder: { select: () => string[] } };
+    } } } } };
+  } | null;
+  if (!m) return;
+  const g = m.deck.d.client.d.graphiteScribe;
+  // Snapshot the current tabs (the reducer mutates tabOrder as each closes · iterate the snapshot).
+  const openPaths = [...(g.k.tabOrder.select() ?? [])];
+  for (const path of openPaths) {
+    m.dispatch(g.e.graphiteScribeCloseFile({ path }));
+  }
+}
+
+watch(observingSpecified, (next, prev) => {
+  if (next === prev) return; // no edge — no reaction.
+  console.log('[GraphiteScribeHomeLanding] C898 locality edge ·', prev ?? 'Local', '→', next ?? 'Local', '· deselect + settle-refetch');
+  // B4 · deselect immediately — the stale tab dies the instant the locality flips.
+  deselectOpenEditorFiles();
+  // B3 · refetch AFTER a settle so the server (B1) has re-pointed /editor-fs before the tree re-reads.
+  if (localityReactionTimer) clearTimeout(localityReactionTimer);
+  localityReactionTimer = setTimeout(() => {
+    treeReloadKey.value += 1;
+  }, TREE_REFETCH_SETTLE_MS);
+});
+
 // MD-CE-5 · THE TREE BADGE MAP — gitm.json paths are REPO-ROOT-relative (the bridge watches the
 // user project) while the tree's paths are SCP-PACKAGE-relative; the SCP package lives somewhere
 // under the repo (dev:self: Cascades/scps/template/SCP/…). SUFFIX-STRIP: keep the segment after
@@ -371,6 +454,10 @@ async function requestTurnOverToB(): Promise<void> {
 // (page-load convenience) but DEFERS first-run spawn entirely to the menu (no page-level spawn).
 
 let muxium: Muxium<ClientMuxiumDeck> | null = null;
+// MD-USP · US-3 · LOCALITY · the page-owned locality subscription handle (armed in onMounted after
+// setMuxium · concluded in onUnmounted). Mirrors Suite8HomeLanding.vue:260 (declaration) — this was
+// US-3 Missing Rung 2 (no handle → leaked planner + stale refresh callback · S4 §GS Rung 4).
+let localityOwner: { conclude: () => void } | null = null;
 // MD-CE-4 · THE REACTIVE MUXIUM HAND-OFF — the plain `let muxium` is assigned in onMounted
 // AFTER the first render, so a child receiving `:muxium="muxium"` captures null and never
 // re-receives it without an unrelated re-render (the C431 finding). The shallowRef makes the
@@ -389,13 +476,30 @@ function logForgeClickPath(e: MouseEvent): void {
 onMounted(() => {
   if (typeof window === 'undefined') return;
 
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — register this page as the current
+  // Suite 8 page so the toolbar's S8 locality face (R3) appears + reads THIS designation's
+  // locality (mirrors Suite8HomeLanding). GraphiteScribe has NO version constant of its own, so
+  // we register with the assumed '0.0.0' (the frozen pageVersion field the S8 face does not display).
+  // MD-USP · US-1 · TO-STANDARD — the wild page is brought to the current 4-arg standard: the s8-AXIS
+  // counter (S8_PAGE_COUNTER · slot 3) rides ALONGSIDE the version string, and the LENT drawer
+  // (markRaw(Suite8ControlDrawer) · slot 4) seats the toolbar S8 button + Control panel (the rung-2
+  // blocker cure — IslandWrapper.vue:424 `s8Present = currentS8Page.value?.drawer != null`). The '0.0.0'
+  // version string is UNCHANGED (the frozen pageVersion field the S8 face does not display). Shape
+  // matches Suite8HomeLanding.vue:178 exactly; drawer import matches CadmiumLanding.vue:70.
+  getGlobalScsBridgeController()?.registerCurrentS8Page(graphiteScribeName.value, '0.0.0', S8_PAGE_COUNTER, markRaw(Suite8ControlDrawer));
+
   // C376 · THE MOUNT STAMP — the relay's proof of WHICH build the window is running.
   console.log('[GraphiteScribeHomeLanding] mounted · build=C376-pointerfix-clickprobe');
 
   // IUPA · this landing supplies graphiteScribe as the muxonomic page concept (the SSMC controller
   // binding needs a live Muxium; the domain work surface can dispatch into it once adapted).
   muxium = createClientMuxiumInstance<ClientMuxiumDeck>(
-    [{ concept: createGraphiteScribeClientConcept(), muxonomy: graphiteScribeMuxonomic }],
+    // MD-USP · US-3 · LOCALITY · suite8 mounts FIRST (CadmiumLanding.vue:699 array-shape), then the page
+    // concept — so d.client.d.suite8.k.localities exists for the arm + the Suite8Control drawer subscription.
+    [
+      { concept: createSuite8ClientConcept(), muxonomy: suite8Muxonomic },
+      { concept: createGraphiteScribeClientConcept(), muxonomy: graphiteScribeMuxonomic },
+    ],
     {
       title: 'GraphiteScribeHomeLanding',
       logging: true,
@@ -409,6 +513,13 @@ onMounted(() => {
   if (sbController) sbController.setMuxium(muxium);
   // MD-CE-4 · the reactive hand-off to the editor surface (see surfaceMuxium declaration).
   surfaceMuxium.value = muxium;
+
+  // MD-USP · US-3 · LOCALITY · V-4g THE PAGE-OWNED LOCALITY — the page's muxium is created HERE (and
+  // now carries suite8 · GS Rung 2), so the page arms the ONE locality subscription (no bind race) and
+  // publishes the shared face every surface reads; the drawer panel is a reader+writer, never an owner.
+  // Runs AFTER setMuxium so the arm's dispatch + stage-planner bind against the bound suite8 slice.
+  // Shape mirrors Suite8HomeLanding.vue:203 (designation = the page's graphiteScribeName ref).
+  localityOwner = armS8LocalityPageOwner(muxium, graphiteScribeName.value);
 
   // ============================================================
   // ADAPT: DOMAIN WORK SURFACE — onMounted wiring
@@ -478,6 +589,19 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // MD-USP · US-3 · LOCALITY · conclude the page-owned locality subscription FIRST — stops the planner,
+  // unregisters the hydrate refresh callback, null-pushes the shared face (mirrors Suite8HomeLanding.vue:263).
+  // Without this the planner + stale refresh callback leak after navigation (US-3 Missing Rung 2 cure).
+  localityOwner?.conclude();
+  localityOwner = null;
+  // C898 · clear the pending locality-reaction settle timer (no leaked refetch after navigation).
+  if (localityReactionTimer) {
+    clearTimeout(localityReactionTimer);
+    localityReactionTimer = null;
+  }
+  // V-3 · THE TOOLBAR BREAKOUT · V-2 REGISTER-PAIR COVERAGE — clear the current S8 page seat so
+  // the toolbar's S8 face + drawer fall away when leaving this page (mirrors Suite8HomeLanding).
+  getGlobalScsBridgeController()?.clearCurrentS8Page();
   // GPIM cleanup · unbind controller from this landing's Muxium (mirror CadmiumLanding onUnmounted).
   const sbController = getGlobalScsBridgeController();
   if (sbController) sbController.setMuxium(null);
@@ -530,12 +654,27 @@ onUnmounted(() => {
            the Session Manager are PRUNED from this Suite (the user's Magic Shotgun directive);
            the forge script machinery remains dormant for the minting scaffold. -->
       <section class="hifi-pane-base ce-work-surface-pane">
-        <h2 class="hifi-heading">Editor</h2>
+        <!-- GLW-5 · the Editor header row — the OBSERVING notify rides beside the heading (C836
+             idiom · quiet muted when Local · the Pewter alert accent when a Specified target tree
+             is under the pen · reads the client locality face · no new fetch). -->
+        <div class="ce-work-surface-header">
+          <h2 class="hifi-heading">Editor</h2>
+          <span
+            class="ce-observing"
+            :class="{ 'ce-observing-specified': observingSpecified !== null }"
+            :title="observingSpecified !== null
+              ? `The editor is observing the ${observingSpecified} SCP tree (Selected Locality · reads + writes land at the target).`
+              : 'The editor is observing this SCP\'s own tree (Local).'"
+          >{{ observingLabel }}</span>
+        </div>
         <div class="ce-workbench">
           <!-- MD-CE-5 · THE FILE BROWSER — lazy tree + GitM badges; click rides the
                shared open circuit into the surface's tab strip. -->
           <aside class="ce-workbench-tree">
-            <GraphiteScribeFileTree :muxium="surfaceMuxium" :badges="treeBadges" />
+            <!-- C898 · :key=treeReloadKey — a locality edge bumps the key → the tree root
+                 unmounts+remounts → every level re-fires onMounted(loadLevel) against the
+                 re-pointed /editor-fs root (the honest minimal live refetch). -->
+            <GraphiteScribeFileTree :key="treeReloadKey" :muxium="surfaceMuxium" :badges="treeBadges" />
           </aside>
           <div class="ce-workbench-editor">
             <GraphiteScribeSurface :muxium="surfaceMuxium" />
@@ -571,6 +710,11 @@ onUnmounted(() => {
       </section>
 
       <GraphiteScribeCascadeDocs :designation="graphiteScribeName" />
+
+      <!-- D-FM · FM-3 · THE FORGE MENU WIDGET (the page mount — remove-enabled). The persisted
+           removal flag gates the render inside the widget; this mount line remains through
+           removal anor updates. The Suite 8 Control drawer stays the always-accessible seat. -->
+      <S8ForgeMenu :designation="graphiteScribeName" :worked="true" :allow-remove="true" />
 
       <!-- ============================================================
            PRE-EPOCH · WTO TRIPTYCH · ZONE 2 (2nd) · the Shatterite Menu. ShatteriteMenu carries the
@@ -987,6 +1131,37 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 1rem 0;
+}
+
+/* GLW-5 · the Editor header row — the heading + the OBSERVING notify chip on one baseline. The row
+   owns the bottom spacing; the wrapped h2 drops its own bottom margin so the baseline stays clean. */
+.ce-work-surface-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem 0;
+}
+.ce-work-surface-header h2 {
+  margin: 0;
+}
+/* GLW-5 · OBSERVING notify — QUIET (muted) when Local: no accent, the pewter chrome the page uses. */
+.ce-observing {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  color: var(--color-pewter, rgba(255, 255, 255, 0.5));
+  white-space: nowrap;
+}
+/* GLW-5 · ALERT accent when a Specified target tree is under the pen — the Pewter amber edge (the
+   rgba(234,179,8) idiom the page + the FileTree context-menu use) · a foreign write deserves visibility. */
+.ce-observing-specified {
+  color: rgba(234, 179, 8, 0.92);
+  border-left-color: rgba(234, 179, 8, 0.6);
+  background: rgba(234, 179, 8, 0.08);
 }
 
 .ce-workbench {

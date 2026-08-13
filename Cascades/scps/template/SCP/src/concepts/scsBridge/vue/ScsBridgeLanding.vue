@@ -39,7 +39,7 @@ import ScsBridgeDocumentationSubPage from './components/ScsBridgeDocumentationSu
 import ScsBridgeInstallationSubPage from './components/ScsBridgeInstallationSubPage.vue';
 import { SCSBRIDGE_SUB_PAGE_OPTIONS } from '../scsBridge.subPageRegistry';
 // MD-6 · D-BP-3 · the CARD subpage mounts the MD-5 Character-Forward Card for SCS-Bridge.
-import Suite8Card from '../../suite8/vue/components/Suite8Card.vue';
+import Suite8Card from '../../vue/components/S8Card.vue';
 
 const bridgeStatus = ref<string>('');
 const bridgeStatusLastUpdate = ref<number>(0);

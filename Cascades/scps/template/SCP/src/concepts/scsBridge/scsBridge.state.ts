@@ -114,6 +114,9 @@ export function createScsBridgeClientState(): ScsBridgeClientState {
     pendingSpawnSuite8Onboard: undefined,
     // THE PLAIN-SPAWN LANE · undefined = default (anchor lane); false = plain instance.
     pendingSpawnSuite8Anchor: undefined,
+    // EF-3′ · THE TARGET S8 THREAD · undefined = target-less conduction. A string names the
+    // Suite 8 PAGE the Forge is commissioned to formalize (persisted on the registry entry).
+    pendingSpawnSuite8TargetName: undefined,
     // MD-9 · D-MC-3 · Per-Instance Model Control · seeded to the default model so the dropdown
     // opens on Opus 4.8 and every spawn threads a model unless the user chooses otherwise.
     pendingSpawnModel: SCS_DEFAULT_MODEL,

@@ -1,11 +1,142 @@
 {
   "schemaVersion": 1,
-  "current": "0.944.1",
+  "current": "0.950.0",
   "muxameter": {
-    "cli": 11,
-    "scp": 12
+    "cli": 12,
+    "scp": 13,
+    "s8": 1
   },
   "releases": [
+    {
+      "id": "v0950",
+      "version": "0.950.0",
+      "label": "New in 0.950.0 · The Diametric SCP",
+      "muxameter": {
+        "cli": 12,
+        "scp": 13,
+        "s8": 1
+      },
+      "magnitude": 8,
+      "features": [
+        {
+          "title": "The Diametric SCP",
+          "color": "mux",
+          "summary": "This release is named for what it proves: three plain measures — the Demometer, the Diameter, the Muxameter — and the worked example is the Suite 8 page itself, the same page standing across locations, relaying its advances.",
+          "detail": [
+            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure — a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure — a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure — a part as it relays through the others' Diameters, proven by operation.",
+            "The worked example is this page itself. A Suite 8 page is the Demometer — and what makes two Demometers UNLIKE is the LOCATIONS of the pages: the same page standing on different SCPs. The Diameter is the <span class=\"hifi-hl-green\">locality</span> — either location can perform from the immediate SCP: stand <span class=\"hifi-hl-green\">Local</span> anor observe and act upon a <span class=\"hifi-hl-blue\">Specified</span> app, from right where you are. And the Muxameter forms when you work an S8 page on one SCP and cascade its advances — back into the <span class=\"hifi-hl-purple\">Base</span> the page may be formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for the page across your projects. The page as it relays, proven by the operation itself.",
+            "The entries below carry the Total. The <span class=\"hifi-hl-green\">SyncLibrary</span> is the foundation — the locality every page holds. On it stand the teeth: <span class=\"hifi-hl-orange\">Page Transfer</span>, landing a real page on another SCP through four honest stations, and the <span class=\"hifi-hl-red\">update from any location</span>, cascading advances into the Base anor the Informatives with divergence held for your decision. Around them, cascade memory renders live across apps, colors round-trip, textures live in each app's own library, and the Forge Menu stands on every page. Not a feature list — measures that relay. The counters read it plainly: 0.950.0 · cli 12 · scp 13 · s8 1.",
+            "THE ANOR NOTATION — <span class=\"hifi-hl-purple\">anor</span> is the Gradient Conjunctive within a Range: And anor Or anor Everything-In-Between. The working example renders here: <span class=\"hifi-anor-band\">Blue anor Yellow</span> — and <span class=\"hifi-hl-green\">Green is within</span> Blue anor Yellow, the way every measure in this release holds its range whole rather than forcing a choice between its ends."
+          ]
+        },
+        {
+          "title": "The SyncLibrary — every page holds a locality",
+          "color": "green",
+          "summary": "The foundation of this release: each Suite 8 page holds a locality — stand Local anor observe a Specified app from right where you are — with a live Locality Register to choose, release, and re-arm without a reload.",
+          "detail": [
+            "Each Suite 8 page carries a <span class=\"hifi-hl-green\">locality</span>: stand Local anor observe a Specified app, from right where you are. The <span class=\"hifi-hl-green\">Locality Register</span> lays it plain — the Local row, then the live ring rows beside it, each with its status; choose anor release a locality and re-arm it with no reload. Localities are only ever LIVE.",
+            "A fire under a Specified locality reaches the TARGET app — never a silent local fire. Content moves under fixed paths while only the library carries the intelligence, and the failure mode is always <span class=\"hifi-hl-blue\">preservation of your last local truth</span>, never adoption. Everything else in this release stands on this ground."
+          ]
+        },
+        {
+          "title": "Suite 8 Page Transfer — the Install Circuit",
+          "color": "orange",
+          "summary": "Install a Suite 8 page onto another SCP from the page's own panel — four stations, Requirements → Target → Gate → Update — landing the real page with a report written into the receiving app's own working record. Proven twice in the field.",
+          "detail": [
+            "The transfer runs from the page's own panel through four stations: <span class=\"hifi-hl-orange\">Requirements → Target → Gate → Update</span>. A Requirements pass writes the page's needs and concerns into the package itself — they travel with the page, so the receiving app is told honestly what it is taking on.",
+            "The transfer lands the REAL page, with a report written into the receiving app's own working record — and a failed gate restores everything honestly, nothing left half-landed. Proven twice in the field."
+          ]
+        },
+        {
+          "title": "The update from any location — the Base anor the Informatives",
+          "color": "red",
+          "summary": "Work an S8 page wherever you stand, and cascade its advances — back into the Base it was formalized from, anor out to the Informatives where you use it across your projects. Divergence never overwrites: both sides quoted, you decide.",
+          "detail": [
+            "A Suite 8 page is no longer worked only where it was born. Work it wherever you stand and cascade the advances — back into the <span class=\"hifi-hl-red\">Base</span> the page was formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for it across your projects. The panel names the concrete relation — <span class=\"hifi-hl-blue\">Base:Name ← Informative:Name</span> — and dispatches role-correctly.",
+            "Divergence never overwrites: where the two sides differ, the difference is held with <span class=\"hifi-hl-red\">both sides quoted</span> and you decide. The resolved page becomes the new Base. Field-proven across two live apps."
+          ]
+        },
+        {
+          "title": "Cascade memory, live across apps",
+          "color": "base",
+          "summary": "A page's own working memory — its cascade documents — renders in an observing app within about 100ms of the write. No reload, honest empty states, and a removal honestly cleared.",
+          "detail": [
+            "Open a page's cascade documents from an observing app and what you read is the LIVE record: a write on the owning side renders in the observer within about <span class=\"hifi-hl-base\">100ms</span> — no reload, no stale copy. A page with no memory yet shows an honest empty state, and a removed document is honestly cleared, never left as a ghost."
+          ]
+        },
+        {
+          "title": "Suite colors travel a full circuit",
+          "color": "red",
+          "summary": "A color choice now completes a round trip before it paints — written to the app's own configuration first, then returned to every open window at once, so what you see is always the shared truth.",
+          "detail": [
+            "Pick a color and it lands in your app's <span class=\"hifi-hl-blue\">hifiConfig.json</span> before any window changes — then every window, including the one you clicked in, re-tints together on the return. No window ever shows a color the configuration does not hold.",
+            "And the circuit reaches across apps: from <span class=\"hifi-hl-base\">Pewter Tessera</span>, choose another app's locality and set ITS colors — its own windows re-tint live, your styling stays untouched, and the swatches you edit show the target's true palette the whole time."
+          ]
+        },
+        {
+          "title": "Suite textures become a living library",
+          "color": "fuchsia",
+          "summary": "The SVG textures behind every pane now live in each app's own patternLibrary.json — a new texture is one small JSON entry, no code change, no restart, and open pages pick it up live.",
+          "detail": [
+            "Each app ships the full texture set as a seeded <span class=\"hifi-hl-fuchsia\">patternLibrary.json</span> and can grow it freely — drop a validated entry in and the texture appears in the picker, paints on selection, and travels the same cross-app circuit colors do. A texture added while windows are open registers itself on the spot.",
+            "Rapid changes settle gracefully too: a burst of edits coalesces to the final value before it lands, so the last choice is the one that paints."
+          ]
+        },
+        {
+          "title": "The Entourage Forge Menu, on every page",
+          "color": "blue",
+          "summary": "The Forge menu now stands as its own widget on each Suite 8 page — sessions filtered to that page alone, build actions drawn from the page's own documentation, and one motion to reach the live Forge.",
+          "detail": [
+            "A page's Forge menu shows only the conductions commissioned from THAT page — a fresh page starts honestly empty. Its build actions come from the page's own <span class=\"hifi-hl-blue\">ForgeMenu.json</span> when one is authored (the built-in set stands otherwise), and firing one either reaches the live Forge for that page or begins a new conduction carrying the action with it.",
+            "The widget is yours to place: remove it from any page and it stays removed — even through a page update — while the Suite 8 panel always keeps the full menu within reach. A freshly authored page opens with the menu expanded; fold it away and the page remembers."
+          ]
+        },
+        {
+          "title": "Every page carries its own version",
+          "color": "purple",
+          "summary": "A Suite 8 page now holds a version of its own — and when a newer one ships, the page's own toolbar button turns amber to say so, quietly, without touching the main version badge.",
+          "detail": [
+            "Until now, only the app as a whole knew whether it was current. A Suite 8 page is a living surface — it can advance on its own cadence — so each page now carries a <span class=\"hifi-hl-purple\">page version</span> counted apart from the CLI and the app template. When the published page version outpaces the one your page carries, the page's own <span class=\"hifi-hl-yellow\">Suite 8 toolbar button turns amber</span> — a signal that belongs to that page alone.",
+            "The main version badge keeps its own voice: it never turns amber for a page update, and the amber toolbar never turns the badge red. Two signals, two meanings — the badge speaks for the app, the amber toggle speaks for the page in front of you."
+          ]
+        },
+        {
+          "title": "The page update, always within reach",
+          "color": "blue",
+          "summary": "The Suite 8 Control panel now carries a standing PAGE and NPM readout with an update control beside it — refresh a single page to its latest shipped version whenever you choose.",
+          "detail": [
+            "Open the Suite 8 Control panel and a plain row reads it straight: <span class=\"hifi-hl-blue\">PAGE #N · NPM #M</span> — the version your page carries beside the version the release ships. The update control stands right there, always available: you decide when a page catches up, page by page, never all-at-once by surprise.",
+            "The readout tells the truth whether or not an update waits: matching numbers mean the page is current, and the amber toggle rests. A higher NPM number is the invitation — press the control when the moment suits you."
+          ]
+        },
+        {
+          "title": "A page update that honors your design",
+          "color": "green",
+          "summary": "A page refresh runs through the Entourage Forge with a conference first — nothing you shaped is overwritten without your say, the way every SCP update already protects your work.",
+          "detail": [
+            "Refreshing a page is not a silent overwrite. It runs through the <span class=\"hifi-hl-green\">Entourage Forge</span>, which opens a conference honoring what you have already made: where the new page and your version differ, you decide — your own design is never clobbered by a template default. The same preservation discipline the SCP update circuit stands on now guards the single page.",
+            "The Forge carries the change onto your page and lets you review it in place. Land what serves you, keep what is yours — the refresh is conducted by you, decision by decision."
+          ]
+        },
+        {
+          "title": "The Forge's Reference Designs, renewed",
+          "color": "orange",
+          "summary": "The Entourage Forge's Reference Design list gains two: Prepared Agent Dispatch — sequence any number of agents straight from your page — and OnBoard.md, so a page ships with its own onboarding.",
+          "detail": [
+            "<span class=\"hifi-hl-orange\">Prepared Agent Dispatch</span> lets your page prepare any number of agents in sequence — a directed line-up dispatched straight from the page, each carrying its own directive into motion.",
+            "<span class=\"hifi-hl-blue\">OnBoard.md</span> lets a page ship with its own onboarding written alongside it — the page arrives already knowing how to introduce itself, so whoever opens it next is met, not left guessing."
+          ]
+        },
+        {
+          "title": "Pewter Tessera joins as a full page",
+          "color": "base",
+          "summary": "Pewter Tessera ships as a full Suite 8 page — pick a locality to preview an SCP's shipped colors without ever touching your own styling.",
+          "detail": [
+            "<span class=\"hifi-hl-base\">Pewter Tessera</span> is now a full Suite 8 page in its own right. Choose a locality and it previews that SCP's shipped colors in place — a look at how another app dresses itself, held entirely apart from your own styling. Nothing you preview ever lands on your page; your look stays yours throughout."
+          ]
+        }
+      ]
+    },
     {
       "id": "v09441",
       "version": "0.944.1",

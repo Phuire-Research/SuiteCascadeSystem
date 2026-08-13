@@ -25,5 +25,25 @@ export function createSuite8HuirthState(): Suite8HuirthState {
     // dir-watch writes per-designation stages via suite8SetDesignationMenuStageHuirthBase; the SMRP
     // relay reads this Record + broadcasts the keyed relay.
     shatteriteMenus: {},
+
+    // EF-5 · THE INSTALL REQUIREMENTS RECORD (Base mirror). Always {} at boot (KeyedSelector). The
+    // install-watcher dir-watch writes per-designation payloads via suite8SetInstallRequirementsHuirthBase;
+    // the STCP SMRP relay reads this Record + broadcasts the keyed relay ('Suite8 Set Install Requirements').
+    installRequirementsMap: {},
+
+    // U2 · THE USHER MODE RECORD — always {} at boot (KeyedSelector); the Usher principle's
+    // library watcher hydrates per-designation modes via suite8SetSyncModeHuirthBase.
+    syncModes: {},
+
+    // B-RLM-1′ · THE CLOSURE GRACES RECORD — always {} at boot (KeyedSelector). The bridge-json
+    // dispatcher opens entries via suite8BeginClosureGrace (which registers the muxiumTimeOut
+    // revert strategy); the fired strategy anor a returned target clears them via
+    // suite8CancelClosureGrace. The presence of an entry IS the Case-4 has-guard (state gate).
+    closureGraces: {},
+
+    // B-RLM-2 · THE LOCALITIES RECORD — always {} at boot (KeyedSelector). The Usher's two boundary
+    // dispatchers (library watcher + bridge-json watcher) + the boot leg compose per-designation
+    // snapshots via suite8SetLocalityHuirthBase; the suite8LocalityStcpRelay broadcasts them.
+    localities: {},
   };
 }
