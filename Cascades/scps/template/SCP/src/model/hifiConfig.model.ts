@@ -20,7 +20,10 @@ import {
 import {
   applySuitePatternOverrides,
   loadSuitePatternOverrides,
+  registerRuntimePatterns,
+  unresolvedPatternIds,
 } from './suitePatternOverride.model';
+import { loadOwnPatternLibrary } from './patternLibraryClientAccess.model';
 
 export interface HifiConfig {
   schemaVersion: string;
@@ -61,11 +64,43 @@ export async function loadTargetHifiConfig(scpName: string): Promise<HifiConfig 
   }
 }
 
+// D-PSVG · THE LAZY RE-REGISTRATION (the boot-frozen registry cure · law seated in
+// suitePatternOverride.model.ts): the runtime pattern registry is a boot snapshot; a pattern id
+// dropped LIVE into the SCP's Cascades/patternLibrary.json after this window booted validates
+// server-side into hifiConfig.json yet cannot resolve here — applySuitePatternOverrides silently
+// skips it. When the just-applied pattern maps carry unresolvable ids, refetch the library EXACTLY
+// ONCE (async — the colors apply stays synchronous and untouched), re-register, and re-run the
+// SAME pattern legs in the same precedence order. The retry re-enters the legs DIRECTLY (never a
+// wrapper that seats this refetch) — structurally non-recursive, one retry by construction. Ids
+// still unresolved after the refetch are genuinely absent (Honest-Absence: one console.warn).
+function lazyReRegisterUnresolvedPatterns(
+  appliedPatternMaps: Partial<Record<SpectrumName, string>>[],
+  rerunPatternLegs: () => void,
+): void {
+  const unresolved = appliedPatternMaps.flatMap((m) => unresolvedPatternIds(m));
+  if (unresolved.length === 0) return;
+  void loadOwnPatternLibrary().then((doc) => {
+    if (doc) registerRuntimePatterns(doc.patterns);
+    rerunPatternLegs();
+    const stillUnresolved = [...new Set(appliedPatternMaps.flatMap((m) => unresolvedPatternIds(m)))];
+    if (stillUnresolved.length) {
+      console.warn(
+        `[hifiConfig] pattern ids unresolved after library refetch (genuinely absent): ${stillUnresolved.join(', ')}`,
+      );
+    }
+  });
+}
+
 // Apply the SCP-design baseline UNDER the user's localStorage clicks (precedence: JSON < localStorage).
 // Applies a JSON entry ONLY where the user has NOT overridden that spectrum — so the user's click
 // always wins, no re-apply, no flicker (the JSON + localStorage spectrum sets are disjoint). Call
 // AFTER the localStorage overrides at boot.
-export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
+// The core is retry-free: it returns its pattern map + leg so BOTH wrappers below seat THE LAZY
+// RE-REGISTRATION over exactly the maps they applied — the retry re-enters the leg, never a wrapper.
+function applyHifiConfigUnderOverridesCore(config: HifiConfig): {
+  jsonPatterns: Partial<Record<SpectrumName, string>>;
+  applyJsonPatternLeg: () => void;
+} {
   const colorOverrides = loadSuiteColorOverrides();
   const patternOverrides = loadSuitePatternOverrides();
   const jsonColors: Partial<Record<SpectrumName, string>> = {};
@@ -77,7 +112,16 @@ export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
     if (!(k in patternOverrides)) jsonPatterns[k as SpectrumName] = v;
   }
   if (Object.keys(jsonColors).length) applySuiteColorOverrides(jsonColors);
-  if (Object.keys(jsonPatterns).length) applySuitePatternOverrides(jsonPatterns);
+  const applyJsonPatternLeg = () => {
+    if (Object.keys(jsonPatterns).length) applySuitePatternOverrides(jsonPatterns);
+  };
+  applyJsonPatternLeg();
+  return { jsonPatterns, applyJsonPatternLeg };
+}
+
+export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
+  const { jsonPatterns, applyJsonPatternLeg } = applyHifiConfigUnderOverridesCore(config);
+  lazyReRegisterUnresolvedPatterns([jsonPatterns], applyJsonPatternLeg);
 }
 
 // D-PCL · THE ROUND-TRIP COLOR CIRCUIT · the RETURN-apply. Re-runs the FULL boot precedence
@@ -91,8 +135,16 @@ export function applyHifiConfigUnderOverrides(config: HifiConfig): void {
 // act). When THIS return-apply runs on the clicker's window, the localStorage layer paints their new
 // color; on every OTHER client (no such localStorage entry) the JSON layer paints it. Precedence law
 // is preserved: localStorage still wins where the user set it — which is now their fresh click.
+// THE LAZY RE-REGISTRATION rides here too: ONE retry seat spans BOTH pattern maps this sequence
+// applies (the localStorage overrides + the JSON patterns) — the composed path never double-fetches.
 export function applyHifiConfigWithOverrides(config: HifiConfig): void {
   applySuiteColorOverrides(loadSuiteColorOverrides());
-  applySuitePatternOverrides(loadSuitePatternOverrides());
-  applyHifiConfigUnderOverrides(config);
+  const localPatterns = loadSuitePatternOverrides();
+  const applyLocalPatternLeg = () => applySuitePatternOverrides(localPatterns);
+  applyLocalPatternLeg();
+  const { jsonPatterns, applyJsonPatternLeg } = applyHifiConfigUnderOverridesCore(config);
+  lazyReRegisterUnresolvedPatterns([localPatterns, jsonPatterns], () => {
+    applyLocalPatternLeg();
+    applyJsonPatternLeg();
+  });
 }

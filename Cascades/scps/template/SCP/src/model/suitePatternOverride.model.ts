@@ -255,6 +255,25 @@ export function resolvePatternEntryById(id: string): PatternEntry | RuntimePatte
   return (PATTERN_BY_ID as Record<string, PatternEntry | undefined>)[id] ?? RUNTIME_PATTERN_REGISTRY.get(id);
 }
 
+// D-PSVG · THE LAZY RE-REGISTRATION LAW (the boot-frozen registry cure): the boot registration is
+// a SNAPSHOT — registerRuntimePatterns runs once when a window loads the JSON library at mount, so
+// an id dropped LIVE into Cascades/patternLibrary.json after boot validates server-side into
+// hifiConfig.json yet cannot resolve here, and applySuitePatternOverrides silently skips it. The
+// apply path (hifiConfig.model.ts) therefore refetches the library EXACTLY ONCE when it meets an
+// id this registry cannot resolve — so a live-dropped library entry paints without a Turn Over.
+// unresolvedPatternIds is that path's pure probe: the ids in a sparse pattern map for which
+// resolvePatternEntryById returns undefined. The silent skip above stands untouched — the probe
+// merely names what it would skip.
+export function unresolvedPatternIds(patterns: Partial<Record<SpectrumName, string>>): string[] {
+  const unresolved: string[] = [];
+  (Object.keys(patterns) as SpectrumName[]).forEach((n) => {
+    const id = patterns[n];
+    if (!id) return;
+    if (!resolvePatternEntryById(id)) unresolved.push(id);
+  });
+  return unresolved;
+}
+
 // The `:root` baseline per spectrum suite — the default a Reset restores to (mirrors DEFAULT_HEX).
 // Each maps to that spectrum's own existing tile id (style.css:133-147).
 export const DEFAULT_PATTERN: Record<SpectrumName, PatternId> = {
