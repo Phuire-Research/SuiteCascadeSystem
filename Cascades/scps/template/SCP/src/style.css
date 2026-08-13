@@ -1548,6 +1548,19 @@ body[data-standby-pulse="4"] .turn-over-a-btn:not(.disabled) {
 .hifi-hl-yellow { color: var(--color-yellow-light, #fde047); text-shadow: 0 0 7px color-mix(in srgb, var(--color-yellow, #eab308) 55%, transparent); }
 .hifi-hl-green { color: var(--color-green-light, #6ee7b7); text-shadow: 0 0 7px color-mix(in srgb, var(--color-green, #10b981) 55%, transparent); }
 .hifi-hl-blue { color: var(--color-blue-light, #93c5fd); text-shadow: 0 0 7px color-mix(in srgb, var(--color-blue, #3b82f6) 55%, transparent); }
+/* THE ANOR BAND — the Gradient Conjunctive rendered: Blue anor Yellow, the hue path passing
+   THROUGH Green (the in-hsl interpolation IS the working example — Green is within). Plain
+   srgb gradient declared first as the fallback for engines without hue interpolation. */
+.hifi-anor-band {
+  display: inline-block;
+  padding: 0 0.55em;
+  border-radius: 3px;
+  font-weight: 600;
+  color: rgb(10, 10, 14);
+  text-shadow: none;
+  background: linear-gradient(90deg, var(--color-blue, #3b82f6), var(--color-yellow, #eab308));
+  background: linear-gradient(90deg in hsl, var(--color-blue, #3b82f6), var(--color-yellow, #eab308));
+}
 .hifi-hl-purple { color: var(--color-purple-light, #d8b4fe); text-shadow: 0 0 7px color-mix(in srgb, var(--color-purple, #a855f7) 55%, transparent); }
 .hifi-hl-fuchsia { color: var(--color-fuchsia-light, #f0abfc); text-shadow: 0 0 7px color-mix(in srgb, var(--color-fuchsia, #d946ef) 55%, transparent); }
 .hifi-hl-base { color: var(--color-white-conductor, #f5f2ea); text-shadow: 0 0 7px rgba(245, 242, 234, 0.45); font-weight: 600; }

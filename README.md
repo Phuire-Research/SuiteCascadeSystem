@@ -238,6 +238,11 @@ page's cascade memory renders live in an observing app within about 100ms of the
 colors round-trip, textures live in each app's own library, and the Forge Menu stands on
 every page — all on the same locality ground.
 
+One notation carries through this piece and the product alike: **anor** — the Gradient
+Conjunctive within a Range: And anor Or anor Everything-In-Between. The working example is a
+gradient band of Blue and Yellow — and Green is within Blue anor Yellow: the range held
+whole rather than a choice forced between its ends.
+
 That is the Total this release proves: not a feature list, but measures that relay. The
 counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 
