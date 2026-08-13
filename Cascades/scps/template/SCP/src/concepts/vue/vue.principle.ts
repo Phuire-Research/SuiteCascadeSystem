@@ -1128,6 +1128,65 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     }
   });
 
+  // FM-5 · THE FORGE MENU COLLAPSED STATE (D-FM · the persisted open-state — the removal
+  // flag's SIBLING). Per-designation + per-SCP + SCP-LEVEL: the state lives under THIS SCP's
+  // OWN Cascades/Extended/<designation>/ (runtime cascade memory — OUTSIDE the S8 page
+  // update's diff surface by construction, so a saved collapse survives every update; the
+  // same seat law as the removal flag above, same deliberate non-walk-up). HONEST-ABSENCE:
+  // absent file anor unreadable = NOT collapsed = EXPANDED — the first-authored page greets
+  // open (the hard-coded default). The route prefix `s8-` carries no rename token; the
+  // client literal is held at forgeMenuCollapsedEndpoint (scpLocalityClientAccess.model).
+  const forgeMenuCollapsedFlagPath = (designation: string): string | null => {
+    if (
+      !designation ||
+      designation.includes('/') ||
+      designation.includes('\\') ||
+      designation.includes('..')
+    ) {
+      return null;
+    }
+    const extendedBase = path.resolve(process.cwd(), 'Cascades', 'Extended');
+    const dir = path.resolve(extendedBase, designation);
+    // Traversal guard — the resolved dir must stay inside this SCP's Extended base.
+    if (dir === extendedBase || !dir.startsWith(extendedBase + path.sep)) return null;
+    return path.join(dir, 'ForgeMenuCollapsed.json');
+  };
+  expressApp.get('/s8-forge-menu-collapsed/:designation', (req, res) => {
+    try {
+      const flagPath = forgeMenuCollapsedFlagPath(req.params.designation ?? '');
+      if (!flagPath || !fs.existsSync(flagPath)) {
+        res.json({ collapsed: false }); // Honest-Absence — an absent state IS expanded.
+        return;
+      }
+      const parsed = JSON.parse(fs.readFileSync(flagPath, 'utf8')) as { collapsed?: unknown };
+      res.json({ collapsed: parsed.collapsed === true });
+    } catch {
+      res.json({ collapsed: false }); // unreadable = expanded (Honest-Absence).
+    }
+  });
+  expressApp.post('/s8-forge-menu-collapsed/:designation', express.json(), (req, res) => {
+    try {
+      const flagPath = forgeMenuCollapsedFlagPath(req.params.designation ?? '');
+      if (!flagPath) {
+        res.status(400).json({ ok: false, error: 'invalid designation' });
+        return;
+      }
+      const body = (req.body ?? {}) as { collapsed?: unknown };
+      const collapsed = body.collapsed === true;
+      // BOTH directions write (the toggle is the writer — a collapse is SAVED anor a
+      // re-expand is SAVED): a written {collapsed:false} reads EXPANDED, indistinguishable
+      // from absence by design (Honest-Absence holds either way).
+      fs.mkdirSync(path.dirname(flagPath), { recursive: true });
+      fs.writeFileSync(
+        flagPath,
+        JSON.stringify({ collapsed, at: new Date().toISOString() }, null, 2),
+      );
+      res.json({ ok: true, collapsed });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: String(err).slice(0, 200) });
+    }
+  });
+
   // D-FM · FM-4 · THE FORGE MENU MANIFEST READ (3A — the menu.json idiom extended). The
   // per-PAGE Build Button manifest the Forge authors when conferring on the page:
   // Cascades/8_SUITES/<designation>/ForgeMenu.json (the Onboard.md sibling — SCP-local, rides

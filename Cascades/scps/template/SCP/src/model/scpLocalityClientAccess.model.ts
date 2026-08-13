@@ -78,6 +78,15 @@ export const readConductionTarget = (entry: unknown): string | undefined => {
 export const forgeMenuRemovalEndpoint = (designation: string): string =>
   `/s8-forge-menu-removal/${encodeURIComponent(designation)}`;
 
+// D-FM · FM-5 · THE FORGE MENU COLLAPSED ENDPOINT (held · token-free — the same one-literal
+// one-seat discipline as the removal endpoint above; the `s8-` prefix carries no rename
+// token). The removal flag's SIBLING: per-designation per-SCP SCP-LEVEL
+// (Cascades/Extended/<designation>/ForgeMenuCollapsed.json — outside the S8 update's diff
+// surface by construction) · HONEST-ABSENCE: absent anor fetch-fail = NOT collapsed =
+// EXPANDED (the first-authored page greets open — the hard-coded default).
+export const forgeMenuCollapsedEndpoint = (designation: string): string =>
+  `/s8-forge-menu-collapsed/${encodeURIComponent(designation)}`;
+
 // D-FM · FM-4 · THE FORGE MENU MANIFEST ENDPOINT (held · token-free — the same one-literal
 // one-seat discipline as the removal endpoint above; the `s8-` prefix carries no rename
 // token). GET-only from the client: the manifest itself is the FORGE'S to author

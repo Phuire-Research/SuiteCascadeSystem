@@ -43,11 +43,13 @@ import {
 import { showBridgeStandby } from '../../webSocketClient/model/bridgeStandbyOverlay.model';
 // EF-3′c · every conduction-target read rides the HELD model; FM-6 · the removal-flag
 // endpoint literal is held beside it (token-free · one literal, one seat); FM-4 · the
-// manifest endpoint literal rides the same seat.
+// manifest endpoint literal rides the same seat; FM-5 · the collapsed-state endpoint
+// literal (the removal flag's sibling) rides it too.
 import {
   readConductionTarget,
   forgeMenuRemovalEndpoint,
   forgeMenuManifestEndpoint,
+  forgeMenuCollapsedEndpoint,
 } from '../../../model/scpLocalityClientAccess.model';
 // MD-S8PM · PM-5 · the Forge Update Vermillion builder (the menu-path update row rides here).
 // D-FM · FM-4 · the Forge Menu Vermillion builder (the Build Button fire rides here).
@@ -66,8 +68,10 @@ const props = defineProps<{
   designation: string;
   // EF-3′ · 2A · THE FRESH-ANOR-WORKED CONTROL — REQUIRED (the boolean-prop trap law: an
   // absent optional boolean coerces to false, so requiring it forces every mount to declare).
-  // false = a FRESH page: the Forge section boots OPEN (the minted-page Lambda). true = a
-  // WORKED page: boots collapsed (the standard toggle).
+  // PANEL mounts ONLY (FM-5 honest note): false = boots OPEN, true = boots collapsed — the
+  // panel's utility boot stands unchanged. PAGE mounts now IGNORE this prop for the open
+  // state: the fold derives from the persisted collapsed state (ForgeMenuCollapsed.json ·
+  // absent = OPEN, the first-authored auto-expand). The prop STAYS — the panel still reads it.
   worked: boolean;
   // FM-6c · THE PROPERTY LAW (the user's ruling): the remove capability is a PROP — DEFAULT
   // DISABLED (an absent optional boolean coerces to false — the omission IS the default).
@@ -141,9 +145,45 @@ const ENTOURAGE_FORGE_CONFIG = {
 // prismatic PULSE on first hover/utilization (session-only · no storage). forgeSpawning guards the
 // ONE MOTION engage; selectedModel persists to the controller (setSpawnModel) so the NEXT spawn pins.
 // ============================================================
-// EF-3′ · 2A · a FRESH page (worked=false) boots the Forge section OPEN — the Entourage
-// Forge greets every minted page; a WORKED page boots collapsed (user-toggled thereafter).
-const forgeMenuOpen = ref<boolean>(!props.worked);
+// EF-3′ · 2A · the PANEL boot: a FRESH mount (worked=false) boots the Forge section OPEN;
+// a WORKED mount boots collapsed (user-toggled thereafter · no persistence — the panel is
+// the utility surface). FM-5 · the PAGE boot: `worked` is IGNORED — the fold boots OPEN
+// (the first-authored auto-expand) then derives from the persisted collapsed state
+// (consultCollapsedState below · Honest-Absence: absent = OPEN stands).
+const forgeMenuOpen = ref<boolean>(props.allowRemove === true ? true : !props.worked);
+// FM-5 · THE PERSISTED COLLAPSE CONSULT (page mounts only — the panel never persists).
+// The removal-fetch idiom replicated: designation-keyed, STALE-GUARDED across both awaits
+// (the C904 idiom — a late resolve for a prior page discards). HONEST-ABSENCE: absent anor
+// unanswerable anor fetch-fail = NOT collapsed — the OPEN boot stands.
+async function consultCollapsedState(): Promise<void> {
+  if (!props.allowRemove || !props.designation) return;
+  const name = props.designation;
+  try {
+    const r = await fetch(forgeMenuCollapsedEndpoint(name));
+    if (props.designation !== name) return; // stale-guard — the page moved on mid-flight.
+    if (!r.ok) return; // Honest-Absence — an unanswerable state is NOT a collapse.
+    const j = (await r.json()) as { collapsed?: unknown };
+    if (props.designation !== name) return; // stale-guard — the json() await is a second gap.
+    forgeMenuOpen.value = j.collapsed !== true;
+  } catch {
+    /* Honest-Absence — fetch fail = not collapsed (the open boot stands). */
+  }
+}
+// FM-5 · THE TOGGLE IS THE WRITER (page mounts): flipping the fold POSTs the NEW state —
+// a collapse is SAVED anor a re-expand is SAVED (both directions · get-it-out-of-the-way,
+// leave-it-if-they-choose). Best-effort: a failed persist never blocks the local toggle.
+// The panel toggle persists NOTHING (the utility surface — behavior unchanged).
+function toggleForgeMenuOpen(): void {
+  forgeMenuOpen.value = !forgeMenuOpen.value;
+  if (!props.allowRemove || !props.designation) return;
+  void fetch(forgeMenuCollapsedEndpoint(props.designation), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ collapsed: !forgeMenuOpen.value }),
+  }).catch(() => {
+    /* best-effort — the local toggle already landed; the save retries on the next flip. */
+  });
+}
 const forgeLaunchEngaged = ref<boolean>(false);
 const forgeSpawning = ref<boolean>(false);
 const forgeSpawnNote = ref<string>('');
@@ -247,6 +287,8 @@ onMounted(() => {
   })();
   // FM-6 · the removal-flag consult (page mounts only — the panel never gates).
   void consultRemovalFlag();
+  // FM-5 · the persisted-collapse consult (page mounts only — absent = the OPEN boot stands).
+  void consultCollapsedState();
   // FM-4 · the manifest fetch (mount leg — the designation-change leg rides the watch below).
   void fetchForgeMenuManifest();
 });
@@ -255,17 +297,27 @@ onMounted(() => {
 // second prop is minted. Page context → LEGACY (target-less) conductions are EXCLUDED
 // (no 'unlabeled' pill); panel context keeps the 'unlabeled' pill (legacy reachable there).
 const isPageMount = computed<boolean>(() => props.allowRemove === true);
-// EF-3′d · THE PILL FILTER SYSTEM — the SCP-wide pool of Forge conductions renders under
-// target PILLS (one per distinct commissioned page + 'unlabeled' for pre-thread legacy on
-// the PANEL mount only). AUTO-SELECTS this page's own pill; any prior remains referenceable
-// from the same page (user orientation with their own work). Every target read rides the
-// HELD model (EF-3′c — a twin's rename never touches the registry field).
-// FM-2 · the pool now carries offline AND launched (the union law — the live highlight).
+// EF-3′d · THE PILL FILTER SYSTEM — PANEL MOUNTS ONLY (FM-5 · the page-scope law): on the
+// panel the SCP-wide pool of Forge conductions renders under target PILLS (one per distinct
+// commissioned page + 'unlabeled' for pre-thread legacy). FM-5 · PAGE mounts scope the
+// ENTIRE Previous-Conductions surface to the page's OWN target: the pool narrows by
+// readConductionTarget === designation, the pill row hides (one target = no chooser — the
+// selected target is fixed to the own designation), and the block gate rides the OWN-scoped
+// pool — a fresh page with ZERO own conductions renders NO Previous block at all (the
+// prior SCP-wide pool leaked OTHER pages' conductions onto a fresh page — the FM-5 field
+// find; the §IV design was panel-correct, page-wrong). Every target read rides the HELD
+// model (EF-3′c — a twin's rename never touches the registry field).
+// FM-2 · the pool carries offline AND launched (the union law — the live highlight).
 const conductionPool = computed(() => {
   const list = getGlobalScsBridgeController()?.sessionsList.value ?? [];
   const scp = resolvedScpName.value;
-  return filterS8Sessions(list, 'Entourage Forge')
+  const pool = filterS8Sessions(list, 'Entourage Forge')
     .filter((s) => (scp === null || s.scpName === scp) && (s.status === 'offline' || s.status === 'launched'));
+  // FM-5 · the page-scope narrowing — page mounts see ONLY this page's own conductions
+  // (legacy target-less entries drop with the rest: undefined never equals a designation).
+  return isPageMount.value
+    ? pool.filter((s) => readConductionTarget(s) === props.designation)
+    : pool;
 });
 const selectedConductionTarget = ref<string>(props.designation);
 watch(
@@ -579,6 +631,8 @@ async function consultRemovalFlag(): Promise<void> {
 // the designation-arrival re-consult (the C486 class — async-hydrating designations).
 // FM-4 · the manifest re-fetch rides the same edge (reset-then-fetch — a prior page's
 // manifest never bleeds; the in-flight stale-guard covers the race).
+// FM-5 · the collapsed-state re-consult rides it too (reset to the OPEN boot, then derive —
+// a prior page's saved collapse never bleeds; the in-flight stale-guard covers the race).
 watch(
   () => props.designation,
   (name, prior) => {
@@ -586,6 +640,10 @@ watch(
     removedByOwner.value = false;
     removeArmed.value = false;
     void consultRemovalFlag();
+    if (props.allowRemove) {
+      forgeMenuOpen.value = true;
+      void consultCollapsedState();
+    }
     forgeMenuManifest.value = null;
     void fetchForgeMenuManifest();
   },
@@ -633,7 +691,7 @@ async function fireRemoveWidget(): Promise<void> {
     <button
       class="s8c-forge-toggle s8c-forge-flair-btn hifi-mono"
       :class="{ 's8c-forge-engaged': forgeLaunchEngaged }"
-      @click="forgeMenuOpen = !forgeMenuOpen"
+      @click="toggleForgeMenuOpen"
       @mouseenter="settleForgeLaunchPulse"
     >
       {{ forgeMenuOpen ? '▾' : '▸' }} ENTOURAGE FORGE
@@ -716,13 +774,17 @@ async function fireRemoveWidget(): Promise<void> {
           </button>
           <p v-if="versionedUpdateNote" class="s8c-forge-note">{{ versionedUpdateNote }}</p>
 
-          <!-- EF-3′d · THE PILL FILTER SYSTEM — target pills over the SCP-wide conduction
-               pool; the page's own pill AUTO-SELECTS (leads the row); any prior remains
-               referenceable from the same page. FM-2 · the LIVE page-Forge surfaces as the
-               launchable highlight row above the offline re-openables; legacy (target-less)
-               conductions render only under the panel's 'unlabeled' pill. -->
+          <!-- EF-3′d · THE PILL FILTER SYSTEM (PANEL mounts) — target pills over the SCP-wide
+               conduction pool; the page's own pill AUTO-SELECTS (leads the row); any prior
+               remains referenceable. FM-5 · THE PAGE-SCOPE LAW: page mounts ride the OWN-scoped
+               pool (conductionPool narrows to this page's target), so this gate renders NO
+               Previous block on a fresh page with zero own conductions; the pill row hides on
+               page mounts (one target = no chooser — the selection is fixed to the own
+               designation). FM-2 · the LIVE page-Forge surfaces as the launchable highlight
+               row above the offline re-openables; legacy (target-less) conductions render
+               only under the panel's 'unlabeled' pill. -->
           <div v-if="conductionPool.length > 0" class="s8c-forge-previous-block">
-            <div class="s8c-forge-previous-pills">
+            <div v-if="!isPageMount" class="s8c-forge-previous-pills">
               <span class="s8c-forge-previous-label hifi-mono">Previous conductions:</span>
               <button
                 v-for="t in conductionTargets"
