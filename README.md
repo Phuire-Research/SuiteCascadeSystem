@@ -213,27 +213,30 @@ every SCP's Home page as the Open Race section.
 This is a major release, and its title is earned by measure. Three terms carry it, each
 plain on first use. A **Demometer** is a different measure — a distinct part with its own
 measurable identity. A **Diameter** is a through-measure — a similarity drawn between
-unlike parts. A **Muxameter** is the integrated measure — a part as it actually relays
-through the others' Diameters, proven by operation.
+unlike parts. A **Muxameter** is the integrated measure — a part as it relays through the
+others' Diameters, proven by operation.
 
-The clearest working example ships in this release as the Suite 8 Page Update Mechanism. A
-page is a Demometer: it carries a version of its own, counted apart from the CLI and the
-app template — the third counter, s8, debuts at 1 here. That page draws a Diameter to
-another Demometer — the template's page it measures against — which is how a newer shipped
-page turns that page's own toolbar signal amber, never the main badge. And the update is
-the next Diameter — drawn to the Base anor the Informative: the refresh runs through the
-Entourage Forge with a conference first, and nothing you shaped is overwritten without
-your say. That completion forms the Muxameter — the page as it actually relays: measured
-against the template, updated through the Forge, proven by the operation itself.
+The worked example is the Suite 8 page itself. The page is the Demometer — and what makes
+two Demometers unlike is the locations of the pages: the same page standing on different
+SCPs. The Diameter is the locality — either location can perform from the immediate SCP:
+stand Local anor observe and act upon a Specified app, from right where you are. And the
+Muxameter forms when you work an S8 page on one SCP and cascade its advances — back into
+the Base the page may be formalized from, anor out to the Informatives where you find use
+for the page across your projects. The page as it relays, proven by the operation itself.
 
-Every system in this release holds the same shape. The color round-trip writes to the
-app's own configuration first and paints every window on the return — and crosses apps:
-choose another app's locality from Pewter Tessera and set its colors; its windows re-tint
-live. The texture library lives in each app's own patternLibrary.json — a new texture is
-one JSON entry, no code, no restart, picked up live by open pages. The Entourage Forge
-Menu stands on every Suite 8 page — sessions filtered to that page alone, build actions
-drawn from the page's own documentation. And beneath them all, the locality system: each
-page can stand Local anor observe a Specified app, and what it observes arrives live.
+The foundation of that proof is the SyncLibrary — the locality system. Each Suite 8 page
+holds a locality; the Locality Register lays it plain — the Local row and the live ring
+rows beside it, each with its status, chosen anor released and re-armed with no reload. A
+fire under a Specified locality reaches the target app, never a silent local fire; content
+moves under fixed paths while only the library carries the intelligence; and the failure
+mode is always preservation of your last local truth, never adoption. On that foundation
+stand the teeth: Suite 8 Page Transfer — install a page onto another SCP from the page's
+own panel, four stations, Requirements → Target → Gate → Update, proven twice in the
+field — and the update from any location, cascading a page's advances into the Base anor
+the Informatives, divergence held with both sides quoted for you to decide. Around them, a
+page's cascade memory renders live in an observing app within about 100ms of the write,
+colors round-trip, textures live in each app's own library, and the Forge Menu stands on
+every page — all on the same locality ground.
 
 That is the Total this release proves: not a feature list, but measures that relay. The
 counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
@@ -241,6 +244,29 @@ counters read it plainly — 0.950.0 · cli 12 · scp 13 · s8 1.
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
 
+- **0.950.0 — the SyncLibrary: every page holds a locality**: each Suite 8 page holds a
+  locality — stand Local anor observe a Specified app, from right where you are. The
+  Locality Register lays it plain: the Local row and the live ring rows beside it, each
+  with its status — choose anor release a locality and re-arm it with no reload; localities
+  are only ever live. A fire under a Specified locality reaches the target app, never a
+  silent local fire; content moves under fixed paths while only the library carries the
+  intelligence; and failure always preserves your last local truth, never adopts.
+  Everything else in this release stands on this ground.
+- **0.950.0 — Suite 8 Page Transfer, the Install Circuit**: install a Suite 8 page onto
+  another SCP from the page's own panel — four stations, Requirements → Target → Gate →
+  Update. A Requirements pass writes the page's needs and concerns into the package
+  itself, so they travel with the page; the transfer lands the real page with a report
+  written into the receiving app's own working record, and a failed gate restores
+  everything honestly. Proven twice in the field.
+- **0.950.0 — the update from any location**: work an S8 page wherever you stand, and
+  cascade its advances — back into the Base the page was formalized from, anor out to the
+  Informatives where you use it across your projects. Divergence never overwrites:
+  differences are held with both sides quoted and you decide; the resolved page becomes
+  the new Base. The panel names the concrete relation — Base:Name ← Informative:Name —
+  and dispatches role-correctly. Field-proven across two live apps.
+- **0.950.0 — cascade memory, live across apps**: a page's own working memory — its
+  cascade documents — renders in an observing app within about 100ms of the write. No
+  reload, honest empty states, and a removal is honestly cleared.
 - **0.950.0 — suite colors travel a full circuit**: a color choice completes a round trip
   before it paints — written to the app's own configuration first, then returned to every
   open window at once. And the circuit reaches across apps: from Pewter Tessera, choose

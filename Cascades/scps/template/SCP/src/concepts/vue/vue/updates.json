@@ -21,11 +21,46 @@
         {
           "title": "The Diametric SCP",
           "color": "purple",
-          "summary": "This release is named for what it proves: three plain measures — the Demometer, the Diameter, the Muxameter — and every system it ships is one of them, proven in operation.",
+          "summary": "This release is named for what it proves: three plain measures — the Demometer, the Diameter, the Muxameter — and the worked example is the Suite 8 page itself, the same page standing across locations, relaying its advances.",
           "detail": [
-            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure — a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure — a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure — a part as it actually relays through the others' Diameters, proven by operation.",
-            "The clearest example rides this page's own toolbar. A Suite 8 page is a Demometer — it carries a version of its own, and the third counter, <span class=\"hifi-hl-purple\">s8</span>, debuts at 1 in this release. The page draws a Diameter to the template's page it measures against — the amber signal when a newer page ships, belonging to the page alone. And the update is the NEXT Diameter — drawn to the Base anor the Informative through the <span class=\"hifi-hl-green\">Entourage Forge</span>, conference first, nothing you shaped overwritten without your say. That completion FORMS the Muxameter: the page as it actually relays, proven by the operation itself.",
-            "Every entry below holds the same shape — colors that round-trip through the app's own configuration, textures living in its own library, the Forge menu standing on every page, and beneath them all the locality each page can hold: stand Local anor observe a Specified app, arriving live. Not a feature list — measures that relay."
+            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure — a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure — a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure — a part as it relays through the others' Diameters, proven by operation.",
+            "The worked example is this page itself. A Suite 8 page is the Demometer — and what makes two Demometers UNLIKE is the LOCATIONS of the pages: the same page standing on different SCPs. The Diameter is the <span class=\"hifi-hl-green\">locality</span> — either location can perform from the immediate SCP: stand <span class=\"hifi-hl-green\">Local</span> anor observe and act upon a <span class=\"hifi-hl-blue\">Specified</span> app, from right where you are. And the Muxameter forms when you work an S8 page on one SCP and cascade its advances — back into the <span class=\"hifi-hl-purple\">Base</span> the page may be formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for the page across your projects. The page as it relays, proven by the operation itself.",
+            "The entries below carry the Total. The <span class=\"hifi-hl-green\">SyncLibrary</span> is the foundation — the locality every page holds. On it stand the teeth: <span class=\"hifi-hl-orange\">Page Transfer</span>, landing a real page on another SCP through four honest stations, and the <span class=\"hifi-hl-red\">update from any location</span>, cascading advances into the Base anor the Informatives with divergence held for your decision. Around them, cascade memory renders live across apps, colors round-trip, textures live in each app's own library, and the Forge Menu stands on every page. Not a feature list — measures that relay. The counters read it plainly: 0.950.0 · cli 12 · scp 13 · s8 1."
+          ]
+        },
+        {
+          "title": "The SyncLibrary — every page holds a locality",
+          "color": "green",
+          "summary": "The foundation of this release: each Suite 8 page holds a locality — stand Local anor observe a Specified app from right where you are — with a live Locality Register to choose, release, and re-arm without a reload.",
+          "detail": [
+            "Each Suite 8 page carries a <span class=\"hifi-hl-green\">locality</span>: stand Local anor observe a Specified app, from right where you are. The <span class=\"hifi-hl-green\">Locality Register</span> lays it plain — the Local row, then the live ring rows beside it, each with its status; choose anor release a locality and re-arm it with no reload. Localities are only ever LIVE.",
+            "A fire under a Specified locality reaches the TARGET app — never a silent local fire. Content moves under fixed paths while only the library carries the intelligence, and the failure mode is always <span class=\"hifi-hl-blue\">preservation of your last local truth</span>, never adoption. Everything else in this release stands on this ground."
+          ]
+        },
+        {
+          "title": "Suite 8 Page Transfer — the Install Circuit",
+          "color": "orange",
+          "summary": "Install a Suite 8 page onto another SCP from the page's own panel — four stations, Requirements → Target → Gate → Update — landing the real page with a report written into the receiving app's own working record. Proven twice in the field.",
+          "detail": [
+            "The transfer runs from the page's own panel through four stations: <span class=\"hifi-hl-orange\">Requirements → Target → Gate → Update</span>. A Requirements pass writes the page's needs and concerns into the package itself — they travel with the page, so the receiving app is told honestly what it is taking on.",
+            "The transfer lands the REAL page, with a report written into the receiving app's own working record — and a failed gate restores everything honestly, nothing left half-landed. Proven twice in the field."
+          ]
+        },
+        {
+          "title": "The update from any location — the Base anor the Informatives",
+          "color": "red",
+          "summary": "Work an S8 page wherever you stand, and cascade its advances — back into the Base it was formalized from, anor out to the Informatives where you use it across your projects. Divergence never overwrites: both sides quoted, you decide.",
+          "detail": [
+            "A Suite 8 page is no longer worked only where it was born. Work it wherever you stand and cascade the advances — back into the <span class=\"hifi-hl-red\">Base</span> the page was formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for it across your projects. The panel names the concrete relation — <span class=\"hifi-hl-blue\">Base:Name ← Informative:Name</span> — and dispatches role-correctly.",
+            "Divergence never overwrites: where the two sides differ, the difference is held with <span class=\"hifi-hl-red\">both sides quoted</span> and you decide. The resolved page becomes the new Base. Field-proven across two live apps."
+          ]
+        },
+        {
+          "title": "Cascade memory, live across apps",
+          "color": "base",
+          "summary": "A page's own working memory — its cascade documents — renders in an observing app within about 100ms of the write. No reload, honest empty states, and a removal honestly cleared.",
+          "detail": [
+            "Open a page's cascade documents from an observing app and what you read is the LIVE record: a write on the owning side renders in the observer within about <span class=\"hifi-hl-base\">100ms</span> — no reload, no stale copy. A page with no memory yet shows an honest empty state, and a removed document is honestly cleared, never left as a ghost."
           ]
         },
         {
