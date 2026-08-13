@@ -1,12 +1,43 @@
 {
   "schemaVersion": 1,
-  "current": "0.950.1",
+  "current": "0.950.2",
   "muxameter": {
     "cli": 13,
-    "scp": 14,
-    "s8": 1
+    "scp": 15,
+    "s8": 2
   },
   "releases": [
+    {
+      "id": "v09502",
+      "version": "0.950.2",
+      "label": "New in 0.950.2",
+      "muxameter": {
+        "cli": 13,
+        "scp": 15,
+        "s8": 2
+      },
+      "magnitude": 2,
+      "features": [
+        {
+          "title": "The Method Seed \u2014 the acquired method, yours to induct",
+          "color": "purple",
+          "summary": "The Home page's Tutorial section becomes the Method Seed: the working method this system was built with, shipped as documentation your own project can absorb. Browse the Manual, engage the Dialectics, and spawn the Cinnabar Dialectic to seed the method into your project's memory. Following through with the installment gives the best experience utilizing the SCS.",
+          "detail": [
+            "Every app now ships the Seed corpus \u2014 seven documents of working method (<span class=\"hifi-hl-purple\">how parallel work is dispatched</span>, <span class=\"hifi-hl-green\">how claims are verified</span>, <span class=\"hifi-hl-blue\">how plans are written</span>, how decisions are conferred, and the field laws learned the hard way) \u2014 plus a Method Lexicon of operational definitions any working session can cite.",
+            "The induction is <span class=\"hifi-hl-yellow\">opt-in and yours</span>: the spawned session reads the Seed and writes its own project memory given your set-up \u2014 nothing writes your memory at install. Re-running after an update refreshes what changed rather than duplicating. Once seeded, the Cinnabar Dialectic remains available to answer questions about any method it carried in.",
+            "The Cinnabar Dialectic itself advances to a second edition: its pattern registry doubles, organized into <span class=\"hifi-hl-fuchsia\">four families</span> \u2014 session grammar, correction shapes, agency laws, and commission shapes \u2014 the study of how prompting engages the Cascade, now teachable."
+          ]
+        },
+        {
+          "title": "A turn-over that cannot stall silently",
+          "color": "green",
+          "summary": "If the restart watcher has quietly died, the app now detects the stall itself \u2014 its own survival past the restart window is the proof \u2014 and completes the turn-over directly.",
+          "detail": [
+            "The restart signal file remains the primary lane and the boot record. The new failsafe only ever acts from a process that <span class=\"hifi-hl-green\">should already have been restarted</span> \u2014 so it cannot misfire when the watcher is healthy, and it completes the turn-over when the watcher is not."
+          ]
+        }
+      ]
+    },
     {
       "id": "v09501",
       "version": "0.950.1",
@@ -21,10 +52,10 @@
         {
           "title": "A turn-over that knows its name",
           "color": "green",
-          "summary": "A turn-over now belongs to one app by name — the name resolves the directory, and only then do the branch operations run inside it. One app's turn-over can no longer restart another.",
+          "summary": "A turn-over now belongs to one app by name \u2014 the name resolves the directory, and only then do the branch operations run inside it. One app's turn-over can no longer restart another.",
           "detail": [
-            "The resolution order is absolute: the app's <span class=\"hifi-hl-green\">name</span> identifies the target, the name resolves the directory, and the branch means of the operation run inside it — never the other way around. The safety deadline now remembers <span class=\"hifi-hl-blue\">which app armed it</span>: it fires for that app alone, and only that app's own boot stands it down.",
-            "Two apps turning over in the same window no longer collide — each conversation is held per app, so a second turn-over never displaces one in progress. And each app's restart watcher answers only to signals <span class=\"hifi-hl-purple\">addressed to it by name</span>; anything foreign is skipped with its reason named."
+            "The resolution order is absolute: the app's <span class=\"hifi-hl-green\">name</span> identifies the target, the name resolves the directory, and the branch means of the operation run inside it \u2014 never the other way around. The safety deadline now remembers <span class=\"hifi-hl-blue\">which app armed it</span>: it fires for that app alone, and only that app's own boot stands it down.",
+            "Two apps turning over in the same window no longer collide \u2014 each conversation is held per app, so a second turn-over never displaces one in progress. And each app's restart watcher answers only to signals <span class=\"hifi-hl-purple\">addressed to it by name</span>; anything foreign is skipped with its reason named."
           ]
         }
       ]
@@ -32,7 +63,7 @@
     {
       "id": "v0950",
       "version": "0.950.0",
-      "label": "New in 0.950.0 · The Diametric SCP",
+      "label": "New in 0.950.0 \u00b7 The Diametric SCP",
       "muxameter": {
         "cli": 12,
         "scp": 13,
@@ -43,118 +74,118 @@
         {
           "title": "The Diametric SCP",
           "color": "mux",
-          "summary": "This release is named for what it proves: three plain measures — the Demometer, the Diameter, the Muxameter — and the worked example is the Suite 8 page itself, the same page standing across locations, relaying its advances.",
+          "summary": "This release is named for what it proves: three plain measures \u2014 the Demometer, the Diameter, the Muxameter \u2014 and the worked example is the Suite 8 page itself, the same page standing across locations, relaying its advances.",
           "detail": [
-            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure — a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure — a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure — a part as it relays through the others' Diameters, proven by operation.",
-            "The worked example is this page itself. A Suite 8 page is the Demometer — and what makes two Demometers UNLIKE is the LOCATIONS of the pages: the same page standing on different SCPs. The Diameter is the <span class=\"hifi-hl-green\">locality</span> — either location can perform from the immediate SCP: stand <span class=\"hifi-hl-green\">Local</span> anor observe and act upon a <span class=\"hifi-hl-blue\">Specified</span> app, from right where you are. And the Muxameter forms when you work an S8 page on one SCP and cascade its advances — back into the <span class=\"hifi-hl-purple\">Base</span> the page may be formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for the page across your projects. The page as it relays, proven by the operation itself.",
-            "The entries below carry the Total. The <span class=\"hifi-hl-green\">SyncLibrary</span> is the foundation — the locality every page holds. On it stand the teeth: <span class=\"hifi-hl-orange\">Page Transfer</span>, landing a real page on another SCP through four honest stations, and the <span class=\"hifi-hl-red\">update from any location</span>, cascading advances into the Base anor the Informatives with divergence held for your decision. Around them, cascade memory renders live across apps, colors round-trip, textures live in each app's own library, and the Forge Menu stands on every page. Not a feature list — measures that relay. The counters read it plainly: 0.950.0 · cli 12 · scp 13 · s8 1.",
-            "THE ANOR NOTATION — <span class=\"hifi-hl-purple\">anor</span> is the Gradient Conjunctive within a Range: And anor Or anor Everything-In-Between. The working example renders here: <span class=\"hifi-anor-band\">Blue anor Yellow</span> — and <span class=\"hifi-hl-green\">Green is within</span> Blue anor Yellow, the way every measure in this release holds its range whole rather than forcing a choice between its ends."
+            "Three terms, plain on first use. A <span class=\"hifi-hl-purple\">Demometer</span> is a different measure \u2014 a distinct part with its own measurable identity. A <span class=\"hifi-hl-blue\">Diameter</span> is a through-measure \u2014 a similarity drawn between UNLIKE parts. A <span class=\"hifi-hl-green\">Muxameter</span> is the integrated measure \u2014 a part as it relays through the others' Diameters, proven by operation.",
+            "The worked example is this page itself. A Suite 8 page is the Demometer \u2014 and what makes two Demometers UNLIKE is the LOCATIONS of the pages: the same page standing on different SCPs. The Diameter is the <span class=\"hifi-hl-green\">locality</span> \u2014 either location can perform from the immediate SCP: stand <span class=\"hifi-hl-green\">Local</span> anor observe and act upon a <span class=\"hifi-hl-blue\">Specified</span> app, from right where you are. And the Muxameter forms when you work an S8 page on one SCP and cascade its advances \u2014 back into the <span class=\"hifi-hl-purple\">Base</span> the page may be formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for the page across your projects. The page as it relays, proven by the operation itself.",
+            "The entries below carry the Total. The <span class=\"hifi-hl-green\">SyncLibrary</span> is the foundation \u2014 the locality every page holds. On it stand the teeth: <span class=\"hifi-hl-orange\">Page Transfer</span>, landing a real page on another SCP through four honest stations, and the <span class=\"hifi-hl-red\">update from any location</span>, cascading advances into the Base anor the Informatives with divergence held for your decision. Around them, cascade memory renders live across apps, colors round-trip, textures live in each app's own library, and the Forge Menu stands on every page. Not a feature list \u2014 measures that relay. The counters read it plainly: 0.950.0 \u00b7 cli 12 \u00b7 scp 13 \u00b7 s8 1.",
+            "THE ANOR NOTATION \u2014 <span class=\"hifi-hl-purple\">anor</span> is the Gradient Conjunctive within a Range: And anor Or anor Everything-In-Between. The working example renders here: <span class=\"hifi-anor-band\">Blue anor Yellow</span> \u2014 and <span class=\"hifi-hl-green\">Green is within</span> Blue anor Yellow, the way every measure in this release holds its range whole rather than forcing a choice between its ends."
           ]
         },
         {
-          "title": "The SyncLibrary — every page holds a locality",
+          "title": "The SyncLibrary \u2014 every page holds a locality",
           "color": "green",
-          "summary": "The foundation of this release: each Suite 8 page holds a locality — stand Local anor observe a Specified app from right where you are — with a live Locality Register to choose, release, and re-arm without a reload.",
+          "summary": "The foundation of this release: each Suite 8 page holds a locality \u2014 stand Local anor observe a Specified app from right where you are \u2014 with a live Locality Register to choose, release, and re-arm without a reload.",
           "detail": [
-            "Each Suite 8 page carries a <span class=\"hifi-hl-green\">locality</span>: stand Local anor observe a Specified app, from right where you are. The <span class=\"hifi-hl-green\">Locality Register</span> lays it plain — the Local row, then the live ring rows beside it, each with its status; choose anor release a locality and re-arm it with no reload. Localities are only ever LIVE.",
-            "A fire under a Specified locality reaches the TARGET app — never a silent local fire. Content moves under fixed paths while only the library carries the intelligence, and the failure mode is always <span class=\"hifi-hl-blue\">preservation of your last local truth</span>, never adoption. Everything else in this release stands on this ground."
+            "Each Suite 8 page carries a <span class=\"hifi-hl-green\">locality</span>: stand Local anor observe a Specified app, from right where you are. The <span class=\"hifi-hl-green\">Locality Register</span> lays it plain \u2014 the Local row, then the live ring rows beside it, each with its status; choose anor release a locality and re-arm it with no reload. Localities are only ever LIVE.",
+            "A fire under a Specified locality reaches the TARGET app \u2014 never a silent local fire. Content moves under fixed paths while only the library carries the intelligence, and the failure mode is always <span class=\"hifi-hl-blue\">preservation of your last local truth</span>, never adoption. Everything else in this release stands on this ground."
           ]
         },
         {
-          "title": "Suite 8 Page Transfer — the Install Circuit",
+          "title": "Suite 8 Page Transfer \u2014 the Install Circuit",
           "color": "orange",
-          "summary": "Install a Suite 8 page onto another SCP from the page's own panel — four stations, Requirements → Target → Gate → Update — landing the real page with a report written into the receiving app's own working record. Proven twice in the field.",
+          "summary": "Install a Suite 8 page onto another SCP from the page's own panel \u2014 four stations, Requirements \u2192 Target \u2192 Gate \u2192 Update \u2014 landing the real page with a report written into the receiving app's own working record. Proven twice in the field.",
           "detail": [
-            "The transfer runs from the page's own panel through four stations: <span class=\"hifi-hl-orange\">Requirements → Target → Gate → Update</span>. A Requirements pass writes the page's needs and concerns into the package itself — they travel with the page, so the receiving app is told honestly what it is taking on.",
-            "The transfer lands the REAL page, with a report written into the receiving app's own working record — and a failed gate restores everything honestly, nothing left half-landed. Proven twice in the field."
+            "The transfer runs from the page's own panel through four stations: <span class=\"hifi-hl-orange\">Requirements \u2192 Target \u2192 Gate \u2192 Update</span>. A Requirements pass writes the page's needs and concerns into the package itself \u2014 they travel with the page, so the receiving app is told honestly what it is taking on.",
+            "The transfer lands the REAL page, with a report written into the receiving app's own working record \u2014 and a failed gate restores everything honestly, nothing left half-landed. Proven twice in the field."
           ]
         },
         {
-          "title": "The update from any location — the Base anor the Informatives",
+          "title": "The update from any location \u2014 the Base anor the Informatives",
           "color": "red",
-          "summary": "Work an S8 page wherever you stand, and cascade its advances — back into the Base it was formalized from, anor out to the Informatives where you use it across your projects. Divergence never overwrites: both sides quoted, you decide.",
+          "summary": "Work an S8 page wherever you stand, and cascade its advances \u2014 back into the Base it was formalized from, anor out to the Informatives where you use it across your projects. Divergence never overwrites: both sides quoted, you decide.",
           "detail": [
-            "A Suite 8 page is no longer worked only where it was born. Work it wherever you stand and cascade the advances — back into the <span class=\"hifi-hl-red\">Base</span> the page was formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for it across your projects. The panel names the concrete relation — <span class=\"hifi-hl-blue\">Base:Name ← Informative:Name</span> — and dispatches role-correctly.",
+            "A Suite 8 page is no longer worked only where it was born. Work it wherever you stand and cascade the advances \u2014 back into the <span class=\"hifi-hl-red\">Base</span> the page was formalized from, anor out to the <span class=\"hifi-hl-orange\">Informatives</span> where you find use for it across your projects. The panel names the concrete relation \u2014 <span class=\"hifi-hl-blue\">Base:Name \u2190 Informative:Name</span> \u2014 and dispatches role-correctly.",
             "Divergence never overwrites: where the two sides differ, the difference is held with <span class=\"hifi-hl-red\">both sides quoted</span> and you decide. The resolved page becomes the new Base. Field-proven across two live apps."
           ]
         },
         {
           "title": "Cascade memory, live across apps",
           "color": "base",
-          "summary": "A page's own working memory — its cascade documents — renders in an observing app within about 100ms of the write. No reload, honest empty states, and a removal honestly cleared.",
+          "summary": "A page's own working memory \u2014 its cascade documents \u2014 renders in an observing app within about 100ms of the write. No reload, honest empty states, and a removal honestly cleared.",
           "detail": [
-            "Open a page's cascade documents from an observing app and what you read is the LIVE record: a write on the owning side renders in the observer within about <span class=\"hifi-hl-base\">100ms</span> — no reload, no stale copy. A page with no memory yet shows an honest empty state, and a removed document is honestly cleared, never left as a ghost."
+            "Open a page's cascade documents from an observing app and what you read is the LIVE record: a write on the owning side renders in the observer within about <span class=\"hifi-hl-base\">100ms</span> \u2014 no reload, no stale copy. A page with no memory yet shows an honest empty state, and a removed document is honestly cleared, never left as a ghost."
           ]
         },
         {
           "title": "Suite colors travel a full circuit",
           "color": "red",
-          "summary": "A color choice now completes a round trip before it paints — written to the app's own configuration first, then returned to every open window at once, so what you see is always the shared truth.",
+          "summary": "A color choice now completes a round trip before it paints \u2014 written to the app's own configuration first, then returned to every open window at once, so what you see is always the shared truth.",
           "detail": [
-            "Pick a color and it lands in your app's <span class=\"hifi-hl-blue\">hifiConfig.json</span> before any window changes — then every window, including the one you clicked in, re-tints together on the return. No window ever shows a color the configuration does not hold.",
-            "And the circuit reaches across apps: from <span class=\"hifi-hl-base\">Pewter Tessera</span>, choose another app's locality and set ITS colors — its own windows re-tint live, your styling stays untouched, and the swatches you edit show the target's true palette the whole time."
+            "Pick a color and it lands in your app's <span class=\"hifi-hl-blue\">hifiConfig.json</span> before any window changes \u2014 then every window, including the one you clicked in, re-tints together on the return. No window ever shows a color the configuration does not hold.",
+            "And the circuit reaches across apps: from <span class=\"hifi-hl-base\">Pewter Tessera</span>, choose another app's locality and set ITS colors \u2014 its own windows re-tint live, your styling stays untouched, and the swatches you edit show the target's true palette the whole time."
           ]
         },
         {
           "title": "Suite textures become a living library",
           "color": "fuchsia",
-          "summary": "The SVG textures behind every pane now live in each app's own patternLibrary.json — a new texture is one small JSON entry, no code change, no restart, and open pages pick it up live.",
+          "summary": "The SVG textures behind every pane now live in each app's own patternLibrary.json \u2014 a new texture is one small JSON entry, no code change, no restart, and open pages pick it up live.",
           "detail": [
-            "Each app ships the full texture set as a seeded <span class=\"hifi-hl-fuchsia\">patternLibrary.json</span> and can grow it freely — drop a validated entry in and the texture appears in the picker, paints on selection, and travels the same cross-app circuit colors do. A texture added while windows are open registers itself on the spot.",
+            "Each app ships the full texture set as a seeded <span class=\"hifi-hl-fuchsia\">patternLibrary.json</span> and can grow it freely \u2014 drop a validated entry in and the texture appears in the picker, paints on selection, and travels the same cross-app circuit colors do. A texture added while windows are open registers itself on the spot.",
             "Rapid changes settle gracefully too: a burst of edits coalesces to the final value before it lands, so the last choice is the one that paints."
           ]
         },
         {
           "title": "The Entourage Forge Menu, on every page",
           "color": "blue",
-          "summary": "The Forge menu now stands as its own widget on each Suite 8 page — sessions filtered to that page alone, build actions drawn from the page's own documentation, and one motion to reach the live Forge.",
+          "summary": "The Forge menu now stands as its own widget on each Suite 8 page \u2014 sessions filtered to that page alone, build actions drawn from the page's own documentation, and one motion to reach the live Forge.",
           "detail": [
-            "A page's Forge menu shows only the conductions commissioned from THAT page — a fresh page starts honestly empty. Its build actions come from the page's own <span class=\"hifi-hl-blue\">ForgeMenu.json</span> when one is authored (the built-in set stands otherwise), and firing one either reaches the live Forge for that page or begins a new conduction carrying the action with it.",
-            "The widget is yours to place: remove it from any page and it stays removed — even through a page update — while the Suite 8 panel always keeps the full menu within reach. A freshly authored page opens with the menu expanded; fold it away and the page remembers."
+            "A page's Forge menu shows only the conductions commissioned from THAT page \u2014 a fresh page starts honestly empty. Its build actions come from the page's own <span class=\"hifi-hl-blue\">ForgeMenu.json</span> when one is authored (the built-in set stands otherwise), and firing one either reaches the live Forge for that page or begins a new conduction carrying the action with it.",
+            "The widget is yours to place: remove it from any page and it stays removed \u2014 even through a page update \u2014 while the Suite 8 panel always keeps the full menu within reach. A freshly authored page opens with the menu expanded; fold it away and the page remembers."
           ]
         },
         {
           "title": "Every page carries its own version",
           "color": "purple",
-          "summary": "A Suite 8 page now holds a version of its own — and when a newer one ships, the page's own toolbar button turns amber to say so, quietly, without touching the main version badge.",
+          "summary": "A Suite 8 page now holds a version of its own \u2014 and when a newer one ships, the page's own toolbar button turns amber to say so, quietly, without touching the main version badge.",
           "detail": [
-            "Until now, only the app as a whole knew whether it was current. A Suite 8 page is a living surface — it can advance on its own cadence — so each page now carries a <span class=\"hifi-hl-purple\">page version</span> counted apart from the CLI and the app template. When the published page version outpaces the one your page carries, the page's own <span class=\"hifi-hl-yellow\">Suite 8 toolbar button turns amber</span> — a signal that belongs to that page alone.",
-            "The main version badge keeps its own voice: it never turns amber for a page update, and the amber toolbar never turns the badge red. Two signals, two meanings — the badge speaks for the app, the amber toggle speaks for the page in front of you."
+            "Until now, only the app as a whole knew whether it was current. A Suite 8 page is a living surface \u2014 it can advance on its own cadence \u2014 so each page now carries a <span class=\"hifi-hl-purple\">page version</span> counted apart from the CLI and the app template. When the published page version outpaces the one your page carries, the page's own <span class=\"hifi-hl-yellow\">Suite 8 toolbar button turns amber</span> \u2014 a signal that belongs to that page alone.",
+            "The main version badge keeps its own voice: it never turns amber for a page update, and the amber toolbar never turns the badge red. Two signals, two meanings \u2014 the badge speaks for the app, the amber toggle speaks for the page in front of you."
           ]
         },
         {
           "title": "The page update, always within reach",
           "color": "blue",
-          "summary": "The Suite 8 Control panel now carries a standing PAGE and NPM readout with an update control beside it — refresh a single page to its latest shipped version whenever you choose.",
+          "summary": "The Suite 8 Control panel now carries a standing PAGE and NPM readout with an update control beside it \u2014 refresh a single page to its latest shipped version whenever you choose.",
           "detail": [
-            "Open the Suite 8 Control panel and a plain row reads it straight: <span class=\"hifi-hl-blue\">PAGE #N · NPM #M</span> — the version your page carries beside the version the release ships. The update control stands right there, always available: you decide when a page catches up, page by page, never all-at-once by surprise.",
-            "The readout tells the truth whether or not an update waits: matching numbers mean the page is current, and the amber toggle rests. A higher NPM number is the invitation — press the control when the moment suits you."
+            "Open the Suite 8 Control panel and a plain row reads it straight: <span class=\"hifi-hl-blue\">PAGE #N \u00b7 NPM #M</span> \u2014 the version your page carries beside the version the release ships. The update control stands right there, always available: you decide when a page catches up, page by page, never all-at-once by surprise.",
+            "The readout tells the truth whether or not an update waits: matching numbers mean the page is current, and the amber toggle rests. A higher NPM number is the invitation \u2014 press the control when the moment suits you."
           ]
         },
         {
           "title": "A page update that honors your design",
           "color": "green",
-          "summary": "A page refresh runs through the Entourage Forge with a conference first — nothing you shaped is overwritten without your say, the way every SCP update already protects your work.",
+          "summary": "A page refresh runs through the Entourage Forge with a conference first \u2014 nothing you shaped is overwritten without your say, the way every SCP update already protects your work.",
           "detail": [
-            "Refreshing a page is not a silent overwrite. It runs through the <span class=\"hifi-hl-green\">Entourage Forge</span>, which opens a conference honoring what you have already made: where the new page and your version differ, you decide — your own design is never clobbered by a template default. The same preservation discipline the SCP update circuit stands on now guards the single page.",
-            "The Forge carries the change onto your page and lets you review it in place. Land what serves you, keep what is yours — the refresh is conducted by you, decision by decision."
+            "Refreshing a page is not a silent overwrite. It runs through the <span class=\"hifi-hl-green\">Entourage Forge</span>, which opens a conference honoring what you have already made: where the new page and your version differ, you decide \u2014 your own design is never clobbered by a template default. The same preservation discipline the SCP update circuit stands on now guards the single page.",
+            "The Forge carries the change onto your page and lets you review it in place. Land what serves you, keep what is yours \u2014 the refresh is conducted by you, decision by decision."
           ]
         },
         {
           "title": "The Forge's Reference Designs, renewed",
           "color": "orange",
-          "summary": "The Entourage Forge's Reference Design list gains two: Prepared Agent Dispatch — sequence any number of agents straight from your page — and OnBoard.md, so a page ships with its own onboarding.",
+          "summary": "The Entourage Forge's Reference Design list gains two: Prepared Agent Dispatch \u2014 sequence any number of agents straight from your page \u2014 and OnBoard.md, so a page ships with its own onboarding.",
           "detail": [
-            "<span class=\"hifi-hl-orange\">Prepared Agent Dispatch</span> lets your page prepare any number of agents in sequence — a directed line-up dispatched straight from the page, each carrying its own directive into motion.",
-            "<span class=\"hifi-hl-blue\">OnBoard.md</span> lets a page ship with its own onboarding written alongside it — the page arrives already knowing how to introduce itself, so whoever opens it next is met, not left guessing."
+            "<span class=\"hifi-hl-orange\">Prepared Agent Dispatch</span> lets your page prepare any number of agents in sequence \u2014 a directed line-up dispatched straight from the page, each carrying its own directive into motion.",
+            "<span class=\"hifi-hl-blue\">OnBoard.md</span> lets a page ship with its own onboarding written alongside it \u2014 the page arrives already knowing how to introduce itself, so whoever opens it next is met, not left guessing."
           ]
         },
         {
           "title": "Pewter Tessera joins as a full page",
           "color": "base",
-          "summary": "Pewter Tessera ships as a full Suite 8 page — pick a locality to preview an SCP's shipped colors without ever touching your own styling.",
+          "summary": "Pewter Tessera ships as a full Suite 8 page \u2014 pick a locality to preview an SCP's shipped colors without ever touching your own styling.",
           "detail": [
-            "<span class=\"hifi-hl-base\">Pewter Tessera</span> is now a full Suite 8 page in its own right. Choose a locality and it previews that SCP's shipped colors in place — a look at how another app dresses itself, held entirely apart from your own styling. Nothing you preview ever lands on your page; your look stays yours throughout."
+            "<span class=\"hifi-hl-base\">Pewter Tessera</span> is now a full Suite 8 page in its own right. Choose a locality and it previews that SCP's shipped colors in place \u2014 a look at how another app dresses itself, held entirely apart from your own styling. Nothing you preview ever lands on your page; your look stays yours throughout."
           ]
         }
       ]
@@ -172,10 +203,10 @@
         {
           "title": "The bridge never hangs on git",
           "color": "red",
-          "summary": "A remote git operation that stalls waiting for credentials can no longer freeze the bridge — it fails fast with a plain reason, and every control stays live.",
+          "summary": "A remote git operation that stalls waiting for credentials can no longer freeze the bridge \u2014 it fails fast with a plain reason, and every control stays live.",
           "detail": [
-            "A push anor pull whose transport stalled awaiting a credential answer used to hold the whole bridge with it — buttons pressed into silence until a relaunch. Git is now told <span class=\"hifi-hl-red\">never to prompt</span> (it fails immediately with its own reason instead), and a hard <span class=\"hifi-hl-yellow\">two-minute backstop</span> ends any transport that stalls without prompting. The failure surfaces in the command log like any other; the bridge stays live throughout.",
-            "This is a CLI-only release — your app needs no changes. Update the bridge from the Update page and relaunch."
+            "A push anor pull whose transport stalled awaiting a credential answer used to hold the whole bridge with it \u2014 buttons pressed into silence until a relaunch. Git is now told <span class=\"hifi-hl-red\">never to prompt</span> (it fails immediately with its own reason instead), and a hard <span class=\"hifi-hl-yellow\">two-minute backstop</span> ends any transport that stalls without prompting. The failure surfaces in the command log like any other; the bridge stays live throughout.",
+            "This is a CLI-only release \u2014 your app needs no changes. Update the bridge from the Update page and relaunch."
           ]
         }
       ]
@@ -193,30 +224,30 @@
         {
           "title": "The update flow, reinforced",
           "color": "yellow",
-          "summary": "The staging update rides a hardened circuit — any number of your SCPs at once, every failure naming its position, one gesture to finalize on whichever branch you stand.",
+          "summary": "The staging update rides a hardened circuit \u2014 any number of your SCPs at once, every failure naming its position, one gesture to finalize on whichever branch you stand.",
           "detail": [
-            "The whole circuit was reinforced in the field: concurrent updates share one source refresh instead of racing it, every SCP keeps its own update rail, and a failure lights the exact stage it stopped at with its reason — never a silent wall.",
-            "Two field-earned habits keep it smooth. Run an update with <span class=\"hifi-hl-yellow\">all your changes committed</span> — the update lands on your current branch, and a clean tree is the ground the circuit expects. And if the <span class=\"hifi-hl-green\">Turn Over prompt</span> does not appear after the resolver completes, that is a stochastic miss, not a failure: run the update again, anor tell the resolver session — <em>“Finalize the resolution — write the pending-0 resolution file and fire the Turn Over prompt.”</em> The apply lands the moment the resolution arrives."
+            "The whole circuit was reinforced in the field: concurrent updates share one source refresh instead of racing it, every SCP keeps its own update rail, and a failure lights the exact stage it stopped at with its reason \u2014 never a silent wall.",
+            "Two field-earned habits keep it smooth. Run an update with <span class=\"hifi-hl-yellow\">all your changes committed</span> \u2014 the update lands on your current branch, and a clean tree is the ground the circuit expects. And if the <span class=\"hifi-hl-green\">Turn Over prompt</span> does not appear after the resolver completes, that is a stochastic miss, not a failure: run the update again, anor tell the resolver session \u2014 <em>\u201cFinalize the resolution \u2014 write the pending-0 resolution file and fire the Turn Over prompt.\u201d</em> The apply lands the moment the resolution arrives."
           ]
         },
         {
-          "title": "Your SCPs, curated — Archive, Restore, Delete",
+          "title": "Your SCPs, curated \u2014 Archive, Restore, Delete",
           "color": "orange",
           "summary": "The install roster grows a second shelf: archive finished SCPs out of the working set, restore them intact when they matter again, and delete with a deliberate guard.",
           "detail": [
-            "The Installation page now carries two tabs — <span class=\"hifi-hl-blue\">Installed</span> and <span class=\"hifi-hl-orange\">Archived</span>. Archiving moves the whole SCP into a vault beside the working set — nothing is lost, it simply leaves the daily roster. Restore brings it back exactly as it left, git and all.",
-            "Deletion is deliberate by design: an installed SCP asks you to <span class=\"hifi-hl-red\">type its name</span> before it goes; an archived one asks a plain yes-anor-no. The template itself is <span class=\"hifi-hl-base\">system-protected</span> — the ground every install builds from can be neither archived nor deleted.",
-            "Work-branch worktrees are first-class citizens of the vault: a worktree SCP wears its own hatched marking, a live SCP refuses the vault until it is stopped, and the git linkage is repaired on the way in anor out so both trees stay whole. Removing an instance from the Session Manager is now one clean acknowledgment — no more stuck 'Removing…'."
+            "The Installation page now carries two tabs \u2014 <span class=\"hifi-hl-blue\">Installed</span> and <span class=\"hifi-hl-orange\">Archived</span>. Archiving moves the whole SCP into a vault beside the working set \u2014 nothing is lost, it simply leaves the daily roster. Restore brings it back exactly as it left, git and all.",
+            "Deletion is deliberate by design: an installed SCP asks you to <span class=\"hifi-hl-red\">type its name</span> before it goes; an archived one asks a plain yes-anor-no. The template itself is <span class=\"hifi-hl-base\">system-protected</span> \u2014 the ground every install builds from can be neither archived nor deleted.",
+            "Work-branch worktrees are first-class citizens of the vault: a worktree SCP wears its own hatched marking, a live SCP refuses the vault until it is stopped, and the git linkage is repaired on the way in anor out so both trees stay whole. Removing an instance from the Session Manager is now one clean acknowledgment \u2014 no more stuck 'Removing\u2026'."
           ]
         },
         {
           "title": "Release notes that know your SCP",
           "color": "green",
-          "summary": "The Update page now carries the release notes themselves — filtered to what YOUR SCP would actually gain, each release weighed with a magnitude, before you decide to update.",
+          "summary": "The Update page now carries the release notes themselves \u2014 filtered to what YOUR SCP would actually gain, each release weighed with a magnitude, before you decide to update.",
           "detail": [
-            "Every release is recorded in a versioned manifest the bridge reads live — anor straight from your own machine in a development loop. The Update page folds it open as <span class=\"hifi-hl-green\">What this update carries</span>: the releases your SCP has not yet landed, each with its features in full and a <span class=\"hifi-hl-yellow\">magnitude</span> of one to five marking the degree of change it brings.",
-            "The filter keys on what your SCP has <span class=\"hifi-hl-blue\">actually applied</span> — not the version string — so an SCP that skipped three releases sees all three, and one that is current sees the plain release notes with nothing pending. The same notes render on the Home page as the full tour, from one shared source.",
-            "When an update is pending, the panel <span class=\"hifi-hl-green\">opens itself</span> — the notes are the first thing you meet on the Update page. It folds away the moment the update process begins, yielding the floor to the review rail; your own toggle always wins over the automatic motion."
+            "Every release is recorded in a versioned manifest the bridge reads live \u2014 anor straight from your own machine in a development loop. The Update page folds it open as <span class=\"hifi-hl-green\">What this update carries</span>: the releases your SCP has not yet landed, each with its features in full and a <span class=\"hifi-hl-yellow\">magnitude</span> of one to five marking the degree of change it brings.",
+            "The filter keys on what your SCP has <span class=\"hifi-hl-blue\">actually applied</span> \u2014 not the version string \u2014 so an SCP that skipped three releases sees all three, and one that is current sees the plain release notes with nothing pending. The same notes render on the Home page as the full tour, from one shared source.",
+            "When an update is pending, the panel <span class=\"hifi-hl-green\">opens itself</span> \u2014 the notes are the first thing you meet on the Update page. It folds away the moment the update process begins, yielding the floor to the review rail; your own toggle always wins over the automatic motion."
           ]
         }
       ]
@@ -234,10 +265,10 @@
         {
           "title": "Updates that explain themselves",
           "color": "green",
-          "summary": "The update diff now carries the exact preservation rules it was computed under — the resolver working inside your SCP reads the guard directly from the artifact.",
+          "summary": "The update diff now carries the exact preservation rules it was computed under \u2014 the resolver working inside your SCP reads the guard directly from the artifact.",
           "detail": [
-            "Every SCP update is a three-way merge guarded by preservation rules: your SCP’s identity — its name, its config — is never clobbered by a template default, and certain files are never deleted. Until now those rules lived only inside the bridge, where the resolver working <span class=\"hifi-hl-green\">inside your SCP</span> had no way to read them. The diff is now self-describing: its provenance block pins the exact rules the merge was computed under.",
-            "The apply step prefers those pinned rules too — so the rules that <span class=\"hifi-hl-blue\">computed</span> your update are the rules that <span class=\"hifi-hl-blue\">land</span> it, even when the update itself is changing the bridge mid-flight. Smoother updates, with the guard in plain sight."
+            "Every SCP update is a three-way merge guarded by preservation rules: your SCP\u2019s identity \u2014 its name, its config \u2014 is never clobbered by a template default, and certain files are never deleted. Until now those rules lived only inside the bridge, where the resolver working <span class=\"hifi-hl-green\">inside your SCP</span> had no way to read them. The diff is now self-describing: its provenance block pins the exact rules the merge was computed under.",
+            "The apply step prefers those pinned rules too \u2014 so the rules that <span class=\"hifi-hl-blue\">computed</span> your update are the rules that <span class=\"hifi-hl-blue\">land</span> it, even when the update itself is changing the bridge mid-flight. Smoother updates, with the guard in plain sight."
           ]
         }
       ]
@@ -255,19 +286,19 @@
         {
           "title": "Every SCP holds its own anchor",
           "color": "green",
-          "summary": "Sessions, anchors, and bindings are now scoped to the SCP that owns them — two SCPs can each carry the same Suite, side by side, without ever crossing.",
+          "summary": "Sessions, anchors, and bindings are now scoped to the SCP that owns them \u2014 two SCPs can each carry the same Suite, side by side, without ever crossing.",
           "detail": [
-            "Before, a Suite’s anchor was found by NAME alone — the first match across every SCP. A fresh SCP’s page could adopt ANOTHER SCP’s session: an old, empty terminal surfacing where a new anchor belonged, a resume of a conversation that never existed, a menu authored into the wrong SCP’s files. The whole identity chain is now <span class=\"hifi-hl-green\">per-SCP</span>: every spawn carries its own SCP’s name, every anchor claim stays within its SCP, a re-engaged session keeps its Suite identity, and a session with nothing to resume boots fresh instead of dying.",
-            "The research workers ride the same ground: a dispatched Topic Researcher now boots <span class=\"hifi-hl-blue\">bare</span> — its streamed plan IS its directive — while the page’s own anchor keeps its full onboarding, primed into motion."
+            "Before, a Suite\u2019s anchor was found by NAME alone \u2014 the first match across every SCP. A fresh SCP\u2019s page could adopt ANOTHER SCP\u2019s session: an old, empty terminal surfacing where a new anchor belonged, a resume of a conversation that never existed, a menu authored into the wrong SCP\u2019s files. The whole identity chain is now <span class=\"hifi-hl-green\">per-SCP</span>: every spawn carries its own SCP\u2019s name, every anchor claim stays within its SCP, a re-engaged session keeps its Suite identity, and a session with nothing to resume boots fresh instead of dying.",
+            "The research workers ride the same ground: a dispatched Topic Researcher now boots <span class=\"hifi-hl-blue\">bare</span> \u2014 its streamed plan IS its directive \u2014 while the page\u2019s own anchor keeps its full onboarding, primed into motion."
           ]
         },
         {
           "title": "Spawn plainly, anchor deliberately",
           "color": "blue",
-          "summary": "The Session Manager spawns PLAIN instances — no onboarding, no anchor claim. Anchoring belongs to the Suite’s own page, and the Suite list reads live from your SCP’s folder.",
+          "summary": "The Session Manager spawns PLAIN instances \u2014 no onboarding, no anchor claim. Anchoring belongs to the Suite\u2019s own page, and the Suite list reads live from your SCP\u2019s folder.",
           "detail": [
-            "The Session Manager’s two lanes are now named: <span class=\"hifi-hl-blue\">Spawn General Session</span> above, and the Suite 8 dropdown below — select a Suite to enable its spawn. A Session-Manager spawn is a plain instance: it never claims a page’s anchor and never takes the onboarding seed. The page’s own menu remains the one door that mints, anchors, and primes.",
-            "The Suite dropdown scans YOUR SCP’s own Suite folder fresh on every open — a Suite you just created appears immediately, turn-overs included. And a new chip on every Suite menu reads <span class=\"hifi-hl-green\">Anchor: Specified</span> — your page addresses its own SCP’s anchor; the Local cross-SCP tabbing it teases is a coming refinement."
+            "The Session Manager\u2019s two lanes are now named: <span class=\"hifi-hl-blue\">Spawn General Session</span> above, and the Suite 8 dropdown below \u2014 select a Suite to enable its spawn. A Session-Manager spawn is a plain instance: it never claims a page\u2019s anchor and never takes the onboarding seed. The page\u2019s own menu remains the one door that mints, anchors, and primes.",
+            "The Suite dropdown scans YOUR SCP\u2019s own Suite folder fresh on every open \u2014 a Suite you just created appears immediately, turn-overs included. And a new chip on every Suite menu reads <span class=\"hifi-hl-green\">Anchor: Specified</span> \u2014 your page addresses its own SCP\u2019s anchor; the Local cross-SCP tabbing it teases is a coming refinement."
           ]
         }
       ]
@@ -285,10 +316,10 @@
         {
           "title": "The Forge cycle, completed",
           "color": "green",
-          "summary": "The Entourage Forge engages the moment a page is created — and the turn-over becomes the trigger at the END of its work, resolving the right branch on its own.",
+          "summary": "The Entourage Forge engages the moment a page is created \u2014 and the turn-over becomes the trigger at the END of its work, resolving the right branch on its own.",
           "detail": [
-            "Before, a fresh page demanded a turn-over before the Forge could even begin — and on a brand-new app with a default git tree, that demand pointed at a working branch that did not exist yet. The order is now the cycle it always meant to be: <span class=\"hifi-hl-green\">engage at creation, work, then land</span>. The landing trigger surfaces once there is work on the tree, and the press resolves the branch itself — a fresh app takes its <span class=\"hifi-hl-blue\">first turn-over</span> with the same overlay and care as the app’s very first landing; a working branch simply restarts; an established app carries the work onto its working branch.",
-            "And git actions fired from any page now carry the app’s <span class=\"hifi-hl-green\">own name</span> to the bridge — a push from the Release pane lands on the right repository whether or not anything ever set focus that session."
+            "Before, a fresh page demanded a turn-over before the Forge could even begin \u2014 and on a brand-new app with a default git tree, that demand pointed at a working branch that did not exist yet. The order is now the cycle it always meant to be: <span class=\"hifi-hl-green\">engage at creation, work, then land</span>. The landing trigger surfaces once there is work on the tree, and the press resolves the branch itself \u2014 a fresh app takes its <span class=\"hifi-hl-blue\">first turn-over</span> with the same overlay and care as the app\u2019s very first landing; a working branch simply restarts; an established app carries the work onto its working branch.",
+            "And git actions fired from any page now carry the app\u2019s <span class=\"hifi-hl-green\">own name</span> to the bridge \u2014 a push from the Release pane lands on the right repository whether or not anything ever set focus that session."
           ]
         }
       ]
@@ -306,18 +337,18 @@
         {
           "title": "Born from the freshest template",
           "color": "green",
-          "summary": "Creating a new app now refreshes the template to the latest release before the birth — never a stale vintage — and a one-press Create door joins SCP Management.",
+          "summary": "Creating a new app now refreshes the template to the latest release before the birth \u2014 never a stale vintage \u2014 and a one-press Create door joins SCP Management.",
           "detail": [
-            "A field catch: a new app could be born from whatever template vintage its workspace had frozen at, wearing a current version over old bones. Every template birth now <span class=\"hifi-hl-green\">refreshes to the freshest release first</span> — the same retained comparison machinery the update circuit already trusts — falling back gracefully when offline. The staged rail says so as it works: refreshing the template, then clone, install, ready.",
-            "And creation is now a page away: <span class=\"hifi-hl-green\">Create a New SCP</span> in SCP Management — one PascalCase name, one press, the same staged rail the manifest install walks. The TUI path is honest too: typing lands from the first key, and every character belongs to the name you are writing."
+            "A field catch: a new app could be born from whatever template vintage its workspace had frozen at, wearing a current version over old bones. Every template birth now <span class=\"hifi-hl-green\">refreshes to the freshest release first</span> \u2014 the same retained comparison machinery the update circuit already trusts \u2014 falling back gracefully when offline. The staged rail says so as it works: refreshing the template, then clone, install, ready.",
+            "And creation is now a page away: <span class=\"hifi-hl-green\">Create a New SCP</span> in SCP Management \u2014 one PascalCase name, one press, the same staged rail the manifest install walks. The TUI path is honest too: typing lands from the first key, and every character belongs to the name you are writing."
           ]
         },
         {
           "title": "The shader stands its ground",
           "color": "purple",
-          "summary": "A render-mode choice now survives every internal rewrite — the chromatic shader no longer goes dark after a session of heavy motion.",
+          "summary": "A render-mode choice now survives every internal rewrite \u2014 the chromatic shader no longer goes dark after a session of heavy motion.",
           "detail": [
-            "The one writer that recorded your render-mode choice could be overwritten by routine internal refreshes — the choice silently erased, the shader falling dark. Every writer now <span class=\"hifi-hl-purple\">preserves the shader fields</span> it does not own. And closing the CLI now reliably carries the whole window set down with it — no orphaned windows holding the stage."
+            "The one writer that recorded your render-mode choice could be overwritten by routine internal refreshes \u2014 the choice silently erased, the shader falling dark. Every writer now <span class=\"hifi-hl-purple\">preserves the shader fields</span> it does not own. And closing the CLI now reliably carries the whole window set down with it \u2014 no orphaned windows holding the stage."
           ]
         }
       ]

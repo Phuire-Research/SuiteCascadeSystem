@@ -32,12 +32,14 @@ import ReleaseMiniSite from './ReleaseMiniSite.vue';
 import SuiteChip from '../components/SuiteChip.vue';
 // C809 · THE SCP MARK — the tri-color formalization of the term (the alternating shadows).
 import ScpMark from '../components/ScpMark.vue';
+// D-MSE-5 · THE METHOD SEED DOOR — the Cinnabar Seed widget (Manual · Dialectics · Pass-Through).
+import S8CinnabarSeed from '../components/S8CinnabarSeed.vue';
 
 // For client-side type safety
 type ClientDeck = any;
 
 // The SCS-Bridge release · version = Cascade Cycle (see Release Notes below).
-const RELEASE_VERSION = '0.950.1';
+const RELEASE_VERSION = '0.950.2';
 
 // ===================== RELEASE NOTES (D-HOME R3) =====================
 // The 0.697.0 notes were the FIRST public stamp; 0.811.0 (R4) added the C702-C809 delta;
@@ -217,50 +219,22 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <!-- ===================== TUTORIAL · PENDING (C817) — the section moves to locked status:
-           after release it becomes the INTERACTIVE Tutorial (the install experience turned
-           teacher · automated · step-conducted) mirroring the curated walkthrough at
-           youtube.com/@Phuire. The locked-with-promise idiom (C813): the suite color held at
-           low saturation — never grayscale death; the channel link LIVE while the body sleeps. -->
+      <!-- ===================== THE METHOD SEED · D-MSE-5 — the position-03 pane re-seated:
+           the acquired method ships as a Seed beside the constitution, and the widget below
+           is its door (Manual · Dialectics · Pass-Through). Induction is opt-in — invited,
+           never automatic. -->
       <section class="home-section hifi-pane-yellow">
-        <p class="section-eyebrow hifi-mono">03 · TUTORIAL</p>
-        <h2 class="section-title hifi-heading">We are just getting started</h2>
-        <span class="tutorial-badge hifi-mono">🔒 LOCKED — UNLOCKS AFTER RELEASE</span>
-        <p class="section-lede tutorial-promise">
-          After release, this section becomes the <span class="hifi-hl-yellow">interactive
-          Tutorial</span> — the install experience turned teacher: <span class="hifi-hl-purple">step-conducted
-          and automated</span>, walking you through each task live. It mirrors a curated
-          walkthrough series at
-          <a class="tutorial-channel" href="https://www.youtube.com/@Phuire" target="_blank" rel="noopener">youtube.com/@Phuire</a>
-          — <span class="hifi-hl-green">subscribe there; the channel unlocks first</span>.
-          The cards below preview the tasks the Tutorial will teach.
+        <p class="section-eyebrow hifi-mono">03 · THE METHOD SEED</p>
+        <h2 class="section-title hifi-heading">Seed the method into this project</h2>
+        <p class="section-lede">
+          The method you just installed carries its <span class="hifi-hl-yellow">acquired case
+          law</span> as a Seed, shipped beside the constitution and riding every update. Browse
+          the Manual, open a Dialectic, or engage the <span class="hifi-hl-purple">Induction
+          Agent</span> to record the Seed into <span class="hifi-hl-green">this project's own
+          memory</span>. Induction is <span class="hifi-hl-base">invited, never automatic</span> —
+          and taking it is the best experience of this system.
         </p>
-        <div class="howto-grid tutorial-locked">
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Spawn or resume a session</span>
-            <span class="howto-a">Sessions → open the <strong>Spawn Picker</strong> → pick a Suite 8 → Spawn. A session opens in its own window. To return to an offline one, engage its row — it <span class="hifi-hl-green">resumes where it left off</span>.</span>
-          </div>
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Anchor a session to a page</span>
-            <span class="howto-a">In the session's Anchor cell → <strong>Set as Anchor</strong> pins it as that Suite 8's page session (Set reassigns — <span class="hifi-hl-yellow">one anchor per Suite 8</span>). <strong>Release Anchor</strong> clears it.</span>
-          </div>
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Install another <ScpMark /></span>
-            <span class="howto-a">Run <span class="hifi-mono">scs</span> from another project folder and take the install menu. Or, in the Session Manager's <strong><ScpMark /> Command</strong> helm, <strong>Multiply</strong> an <ScpMark /> to run it as another worktree instance <span class="hifi-hl-blue">on its own port</span>.</span>
-          </div>
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Turn over (adopt code changes)</span>
-            <span class="howto-a">Set <span class="hifi-hl-green"><strong>Shield A</strong></span> as your clean baseline, drift on <span class="hifi-hl-orange"><strong>Sword B</strong></span>, then Turn Over from the bottom dock. The server restarts under you — <span class="hifi-hl-base">your place survives</span>. A bad boot <span class="hifi-hl-red">reverts to Shield A within ~45s</span>.</span>
-          </div>
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Update the <ScpMark /></span>
-            <span class="howto-a">When the template advances, run an <ScpMark /> update: a retained clone diffs the new template against your history; the <strong>Gitm Resolver</strong> <span class="hifi-hl-green">keeps your additions</span> and merges the rest. Then Turn Over to boot the updated app.</span>
-          </div>
-          <div class="howto-card hifi-pane-base">
-            <span class="howto-q hifi-heading">Personalize the look</span>
-            <span class="howto-a">Settings → pick the render mode (Muxon skin or Off) and theme. The window <span class="hifi-hl-green">re-tints live</span> — no reload.</span>
-          </div>
-        </div>
+        <S8CinnabarSeed designation="Home" :worked="false" />
       </section>
 
       <!-- ===================== RELEASE NOTES · v0.930.0 ===================== -->
@@ -271,7 +245,7 @@ onUnmounted(() => {
           <span class="release-stamp hifi-stamp hifi-stamp-purple">version = Cascade Cycle</span>
         </h2>
         <p class="section-lede">
-          <span class="hifi-hl-green">Stamped 2026-07-28 — the first public release, carried forward through 0.950.1.</span>
+          <span class="hifi-hl-green">Stamped 2026-07-28 — the first public release, carried forward through 0.950.2.</span>
           The bridge's <span class="hifi-hl-purple">version number IS its Cascade Cycle</span> — each cycle of the method advances it.
           This release crossed the bar for <span class="hifi-hl-base">the first public product</span>. This is the full tour — pick a
           feature on the left to read it.
@@ -568,39 +542,6 @@ onUnmounted(() => {
   max-width: 640px;
 }
 
-/* ---- THE TUTORIAL LOCK (C817 · pending status · the locked-with-promise idiom) ---- */
-.tutorial-badge {
-  display: inline-block;
-  width: max-content;
-  margin: 0.15rem 0 0.55rem;
-  padding: 0.2rem 0.9rem;
-  border: 1px dashed color-mix(in srgb, var(--color-yellow, #eab308) 75%, white 10%);
-  border-radius: 999px;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  color: var(--color-yellow-light, #fde047);
-}
-
-.tutorial-promise {
-  max-width: 72ch;
-}
-
-.tutorial-channel {
-  color: var(--color-green-light, #6ee7b7);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-shadow: 0 0 7px color-mix(in srgb, var(--color-green, #10b981) 55%, transparent);
-}
-
-/* The body sleeps: the suite hues held at LOW SATURATION (never grayscale death — the
-   promise law) · inert · the preview stays legible. */
-.howto-grid.tutorial-locked {
-  filter: saturate(0.35) brightness(0.82);
-  opacity: 0.75;
-  pointer-events: none;
-  user-select: none;
-}
-
 /* ---- THE CONCLUDER (C814 · the inducted close) ---- */
 .home-concluder {
   margin-top: 2rem;
@@ -761,36 +702,6 @@ onUnmounted(() => {
 }
 
 .model-note strong {
-  color: var(--color-white-conductor, #f5f2ec);
-}
-
-/* ---- HOW DO I ---- */
-.howto-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.75rem;
-}
-
-.howto-card {
-  border-radius: 7px;
-  padding: 1rem 1.05rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.howto-q {
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.howto-a {
-  font-size: 0.83rem;
-  line-height: 1.5;
-  color: rgba(235, 231, 222, 0.82);
-}
-
-.howto-a strong {
   color: var(--color-white-conductor, #f5f2ec);
 }
 

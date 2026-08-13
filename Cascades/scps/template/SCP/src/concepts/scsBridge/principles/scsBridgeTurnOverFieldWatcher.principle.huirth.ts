@@ -29,6 +29,17 @@
  * ENOENT-safe reads · cleanup order watcher → conclude). This principle dispatches NOTHING —
  * pure fs observation → fs write (the one principle whose output is a file, by design).
  *
+ * D-MSE C939 · THE SIGNAL LANE (the deaf-watch failsafe): the trigger write below is observed
+ * by nodemon's single-file watch — a watch that can die SILENTLY (the C937 field wound: every
+ * upstream hop clean, the trigger landing in a void, the turn-over presenting as a stall).
+ * THE SURVIVAL PROBE: a healthy watch kills THIS process within ~1s of the trigger write (the
+ * restart event's scoped pkill). If this process is still alive PROBE_MS later, the watch is
+ * deaf — the principle sends the lane's own nodemon its manual-restart signal (SIGUSR2 · the
+ * field-proven remedy) directly: ancestry walk first (this server's OWN lane), pgrep by this
+ * SCP's own directory as the fallback (the Name-First class — identity resolves the target).
+ * The file write REMAINS the primary lane anor the boot fingerprint; the signal never fires
+ * when the watch is healthy, because the process it would fire from is already dead.
+ *
  * Citation: DIAMOND-BREAKOUT-SEQUENCE.md §BO-2-G (the layered watcher design).
  */
 import { resolveScpLocalBridgeDir } from '../bridgeRoot.model';
@@ -36,6 +47,7 @@ import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
 import { readFile } from 'node:fs/promises';
 import { writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import type { ScsBridgeHuirthState, ScsBridgeHuirthQualities } from '../scsBridge.type';
 
@@ -104,6 +116,55 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
     watcher.on('change', () => void onChange());
   })();
 
+  // D-MSE C939 · THE SIGNAL LANE — see the header. One probe per fire; a fresh fire re-arms.
+  let survivalProbe: NodeJS.Timeout | null = null;
+  const SIGNAL_LANE_PROBE_MS = 4000;
+
+  const findLaneNodemonPids = (): number[] => {
+    try {
+      let pid = process.pid;
+      for (let hop = 0; hop < 8; hop++) {
+        const ppid = Number(execFileSync('ps', ['-o', 'ppid=', '-p', String(pid)], { encoding: 'utf8' }).trim());
+        if (!Number.isFinite(ppid) || ppid <= 1) break;
+        const cmd = execFileSync('ps', ['-o', 'command=', '-p', String(ppid)], { encoding: 'utf8' }).trim();
+        if (cmd.includes('node_modules/.bin/nodemon')) return [ppid];
+        pid = ppid;
+      }
+    } catch {
+      /* detached lane anor ps unavailable — the pgrep fallback below */
+    }
+    try {
+      const out = execFileSync('pgrep', ['-f', `${process.cwd()}/node_modules/.bin/nodemon`], { encoding: 'utf8' });
+      return out
+        .split('\n')
+        .map((line) => Number(line.trim()))
+        .filter((pid) => Number.isFinite(pid) && pid > 1);
+    } catch {
+      return [];
+    }
+  };
+
+  const armSignalLaneProbe = (fieldAt: number): void => {
+    if (survivalProbe) clearTimeout(survivalProbe);
+    survivalProbe = setTimeout(() => {
+      // Still alive → the restart never came → the watch is deaf. The signal completes it.
+      const pids = findLaneNodemonPids();
+      if (pids.length === 0) {
+        console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.skip · reason=nodemon-not-found · fieldAt=', fieldAt);
+        return;
+      }
+      for (const pid of pids) {
+        try {
+          process.kill(pid, 'SIGUSR2');
+          console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.fired · nodemonPid=', pid, '· fieldAt=', fieldAt, '· probeMs=', SIGNAL_LANE_PROBE_MS);
+        } catch (err) {
+          console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.skip · reason=signal-failed · pid=', pid, '·', String(err));
+        }
+      }
+    }, SIGNAL_LANE_PROBE_MS);
+    survivalProbe.unref();
+  };
+
   const onChange = async (): Promise<void> => {
     const stamp = await readTurnOverStamp();
     if (stamp === null) {
@@ -132,6 +193,7 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
         'utf-8',
       );
       console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.fired · fieldAt=', at);
+      armSignalLaneProbe(at);
     } catch (err) {
       console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.skip · reason=restart-write-failed ·', String(err));
     }
