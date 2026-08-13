@@ -32,6 +32,10 @@
  * d_ + DTBP throttle discipline).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
+// C909 · THE ACCOUNTED SETTLE — the accounted lane dispatches a TWO-NODE strategy (the debounce
+// node prior → the SET) instead of the direct SET action (the strategy idiom: the grace quality's
+// createActionNode/createStrategy/strategyBegin · fileChangeStrategies.ts).
+import { createStrategy, createActionNode, strategyBegin, type ActionStrategy } from 'stratimux';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -41,6 +45,9 @@ import { suite8SetSyncModeHuirthBase } from '../qualities/suite8SetSyncModeHuirt
 // B-RLM-2 · THE LOCALITY SNAPSHOT DISPATCH — the same two boundary legs that dispatch the mode +
 // the grace ALSO compose + dispatch the per-designation locality snapshot (the relay ground).
 import { suite8SetLocalityHuirthBase } from '../qualities/suite8SetLocalityHuirthBase.quality.huirth';
+// C909 · the debounce node prior (null reducer · 400ms settle · only the burst's LAST strategy
+// reaches the SET) — the accounted-change path ONLY; every other locality dispatch stays DIRECT.
+import { suite8AccountedChangeDebounce } from '../qualities/suite8AccountedChangeDebounce.quality.huirth';
 // B-RLM-1′ · THE GRACE-AS-STATE TRIAD — the bridge-json + boot dispatchers open/cancel graces
 // (the fuse rides muxiumTimeOut inside the begin quality; scheduleRevertCheck is RETIRED).
 import { suite8BeginClosureGraceHuirthBase } from '../qualities/suite8BeginClosureGraceHuirthBase.quality.huirth';
@@ -242,6 +249,37 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     });
   };
 
+  // C909 · THE DEBOUNCED LOCALITY DISPATCHER (the accounted-change path ONLY — the Smooth
+  // Foreign Transition refinement): compose the snapshot fresh (the SAME composeLocalitySnapshot
+  // the direct path uses — ONE compose) and dispatch a TWO-NODE strategy: the debounce node
+  // (suite8AccountedChangeDebounce · null reducer · 400ms settle) → successNode → the SET with
+  // the composed snapshot. The debounce method concludes every intermediate strategy of a burst;
+  // only the LAST passes to the SET — and each event composes from a FRESH disk read after
+  // awaitWriteFinish, so the last action already carries the final value. The SET's change-gate
+  // reducer stays the single truth. Every OTHER locality dispatch stays DIRECT (snappy).
+  const dispatchLocalityDebounced = (designation: string): void => {
+    const snapshot = composeLocalitySnapshot(designation);
+    const settle: ActionStrategy | undefined = createStrategy({
+      topic: `Suite8 Accounted Change Settle · ${designation}`,
+      initialNode: createActionNode(
+        suite8AccountedChangeDebounce.actionCreator({ designation }),
+        {
+          successNode: createActionNode(
+            suite8SetLocalityHuirthBase.actionCreator({ designation, snapshot }),
+          ),
+          successNotes: { preposition: 'then', denoter: 'the settled snapshot lands;' },
+        },
+      ),
+    });
+    if (settle) {
+      nextA(strategyBegin(settle));
+      sinkSyncLibraryTelemetry('usher.accounted-debounce.dispatched', { designation });
+    } else {
+      // Never strand the circuit — a strategy-build failure falls back to the direct seat.
+      dispatchLocalityFromDisk(designation);
+    }
+  };
+
   const debounced = (key: string, fn: () => void): void => {
     const held = debounceTimers.get(key);
     if (held) clearTimeout(held);
@@ -371,7 +409,9 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
           `accounted:${designation}`,
           setTimeout(() => {
             debounceTimers.delete(`accounted:${designation}`);
-            dispatchLocalityFromDisk(designation);
+            // C909 · the accounted lane rides the settle strategy — burst-collapsed to the
+            // final value (the direct dispatchLocalityFromDisk stays for every other leg).
+            dispatchLocalityDebounced(designation);
           }, ACCOUNTED_DEBOUNCE_MS),
         );
       };

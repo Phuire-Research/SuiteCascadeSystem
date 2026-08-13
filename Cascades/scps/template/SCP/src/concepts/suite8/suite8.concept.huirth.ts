@@ -46,6 +46,9 @@ import { suite8GraceRevertCheckHuirthBase } from './qualities/suite8GraceRevertC
 // B-RLM-2 · THE LOCALITY BASE + THE LOCALITY RELAY — the keyed Base quality the Usher's two boundary
 // dispatchers write, and the SMRP+BOCR relay that broadcasts the localities + closureGraces slices.
 import { suite8SetLocalityHuirthBase } from './qualities/suite8SetLocalityHuirthBase.quality.huirth';
+// C909 · THE ACCOUNTED SETTLE — the debounce node prior to the SET on the accounted-change path
+// (null reducer · 400ms settle · Huirth-only · absent from actionExchange · TQNI).
+import { suite8AccountedChangeDebounce } from './qualities/suite8AccountedChangeDebounce.quality.huirth';
 import { suite8LocalityStcpRelayPrinciple } from './principles/suite8LocalityStcpRelay.principle.huirth';
 
 // Explicit quality mapping — NEVER typeof. The scalar Base + the PRE-EPOCH keyed Base + the
@@ -61,6 +64,8 @@ const suite8HuirthQualities: Suite8HuirthQualities = {
   suite8GraceRevertCheckHuirthBase,
   // B-RLM-2 · the locality Base (the Usher's boundary dispatchers write it · the relay reads it).
   suite8SetLocalityHuirthBase,
+  // C909 · the accounted settle (the debounce node prior — only the burst's LAST strategy passes).
+  suite8AccountedChangeDebounce,
 };
 
 export const createSuite8HuirthConcept = () =>

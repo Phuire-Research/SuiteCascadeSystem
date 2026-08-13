@@ -418,6 +418,15 @@ export type Suite8SetLocalityHuirthBasePayload = {
   snapshot: Suite8SyncLocalitySnapshot;
 };
 
+// C909 · THE ACCOUNTED SETTLE PAYLOAD (Huirth-only · NOT in actionExchange · TQNI discipline).
+// suite8AccountedChangeDebounce — the debounce node PRIOR to the SET on the accounted-change
+// path (null reducer · createMethodDebounce 400ms settle · only the LAST strategy of a burst
+// passes to its SET successNode). The designation rides for telemetry/identity; the SET node
+// carries the real snapshot payload.
+export type Suite8AccountedChangeDebouncePayload = {
+  designation: string;
+};
+
 export type Suite8HuirthQualities = {
   suite8SetMenuStageHuirthBase: Quality<Suite8HuirthState, Suite8SetMenuStageHuirthBasePayload>;
   // PRE-EPOCH · BSSM keyed Huirth Base quality (the N-watcher dispatches this FIRST · Base-maintenance).
@@ -451,6 +460,12 @@ export type Suite8HuirthQualities = {
   suite8SetLocalityHuirthBase: Quality<
     Suite8HuirthState,
     Suite8SetLocalityHuirthBasePayload
+  >;
+  // C909 · THE ACCOUNTED SETTLE (Huirth-only · null reducer · NOT in actionExchange · the
+  // debounce node prior — the accounted lane dispatches the two-node strategy through it).
+  suite8AccountedChangeDebounce: Quality<
+    Suite8HuirthState,
+    Suite8AccountedChangeDebouncePayload
   >;
 };
 export type Suite8HuirthConcept = Concept<Suite8HuirthState, Suite8HuirthQualities>;
