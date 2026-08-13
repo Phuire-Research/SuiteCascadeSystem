@@ -206,10 +206,25 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
-## Release Notes — v0.945.0
+## Release Notes — v0.950.0
 
 The version number IS the Cascade Cycle: each cycle of the method that builds this software
 advances it. The npm badge above always carries the published version.
+
+- **0.950.0 — suite colors travel a full circuit**: a color choice completes a round trip
+  before it paints — written to the app's own configuration first, then returned to every
+  open window at once. And the circuit reaches across apps: from Pewter Tessera, choose
+  another app's locality and set its colors — its windows re-tint live, your own styling
+  stays untouched.
+- **0.950.0 — suite textures become a living library**: the SVG textures behind every pane
+  now live in each app's own patternLibrary.json. A new texture is one small JSON entry —
+  no code change, no restart — and open pages pick it up live. Rapid changes settle to the
+  final value before they land.
+- **0.950.0 — the Entourage Forge Menu on every page**: the Forge menu stands as its own
+  widget on each Suite 8 page — sessions filtered to that page alone, build actions drawn
+  from the page's own documentation, one motion to reach the live Forge. Remove it from any
+  page and it stays removed, even through a page update; the Suite 8 panel always keeps the
+  full menu within reach, and a freshly authored page opens with it expanded.
 
 - **0.945.0 — every page carries its own version**: a Suite 8 page now holds a version of
   its own, counted apart from the CLI and the app template. When a newer page ships, that

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "current": "0.945.0",
+  "current": "0.950.0",
   "muxameter": {
     "cli": 12,
     "scp": 13,
@@ -8,16 +8,43 @@
   },
   "releases": [
     {
-      "id": "v0945",
-      "version": "0.945.0",
-      "label": "New in 0.945.0",
+      "id": "v0950",
+      "version": "0.950.0",
+      "label": "New in 0.950.0",
       "muxameter": {
         "cli": 12,
         "scp": 13,
         "s8": 1
       },
-      "magnitude": 4,
+      "magnitude": 8,
       "features": [
+        {
+          "title": "Suite colors travel a full circuit",
+          "color": "red",
+          "summary": "A color choice now completes a round trip before it paints — written to the app's own configuration first, then returned to every open window at once, so what you see is always the shared truth.",
+          "detail": [
+            "Pick a color and it lands in your app's <span class=\"hifi-hl-blue\">hifiConfig.json</span> before any window changes — then every window, including the one you clicked in, re-tints together on the return. No window ever shows a color the configuration does not hold.",
+            "And the circuit reaches across apps: from <span class=\"hifi-hl-base\">Pewter Tessera</span>, choose another app's locality and set ITS colors — its own windows re-tint live, your styling stays untouched, and the swatches you edit show the target's true palette the whole time."
+          ]
+        },
+        {
+          "title": "Suite textures become a living library",
+          "color": "fuchsia",
+          "summary": "The SVG textures behind every pane now live in each app's own patternLibrary.json — a new texture is one small JSON entry, no code change, no restart, and open pages pick it up live.",
+          "detail": [
+            "Each app ships the full texture set as a seeded <span class=\"hifi-hl-fuchsia\">patternLibrary.json</span> and can grow it freely — drop a validated entry in and the texture appears in the picker, paints on selection, and travels the same cross-app circuit colors do. A texture added while windows are open registers itself on the spot.",
+            "Rapid changes settle gracefully too: a burst of edits coalesces to the final value before it lands, so the last choice is the one that paints."
+          ]
+        },
+        {
+          "title": "The Entourage Forge Menu, on every page",
+          "color": "blue",
+          "summary": "The Forge menu now stands as its own widget on each Suite 8 page — sessions filtered to that page alone, build actions drawn from the page's own documentation, and one motion to reach the live Forge.",
+          "detail": [
+            "A page's Forge menu shows only the conductions commissioned from THAT page — a fresh page starts honestly empty. Its build actions come from the page's own <span class=\"hifi-hl-blue\">ForgeMenu.json</span> when one is authored (the built-in set stands otherwise), and firing one either reaches the live Forge for that page or begins a new conduction carrying the action with it.",
+            "The widget is yours to place: remove it from any page and it stays removed — even through a page update — while the Suite 8 panel always keeps the full menu within reach. A freshly authored page opens with the menu expanded; fold it away and the page remembers."
+          ]
+        },
         {
           "title": "Every page carries its own version",
           "color": "purple",

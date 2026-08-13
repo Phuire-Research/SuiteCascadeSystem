@@ -37,7 +37,7 @@ import ScpMark from '../components/ScpMark.vue';
 type ClientDeck = any;
 
 // The SCS-Bridge release · version = Cascade Cycle (see Release Notes below).
-const RELEASE_VERSION = '0.945.0';
+const RELEASE_VERSION = '0.950.0';
 
 // ===================== RELEASE NOTES (D-HOME R3) =====================
 // The 0.697.0 notes were the FIRST public stamp; 0.811.0 (R4) added the C702-C809 delta;
