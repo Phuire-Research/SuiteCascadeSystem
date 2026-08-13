@@ -54,6 +54,13 @@ const targetScpName = computed<string | null>(
 const localScpName = computed<string | null>(
   () => scsBridgeController?.currentS8Locality.value?.localScp ?? null,
 );
+// D-PFR · THE CHANGE-STAMP (Conference 1A) — the TARGET hifiConfig's mtimeMs riding the same
+// face. On advance while Specified the swatches refetch the target's ACTUAL colors through the
+// existing loadTargetHifiConfig lane (the colors never ride the snapshot) — every door lands
+// here: the target's own click, a foreign push, a direct hifiConfig.json edit.
+const targetHifiStamp = computed<number | null>(
+  () => scsBridgeController?.currentS8Locality.value?.targetHifiStamp ?? null,
+);
 
 // The RD default hex per spectrum suite — the `:root` baseline a Reset restores to.
 const DEFAULT_HEX: Record<SpectrumName, string> = {
@@ -123,6 +130,13 @@ function reseedSwatches(): void {
 // initial mount state (a page opened already under a Specified locality shows the target's colors).
 watch(targetScpName, (next, prev) => {
   if (next === prev) return;
+  reseedSwatches();
+});
+// D-PFR · Conference 1A — the stamp watch. R2-gated on the Specified state (Local stamp moves
+// are the locality edge's business, handled above); reseedSwatches carries its own stale-guard.
+watch(targetHifiStamp, (next, prev) => {
+  if (next === prev) return;
+  if (!targetScpName.value) return;
   reseedSwatches();
 });
 onMounted(() => {
@@ -247,9 +261,12 @@ function onResetOne(n: SpectrumName): void {
         :aria-label="`Edit ${FUNCTIONAL_LABEL[n].name}`"
         @click="togglePicker(n)"
       >
+        <!-- D-PFR · Conference 2A · THE TILES-ONLY FORK (the R2 gate absolute): Specified →
+             selection[n] (the target-seeded truth + the 3A intent-immediate preview); Local →
+             var(--color-n) (the own paint — the D-PCL round-trip law unchanged). -->
         <span
           class="suite-color-swatch-btn"
-          :style="{ background: `var(--color-${n})` }"
+          :style="{ background: targetScpName ? selection[n] : `var(--color-${n})` }"
         ></span>
         <span class="suite-color-label">
           <strong class="suite-color-name">{{ FUNCTIONAL_LABEL[n].name }}</strong>

@@ -63,6 +63,10 @@ import {
   // B-RLM-2 · the pure reads that compose a locality snapshot (all boundary reads at the boundary).
   readLocalScpName,
   readSpecifiedKey,
+  // D-PFR · the accounted-surface reads (observed-not-delivered · the change-stamp lane).
+  readAccountedSurfaceRel,
+  readTargetAccountedHifiStamp,
+  ACCOUNTED_HIFI_CONFIG_KEY,
   // D-LSG · the Content-Origin Stamp (the user's Critical Notion — the vault refuses foreign).
   writeContentOriginStamp,
   readContentOriginStamp,
@@ -83,6 +87,8 @@ export type Suite8SyncUsherPrincipleType = PrincipleFunction<
 const EXTENDED_ROOT_ABS = path.resolve(process.cwd(), 'Cascades', 'Extended');
 const USHER_DEBOUNCE_MS = 250;
 const USHER_ADDDIR_DEBOUNCE_MS = 250;
+// D-PFR · the accounted watcher's coalescer (the change-stamp lane · ~100ms).
+const ACCOUNTED_DEBOUNCE_MS = 100;
 
 type StagePlannerHandle = { conclude: () => void };
 
@@ -114,6 +120,9 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
   const libraryWatchers = new Map<string, FSWatcher>();
   const preservationWatchers = new Map<string, FSWatcher[]>();
   const deliveryWatchers = new Map<string, FSWatcher[]>();
+  // D-PFR · THE ACCOUNTED WATCHERS (observed-not-delivered) — one per designation under
+  // TARGET, over the TARGET's hifiConfig.json. Never enters the replace/restore motions.
+  const accountedWatchers = new Map<string, FSWatcher>();
   const targetRootByDesignation = new Map<string, string>();
   const debounceTimers = new Map<string, NodeJS.Timeout>();
   let extendedDirWatcher: FSWatcher | null = null;
@@ -202,6 +211,12 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       targetRoot: resolution ? resolution.root : null,
       targetLive: specified !== null ? live : false,
       localLive,
+      // D-PFR · THE CHANGE-STAMP (Conference 1A) — the TARGET hifiConfig's mtimeMs, read fresh
+      // at every compose (a page opened already-Specified gets a truthful initial stamp for
+      // free). Local anor absent → null (Honest-Absence · the KeyedSelector NON-OPTIONAL law).
+      targetHifiStamp: resolution
+        ? readTargetAccountedHifiStamp(designation, resolution.root)
+        : null,
       // The ring the client renders — the local SCP EXCLUDED (Local is its own row · GET
       // parity) AND the template PRUNED (the r7 invariant: the install substrate is never
       // a locality target).
@@ -321,6 +336,84 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     });
   };
 
+  // D-PFR · TARGET MODE · arm the ACCOUNTED watcher (observed-not-delivered) — the OBSERVER's
+  // server watching the TARGET's hifiConfig.json. On change: re-compose the locality snapshot
+  // (the compose reads the fresh stamp) → the existing suite8SetLocalityHuirthBase seat → the
+  // SMRP relay carries it. C898 · THE WATCH IDIOM (graphiteScribeLocalityWatch:184-209): the
+  // hifiConfig writer uses atomic tmp-write + rename — a single-FILE watch DIES on the inode
+  // swap; watch the PARENT DIR (depth 0) + basename-gate. NEVER delivers, NEVER touches the
+  // vault — the α-firewall's structural half.
+  const armAccounted = (designation: string, targetRoot: string): void => {
+    if (accountedWatchers.has(designation)) return;
+    const rel = readAccountedSurfaceRel(designation, ACCOUNTED_HIFI_CONFIG_KEY);
+    if (rel === null) {
+      sinkSyncLibraryTelemetry('usher.accounted-watch.arm-skip', {
+        designation,
+        reason: 'no-accounted-rel',
+      });
+      return;
+    }
+    const fileAbs = path.resolve(targetRoot, rel);
+    const gateBasename = path.basename(fileAbs);
+    try {
+      const w = chokidarWatch(path.dirname(fileAbs), {
+        persistent: true,
+        ignoreInitial: true,
+        depth: 0,
+        awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
+      });
+      const onChange = (changed: string): void => {
+        // basename-gate — only the accounted surface re-composes (sibling writes ignored).
+        if (path.basename(changed) !== gateBasename) return;
+        const held = debounceTimers.get(`accounted:${designation}`);
+        if (held) clearTimeout(held);
+        debounceTimers.set(
+          `accounted:${designation}`,
+          setTimeout(() => {
+            debounceTimers.delete(`accounted:${designation}`);
+            dispatchLocalityFromDisk(designation);
+          }, ACCOUNTED_DEBOUNCE_MS),
+        );
+      };
+      w.on('change', onChange);
+      w.on('add', onChange);
+      w.on('error', () => {
+        /* never harm the SCP */
+      });
+      accountedWatchers.set(designation, w);
+      sinkSyncLibraryTelemetry('usher.accounted-watch.armed', {
+        designation,
+        watchedDir: path.dirname(fileAbs),
+        gateBasename,
+      });
+    } catch (err) {
+      sinkSyncLibraryTelemetry('usher.accounted-watch.arm-skip', {
+        designation,
+        reason: 'arm-failed',
+        error: String(err),
+      });
+    }
+  };
+
+  // D-PFR · WIND-DOWN — the accounted watcher closes BEFORE any mode flip lands (no orphan
+  // watcher on a released target). Timer first, then the watcher (the HAZARD-A ordering).
+  const closeAccounted = (designation: string): void => {
+    const held = debounceTimers.get(`accounted:${designation}`);
+    if (held) {
+      clearTimeout(held);
+      debounceTimers.delete(`accounted:${designation}`);
+    }
+    const w = accountedWatchers.get(designation);
+    if (!w) return;
+    try {
+      w.close();
+    } catch {
+      /* already closed */
+    }
+    accountedWatchers.delete(designation);
+    sinkSyncLibraryTelemetry('usher.accounted-watch.closed', { designation });
+  };
+
   // The per-designation MODE MACHINE — three exclusive setStage stages (REFERENCE:778 ·
   // DSP-B3a: the user's Closure Stage ruling). LOCAL-WATCH ⇄ TARGETED with the CLOSURE
   // stage as the ONE structural exit from target: switch the vault back in → close the
@@ -335,6 +428,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
         ({ d, dispatch }) => {
           const mode = (d.suite8.k.syncModes.select() as Record<string, string>)[designation] ?? 'local';
           if (mode === 'local') {
+            closeAccounted(designation); // D-PFR · wind-down FIRST — no orphan accounted watcher.
             closeWatchers(deliveryWatchers, designation); // entry guard — stale target watchers die here.
             // D-EF-ORPHANED-HOLD · THE BOOT-CLOSURE ARM (the r4 forensics — the field
             // breach): a kill between Stage 1's setStage:2 and Stage 2 executing strands
@@ -386,6 +480,10 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
           writeContentOriginStamp(designation, readSpecifiedKey(designation) ?? targetRoot);
           replaceRegisteredFromTarget(designation, targetRoot);
           armDelivery(designation, targetRoot);
+          // D-PFR · the accounted watcher arms WITH the delivery posture; the re-dispatch
+          // stamps once at the genuine arm (the reducer's change-gate absorbs a repeat).
+          armAccounted(designation, targetRoot);
+          dispatchLocalityFromDisk(designation);
           sinkSyncLibraryTelemetry('usher.machine.advance', { designation, to: 'target', targetRoot });
           dispatch(d.muxium.e.muxiumKick(), { setStage: 1, throttle: 0 });
         },
@@ -409,6 +507,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       // the routing kick fires it once; every operation is idempotent.
       stage(
         ({ d, dispatch }) => {
+          closeAccounted(designation); // D-PFR · wind-down FIRST — before any restore motion.
           closeWatchers(deliveryWatchers, designation);
           const heldDeliver = debounceTimers.get(`deliver:${designation}`);
           if (heldDeliver) {
@@ -603,6 +702,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     for (const t of debounceTimers.values()) clearTimeout(t);
     debounceTimers.clear();
     for (const designation of [...armed]) {
+      closeAccounted(designation);
       closeWatchers(preservationWatchers, designation);
       closeWatchers(deliveryWatchers, designation);
     }

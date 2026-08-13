@@ -141,6 +141,7 @@ import {
   readLocalScpName,
   readSyncRingFromBridgeJson,
   writeSpecifiedAdditive,
+  readTargetAccountedHifiStamp,
 } from '../../model/scpSyncLibrary.model';
 // CMLS · CSRS · the ONE seat — the cascade routes (floor · tiers · doc-save) resolve the target
 // dir through this state-projection (replaces the SL-3 consult · the Honest-Absence Law · §3.6).
@@ -997,6 +998,10 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         targetRoot: resolution ? resolution.root : null,
         targetLive: !!targetEntry && targetEntry.status !== 'offline',
         localLive: !!localEntry && localEntry.status !== 'offline',
+        // D-PFR · the change-stamp rides the GET (hydration parity with the relay's compose).
+        targetHifiStamp: resolution
+          ? readTargetAccountedHifiStamp(designation, resolution.root)
+          : null,
         ring,
       });
     } catch {
@@ -1008,6 +1013,7 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
         targetRoot: null,
         targetLive: false,
         localLive: false,
+        targetHifiStamp: null,
         ring: [],
       });
     }

@@ -98,6 +98,9 @@ type SyncLocalityInfo = {
   localScp: string | null;
   specified: string | null;
   targetScp: string | null;
+  // D-PFR · the target hifiConfig change-stamp — carried through to the face push (a face
+  // composed without it would clobber the page owner's stamped face).
+  targetHifiStamp: number | null;
   ring: { scpName: string; status: string; origin?: string | null }[];
 };
 const syncLocality = ref<SyncLocalityInfo | null>(null);
@@ -760,6 +763,7 @@ function snapshotToInfo(snap: Suite8SyncLocalitySnapshot): SyncLocalityInfo {
     localScp: snap.localScp,
     specified: snap.specified,
     targetScp: snap.targetScp,
+    targetHifiStamp: snap.targetHifiStamp,
     ring: Array.isArray(snap.ring) ? snap.ring : [],
   };
 }
@@ -779,7 +783,7 @@ function hydrateLocalityOnce(): void {
       // client — they are relay-authoritative; the GET carries the four the component consumes).
       // D-TRL-c · the GET now carries the Scholar fields — map them (the prior defaults
       // poisoned the effective-locality computation on relay-silent pages).
-      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown };
+      const jx = j as SyncLocalityInfo & { targetRoot?: unknown; targetLive?: unknown; localLive?: unknown; targetHifiStamp?: unknown };
       const snapshot: Suite8SyncLocalitySnapshot = {
         localScp: typeof j.localScp === 'string' ? j.localScp : null,
         specified: typeof j.specified === 'string' ? j.specified : null,
@@ -787,6 +791,7 @@ function hydrateLocalityOnce(): void {
         targetRoot: typeof jx.targetRoot === 'string' ? jx.targetRoot : null,
         targetLive: jx.targetLive === true,
         localLive: jx.localLive === true,
+        targetHifiStamp: typeof jx.targetHifiStamp === 'number' ? jx.targetHifiStamp : null,
         ring: Array.isArray(j.ring) ? j.ring : [],
       };
       // B-RLM-2b · THE DUAL WRITE — the ref sets DIRECTLY (the panel-grade resilient path: the
@@ -937,6 +942,7 @@ watch(
       localScp: s.localScp ?? null,
       specified: s.specified ?? null,
       targetScp: s.targetScp ?? null,
+      targetHifiStamp: s.targetHifiStamp ?? null,
       ring: (s.ring ?? []).map((e) => ({ scpName: e.scpName, status: e.status })),
     });
   },

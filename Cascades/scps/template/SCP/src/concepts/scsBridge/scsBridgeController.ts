@@ -28,6 +28,9 @@ export type S8LocalityFace = {
   // reads targetScp; localityDark honors targetLive).
   targetScp?: string | null;
   targetLive?: boolean;
+  // D-PFR · the TARGET hifiConfig change-stamp (Conference 1A) — the SuiteColorSelection
+  // widget watches this through the face and refetches the target palette on advance.
+  targetHifiStamp?: number | null;
 };
 import type { AnyAction, Muxium } from 'stratimux';
 import type {

@@ -78,6 +78,14 @@ export type SyncLibraryShape = {
   // (a FILE anor a DIRECTORY — the usher stats at run time). Seeded from the local group;
   // aspects register further surfaces (the Demometeric means · e.g. the Cadmium frontier).
   registered: Record<string, string>;
+  // D-PFR · THE ACCOUNTED SURFACES (observed-not-delivered) — locations the library takes
+  // account of WITHOUT delivery: the usher's replace/restore/snapshot motions iterate ONLY
+  // `registered`; an accounted surface is never replaced, never vaulted, never restored
+  // (the structural exclusion — delivery over an accounted surface would overwrite the
+  // observer's own file). Consumers WATCH an accounted surface at whichever root the
+  // locality names and re-compose state from it. Keyed by surface name, SCP-root-relative —
+  // the generic class (per-locality availability surfaces join here as further citizens).
+  accounted: Record<string, string>;
 };
 
 // File-sunk telemetry (the C740 idiom · 2MB skip-guard · never-throw) — the seed's Lambda
@@ -133,6 +141,14 @@ export const defaultLocalPathsFor = (designation: string): SyncLibraryLocalPaths
   menu: ['Cascades', 'Extended', designation, 'menu.json'].join('/'),
   cascadeManifest: ['Cascades', 'Extended', designation, 'Cascade.json'].join('/'),
   working: ['Cascades', 'Extended', designation, 'Working'].join('/'),
+});
+
+// D-PFR · the default accounted surfaces — hifiConfig.json is SCP-GLOBAL (the package root's
+// Cascades/, not the per-designation Extended shape), observed at whichever root the locality
+// names. The group stays generic; hifiConfig is merely its first citizen.
+export const ACCOUNTED_HIFI_CONFIG_KEY = 'hifiConfig';
+export const defaultAccountedSurfaces = (): Record<string, string> => ({
+  [ACCOUNTED_HIFI_CONFIG_KEY]: ['Cascades', 'hifiConfig.json'].join('/'),
 });
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -200,6 +216,17 @@ export const normalizeSyncLibrary = (
   if (!registered.menu) registered.menu = local.menu;
   if (!registered.cascadeManifest) registered.cascadeManifest = local.cascadeManifest;
   if (!registered.working) registered.working = local.working;
+  // D-PFR · the accounted map — user-borne keys PRESERVED; the default surfaces always
+  // present (the registered group's normalization pattern · the Additive Law).
+  const accounted: Record<string, string> = {};
+  if (isPlainObject(doc.accounted)) {
+    for (const [k, v] of Object.entries(doc.accounted)) {
+      if (typeof v === 'string' && v.length > 0) accounted[k] = v;
+    }
+  }
+  for (const [k, v] of Object.entries(defaultAccountedSurfaces())) {
+    if (!accounted[k]) accounted[k] = v;
+  }
   return {
     schemaVersion: SYNC_LIBRARY_SCHEMA_VERSION,
     localScp,
@@ -207,6 +234,7 @@ export const normalizeSyncLibrary = (
     local,
     paths: normalizeRemotePaths(doc.paths),
     registered,
+    accounted,
   };
 };
 
@@ -388,6 +416,41 @@ export const resolveSyncLocality = (designation: string): SyncLocalityResolution
     cascadeManifestAbs: path.resolve(target.root, rel('cascadeManifest')),
     workingAbs: path.resolve(target.root, rel('working')),
   };
+};
+
+// D-PFR · the accounted-surface rel for a designation (pure read · the default stands on
+// absence anor malformation). null ONLY for a key carrying neither registration nor default.
+export const readAccountedSurfaceRel = (
+  designation: string,
+  surfaceKey: string,
+): string | null => {
+  try {
+    const raw = JSON.parse(readFileSync(resolveSyncLibraryPath(designation), 'utf8'));
+    if (isPlainObject(raw) && isPlainObject(raw.accounted)) {
+      const v = (raw.accounted as Record<string, unknown>)[surfaceKey];
+      if (typeof v === 'string' && v.length > 0) return v;
+    }
+  } catch {
+    /* absent anor malformed — the default stands */
+  }
+  return defaultAccountedSurfaces()[surfaceKey] ?? null;
+};
+
+// D-PFR · THE CHANGE-STAMP READ (pure boundary read · Honest-Absence): the TARGET's
+// hifiConfig mtimeMs — null on absence, never a throw. The stamp rides the locality
+// snapshot; the consumer refetches the actual content through its existing read lane on
+// stamp advance (the content never rides the snapshot).
+export const readTargetAccountedHifiStamp = (
+  designation: string,
+  targetRoot: string,
+): number | null => {
+  const rel = readAccountedSurfaceRel(designation, ACCOUNTED_HIFI_CONFIG_KEY);
+  if (rel === null) return null;
+  try {
+    return statSync(path.resolve(targetRoot, rel)).mtimeMs;
+  } catch {
+    return null;
+  }
 };
 
 // The specified-key read alone (the re-arm comparator — cheap, no path resolution).
