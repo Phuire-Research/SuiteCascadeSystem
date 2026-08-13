@@ -1,8 +1,8 @@
 # Cinnabar Dialectic — Skill Reference Design
 
 **Suite 8**: Cinnabar Dialectic
-**Version**: 1.0
-**Skills**: 6 (CD-S1 through CD-S6)
+**Version**: 2.0
+**Skills**: 8 (CD-S1 through CD-S8)
 
 ---
 
@@ -16,6 +16,8 @@
 | CD-S4 | Recursive Refinement Detection | Yellow | Architect detection rules for iterative prompts |
 | CD-S5 | Directive-to-Cascade Mapping | Blue | Implement natural language → Cascade operation mapping |
 | CD-S6 | Correction Pattern Registry | Fuchsia | Diagnose what corrections reveal about system gaps |
+| CD-S7 | The Seed Induction | Blue | Induct the Seed corpus into project memory per the INDUCTION CONTRACT |
+| CD-S8 | The Method Q&A | Base | Ground method answers in the Seed docs anor the registry |
 
 ---
 
@@ -27,7 +29,7 @@
 Read session transcripts (JSONL format). Extract user messages only (`type: "user"` with text content). Filter system messages, login commands, and tool results. Retain substantive prompts — those with directional content.
 
 ### Actionable
-Classify each substantive prompt against the Pattern Registry (P1-P9 from Instance.md). Produce a Pattern Card per session:
+Classify each substantive prompt against the Pattern Registry (P1-P18 from Instance.md). Produce a Pattern Card per session:
 
 ```
 Session: {session_id}
@@ -221,6 +223,62 @@ Produce a **Correction Diagnosis** with:
 
 ---
 
+## CD-S7: The Seed Induction
+
+**Cognitive Function**: Blue Professional — induct the Seed corpus into project memory
+
+**Trigger**: Spawned with the induction directive anor asked to induct/refresh the Seed.
+
+### Informative
+Read the Seed corpus at its install-relative path (`Cascades/Documentation/Seed/`): the index first (`SEED-0-INDEX.md` — the Theme Map, the INDUCTION CONTRACT, the Versioning Law), then the theme docs it maps. On a refresh: also read the project's MEMORY.md and existing Seed-derived memory files to distinguish new / changed / unchanged methods.
+
+### Actionable
+Execute the INDUCTION CONTRACT operationally:
+
+1. **One memory file per method** (anor per tightly-bound cluster). Frontmatter: `name:` (kebab-case slug of the law's title) · `description:` (the one-line essence) · `type: feedback`. Body: the law's full three-part shape (The Law · The Failure Mode · How to Apply).
+2. **One index line per file** appended to MEMORY.md: `[Law Title](filename.md) — the one-line essence.` — under ~200 characters.
+3. **Read-back per write**: every memory file written is read back before the next is written.
+4. **Induct what can be APPLIED, not quoted**: each entry must operate as a decision rule at the moment its trigger appears; a law not phrased as something the agent will DO differently is not fully inducted.
+5. **Selective depth is legitimate**: theme docs may induct first as cluster files (name, description, the doc's checklist as body), splitting laws out as they start firing.
+6. **Refresh semantics**: new methods → new files; changed methods → UPDATE the existing file (Read-back verified), never duplicate; reconcile the MEMORY.md index; NEVER overwrite project-local memory minted by the project's own cycles.
+7. **Report the induction** with Concluders.
+
+### Quality Gate
+- File-count Concluder: files written = methods inducted (`ls | wc -l`)
+- Index-line Concluder: `grep -c` of Seed index lines in MEMORY.md
+- Read-back count: one per write, reported
+- ZERO project-specific content invented into memory — the Seed's generalized shapes land as shipped; nothing project-local is fabricated into a memory file
+
+### Lambda Base Aspect
+- Write memory files; Read-back each before the next
+- Append MEMORY.md index lines; `grep -c` verify
+- Count Concluders close the run (files · index lines · Read-backs)
+
+---
+
+## CD-S8: The Method Q&A
+
+**Cognitive Function**: Base Unification — ground method answers in the Seed docs anor the registry
+
+**Trigger**: A question about a method, a Seed law, anor a registry pattern.
+
+### Informative
+Locate the answer's seat: the Seed doc (via `SEED-0-INDEX.md`'s Theme Map) anor the Observed Pattern Registry (Instance.md, P1-P18). The Seed's laws and the registry's shapes are two halves of one acquired method — a question may seat in either anor both.
+
+### Actionable
+Answer FROM the docs — cite the doc (and the specific law anor P-entry) the answer seats in. Unknown → say so and read the doc live before answering. Never invent a law, a pattern, anor a provenance.
+
+### Quality Gate
+- Every answer carries its citation (doc + entry)
+- Uncertain → the cited doc is read in-session before the answer — no answer from decayed memory alone
+- An answer with no seat in the Seed anor the registry is declared as such, not fabricated
+
+### Lambda Base Aspect
+- Read the cited Seed doc anor Instance registry entry in-session
+- Citation named in the answer (doc + law anor P-entry)
+
+---
+
 ## Muxonomy of Skill Landscape
 
 ### Demometer Inventory (Skills as Demometers)
@@ -233,6 +291,8 @@ Produce a **Correction Diagnosis** with:
 | CD-S4 | Refinement detection accuracy, false positive rate |
 | CD-S5 | Mapping completeness, misparse frequency |
 | CD-S6 | Correction frequency, root cause coverage |
+| CD-S7 | Files inducted vs methods shipped, index reconciliation, Read-back count |
+| CD-S8 | Citation coverage per answer, live-read rate on uncertainty |
 
 ### Diameter Map
 
@@ -276,7 +336,7 @@ For system improvement: audit utilization, diagnose corrections, produce recomme
 
 ## Cross-References
 
-- **Instance.md**: Pattern Registry (P1-P9) — canonical pattern definitions
+- **Instance.md**: Pattern Registry (P1-P18) — canonical pattern definitions + the Induction Role
 - **Automata (C9)**: Directive-to-Cascade mapping validates Automata routing table
 - **Pearl (C1)**: Pearl Compression Density (CD-S3) studies Pearl in natural language
 - **Shatterite Menu**: Utilization audit (CD-S2) reveals which menus users actually need
