@@ -8,9 +8,11 @@
  *
  * When the user turns over to B, the B button writes GITM_TURNOVER_KEY BEFORE dispatching
  * the MCP turn-over. The close handler reads it to distinguish an A↔B turn-over
- * (deadline-armed) from a normal restart (unbounded ping). If B never boots within
- * GITM_TURNOVER_DEADLINE_MS, the deadline timer fires gitm_revert_to_stable over the OUTER
- * bridge /mcp (alive during SCP-down) → checkout A → boot on A → client reloads.
+ * (deadline-armed) from a normal restart (unbounded ping). TOH-6 · THE AGENCY CURE: the
+ * deadline is INFORMATIONAL ONLY — when GITM_TURNOVER_DEADLINE_MS elapses without a boot,
+ * the timer re-words the standby to the neutral 'b-still-rebuilding' message and nothing
+ * else. No revert, no turn-over, ever fires on this clock — THE BENEFIT OF THE DOUBT
+ * BELONGS TO THE USER; Turn Over on A is their button, from the dock.
  *
  * Citation: webSocketClient.principle.ts (the verbatim L39-59 it replaces).
  * Citation: GITM-AB-R-S3-YELLOW-BLUEPRINT.md §W5-step-1 + §W6a.
@@ -19,13 +21,18 @@
 // The localStorage key the B button writes + the close handler reads.
 export const GITM_TURNOVER_KEY = 'gitm_turnover_in_progress';
 
-// S4 Green §1c — generous build budget, < 60s HPRD.
+// The client watch window. 45s — INFORMATIONAL PACING ONLY (D-TOH TOH-6 · the agency cure):
+// nothing fires when it elapses; the WS-close deadline timer only swaps the standby to the
+// neutral 'b-still-rebuilding' wording while the ping loop keeps waiting. HELD at 45s by
+// judgment: the TOH-5 field showed a healthy ~77s boot, so 45s is no longer a failure floor —
+// it is 45s of quiet patience before the honest 'taking a while' note; earlier would nag every
+// healthy fast boot, later would leave a long boot wordless. Time proves nothing.
 export const GITM_TURNOVER_DEADLINE_MS = 45_000;
 
 export type GitmTurnoverProgress = {
   // SORD Shield/Sword (Macro Diamond) — the source is now 'A' OR 'B'. A Shield-A turn-over
   // (return/recovery to stable A) writes source:'A'; a Sword-B turn-over (carry onto B) writes
-  // source:'B'. The deadline failsafe in the WS-close handler only arms for source==='B'.
+  // source:'B'. TOH-6 — the WS-close deadline is informational-only for either source.
   source: 'A' | 'B';
   deadline: number; // Date.now() + GITM_TURNOVER_DEADLINE_MS (set at write time by the button)
   stableA: string; // the stableBranch name at turn-over time
@@ -70,6 +77,6 @@ export const writeGitmTurnoverProgress = (p: GitmTurnoverProgress): void => {
   try {
     localStorage.setItem(GITM_TURNOVER_KEY, JSON.stringify(p));
   } catch {
-    /* localStorage unavailable — the turn-over still fires, just without the failsafe/variant */
+    /* localStorage unavailable — the turn-over still fires, just without the informational deadline/variant */
   }
 };

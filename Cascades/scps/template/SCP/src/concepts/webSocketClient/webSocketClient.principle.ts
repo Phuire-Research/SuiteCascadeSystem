@@ -40,10 +40,16 @@ const WEB_SOCKET_CLIENT_ATOMIC_STATE_UPDATE = 'Web Socket Client Atomic State Up
 // When the user turns over to B, GitmTurnOverBButton.vue writes GITM_TURNOVER_KEY (the
 // shared gitmTurnover.model contract) BEFORE dispatching the MCP turn-over. This close
 // handler reads it to distinguish an A↔B turn-over (deadline-armed) from a normal restart
-// (unbounded ping). If B never boots within the deadline, the deadline timer fires the
-// FAILSAFE-RETURN 3-step: it clears the ping loop FIRST (D1 conflict prevention · S4 Green
-// seam 5c), swaps the standby to 'b-failed-reverting', and fires gitm_revert_to_stable over
-// the OUTER bridge /mcp (alive during SCP-down) → checkout A → boot on A → client reloads.
+// (unbounded ping).
+//
+// D-TOH TOH-6 · THE AGENCY CURE (the user's ruling): THE BENEFIT OF THE DOUBT BELONGS TO
+// THE USER. A long boot may be a large SCP honestly recompiling — time proves nothing. The
+// AUTO-REVERT is RETIRED: the deadline timer NEVER fires gitm_revert_to_stable (nor any
+// turn-over) on a clock (the TOH-5 field: a healthy ~77s boot outran the 45s arm and the
+// failsafe re-fired the healthy SCP). At the deadline the timer only swaps the standby to
+// the NEUTRAL 'b-still-rebuilding' wording — the ping loop keeps running, the carrier stays,
+// and a late-but-healthy B boot resumes through the normal ping-success seam. Turning over
+// on A is THE USER'S button (the dock's Turn Over A — named on the overlay, never auto-fired).
 // GITM_TURNOVER_KEY + readGitmTurnoverProgress are imported above from gitmTurnover.model
 // (the single byte-match source · GitmTurnoverProgress flows through the reader's inference ·
 // HAZARD-5 fully closed).
@@ -230,8 +236,9 @@ export const webSocketClientPrinciple: WebSocketClientPrinciple = ({
 
       console.log('[WebSocket] Connection lost. Starting reconnection ping...');
 
-      // Shared abort flag — mutual cancellation of the ping loop and the deadline timer.
-      // Whichever fires FIRST flips `aborted`; the other silently returns.
+      // Shared abort flag — the ping loop's success flips `aborted` and clears the deadline
+      // timer (no informational swap after a proven boot). TOH-6: the timer itself no longer
+      // aborts anything — it only re-words the standby; the ping loop outlives the deadline.
       let aborted = false;
       let deadlineTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -343,67 +350,25 @@ export const webSocketClientPrinciple: WebSocketClientPrinciple = ({
       const pingInterval = setInterval(pingServer, 2000);
       pingServer();
 
-      // GITM A↔B (#641) — arm the deadline ONLY for an A↔B turn-over to B.
+      // GITM A↔B (#641) — arm the deadline ONLY for an A↔B turn-over. TOH-6 · THE AGENCY
+      // CURE: the deadline is INFORMATIONAL PACING ONLY — the timer re-words the standby to
+      // the neutral 'b-still-rebuilding' message and NOTHING ELSE. The ping loop keeps
+      // running (the SCP may still be honestly recompiling — the TOH-5 field's healthy ~77s
+      // boot); the carrier stays (the overlay re-shows truthfully across further closes);
+      // no revert, no turn-over, ever fires on this clock. Turning over on A is the user's
+      // dock button — the overlay names it, the system never presses it.
       if (turnoverProgress) {
         const deadlineMs = Math.max(turnoverProgress.deadline - Date.now(), 0);
-        console.log('[WebSocket] A↔B turn-over in progress · deadline armed · ms=', deadlineMs);
+        console.log('[WebSocket] A↔B turn-over in progress · informational deadline armed · ms=', deadlineMs);
 
-        deadlineTimer = setTimeout(async () => {
+        deadlineTimer = setTimeout(() => {
           if (aborted) return; // ping already succeeded — B booted
-          aborted = true;
 
-          // D1 conflict prevention (S4 Green seam 5c): stop the ping loop BEFORE the
-          // revert fetch so the renderer ping + the revert do not double-navigate.
-          clearInterval(pingInterval);
-          localStorage.removeItem(GITM_TURNOVER_KEY);
-
-          // Swap the standby to the failsafe message (inner-text swap · single overlay).
-          showBridgeStandby('b-failed-reverting');
-          console.warn('[WebSocket] A↔B deadline fired · B never booted · reverting to stable A');
-
-          // Fire the revert over the OUTER SCS-Bridge /mcp (separate process · alive while
-          // the SCP server is down). The endpoint was captured by the turn-over button.
-          const bridgeEndpoint = turnoverProgress.bridgeEndpoint;
-          if (bridgeEndpoint) {
-            try {
-              await fetch(`${bridgeEndpoint}/mcp`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Accept: 'application/json, text/event-stream',
-                },
-                body: JSON.stringify({
-                  jsonrpc: '2.0',
-                  id: Date.now(),
-                  method: 'tools/call',
-                  params: { name: 'gitm_revert_to_stable', arguments: {} },
-                }),
-              });
-              console.log('[WebSocket] gitm_revert_to_stable dispatched to outer bridge');
-            } catch (e) {
-              console.error('[WebSocket] Revert MCP call failed:', e);
-            }
-          } else {
-            console.error('[WebSocket] No bridge endpoint captured · cannot fire revert');
-          }
-
-          // Arm a FRESH ping loop to wait for A to come back after the revert restart.
-          const aRecoveryInterval = setInterval(async () => {
-            try {
-              const res = await fetch('/mcp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ jsonrpc: '2.0', id: 0, method: 'ping' }),
-              });
-              if (res.ok) {
-                console.log('[WebSocket] Stable A detected after revert · refreshing page...');
-                clearInterval(aRecoveryInterval);
-                window.location.reload();
-              }
-            } catch {
-              /* A not ready yet — keep waiting */
-            }
-          }, 2000);
+          // THE ONE INFORMATIONAL MOTION — inner-text swap to the neutral wording (single
+          // overlay · the declared turn class is preserved, never downgraded). The turn-over-
+          // in-progress state PERSISTS: no abort, no ping-loop teardown, no carrier removal.
+          showBridgeStandby('b-still-rebuilding', turnoverProgress, turnoverProgress.turnClass);
+          console.log('[WebSocket] A↔B watch window elapsed (informational) · B may still be rebuilding · Turn Over on A remains available from the dock');
         }, deadlineMs);
       }
     });

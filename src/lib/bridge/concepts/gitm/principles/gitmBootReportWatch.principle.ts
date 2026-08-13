@@ -564,27 +564,35 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
   ]);
   void armPlan;
 
-  // MD-E (THE C318 FOLD · THE BRIDGE-OWNED DEADLINE) — the standing FLOOR beat. A source:'A'
-  // turn-over that carried a working B armed BOTH the seat-return arm AND the 45s deadline
-  // (bridgeOwnedDeadline.model). The boot-report watcher above DISARMS the deadline the moment ANY
-  // report lands (the SCP booted). If NO report arrives within 45s — A never booted, the observed
-  // failure — this beat fires the FLOOR: disarm (one-shot · re-entrancy guard), dispatch
-  // gitmRevertToStable via the LIVE handle (commit B if dirty → switch A → restart), stamp the
-  // outcome (updateStatus note · the never-silent rule) + log gitm.deadline.reverted. The C319
-  // client pulse remains the AWARENESS layer; THIS is the floor. Non-concluding stage (a monitoring
-  // beat · never stagePlanner.conclude() so it polls each tick · mirror the location-dial WGHA beat).
+  // MD-E (THE C318 FOLD · THE BRIDGE-OWNED DEADLINE) — the standing beat, now INFORMATIONAL ONLY.
+  // D-TOH TOH-6 · THE AGENCY CURE (the user's ruling): THE BENEFIT OF THE DOUBT BELONGS TO THE
+  // USER. A long boot may be a large SCP honestly recompiling — time proves nothing. The AUTO-REVERT
+  // is RETIRED: this beat NEVER dispatches gitmRevertToStable (nor any turn-over) on a clock (the
+  // TOH-5 field: a healthy ~77s boot outran both 45s arms and the fire RE-FIRED the healthy SCP).
+  // Turning over on A is THE USER'S intended design — their agency, their judgment, their button
+  // (the gitmRevertToStable QUALITY stays whole as that deliberate tool). The system's whole
+  // remaining duty: INFORM HONESTLY — the arm/disarm machinery (armDeadline · disarmDeadlineFor ·
+  // the keyed H1 discipline) STAYS as the informational clock; when the window elapses this beat
+  // logs gitm.deadline.expired-informational + stamps a NEUTRAL note on the ORIGIN's rail (the
+  // never-silent rule) that NEVER claims failure it cannot prove. Non-concluding stage (a
+  // monitoring beat · never stagePlanner.conclude() so it polls each tick).
   const deadlinePlan = plan('Gitm Bridge Owned Deadline', ({ stage }) => [
     stage(() => {
       if (!isDeadlinePassed()) return; // no arm ANOR window not yet elapsed · retry next beat
       const arm = readDeadlineArm();
-      // DISARM FIRST (one-shot · re-entrancy — a second beat must not re-fire the revert).
+      const elapsedMs = arm !== null ? Date.now() - arm.armedAt : 0;
+      // DISARM FIRST (one-shot · re-entrancy — the informational note must not re-fire each beat).
       disarmDeadline();
-      // D-TOH H1 · THE NAME-FIRST FIRE — the revert lands on THE ARMED ORIGIN by NAME (the name
-      // resolves the dir inside gitmRevertToStable via the same name→dir lane the turn-over used).
-      // An arm WITHOUT a name (legacy) SKIPS with a named sink — NEVER the pointer-at-fire-time
-      // (the severed fall-through restarted WHICHEVER SCP was active · the storm's cross-restart).
+      // THE ONE INFORMATIONAL MOTION — the window elapsed; nothing fires. Named sink always.
+      log('gitm.deadline.expired-informational', {
+        originScpName: arm?.originScpName ?? '',
+        stableBranch: arm?.stableBranch ?? '',
+        elapsedMs,
+      });
+      // D-TOH H1 legacy shape kept — a nameless arm has no rail to note onto; SKIP with a named
+      // sink rather than falling to the pointer (the severed fall-through was the storm's wound).
       if (arm === null || arm.originScpName === '') {
-        log('gitm.deadline.revert-skip', {
+        log('gitm.deadline.note-skip', {
           reason: 'arm-origin-absent',
           stableBranch: arm?.stableBranch ?? '',
         });
@@ -592,26 +600,22 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
       }
       const bh = getActiveScsBridgeMuxiumHandle();
       if (bh === null) {
-        // No live handle to revert through — log and move on (the arm is already cleared; a later
+        // No live handle to note through — log and move on (the arm is already cleared; a later
         // turn-over re-arms). Never silent.
-        log('gitm.deadline.reverted', { fired: false, reason: 'no-live-handle', stableBranch: arm.stableBranch });
+        log('gitm.deadline.note-skip', { reason: 'no-live-handle', stableBranch: arm.stableBranch });
         return;
       }
       const gitmDeck = bh.muxium.deck.d.gitm;
-      // Stamp the outcome onto the Update rail FIRST (the never-silent rule — the strip/panel shows
-      // WHY the app reverted before the revert restarts it). D-TOH H1 — origin-stamped (RS.4: the
-      // note lands on the ARMED ORIGIN's rail, not the pointer's panel).
+      // The honest note on the ORIGIN's rail (the never-silent updateStatus idiom · RS.4: the note
+      // lands on the ARMED ORIGIN's rail, not the pointer's panel). NEUTRAL wording only — the
+      // overlay may say 'still rebuilding' but never claims failure without a failure fact.
       bh.muxium.dispatch(
         gitmDeck.e.gitmScpUpdateProgress({
-          note: 'B did not boot within the deadline — reverted to ground',
+          note: 'B boot exceeding the watch window — the SCP may still be rebuilding; Turn Over on A remains at your discretion',
           originScpName: arm.originScpName,
         } as GitmScpUpdateProgressPayload) as never,
       );
-      // Fire the failsafe (commit B if dirty → switch A → restart). D-TOH H1 — the payload carries
-      // THE ARMED ORIGIN's NAME; the quality resolves opCwd from it (never empty · never the pointer).
-      bh.muxium.dispatch(gitmDeck.e.gitmRevertToStable({ originScpName: arm.originScpName }) as never);
-      log('gitm.deadline.reverted', { fired: true, stableBranch: arm.stableBranch, originScpName: arm.originScpName });
-      console.log('[Gitm BootReportWatch] DEADLINE — B did not boot within 45s · reverted', arm.originScpName, 'to stable ground');
+      console.log('[Gitm BootReportWatch] deadline window elapsed (informational) ·', arm.originScpName, '· the SCP may still be rebuilding');
     }, { beat: 1000 }),
   ]);
   void deadlinePlan;
