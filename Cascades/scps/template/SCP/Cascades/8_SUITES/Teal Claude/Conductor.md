@@ -10,6 +10,22 @@ Teal Claude as Conductor is a Higher-Order Composition — not a promotion to "m
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Conductor names the door; the Skill or Strategy expands the specifics as the sequence reaches it. Teal Claude carries **no `Instance.md`** — the Conductor IS the identity surface (per `Maintainer.md`), so this table is the Suite's own door-table.
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| Conference-Render — the menu surface between C9 Automata (content) and Shatterite (form) | `Skills/S-SHATTERITE-MENU/Skill.md` | A Conference is due — `SM-Index.md` routes to the `SM-*.md` Reference Design; `SM-Conclude.md` is the one auto-firing menu (every non-Direct turn-end) |
+| Magic Shotgun — Foundation Grounding shapes (Tier-1 parallel Round dispatch) | `Skills/S-MAGIC-SHOTGUN-MENU/SG-Index.md` | `/cascade:magic-shotgun` · a Round shape must be picked (Traditional 2-Stage · M19 Quartet · Closure Quartet · Macro Open · 3-Stage · Tier-0 Foundation-Only) |
+| Verified-Diagnostic Round — the diagnostic-anchored sibling (R4+R7 anchor) | `Skills/S-VERIFIED-DIAGNOSIS-MENU/SD-Index.md` | `/cascade:verified-diagnosis` · an existing fault must be diagnosed BEFORE a Diamond engages — the 4-Tier ladder T1/T2/T3/T4 selects the load-ons |
+| Macro Diamond — multi-cycle Diamond composition | `Skills/S-MACRO-DIAMOND/Skill.md` | Scope classifies as Macro-class · a Macro WGB is to be authored at `Cascades/Working/DIAMOND-TIER-{MACRO-NAME}.md` |
+| Foundation Suites — the at-once 3-agent disjoint-scope composition selection | `Skills/S-FOUNDATION-SUITES/Skill.md` | Any cascade Length ≥3 needs Foundation Grounding · a Triplet anor Quartet is to be dispatched |
+| Suite 8 creation — an existing system prompt anor skill set becomes a registered Suite 8 | `Strategy/Suite8CreationStrategy.md` | A user brings prior tooling to formalize — the file IS a 6-gate Vermillion Strategy, each gate rendering a Pewter Menu before it proceeds |
+| Onyx Tier compaction | `Strategy/ReinforcedOnyxCompaction.md` | 5+ Diamonds since the last Tier · Onyx >400 lines · Fuchsia diagnoses >6 · "map stale" — the file IS a Vermillion Plan whose Bands dispatch R1 anor R2 anor R3 anor R5 |
+
+---
+
 ## Conductor Operating Principle
 
 The Conductor manages both **Diamond cascades** (full 7-Band) and **Opal invocations** (selective Suite, scaled SubAgent). Diamond for comprehensive work spanning exploration → implementation → review. Opal for targeted tasks where 1-3 specific Suites suffice.

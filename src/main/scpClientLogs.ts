@@ -36,6 +36,7 @@ import * as fs from 'node:fs';
 import { type BrowserWindow } from 'electron';
 import { sdia } from './diagnostics';
 import { readScpConfigName } from '../lib/bridge/scpConfig.model';
+import { workspaceBridgeDir } from '../lib/bridge/paths';
 
 // Rotate (truncate) past this size so a chatty renderer can never grow the file unbounded.
 const CLIENT_LOG_MAX_BYTES = 5_000_000;
@@ -57,7 +58,7 @@ export function resolveActiveScpName(): string | null {
   // 1. bridge.json — the bridge KNOWS which SCP is running (Per-SCP-Identity composed).
   try {
     const raw = fs.readFileSync(
-      path.join(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
+      path.join(workspaceBridgeDir(process.cwd()), 'bridge.json'),
       'utf8',
     );
     const bj = JSON.parse(raw) as {
@@ -101,9 +102,9 @@ function getClientLogsPath(scpName?: string): string {
   // CALL LOCATION, not the package dir. `app.getAppPath()` resolves to the scs-bridge PACKAGE
   // ("the Base Repository") — where the user does NOT want their debug logs. Every user-facing
   // bridge artifact (debug.json, bridge.json, sessions.json) routes through
-  // bridgeRoot() = join(process.cwd(), 'Cascades', 'Bridge') — the directory `scs` was CALLED from.
+  // bridgeRoot() = workspaceBridgeDir(process.cwd()) — the directory `scs` was CALLED from.
   // Client-logs must join them so the CLI is callable for the user to debug THEIR application.
-  const dir = path.join(process.cwd(), 'Cascades', 'Bridge');
+  const dir = workspaceBridgeDir(process.cwd());
   try {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });

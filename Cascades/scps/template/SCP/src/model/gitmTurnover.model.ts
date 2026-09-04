@@ -57,10 +57,20 @@ export type GitmTurnoverProgress = {
   scpName?: string;
 };
 
+// TOH-12 · THE SOVEREIGN-IDENTITY SCOPE: the carrier key is scoped by this SCP's own name
+// (scpIdentityStorage.model — synchronous, outage-surviving), so a recycled port's next
+// tenant never reads a prior tenant's turn-over carrier. Reads fall back to the bare
+// legacy key (a carrier written pre-scope stays honored); clears remove both.
+import {
+  readScopedWithLegacyFallback,
+  removeScopedAndLegacy,
+  scpScopedStorageKey,
+} from './scpIdentityStorage.model';
+
 // Read + parse the turn-over progress key (null when absent or malformed).
 export const readGitmTurnoverProgress = (): GitmTurnoverProgress | null => {
   if (typeof localStorage === 'undefined') return null;
-  const raw = localStorage.getItem(GITM_TURNOVER_KEY);
+  const raw = readScopedWithLegacyFallback(GITM_TURNOVER_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as GitmTurnoverProgress;
@@ -75,8 +85,15 @@ export const readGitmTurnoverProgress = (): GitmTurnoverProgress | null => {
 export const writeGitmTurnoverProgress = (p: GitmTurnoverProgress): void => {
   if (typeof localStorage === 'undefined') return;
   try {
-    localStorage.setItem(GITM_TURNOVER_KEY, JSON.stringify(p));
+    localStorage.setItem(scpScopedStorageKey(GITM_TURNOVER_KEY), JSON.stringify(p));
   } catch {
     /* localStorage unavailable — the turn-over still fires, just without the informational deadline/variant */
   }
+};
+
+// TOH-12 · the single clear helper — removes the scoped AND the bare legacy carrier, so a
+// consumed turn-over never survives under either name. The WS-close handler's two
+// removeItem sites route through THIS, never a hand-rolled removeItem.
+export const clearGitmTurnoverProgress = (): void => {
+  removeScopedAndLegacy(GITM_TURNOVER_KEY);
 };

@@ -445,3 +445,209 @@ describe('buildTerminalCommand — WSL', () => {
     expect(bashCmd).toContain('--settings');
   });
 });
+
+// ============================================================
+// C1104 · RULING A · THE MODEL CLAUSE, ALL SEVEN BRANCHES.
+// This door carried NO --model support at all before (Lane 7 row 11): the four branches
+// sharing buildClaudeCommandFragment AND the three assembling args by hand were equally
+// blind, so a TUI/attach resume ignored entry.model entirely. T3 is the ruling-A
+// Concluder: model absent ⇒ the built command contains ZERO '--model' occurrences.
+// ============================================================
+describe('C1104 · the --model clause across every platform branch', () => {
+  const base = {
+    cwd: '/tmp/proj',
+    settingsPath: '/tmp/spawn-settings.json',
+  };
+
+  // humanReadable is the FULL built command for every branch (the fragment branches embed
+  // it; the manual-args branches join their argv into it), so it is the one string to
+  // count — counting args as well would double every hit.
+  function countModelFlags(out: { humanReadable: string }): number {
+    return (out.humanReadable.match(/--model/g) ?? []).length;
+  }
+
+  function linuxWith(terminal: string): void {
+    setPlatform('linux');
+    childProcess.execSync.mockImplementation((cmd: string) => {
+      if (typeof cmd === 'string' && cmd.includes(terminal)) return Buffer.from('');
+      throw new Error('not found');
+    });
+  }
+
+  describe('BRANCH 1/7 · macOS Terminal (shared fragment)', () => {
+    beforeEach(() => setPlatform('darwin'));
+
+    it('T3 · omits --model entirely on a resume with no recorded model', () => {
+      const out = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'uuid-1',
+        model: null,
+      });
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('T3 · omits --model when the field is absent altogether', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'new' });
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the clause exactly once on a resume with a recorded model', () => {
+      const out = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'uuid-1',
+        model: 'claude-fable-5-1',
+      });
+      expect(countModelFlags(out)).toBe(1);
+      expect(out.humanReadable).toContain('claude-fable-5-1');
+    });
+
+    it('emits the clause on a new spawn with a chosen model', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'new', model: 'claude-opus-5' });
+      expect(countModelFlags(out)).toBe(1);
+      expect(out.humanReadable).toContain('claude-opus-5');
+    });
+  });
+
+  describe('BRANCH 2/7 · linux gnome-terminal (manual args)', () => {
+    beforeEach(() => linuxWith('gnome-terminal'));
+
+    it('T3 · no --model arg pair when the model is null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.terminalChoice).toBe('gnome-terminal');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the --model arg pair when set (resume AND new)', () => {
+      const r = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(r.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+      const n = buildTerminalCommand({ ...base, mode: 'new', model: 'claude-fable-5-1' });
+      expect(n.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+    });
+  });
+
+  describe('BRANCH 3/7 · linux konsole (manual args)', () => {
+    beforeEach(() => linuxWith('konsole'));
+
+    it('T3 · no --model arg pair when the model is null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.terminalChoice).toBe('konsole');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the --model arg pair when set (resume AND new)', () => {
+      const r = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(r.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+      const n = buildTerminalCommand({ ...base, mode: 'new', model: 'claude-fable-5-1' });
+      expect(n.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+    });
+  });
+
+  describe('BRANCH 4/7 · linux xterm (shared fragment)', () => {
+    beforeEach(() => linuxWith('xterm'));
+
+    it('T3 · omits --model when null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.terminalChoice).toBe('xterm');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the clause when set', () => {
+      const out = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(countModelFlags(out)).toBe(1);
+      expect(out.args.join(' ')).toContain('claude-fable-5-1');
+    });
+  });
+
+  describe('BRANCH 5/7 · Windows Terminal wt (manual args)', () => {
+    beforeEach(() => {
+      setPlatform('win32');
+      childProcess.execSync.mockReturnValue(Buffer.from(''));
+    });
+
+    it('T3 · no --model arg pair when null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.terminalChoice).toBe('wt');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the --model arg pair when set (resume AND new)', () => {
+      const r = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(r.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+      const n = buildTerminalCommand({ ...base, mode: 'new', model: 'claude-fable-5-1' });
+      expect(n.args).toEqual(expect.arrayContaining(['--model', 'claude-fable-5-1']));
+    });
+  });
+
+  describe('BRANCH 6/7 · Windows cmd (shared fragment)', () => {
+    beforeEach(() => {
+      setPlatform('win32');
+      childProcess.execSync.mockImplementation(() => {
+        throw new Error('wt not found');
+      });
+    });
+
+    it('T3 · omits --model when null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.terminalChoice).toBe('cmd');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the clause when set', () => {
+      const out = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(countModelFlags(out)).toBe(1);
+      expect(out.args.join(' ')).toContain('claude-fable-5-1');
+    });
+  });
+
+  describe('BRANCH 7/7 · WSL (shared fragment)', () => {
+    beforeEach(() => {
+      setPlatform('linux');
+      process.env.WSL_DISTRO_NAME = 'Ubuntu';
+    });
+
+    it('T3 · omits --model when null', () => {
+      const out = buildTerminalCommand({ ...base, mode: 'resume', claudeUuid: 'u', model: null });
+      expect(out.platform).toBe('wsl');
+      expect(countModelFlags(out)).toBe(0);
+    });
+
+    it('emits the clause when set', () => {
+      const out = buildTerminalCommand({
+        ...base,
+        mode: 'resume',
+        claudeUuid: 'u',
+        model: 'claude-fable-5-1',
+      });
+      expect(out.platform).toBe('wsl');
+      expect(countModelFlags(out)).toBe(1);
+      expect(out.args.join(' ')).toContain('claude-fable-5-1');
+    });
+  });
+});

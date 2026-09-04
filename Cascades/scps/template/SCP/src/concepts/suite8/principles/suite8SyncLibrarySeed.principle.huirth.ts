@@ -19,7 +19,8 @@
  * (the additive seed + the Truth Law).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import type { Suite8HuirthState, Suite8HuirthQualities } from '../suite8.type';
@@ -107,7 +108,7 @@ export const suite8SyncLibrarySeedPrinciple: Suite8SyncLibrarySeedPrincipleType 
         });
 
         try {
-          extendedDirWatcher = chokidarWatch(EXTENDED_ROOT_ABS, {
+          extendedDirWatcher = createWatcher('suite8SyncLibrarySeed#1', EXTENDED_ROOT_ABS, {
             persistent: true,
             ignoreInitial: true,
             depth: 0,

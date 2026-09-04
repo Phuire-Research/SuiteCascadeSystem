@@ -32,11 +32,12 @@
  * d_ + DTBP throttle discipline).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 // C909 · THE ACCOUNTED SETTLE — the accounted lane dispatches a TWO-NODE strategy (the debounce
 // node prior → the SET) instead of the direct SET action (the strategy idiom: the grace quality's
 // createActionNode/createStrategy/strategyBegin · fileChangeStrategies.ts).
 import { createStrategy, createActionNode, strategyBegin, type ActionStrategy } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import type { Suite8HuirthState, Suite8HuirthQualities, Suite8SyncLocalitySnapshot } from '../suite8.type';
@@ -319,7 +320,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     const list: FSWatcher[] = [];
     for (const rel of Object.values(shape.registered)) {
       try {
-        const w = chokidarWatch(path.resolve(process.cwd(), rel), {
+        const w = createWatcher('suite8SyncUsher#1', path.resolve(process.cwd(), rel), {
           persistent: true,
           ignoreInitial: true,
           awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
@@ -357,7 +358,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     for (const rel of Object.values(shape.registered)) {
       for (const base of [targetRoot, process.cwd()]) {
         try {
-          const w = chokidarWatch(path.resolve(base, rel), {
+          const w = createWatcher('suite8SyncUsher#2', path.resolve(base, rel), {
             persistent: true,
             ignoreInitial: true,
             awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
@@ -418,7 +419,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
       gateBasenames.add(path.basename(fileAbs));
     }
     try {
-      const w = chokidarWatch(watchedDir, {
+      const w = createWatcher('suite8SyncUsher#3', watchedDir, {
         persistent: true,
         ignoreInitial: true,
         depth: 0,
@@ -633,7 +634,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
     dispatchModeFromDisk(trimmed);
     // The library subscription — a `specified` change on disk re-dispatches the mode.
     try {
-      const w = chokidarWatch(resolveSyncLibraryPath(trimmed), {
+      const w = createWatcher('suite8SyncUsher#4', resolveSyncLibraryPath(trimmed), {
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
@@ -668,7 +669,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
         for (const name of readExtendedSubdirectoryNames()) armDesignation(name);
         sinkSyncLibraryTelemetry('usher.boot-sweep', { armedCount: armed.size, designations: [...armed] });
         try {
-          extendedDirWatcher = chokidarWatch(EXTENDED_ROOT_ABS, {
+          extendedDirWatcher = createWatcher('suite8SyncUsher#5', EXTENDED_ROOT_ABS, {
             persistent: true,
             ignoreInitial: true,
             depth: 0,
@@ -691,7 +692,7 @@ export const suite8SyncUsherPrinciple: Suite8SyncUsherPrincipleType = ({
         // → the mode re-dispatches → the machine winds down and restores through the
         // proven circuit. Debounced (the bridge rewrites in bursts).
         try {
-          bridgeJsonWatcher = chokidarWatch(
+          bridgeJsonWatcher = createWatcher('suite8SyncUsher#6', 
             path.resolve(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
             {
               persistent: true,

@@ -7,6 +7,34 @@
 
 ---
 
+## The Router (the doors this Suite opens)
+
+**The Instance names the door; the Skill anor Strategy expands the specifics as the sequence reaches it.** The eight `Skills/` carry the **runtime** aspects — the `scpDockHost` Concept's inducted Qualities · the offscreen-surface doctrine · the callable tool roster. The eleven `Strategy/` files carry the **Install Conductor** sequence — each is a Banded Vermillion plan (R1/R4/R5/R6/R7 Bands with inline Concluders) the install agent executes in phase order S1 → S10. Paths are relative to this Suite 8 directory.
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| **Dock listener bind** — `scpDockHostStart` · ephemeral port into DECK K | `Skills/SB-DS1-Dock-Host-Start/Skill.md` | The Dock Listener binds at Muxium start, anor `dockServerListening`/`dockServerPort` is read by an observer |
+| **SCP docks** — `scpDockHostRegisterScp` · Pattern 4 immutable Record spread | `Skills/SB-DS2-Register-Scp/Skill.md` | An SCP self-registers (`POST /dock` anor the `dock_scp` tool), anor `connectedScps` is written |
+| **SCP undocks** — `scpDockHostUnregisterScp` · immutable delete + Pattern 6 no-op guard | `Skills/SB-DS3-Unregister-Scp/Skill.md` | An SCP exits anor an idempotent teardown loop emits unregister for an already-absent entry |
+| **Log endpoint publication** — `scpDockHostPublishLogs` · Pattern 3 + Pattern 6 defensive | `Skills/SB-DS4-Publish-Logs/Skill.md` | A `logEndpoint` is late-bound anor recomputed on an existing `connectedScps` entry |
+| **Teardown ordering** — `scpDockHostTeardown` · the SBOTD 7-step LIFO + the M8 prepend rule | `Skills/SB-DS5-Dock-Host-Teardown/Skill.md` | The Muxium stops (the listener closes BEFORE child SCPs are signalled), anor a newly inducted Concept takes an SBOTD position |
+| **Offscreen UI doctrine** — the RULED-OUT OS-chrome set · the in-DOM family · the `isTrusted` probe | `Skills/SB-DS6-Offscreen-UI-Doctrine/Skill.md` | ANY new UI element is developed for the SCP surface, anor a picker/dropdown fires its handler but shows no popup |
+| **The callable tool channel** — the two `/mcp` surfaces · the JSON-RPC envelope · TQNI `toolName`→`qualityName` · FKIS origin threading · the 31 non-gitm tools | `Skills/SB-DS7-Callable-Tool-Channel/Skill.md` | Another session, SCP, anor agent must CALL a bridge tool, anor the roster is extended |
+| **The `gitm_*` family** — the worktree Multiplication trio · the A↔B turn-over (Shield · Sword · Sparks) · git plumbing · the two guard classes | `Skills/SB-DS8-GitM-Worktree-AB-Tools/Skill.md` | A `gitm_*` tool is invoked anor the worktree/turn-over mechanism is worked from the bridge side (SCP-S19 holds the operator surface) |
+| **Install phase S1** — the double-install gate · read-only probe · `proceed` anor `abort-already-installed` | `Strategy/S1-DetectCascadesPresence.md` | `install-selected` fires — the Conductor dispatches S1 first, unconditionally |
+| **Install phase S2** — the human-in-the-loop scope gate (Shatterite confirmation before any write) | `Strategy/S2-ConfirmInstallation.md` | S1 returned `proceed` — the user must confirm what lands and where |
+| **Install phase S3** — the shallow clone into bridge-owned `<bridgeRoot>/install-temp/` (Pattern 4 territory) | `Strategy/S3-CloneRepo.md` | The user confirmed at S2 — the first write, still outside the user's project |
+| **Install phase S4** — the first write into the user's root · the COPY/NOT-COPY filter · `Cascade.template.json` → `Cascade.json` · `scaffold-done.flag` | `Strategy/S4-ScaffoldCascadesDir.md` | The scaffold copies into `<userCwd>/Cascades/`, anor what does anor does not ship on a fresh install must be audited |
+| **Install phase S5** — consent-gated CLAUDE.md → Suite 8 conversion · PIABCGR backup relocation · the Revert doc (Band 7 fires unconditionally) | `Strategy/S5-ConvertClaudeMd.md` | The optional conversion path is offered, anor `SuiteCascadeSystem-Revert.md` is rendered |
+| **Install phase S6** — the terminal in-instance phase · the `/tmp/scs-install-<ulid>/` boundary regex · UCNBSP closeout · bridge-side poll + cleanup | `Strategy/S6-CleanupTempDir.md` | The install closes out and the bridge-owned temp territory is reclaimed |
+| **Install phase S7** — the intelligence step · the pre-install snapshot becomes a first-class Suite 8 (RETARGETED C784: Step 6, minted IN the installed SCP via `POST /s8/create`; a no-op on a blank slate) | `Strategy/S7-MuxifyUserClaudeMd.md` | The user's prior context must be elevated to a Suite 8 rather than demoted to a prefix |
+| **Install phase S8** — the Stratidian Welcome arc · Shatterite naming (menus MANDATORY) · router-pattern branch · memory probe · atomic RI activation (Onyx-Tier-1 + Diamond-Tier-1 + cycle 0→1) · the Step-8 welcome menu that fires LAST | `Strategy/S8-StratidianWelcome.md` | The install must hand the user agency — naming, branching, RI activation, the closing choice |
+| **Install phase S9** — the first SCP installed · the domain page minted by the PROVEN means (`scs suite8:page … --home`, ONE motion) · the STALE-SERVER law + `scp_alert_turn_over` stand-by · then the Entourage Forge persona | `Strategy/S9-DomainPageCreate.md` | The user's named Suite 8 needs a live page in their own SCP |
+| **Install phase S10** — RETIRED (C780) · the SAMLS swap · the DHHSB how-to block seeded into the first Diamond | `Strategy/S10-HomePageAdapt.md` | Historical reference only — S9 Band 3.5 now claims the home route; read for the swap/unclaim mechanics anor the DHHSB text |
+| **The Revert document** — the 7-slot template (`{{TIMESTAMP}}` … `{{INSTALL_VERSION}}`) rendered into the user's project | `Strategy/templates/SuiteCascadeSystem-Revert.md.template` | S5 Band 7 renders it (Concluder: `grep -c '{{'` → 0), anor a slot is added anor changed |
+
+---
+
 ## MCP Tool Surface (SB-S126 · Post-ICSM1 · Diamond MCP-Skill)
 
 `launch_scp` MCP tool exposed at `POST /-mcp` on the live `scpDockHost` Express server (loopback only · port from `state.dockServerPort`). External Claude sessions (Claude Code, Claude Desktop) can invoke the tool. Dispatch routes to `scpSpawnManagerSpawnRequested` — the SAME Quality the TUI L/Enter path dispatches. The calling Claude session is automatically appended to the target SCP's `sessions[]` array in `Cascades/SCPs.json` via a chainWrite-mutex-guarded atomic tmp+rename write.

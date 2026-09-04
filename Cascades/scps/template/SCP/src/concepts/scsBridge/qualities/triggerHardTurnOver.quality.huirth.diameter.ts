@@ -32,6 +32,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { spawnSync } from 'node:child_process';
 import type { ScsBridgeTriggerHardTurnOverPayload } from '../scsBridge.type';
+import { releaseAllWatchers } from '../../../model/watcherSingleton.model';
+import { closeAllHttpServers } from '../../server/httpServerHandles.model';
 
 const BRIDGE_RESTART_FILE = '.bridge-restart.json';
 
@@ -103,9 +105,30 @@ export const scsBridgeTriggerHardTurnOverHuirth = createQualityCardWithPayload<
       console.log('[SCS-Bridge Huirth] Hard Turn Over triggered · writing', filePath);
 
       fs.writeFile(filePath, JSON.stringify(restartPayload, null, 2), 'utf-8')
-        .then(() => {
+        .then(async () => {
           console.log('[SCS-Bridge Huirth] .bridge-restart.json written · nodemon should restart');
           controller.fire(muxiumConclude());
+          // C988 · step 4 · THIS WRITER *IS* THE SCP — it needs no endpoint to ask itself.
+          // The CLI-side writers POST /graceful-exit because a DIFFERENT process owns the
+          // SCP; here we are already inside it, so we release directly.
+          //
+          // ORDER IS LOAD-BEARING: the file is written FIRST so nodemon has its trigger;
+          // we release and exit only afterwards. Exiting before the write would leave
+          // nothing to restart from.
+          //
+          // We race nodemon's own SIGKILL and usually win (its `delay: 100` plus the watch
+          // round trip). LOSING COSTS NOTHING — that is today's behaviour — so this is a
+          // strict improvement, never a dependency.
+          try {
+            const released = await releaseAllWatchers();
+            const closed = await closeAllHttpServers();
+            console.log('[SCS-Bridge Huirth] graceful release · watchers', released, '· servers', closed);
+          } catch (err) {
+            console.log('[SCS-Bridge Huirth] graceful release error ·', String(err));
+          }
+          // exit(0) is the CONTRACT: nodemon treats a clean code 0 exactly like its
+          // configured signal (run.js:233), so it respawns rather than reporting a crash.
+          process.exit(0);
         })
         .catch((err: Error) => {
           console.error('[SCS-Bridge Huirth] Hard Turn Over write failed:', err.message);

@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { bridgeRoot } from './paths';
+import { bridgeLogDir } from './paths';
 import { capLogFile } from './logCap';
 
 let debugEnabled = false;
@@ -14,7 +14,7 @@ export function isDebugEnabled(): boolean {
 }
 
 export function debugLogPath(): string {
-  return join(bridgeRoot(), 'debug.json');
+  return join(bridgeLogDir(), 'debug.json');
 }
 
 export function log(event: string, payload?: Record<string, unknown>): void {

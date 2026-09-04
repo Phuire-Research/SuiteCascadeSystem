@@ -14,7 +14,9 @@
  *   - Mount: fs.watchFile(scpRegistryPath, { interval: 1000 }, listener)
  *   - On change: readRegistryFile() → parse → dispatch (if changed)
  *   - On startup: ALSO perform initial read so clients see existing entries
- *   - Teardown: fs.unwatchFile (lifecycle managed by Muxium muxiumStop)
+ *   - Teardown: the watcher singleton (C978). Muxium teardown is ASYNCHRONOUS and so
+ *     cannot carry process exit; release now rides the singleton's own process
+ *     handlers. The unwatchFile path below still serves ordinary in-life teardown.
  *
  * Higher-Order Composition: principle composes scpRegistry (own state) +
  * scsBridge (target dispatch). Through-Diameter on huirth deck.
@@ -23,6 +25,7 @@
  * Citation: STRATIMUX-REFERENCE.md "🎯 Critical Planning Context Patterns"
  */
 import { watchFile, unwatchFile, existsSync, readFileSync } from 'node:fs';
+import { createFileWatcher } from '../../../model/watcherSingleton.model';
 import type { PrincipleFunction } from 'stratimux';
 import type { ScpRegistry, ScpRegistryEntry } from '../scpRegistry.type';
 
@@ -107,7 +110,7 @@ export const scpRegistryWatcherPrinciple: PrincipleFunction<never, never, never>
   console.log(`[scpRegistryWatcher] Initial registry load: ${initial.scps.length} entries`);
 
   // Arm fs.watchFile (polling-based watcher · cross-platform reliable)
-  watchFile(scpRegistryPath, { interval: 1000 }, (curr, prev) => {
+  createFileWatcher('scpRegistryWatcher', scpRegistryPath, { interval: 1000 }, (curr, prev) => {
     if (curr.mtimeMs === prev.mtimeMs) return; // No real change
     const updated = readRegistryFile(scpRegistryPath);
     // eslint-disable-next-line no-console

@@ -72,6 +72,16 @@ See `Skill.md` for full signature specifications.
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it. **This seat holds no `Skills/` directory and no `Strategy/` directory** — the five signatures are not yet separable doors, so no table is drawn for what does not stand.
+
+What stands in their place, beside this file: `Skill.md` — the full specification of S1-S5, the single companion read whole rather than routed into · `Onboard.md` — the walkthrough the `SCS:Onboard` directive actuates · `Maintainer.md` — the aspect-transplant manifest that governs this seat at an update seam · `Documentation/` — the RI seeds a fresh cascade starts from (`Cascade.default.json`, `DIAMOND-TIER-0.default.md`, `ONYX-TIER-0.default.md`, `README.md`) · `Cascades/Cascade.json` — this seat's own cycle record. Everything else this Instance routes to is RUNTIME, not a Skill: the `SCS:<Aspect>` directive map below IS the operational router, and its targets live in the converged RI dir `Cascades/Extended/Cadmium Researcher/`, resolved against SCP_ROOT per the Geography Resolution Law above.
+
+What would land here first: **PGED (Page-Grounded Entourage Dispatch)** — the general pattern this document teaches through the research case. It is the one aspect whose procedure is reusable outside the `SCS:Vermillion` row that currently carries it; extracted, it becomes this seat's first `Skills/` entry and these lines become a table.
+
+---
+
 ## SCS Dispatch Format
 
 ```

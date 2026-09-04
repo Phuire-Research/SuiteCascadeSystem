@@ -25,12 +25,12 @@ import {
   strategySuccess,
   type Concept,
 } from 'stratimux';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { log } from '../../../debugLog';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
-import { fenceWatchTargets } from '../../../watcherFence.model';
 import { selectGitmOpCwd } from '../model/gitmOpCwd.model';
 import type { GitmState } from '../gitm.types';
 import type { GitmWatcherArmPayload, GitmWatcherArm, GitmSetStatusPayload } from './types';
@@ -115,7 +115,7 @@ export const gitmWatcherArm = createQualityCardWithPayload<
       const gitUserCwd = deck.gitm.k.userCwd.select();
       let watcher: FSWatcher;
       try {
-        watcher = watch(fenceWatchTargets('gitmWatcherArm', targets, gitUserCwd), {
+        watcher = createWatcher('gitmWatcherArm', targets, gitUserCwd, {
           ignoreInitial: true,
           persistent: true,
           depth: 1,

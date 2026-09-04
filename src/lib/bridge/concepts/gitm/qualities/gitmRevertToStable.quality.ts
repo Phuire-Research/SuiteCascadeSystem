@@ -28,6 +28,10 @@ import {
   strategyData_muxifyData,
   type Concept,
 } from 'stratimux';
+// TOH-10 · step 5 · the stall's OPENING BRACKET (see scpBootTiming.model). The revert is the
+// leg that fires when B never came up — the ONE leg whose own timing nobody has ever seen.
+import { recordScpRestartSignal } from '../../../scpBootTiming.model';
+import { askScpGracefulExit } from '../../../scpGracefulExitAsk.model';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { GitmState, GitmABMode } from '../gitm.types';
@@ -168,6 +172,21 @@ export const gitmRevertToStable = createQualityCardWithPayload<
       // actually reloads the SCP onto A. MOVES with the branch ops.
       let writeOk = true;
       let writeErr = '';
+      // THE OPENING BRACKET. ABSENCE IS A STATE: when the payload carries no originScpName the
+      // stamp is SKIPPED rather than filed under a guessed name — an unanchored run still records
+      // its stages from the drain, with sinceSignalMs honestly null.
+      {
+        const revertScpName = selectPayload<GitmRevertToStablePayload>(action).originScpName;
+        if (typeof revertScpName === 'string' && revertScpName.length > 0) {
+          recordScpRestartSignal(revertScpName, 'gitm-revert-to-stable');
+        }
+      }
+      // C992 · STEP 5 · THE GRACEFUL ASK — after the stamp, before the write (see the sibling note
+      // in gitmTurnOverWithSource). NOTE THE ASYMMETRY WITH THE STAMP ABOVE: the stamp needs a NAME
+      // and is skipped without one; the ask needs only a DIRECTORY and resolves the port from
+      // `opCwd` alone. So the failsafe still releases gracefully on exactly the unanchored runs
+      // where the timing instrument must stay honestly silent.
+      askScpGracefulExit(opCwd, 'gitm-revert-to-stable');
       try {
         writeFileSync(
           resolve(opCwd, '.bridge-restart.json'),

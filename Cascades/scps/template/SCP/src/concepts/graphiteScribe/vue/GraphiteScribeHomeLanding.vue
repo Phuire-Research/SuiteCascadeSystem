@@ -572,10 +572,11 @@ onMounted(() => {
   // graphiteScribeName). Runs once on mount; the Forge menu shows only while isUnactualized === true.
   void refreshSelfForgeState();
 
-  // MD-9 · seed pendingSpawnModel with the picker's initial default so the FIRST Forge spawn threads
-  // it (the Session Management onMounted idiom). The controller was bound to this page's Muxium above
-  // (setMuxium) — setSpawnModel needs a bound Muxium, so this runs after that binding.
-  getGlobalScsBridgeController()?.setSpawnModel(selectedModel.value);
+  // MD-9 · C1104 ruling A · THE SEED IS DELETED (not moved). Pushing the picker's own
+  // default into pendingSpawnModel on mount stamped a model nobody chose onto the registry
+  // entry, and every later resume re-forced it over the user's /model. Only the on-change
+  // handler writes now, so a stamp means a CHOICE; an unstamped new spawn still runs the
+  // derived highest Opus as a bridge-injected flag.
 
   // C386 · W3 · resolve THIS SCP's name (best-effort) so the previous-conductions row filters to this
   // SCP's OFFLINE Forge sessions. Null on failure → the row matches by graphiteScribeName alone (safe superset).

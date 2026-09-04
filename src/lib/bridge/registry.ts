@@ -2,13 +2,19 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 // F1 · sync fs for the quit-race closure write — a small JSON write on a user-gesture
 // path where the process may be quitting. See recordScpWindowClosureSync below.
 import { readFileSync, writeFileSync, renameSync } from 'node:fs';
+// C1104 · the reconcile sentinel lands beside sessions.json (Cascades/Bridge/bridge.json).
+import { join as joinPath } from 'node:path';
 import { bridgeRoot, metaPath, registryPath } from './paths';
 import type { RegistryEntry, SessionMeta, SessionStatus } from './types';
 import { log } from './debugLog';
 // MD-9 · D-MC-1 · Per-Instance Model Control · validate the spawn-time model against the
 // maintained static catalog before recording it onto the entry (spawn NEVER breaks on a
 // bad model — the caller warns + falls back to the global default).
-import { isAvailableModel, normalizeModelId } from '../../shared/modelCatalog.model';
+import {
+  isAvailableModel,
+  normalizeModelId,
+  HISTORICAL_BIRTH_DEFAULTS,
+} from '../../shared/modelCatalog.model';
 // RSTM · Dissolution + Archival Diamond · real ClaudeCode session teardown (PFCX).
 // ASEC/AEJP (SE) · archiveEntryMetadata co-locates <id>.entry.json beside the .jsonl.
 import {
@@ -604,11 +610,22 @@ export async function setSessionSuite8Name(
 /**
  * MD-9 · D-MC-1 · Per-Instance Model Control write helper.
  *
- * Records the spawn-time model ID (a full AVAILABLE_MODELS id) onto the registry
- * entry. Parallel to setSessionSuite8Name — an independent lane; setting model does
- * NOT affect suite8Name/scpName and vice versa. The cli-handler `open-session`
- * resolver reads entry.model → resolved.model → modelClause `resolved.model ??
- * getActiveDefaultModel()`, so resume injects the recorded model OVER the global.
+ * THE SINGLE WRITER of entry.model — two sources, one pipeline (C1104 ruling A).
+ *   source 'set'      — an explicit choice: the spawn qualities, the SessionManager
+ *                       row picker, the TUI row, the scs_set_session_model MCP tool.
+ *   source 'observed' — the transcript's latest assistant turn (`message.model`),
+ *                       relayed by scsBridgePersistLastTurn. The registry LEARNS what
+ *                       the session actually runs, so a /model switch survives resume.
+ * OBSERVE MUST come through here (Lane 7 guard 2) — never a direct entry.model write —
+ * so the normalise → isAvailableModel → log pipeline can never be bypassed.
+ *
+ * PRECEDENCE (law 4 · "last writer wins BY TIME"): every accepted write stamps
+ * entry.modelSetAt (SET → Date.now(); OBSERVED → the observed TURN's own timestamp).
+ * An observation whose turn PREDATES the stamp is refused as observed-stale, so a SET
+ * on an ALIVE session holds until that session actually runs the new model.
+ *
+ * Under ruling A the cli-handler resume clause is CONDITIONAL: entry.model defined →
+ * `--model <id>`; absent → NO flag at all (the user's own /model default applies).
  *
  * Validated against the maintained static catalog (isAvailableModel): an invalid or
  * empty/undefined model is a NO-OP (the entry keeps whatever it had — the session
@@ -619,28 +636,209 @@ export async function setSessionSuite8Name(
  * Callers: the spawn qualities (scsBridgeSpawnSuite8Session + scsBridgeSpawnNewScpSession),
  * asWorker + anchor + plain paths alike, AFTER the entry exists.
  */
-export async function setSessionModel(ulid: string, model: string | undefined): Promise<void> {
+export async function setSessionModel(
+  ulid: string,
+  model: string | undefined,
+  source: 'set' | 'observed' = 'set',
+  observedAt?: number | null,
+): Promise<void> {
   return chainWrite('setSessionModel', async () => {
     const registry = await loadRegistry();
     const entry = registry.sessions.find((s) => s.id === ulid);
-    if (!entry) return;
+    if (!entry) {
+      // Lane 7 row 12: the silent miss now leaves a trail. The MCP tool refuses a
+      // nonexistent ulid BEFORE reaching here; this covers every other caller.
+      log('registry.model.ulid-not-found', { ulid, model: model ?? null, source });
+      return;
+    }
     // Haiku pin shim: forward the retired 'claude-haiku-4-5' alias to the pinned id
     // BEFORE the isAvailableModel guard (else the drifting alias fails validation).
     const normalized =
       typeof model === 'string' ? normalizeModelId(model) : model;
     // Guard: only a valid catalog id records. Absent/invalid → no-op (global default).
+    // Lane 7 row 1: an uncatalogued id observed off a transcript can NEVER reach
+    // entry.model and therefore can never reach `claude --model`.
     if (typeof normalized !== 'string' || normalized.trim() === '' || !isAvailableModel(normalized)) {
-      log('registry.model.skipped', { ulid, model: model ?? null, reason: 'invalid-or-absent' });
+      log(source === 'observed' ? 'registry.model.observed-unknown' : 'registry.model.skipped', {
+        ulid,
+        model: model ?? null,
+        reason: 'invalid-or-absent',
+      });
+      return;
+    }
+    // PRECEDENCE GATE (law 4) — an observation older than the standing stamp loses.
+    if (
+      source === 'observed' &&
+      typeof entry.modelSetAt === 'number' &&
+      typeof observedAt === 'number' &&
+      observedAt < entry.modelSetAt
+    ) {
+      log('registry.model.observed-stale', {
+        ulid,
+        model: normalized,
+        observedAt,
+        modelSetAt: entry.modelSetAt,
+      });
       return;
     }
     if (entry.model === normalized) {
-      log('registry.model.noop', { ulid, model: normalized, reason: 'already-set' });
+      log('registry.model.noop', { ulid, model: normalized, reason: 'already-set', source });
       return;
     }
+    const from = entry.model ?? null;
     entry.model = normalized;
+    entry.modelSetAt =
+      source === 'observed' && typeof observedAt === 'number' ? observedAt : Date.now();
     await saveRegistry(registry);
-    log('registry.model', { ulid, model: normalized });
+    if (source === 'observed') {
+      log('registry.model.observed', { ulid, from, to: normalized, observedAt: observedAt ?? null });
+    } else {
+      log('registry.model', { ulid, model: normalized, from, modelSetAt: entry.modelSetAt });
+    }
   });
+}
+
+/**
+ * C1104 · RULING m-A · THE ONE-TIME RECONCILE SWEEP.
+ *
+ * THE PROBLEM IT CURES. Until ruling A, the spawn pickers seeded their own default into
+ * every spawn payload, so 76 of 85 live entries carried a BIRTH STAMP nobody chose. Under
+ * ruling A an entry.model MEANS A CHOICE and is forced onto every resume — so those 76
+ * stamps would silently become permanent overrides of the user's own /model default.
+ * OBSERVE alone cannot cure them: for a birth-stamped session the observed model EQUALS
+ * the stamp *because the flag forced it* — circular evidence that never converges.
+ *
+ * THREE ORDERED BRANCHES, over every entry:
+ *   CLEAR — the stamp is a HISTORICAL_BIRTH_DEFAULT **and** the transcript's latest
+ *           assistant model equals it (or the transcript is unreadable/archived). The
+ *           stamp is the forced flag's echo; delete it so the session resumes on the
+ *           user's own /model default.
+ *   WRITE — the observed model is a valid catalog id and DIFFERS from the stamp. The
+ *           user changed model mid-session and the registry never learned; write it now
+ *           rather than one beat later (this is the measured wound).
+ *   LEAVE — everything else: already undefined, or a stamp no historical default ever
+ *           produced (the 2 measured `claude-fable-5` entries — real choices).
+ * CLEAR outranks WRITE by construction (the branches are tested in that order).
+ *
+ * ONE chainWrite transaction · ONE saveRegistry · idempotent · guarded by an additive
+ * `modelReconcile` sentinel in bridge.json so it can never re-run and re-clear a later
+ * deliberate re-selection of Opus 5. The sentinel write is a READ-MERGE-WRITE of that one
+ * key (never writeBridgeMetadata, which rebuilds the whole file from process state).
+ *
+ * Wired at daemon boot AFTER the registry loads. Safe only once the resume doors omit
+ * `--model` for an unstamped entry — sweeping before that would strand every cleared
+ * session with no flag AND no default.
+ */
+async function readLatestObservedModel(entry: RegistryEntry): Promise<string | null> {
+  if (!entry.claudeSessionId || !entry.cwd) return null;
+  try {
+    const { extractLastTurnSnippet, resolveClaudeProjectDir } = await import(
+      './lastTurnExtraction.model'
+    );
+    const result = await extractLastTurnSnippet(
+      resolveClaudeProjectDir(entry.cwd),
+      entry.claudeSessionId,
+    );
+    return result?.transcriptLastModelId ?? null;
+  } catch {
+    return null; // unreadable / archived → treated as "the transcript agrees" (CLEAR)
+  }
+}
+
+export type ModelReconcileResult = {
+  total: number;
+  cleared: number;
+  written: number;
+  left: number;
+  alreadyRun: boolean;
+};
+
+export async function reconcileSessionModels(options?: {
+  force?: boolean;
+}): Promise<ModelReconcileResult> {
+  const bridgeJsonPath = joinPath(bridgeRoot(), 'bridge.json');
+  // THE SENTINEL · read first. Present ⇒ the sweep already ran; never run twice.
+  let sentinelSeen = false;
+  try {
+    const raw = await readFile(bridgeJsonPath, 'utf8');
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    sentinelSeen = parsed.modelReconcile !== undefined;
+  } catch {
+    sentinelSeen = false; // absent/malformed bridge.json → treat as not-yet-run
+  }
+  if (sentinelSeen && options?.force !== true) {
+    log('registry.model.reconcile.skipped', { reason: 'sentinel-present' });
+    return { total: 0, cleared: 0, written: 0, left: 0, alreadyRun: true };
+  }
+
+  // The transcript reads happen OUTSIDE the chainWrite body — they are pure reads of
+  // ~/.claude/projects and must not hold the registry write mutex for 85 file reads.
+  const snapshot = await loadRegistry();
+  const observed = new Map<string, string | null>();
+  for (const entry of snapshot.sessions) {
+    observed.set(entry.id, await readLatestObservedModel(entry));
+  }
+
+  let cleared = 0;
+  let written = 0;
+  let left = 0;
+  let total = 0;
+  await chainWrite('reconcileSessionModels', async () => {
+    const registry = await loadRegistry();
+    total = registry.sessions.length;
+    const now = Date.now();
+    for (const entry of registry.sessions) {
+      const stamp = entry.model;
+      const seen = observed.get(entry.id) ?? null;
+      const seenValid = typeof seen === 'string' && isAvailableModel(normalizeModelId(seen));
+      const normalizedSeen = seenValid ? normalizeModelId(seen as string) : null;
+      // BRANCH 1 · CLEAR (outranks WRITE).
+      if (
+        typeof stamp === 'string' &&
+        HISTORICAL_BIRTH_DEFAULTS.includes(stamp) &&
+        (normalizedSeen === null || normalizedSeen === stamp)
+      ) {
+        delete entry.model;
+        delete entry.modelSetAt;
+        cleared += 1;
+        continue;
+      }
+      // BRANCH 2 · WRITE the observed model — ONLY onto an entry that ALREADY carries a
+      // stamp the transcript contradicts. The `typeof stamp === 'string'` guard is
+      // load-bearing: without it the sweep would write the observed model onto the
+      // entries that carry NO stamp, minting 7 brand-new forced overrides (measured on
+      // the live registry) — the exact wound this sweep exists to remove. An unstamped
+      // entry is ALREADY ruling-A-correct and must fall through to LEAVE.
+      if (typeof stamp === 'string' && normalizedSeen !== null && normalizedSeen !== stamp) {
+        entry.model = normalizedSeen;
+        entry.modelSetAt = now;
+        written += 1;
+        continue;
+      }
+      // BRANCH 3 · LEAVE.
+      left += 1;
+    }
+    await saveRegistry(registry);
+    log('registry.model.reconcile', { total, cleared, written, left });
+  });
+
+  // THE SENTINEL · additive read-merge-write of ONE key; every other key survives
+  // byte-for-byte. Atomic tmp+rename, the same discipline saveRegistry uses.
+  try {
+    const raw = await readFile(bridgeJsonPath, 'utf8');
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    parsed.modelReconcile = { at: Date.now(), cleared, written, left };
+    const tmp = `${bridgeJsonPath}.model-reconcile.tmp`;
+    await writeFile(tmp, JSON.stringify(parsed, null, 2), 'utf8');
+    await rename(tmp, bridgeJsonPath);
+    log('registry.model.reconcile.sentinel', { cleared, written, left });
+  } catch (err) {
+    // The sweep itself already committed; a failed sentinel only risks a re-run, and a
+    // re-run is idempotent for CLEAR (the stamp is gone) — never poison the boot.
+    log('registry.model.reconcile.sentinel-failed', { error: String(err) });
+  }
+
+  return { total, cleared, written, left, alreadyRun: false };
 }
 
 /**

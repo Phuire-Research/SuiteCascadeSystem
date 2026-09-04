@@ -37,6 +37,20 @@ import {
 
 const childProcessByScp = new Map<string, ChildProcess>();
 
+// C1020 · THE LANE'S DIRECTORY, kept beside its child. The teardown needs BOTH: the dir to resolve
+// the graceful-exit address (the lane file lives under it), and the child's pid to signal the lane
+// root when the graceful ask is not enough. Held here rather than re-derived, because at teardown
+// time the registry is the only thing that still knows which SCPs this daemon actually spawned.
+const scpPathByScp = new Map<string, string>();
+
+export function setScpPath(scpName: string, scpPath: string): void {
+  scpPathByScp.set(scpName, scpPath);
+}
+
+export function getScpPath(scpName: string): string | undefined {
+  return scpPathByScp.get(scpName);
+}
+
 export function getChildProcess(scpName: string): ChildProcess | undefined {
   return childProcessByScp.get(scpName);
 }

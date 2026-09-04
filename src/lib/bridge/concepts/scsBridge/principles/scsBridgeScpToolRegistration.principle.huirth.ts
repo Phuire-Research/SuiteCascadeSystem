@@ -533,6 +533,48 @@ const buildToolRoster = (): {
     relatedActionables: ['scp_engage_session', 'scp_focus_session'],
   };
 
+  // C1104 · ruling A · scs_set_session_model · the per-session RESUME model.
+  // TQNI invariant: qualityName MUST byte-match the scsBridge.e key
+  // 'scsBridgeSetSessionModel' (createSCPQualityManifold does
+  // qualityEmitter[meta.qualityName] — a mismatch silently no-ops).
+  // IDTND: sessionId is the ULID; never routed/mutated. ACK-only · the setSessionModel
+  // chainWrite is the Lambda · the json-watcher relays to every surface.
+  const setSessionModelMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'scsBridge',
+    qualityName: 'scsBridgeSetSessionModel',        // ← TQNI byte-identity with scsBridge.e key
+    toolName: 'scs_set_session_model',
+    description:
+      'C1104 SET MODEL · Set the model a session RESUMES with. Writes entry.model via the ' +
+      'single-writer registry.ts setSessionModel (validated against AVAILABLE_MODELS; an ' +
+      'off-catalog id no-ops with registry.model.skipped). A ULID that does not exist is ' +
+      'REFUSED — this tool never creates a session. The sessions.json json-watcher relays ' +
+      'to all surfaces (SessionManager chip/picker + TUI model column). A model set on an ' +
+      'ALIVE session takes effect at its NEXT resume, not immediately. Clearing is not ' +
+      'supported here: an entry with NO model resumes with no --model flag at all, so the ' +
+      "user's own /model default applies. IDTND: the ULID is the lookup key, never " +
+      'mutated, never routed.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sessionId: {
+          type: 'string',
+          description: 'Session ULID whose resume model to set (lookup key · never mutated)',
+        },
+        model: {
+          type: 'string',
+          description:
+            'A full pinned AVAILABLE_MODELS id (e.g. claude-opus-5 · claude-fable-5-1). ' +
+            'Bare aliases drift and are not accepted; an off-catalog id no-ops.',
+        },
+      },
+      required: ['sessionId', 'model'],   // BOTH — an empty model is meaningless, not a clear
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',        // ← routes through createSCPQualityManifold (quality path)
+    strategyName: '',
+    relatedActionables: ['scp_rename_session', 'scp_engage_session'],
+  };
+
   // A-D3b · ARFSP · scs_set_anchor_session · manual Anchor reassignment ("Set as Anchor").
   // TQNI invariant: qualityName MUST byte-match scsBridge.e key 'scsBridgeSetSessionAnchor'
   // (Cycle 140 TQDR · createSCPQualityManifold does qualityEmitter[meta.qualityName] —
@@ -2154,6 +2196,39 @@ const buildToolRoster = (): {
     relatedActionables: ['gitm_revert_to_stable', 'gitm_confirm_success'],
   };
 
+  const gitmCarryToWorkingThenServeStableMetadata: SCPQualityMetadataRegistered = {
+    conceptName: 'gitm',
+    qualityName: 'gitmCarryToWorkingThenServeStable',
+    toolName: 'gitm_carry_to_working_then_serve_stable',
+    description:
+      'GITM A↔B · THE THIRD PATH · Carry the working changes into B, THEN serve A. Does exactly ' +
+      'four legs and nothing else: (1) commit the working drift onto the B seat (minting ' +
+      'b/<stable>-<ts> when no B exists yet — nothing is discarded); (2) checkout A; (3) write ' +
+      '.bridge-restart.json so the app reboots onto A — THE STABLE RUN; (4) arm the observed seat ' +
+      'return, which checks B back out once the SCP\'s own boot-report proves A actually booted. ' +
+      'THE POINT OF LEG 4: the worktree never stays parked on A, so A is only ever SERVED, never ' +
+      'WORKED ON — the stability of A is maintained by never standing on it. This is the recovery ' +
+      'path when B cannot boot, AND the way to compare A against B when both are operational. ' +
+      'DISTINCT FROM gitm_turn_over_with_source: that quality\'s confirmed carry deliberately ' +
+      'CONVERGES ONTO B (C791 · SERVE THE CARRY — the app reboots onto B so you see your changes); ' +
+      'this one serves A instead. Guards: unknown stable → { guardFired:true, ' +
+      'reason:"stable-branch-unknown" }; a failed carry switch → { guardFired:true, ' +
+      'reason:"carry-switch-failed" } and A is NEVER switched to (the work is never abandoned); a ' +
+      'failed A switch → { guardFired:true, reason:"stable-switch-failed" } with the carry already ' +
+      'landed safely on B.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        originScpName: GITM_ORIGIN_SCHEMA_PROP,
+      },
+      required: [],
+    },
+    toolType: 'actionable',
+    handlerType: 'quality',
+    strategyName: '',
+    relatedActionables: ['gitm_turn_over_with_source', 'gitm_revert_to_stable'],
+  };
+
   const gitmRevertToStableMetadata: SCPQualityMetadataRegistered = {
     conceptName: 'gitm',
     qualityName: 'gitmRevertToStable',
@@ -2428,6 +2503,7 @@ const buildToolRoster = (): {
     masnChatSessionMetadata,    // D3RM-G · CHAT · scp_chat_session · UIMJ+CHMH
     sendMessageMetadata,        // D3 FKIS · send_message · live keystroke streaming
     renameSessionMetadata,      // RM-D4 · RENAME · scp_rename_session · SNDF/DUAL
+    setSessionModelMetadata,    // C1104 · scs_set_session_model · per-session resume model
     setAnchorMetadata,          // A-D3b · ARFSP · scs_set_anchor_session · Anchor reassignment
     unsetAnchorMetadata,        // SAC.1 · ARFSP · scs_unset_anchor_session · Anchor release
     setAnchorConfigMetadata,    // SAC.3 · scs_set_anchor_config · per-page auto-anchor USER OVERRIDE write
@@ -2491,6 +2567,7 @@ const buildToolRoster = (): {
     gitmRegisterStableMetadata,     // gitm_register_stable         · mark current branch as stable A (annotation)
     gitmCreateWorkingMetadata,      // gitm_create_working          · git branch b/<shield>-<ts> && git switch (GUARDSHUNTs)
     gitmTurnOverWithSourceMetadata, // gitm_turn_over_with_source   · switch source THEN write .bridge-restart.json
+    gitmCarryToWorkingThenServeStableMetadata, // gitm_carry_to_working_then_serve_stable · THE THIRD PATH · carry→B, serve A, return to B
     gitmRevertToStableMetadata,     // gitm_revert_to_stable        · FAILSAFE · commit B → switch A → restart
     gitmConfirmSuccessMetadata,
     gitmAssignRoleMetadata,          // gitm_assign_role             · Tactical Bridge explicit role (D2 M9)

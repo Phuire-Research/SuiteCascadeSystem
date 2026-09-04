@@ -24,6 +24,7 @@ import {
   mkdirSync,
 } from 'node:fs';
 import path from 'node:path';
+import { scpsJsonPath, scsWorkspaceRoot } from '../bridge/paths';
 
 // ============================================
 // TYPES (inline-ported from template scpRegistry.type.ts)
@@ -101,8 +102,13 @@ export function deriveMainMenuMirrorEntry(registry: ScpRegistry): MainMenuMirror
 
 export const SCPS_JSON_RELATIVE = 'Cascades/SCPs.json';
 
-export function resolveScpsJsonPath(projectRoot: string = process.cwd()): string {
-  return path.resolve(projectRoot, SCPS_JSON_RELATIVE);
+// C950 · the registry is SHARED — scpsJsonBasename() is a hard constant ('SCPs.json',
+// no environment branch); the C947 per-environment partition described in earlier
+// revisions of this comment is RETIRED (see the C950 header in paths.ts).
+// TOH-12 · BREAK 2: the default root is the ANCHORED workspace root (scsWorkspaceRoot ·
+// bridgeRoot()'s override chain), never raw process.cwd().
+export function resolveScpsJsonPath(projectRoot: string = scsWorkspaceRoot()): string {
+  return scpsJsonPath(projectRoot);
 }
 
 // ============================================
@@ -113,7 +119,20 @@ export function parseScpRegistry(content: string): ScpRegistry {
   try {
     const parsed = JSON.parse(content);
     if (parsed && Array.isArray(parsed.scps)) {
-      const registry: ScpRegistry = { scps: parsed.scps as ScpRegistryEntry[] };
+      // TOH-12 · BREAK 4 (ABSENT ≠ NULL): a hand-authored or pre-seed entry may lack the
+      // boundBridgePort/managingInstancePid KEYS entirely — `undefined`, which the launch
+      // guards' `=== null` checks never caught. Normalize ONCE at the parse boundary so
+      // every downstream read sees an explicit null for an absent port.
+      const scps = (parsed.scps as ScpRegistryEntry[]).map((s) =>
+        s && typeof s === 'object'
+          ? {
+              ...s,
+              boundBridgePort: s.boundBridgePort === undefined ? null : s.boundBridgePort,
+              managingInstancePid: s.managingInstancePid === undefined ? null : s.managingInstancePid,
+            }
+          : s,
+      );
+      const registry: ScpRegistry = { scps };
       // MD-ARC+C · carry the archived ledger opaquely (never reconstructed away).
       if (Array.isArray(parsed.archivedScps)) registry.archivedScps = parsed.archivedScps;
       return registry;
@@ -132,7 +151,7 @@ export function parseScpRegistry(content: string): ScpRegistry {
  * Reads SCPs.json from disk. Returns empty registry on missing file or any
  * parse/IO error. NEVER throws.
  */
-export function readScpRegistry(projectRoot: string = process.cwd()): ScpRegistry {
+export function readScpRegistry(projectRoot: string = scsWorkspaceRoot()): ScpRegistry {
   const scpsPath = resolveScpsJsonPath(projectRoot);
   if (!existsSync(scpsPath)) {
     return { scps: [] };
@@ -155,7 +174,7 @@ export function readScpRegistry(projectRoot: string = process.cwd()): ScpRegistr
  */
 export function writeScpRegistry(
   registry: ScpRegistry,
-  projectRoot: string = process.cwd(),
+  projectRoot: string = scsWorkspaceRoot(),
 ): void {
   const scpsPath = resolveScpsJsonPath(projectRoot);
   const parentDir = path.dirname(scpsPath);
@@ -189,6 +208,15 @@ export function appendScpEntry(registry: ScpRegistry, entry: ScpRegistryEntry): 
 /**
  * Returns a new registry with the named entry's status (and optional pid/port)
  * updated. No-op if no match.
+ *
+ * TOH-12 · BREAK 3 (THE UNGUARDED OVERWRITE · the Sovereignty gate): the port
+ * parameter is a FIRST-ASSIGNMENT channel only. A port lands iff the entry's
+ * boundBridgePort is currently null/absent (discovery-at-induction — the worktree
+ * add's fresh-entry stamp). Once an SCP holds a port, that port is its sovereign
+ * identity (localStorage is scoped by scheme+host+PORT); a status update passing a
+ * DIFFERENT port is refused — the existing port is kept. Explicit reassignment,
+ * when it ever exists, must be its own recorded act (SOV-3), never a side effect
+ * of a status write.
  */
 export function updateScpStatus(
   registry: ScpRegistry,
@@ -200,11 +228,15 @@ export function updateScpStatus(
   const idx = registry.scps.findIndex((s) => s.name === name);
   if (idx < 0) return registry;
   const scps = registry.scps.slice();
+  const existingPort = scps[idx].boundBridgePort;
   scps[idx] = {
     ...scps[idx],
     status,
     managingInstancePid: pid !== undefined ? pid : scps[idx].managingInstancePid,
-    boundBridgePort: port !== undefined ? port : scps[idx].boundBridgePort,
+    boundBridgePort:
+      port !== undefined && (existingPort === null || existingPort === undefined)
+        ? port
+        : existingPort ?? null,
   };
   return { ...registry, scps };
 }
@@ -262,8 +294,8 @@ export const SCP_PORT_RANGE_END = 7799;
 
 /**
  * Returns the first port in [start, end] whose PORT PAIR is NOT currently bound
- * to a SCPs.json entry. Falls back to start if all are taken. NOTE: this does
- * not perform actual socket-bind probing — that's the spawn's responsibility.
+ * to a SCPs.json entry — LIVE OR ARCHIVED. NOTE: this does not perform actual
+ * socket-bind probing — that's the spawn's responsibility.
  *
  * MD-B · THE PORT-PAIR LAW (the PortableExpanse EADDRINUSE crash): every SCP
  * binds TWO sockets — its assigned port AND the REFLECTED server at port + 1
@@ -272,6 +304,20 @@ export const SCP_PORT_RANGE_END = 7799;
  * a nodemon restart on either side re-enters the race). The allocator therefore
  * (a) treats every registered port as consuming {p, p+1}, and (b) strides by 2
  * so pairs never interleave.
+ *
+ * TOH-12 · BREAK 1 (THE SILENT RECLAIM · SOV-3): sovereignty is PERMANENT, not
+ * merely current. localStorage is scoped by scheme+host+PORT, so an archived
+ * SCP's port still names that SCP's entire browser store — recycling it hands
+ * the next SCP the prior SCP's store (this FIRED once: archived PortableExpanse
+ * held 7702 before live Stratithon received it). The used-set therefore spans
+ * scps[] ∪ archivedScps[]: an archived port stays RESERVED, released only by an
+ * explicit recorded act (which does not exist yet — deliberately), never by the
+ * accident of archival. archivedScps is opaque on the CLI side (MD-ARC+C), so
+ * ports are extracted defensively.
+ *
+ * Exhaustion now THROWS (`scp-port-range-exhausted`) instead of silently
+ * returning `start` — the old fallback handed back an OCCUPIED port, which is
+ * exactly the collision class this mend removes.
  */
 export function pickPortFromRegistry(
   registry: ScpRegistry,
@@ -279,17 +325,98 @@ export function pickPortFromRegistry(
   end: number = SCP_PORT_RANGE_END,
 ): number {
   const used = new Set<number>();
-  for (const s of registry.scps) {
-    const p = s.boundBridgePort;
-    if (p !== null && p !== undefined) {
+  const reserve = (p: unknown): void => {
+    if (typeof p === 'number' && Number.isFinite(p)) {
       used.add(p);
       used.add(p + 1); // the reflected server's socket
     }
+  };
+  for (const s of registry.scps) {
+    reserve(s.boundBridgePort);
+  }
+  for (const a of registry.archivedScps ?? []) {
+    reserve((a as { boundBridgePort?: unknown } | null)?.boundBridgePort);
   }
   for (let p = start; p <= end - 1; p += 2) {
     if (!used.has(p) && !used.has(p + 1)) return p;
   }
-  return start;
+  throw new Error(
+    `scp-port-range-exhausted: no free port pair in [${start},${end}] across live+archived entries`,
+  );
+}
+
+// ============================================
+// TOH-12 · THE PORT SOVEREIGNTY ARBITER (BREAK 5 · SOV-1/2/3)
+// ============================================
+
+export interface ScpPortSovereigntyViolation {
+  invariant: 'SOV-1' | 'SOV-2';
+  detail: string;
+  names: string[];
+}
+
+/**
+ * Returns { p, p+1 } for a numeric port, honoring the PORT-PAIR LAW; empty for
+ * null/absent. Shared by every sovereignty predicate so the pair math never forks.
+ */
+export function scpPortPair(port: unknown): number[] {
+  return typeof port === 'number' && Number.isFinite(port) ? [port, port + 1] : [];
+}
+
+/**
+ * THE SOVEREIGNTY INVARIANT, as a checkable statement (never throws · REPORTS):
+ *   SOV-1 · no two entries across scps[] ∪ archivedScps[] hold overlapping
+ *           {p, p+1} pairs. (The live ledger already carries ONE historical
+ *           violation — archived PortableExpanse and live Stratithon both at
+ *           7702, the recorded silent-reclaim event — so this is a reporter
+ *           everywhere and a BLOCKER only at the mutation gates: allocation
+ *           (pickPortFromRegistry's union), reinstate, launch.)
+ *   SOV-2 · no registered scps[] entry has a null/absent port (post-parse
+ *           normalization, absent reads as null).
+ *   SOV-3 · reclamation is an explicit recorded act, never a default — enforced
+ *           structurally by the allocator's live ∪ archived used-set; no code
+ *           path releases an archived port today, by design.
+ */
+export function findScpPortSovereigntyViolations(
+  registry: ScpRegistry,
+): ScpPortSovereigntyViolation[] {
+  const violations: ScpPortSovereigntyViolation[] = [];
+  type Row = { name: string; port: unknown; archived: boolean };
+  const rows: Row[] = [
+    ...registry.scps.map((s) => ({ name: s.name, port: s.boundBridgePort, archived: false })),
+    ...(registry.archivedScps ?? []).map((a) => {
+      const rec = a as { name?: unknown; boundBridgePort?: unknown } | null;
+      return {
+        name: typeof rec?.name === 'string' ? rec.name : '(unnamed-archived)',
+        port: rec?.boundBridgePort,
+        archived: true,
+      };
+    }),
+  ];
+  for (let i = 0; i < rows.length; i += 1) {
+    const a = scpPortPair(rows[i].port);
+    if (a.length === 0) continue;
+    for (let j = i + 1; j < rows.length; j += 1) {
+      const b = scpPortPair(rows[j].port);
+      if (b.some((p) => a.includes(p))) {
+        violations.push({
+          invariant: 'SOV-1',
+          detail: `port pair collision: ${rows[i].name}${rows[i].archived ? ' (archived)' : ''} {${a.join(',')}} ∩ ${rows[j].name}${rows[j].archived ? ' (archived)' : ''} {${b.join(',')}}`,
+          names: [rows[i].name, rows[j].name],
+        });
+      }
+    }
+  }
+  for (const s of registry.scps) {
+    if (s.boundBridgePort === null || s.boundBridgePort === undefined) {
+      violations.push({
+        invariant: 'SOV-2',
+        detail: `registered entry '${s.name}' has no boundBridgePort`,
+        names: [s.name],
+      });
+    }
+  }
+  return violations;
 }
 
 // ============================================
@@ -307,7 +434,7 @@ export function pickPortFromRegistry(
  * template on disk. Guard (a) is idempotent — re-runs on every bridge boot.
  */
 export function upsertTemplateCitizen(
-  projectRoot: string = process.cwd(),
+  projectRoot: string = scsWorkspaceRoot(),
 ): void {
   const templateSCPDir = path.resolve(projectRoot, 'Cascades', 'scps', 'template', 'SCP');
   if (!existsSync(templateSCPDir)) return;
@@ -323,12 +450,30 @@ export function upsertTemplateCitizen(
   // citizenship fields filled (never overwriting a user-set false — only absent fields).
   const existing = rawRegistry.scps.find((s) => s.name === 'template');
   if (existing) {
+    // TOH-12 · BREAK 4: the C430 hand-repaired entry pre-existed the seed, so the
+    // create-branch's port allocation never ran and the field-fill silently skipped
+    // it — the live registry carried template with the port KEY ENTIRELY ABSENT.
+    // An absent/null port now fills exactly like the other citizenship fields.
+    const portMissing =
+      existing.boundBridgePort === null || existing.boundBridgePort === undefined;
     const needsFill =
       existing.autoLaunch === undefined ||
       existing.system === undefined ||
       !existing.path ||
-      !existing.conceptName;
+      !existing.conceptName ||
+      portMissing;
     if (needsFill) {
+      // Boot-safety: allocation can throw on range exhaustion — the bridge boot
+      // must never die on the template seed. On failure the port stays null and
+      // the fill still lands the other fields.
+      let filledPort: number | null = null;
+      if (portMissing) {
+        try {
+          filledPort = pickPortFromRegistry(rawRegistry);
+        } catch {
+          filledPort = null;
+        }
+      }
       const filled = rawRegistry.scps.map((s) =>
         s.name === 'template'
           ? {
@@ -337,6 +482,10 @@ export function upsertTemplateCitizen(
               path: s.path || 'Cascades/scps/template/SCP',
               autoLaunch: s.autoLaunch === undefined ? true : s.autoLaunch,
               system: s.system === undefined ? true : s.system,
+              boundBridgePort:
+                s.boundBridgePort === null || s.boundBridgePort === undefined
+                  ? filledPort
+                  : s.boundBridgePort,
             }
           : s,
       );
@@ -345,7 +494,13 @@ export function upsertTemplateCitizen(
     return;
   }
 
-  const port = pickPortFromRegistry(rawRegistry);
+  // Boot-safety twin of the field-fill branch: exhaustion must not kill the boot.
+  let port: number | null = null;
+  try {
+    port = pickPortFromRegistry(rawRegistry);
+  } catch {
+    port = null;
+  }
   const entry: ScpRegistryEntry = {
     name: 'template',
     conceptName: 'template',

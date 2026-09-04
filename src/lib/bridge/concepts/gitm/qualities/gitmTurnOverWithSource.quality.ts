@@ -35,6 +35,11 @@ import {
   strategyData_muxifyData,
   type Concept,
 } from 'stratimux';
+// TOH-10 · step 5 · the stall's OPENING BRACKET — the only stamp that exists before the
+// child speaks. Without it the pre-build stall (97 percent of a 7-minute turn-over) has no
+// start time, and the timeline reads as a slow build rather than a starving machine.
+import { recordScpRestartSignal } from '../../../scpBootTiming.model';
+import { askScpGracefulExit } from '../../../scpGracefulExitAsk.model';
 import { writeFileSync, existsSync, lstatSync, realpathSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { execSync } from 'node:child_process';
@@ -719,6 +724,17 @@ export const gitmTurnOverWithSource = createQualityCardWithPayload<
       log('gitm.turnover.field-written', { target: 'gitm.json-state', source });
       let writeOk = true;
       let writeErr = '';
+      // THE OPENING BRACKET, stamped BEFORE the write so the clock starts at the decision, not at
+      // the filesystem's convenience. The leg is named so a stall can be attributed to a leg.
+      recordScpRestartSignal(turnOverTargetScpName, `gitm-turn-over-${source}`);
+      // C992 · STEP 5 · THE GRACEFUL ASK — issued AFTER the timing stamp above (so its latency
+      // stays VISIBLE to the 7-second instrument) and BEFORE the write below (so the SCP begins
+      // releasing during nodemon's detection window, which is otherwise dead time).
+      //
+      // FIRE-AND-FORGET BY RULE. It returns immediately and CANNOT reject, so the write on the
+      // next line is unconditional STRUCTURALLY, not by a guard someone could later 'simplify'
+      // away. That is the C980 invariant made load-bearing instead of remembered.
+      askScpGracefulExit(opCwd, `gitm-turn-over-${source}`);
       try {
         writeFileSync(
           resolve(opCwd, '.bridge-restart.json'),

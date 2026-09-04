@@ -55,6 +55,7 @@ import {
   type ScpRegistry,
 } from './scpPersistence';
 import { ensureNestedGitStructure } from '../bridge/gitmNestedMaintain';
+import { scsWorkspaceRoot } from '../bridge/paths';
 import { SCP_CONFIG_FILENAME } from '../bridge/scpConfig.model';
 import { getBridgeMuxameter } from '../bridge/bridgeVersion';
 // MB-W1 · THE URL PRIMITIVE · performClone owns the dual-path clone (file:// → fs cp,
@@ -678,7 +679,8 @@ export function resolveBundledTemplatePath(projectRoot?: string): string {
     // __dirname unavailable in some bundler contexts · fall through
   }
   // 3. Registry lookup (Template Citizenship · demoted from authoritative to fallback)
-  const root = projectRoot ?? process.cwd();
+  // TOH-12 · BREAK 2: the fallback root is the anchored workspace root, not raw cwd.
+  const root = projectRoot ?? scsWorkspaceRoot();
   try {
     const registry = readScpRegistry(root);
     const templateEntry = registry.scps.find((s) => s.name === 'template');

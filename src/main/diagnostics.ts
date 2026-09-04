@@ -17,6 +17,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { app } from 'electron';
 import { capLogFile } from '../lib/bridge/logCap';
+import { workspaceBridgeDir } from '../lib/bridge/paths';
+import { environmentSegment } from '../lib/bridge/workspaceSocket.model';
 
 function getDiagnosticLogPath(): string {
   // C934 · THE SINK LEAVES THE PACKAGE — app.getAppPath() under a GLOBAL install is the npm
@@ -26,7 +28,9 @@ function getDiagnosticLogPath(): string {
   // singleton and startRenderModeWatch trust), beside the CLI's debug.json. dev:self keeps
   // its DEV-repo sink (cwd = the repo there).
   const projectRoot = process.cwd();
-  const dir = path.join(projectRoot, 'Cascades', 'Bridge');
+  // C1080 · logs write by the PROVIDED name (the environment segment); no name = the conventional root write.
+  // Before this, every Electron wrote the ROOT electron-debug.json and a named bridge's events were misattributed (C1079).
+  const dir = path.join(workspaceBridgeDir(projectRoot), environmentSegment());
   try {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });

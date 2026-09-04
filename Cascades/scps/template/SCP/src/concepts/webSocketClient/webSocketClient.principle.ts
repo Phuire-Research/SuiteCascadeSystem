@@ -25,7 +25,7 @@ import { validateAndRecreateAction } from '../../model/validateAction.model';
 // shared source (gitmTurnover.model). The B button (GitmTurnOverBButton.vue) writes the
 // SAME GITM_TURNOVER_KEY this close handler reads — byte-identical, never two defs (HAZARD-5).
 import {
-  GITM_TURNOVER_KEY,
+  clearGitmTurnoverProgress,
   readGitmTurnoverProgress,
 } from '../../model/gitmTurnover.model';
 
@@ -430,7 +430,8 @@ export const webSocketClientPrinciple: WebSocketClientPrinciple = ({
         if (typeof window !== 'undefined' && window.localStorage) {
           const staleProgress = readGitmTurnoverProgress();
           if (staleProgress && staleProgress.deadline < Date.now()) {
-            window.localStorage.removeItem(GITM_TURNOVER_KEY);
+            // TOH-12 · route through the model's clear (scoped + legacy keys both removed).
+            clearGitmTurnoverProgress();
             console.log('[WebSocket] Cleared stale gitm_turnover_in_progress flag (expired)');
           } else if (staleProgress) {
             // AUTO-CONFIRM B (Cycle 267 · user design — the Confirm gesture is UNNECESSARY):
@@ -461,7 +462,8 @@ export const webSocketClientPrinciple: WebSocketClientPrinciple = ({
                 })
                 .catch((err) => console.warn('[WebSocket] AUTO-CONFIRM B failed:', err));
             }
-            window.localStorage.removeItem(GITM_TURNOVER_KEY);
+            // TOH-12 · route through the model's clear (scoped + legacy keys both removed).
+            clearGitmTurnoverProgress();
             console.log(
               '[WebSocket] Turn-over carrier cleared on successful boot · source=',
               staleProgress.source,

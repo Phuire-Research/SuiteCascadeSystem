@@ -300,7 +300,7 @@ export type ScsBridgeController = {
   // THE SOVEREIGN SPAWN BINDING · scpName omitted/null → the controller resolves the OWN
   // citizen (/scp-config · cached) before threading — the C857 first-found probe never fires
   // from a page-side spawn.
-  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
+  triggerSpawnSuite8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string, model?: string | null) => void;
   // C373 · THE RENAME-PROOF ALIAS · same signature as triggerSpawnSuite8Session; ONE implementation,
   // two names. The `suite8:page` pipeline recursively find-replaces `Suite8`→`{Domain}` /
   // `suite8`→`{domainLower}` across EVERY .ts/.vue in the copied concept dir (suite8PageCreate.ts
@@ -310,7 +310,7 @@ export type ScsBridgeController = {
   // has no `Suite8`/`suite8` substring → SURVIVES the rename intact (the proven /s8/ URL-alias idiom).
   // Copied suite8-concept call sites MUST call THIS name; shared surfaces keep triggerSpawnSuite8Session.
   // C386 · fresh (4th arg) rides the same signature — the Forge's Engage passes fresh:true.
-  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string) => void;
+  triggerSpawnS8Session: (suite8Name: string, scpName?: string | null, asWorker?: boolean, fresh?: boolean, manualMode?: boolean, initialDirective?: string, onboard?: boolean, anchor?: boolean, targetSuite8Name?: string, model?: string | null) => void;
   // MD-9 · D-MC-3 · Per-Instance Model Control · set the model the NEXT spawn (general anor S8)
   // pins. Persistent selection the Session Management dropdown owns; both spawn principles read
   // pendingSpawnModel FRESH at fire-time. undefined = clear the pin (spawn → global default).
@@ -375,6 +375,15 @@ export type ScsBridgeController = {
   // here. POSTs scs_set_anchor_session via /mcp tools/call → scsBridgeSetSessionAnchor
   // Quality → setSessionAnchor(sessionId). IDTND: sessionId is the ULID lookup key.
   triggerSetAnchor: (sessionId: string) => Promise<{ ok: boolean; error?: string }>;
+  // C1104 · ruling A · the per-session RESUME model write leg. The SessionManager row
+  // picker dispatches here. POSTs scs_set_session_model via /mcp tools/call →
+  // scsBridgeSetSessionModel Quality → setSessionModel(sessionId, model, 'set').
+  // IDTND: sessionId is the ULID lookup key. DISTINCT from setSpawnModel, which pins the
+  // NEXT spawn's model in client state and never touches an existing entry.
+  triggerSetSessionModel: (
+    sessionId: string,
+    model: string,
+  ) => Promise<{ ok: boolean; error?: string }>;
   // SAC.1 · ARFSP · "Release Anchor" un-anchor write leg. Faithful mirror of
   // triggerSetAnchor. POSTs scs_unset_anchor_session via /mcp tools/call →
   // scsBridgeUnsetSessionAnchor Quality → unsetSessionAnchor(sessionId). IDTND:
@@ -615,6 +624,27 @@ export function createScsBridgeController(): ScsBridgeController {
   // before any SCP is chosen and has no per-SCP env — receives the origin from the SEND itself.
   let cachedScpName: string | null = null;
   let scpNamePromise: Promise<string | null> | null = null;
+  // TOH-8 · BAND B · THE ORIGIN ENDPOINT. The CLI that SPAWNED this SCP, published by our own
+  // server on /scp-config from its spawn env. The C952 root: every gitm action dialed the RAW
+  // `bridgeJson.endpoint`, which an older production build rewrites into the shared bridge.json —
+  // so a Dev-owned SCP sent its Turn Over B to production's /mcp, which owns nothing of it, and
+  // NOTHING HAPPENED (no branch · no stamp · no restart · no trace). This cache is the cure: the
+  // origin travels on the SCP's OWN same-origin endpoint, which no other CLI can overwrite.
+  let cachedOriginEndpoint: string | null = null;
+  let cachedServerBootedAt: number | null = null;
+  /**
+   * TOH-8 · BAND B · resolve the endpoint of the CLI THAT OWNS THIS SCP.
+   * Order: the published origin (our own /scp-config · un-erasable by another CLI) → the shared
+   * bridge.json's endpoint (the legacy path · correct ONLY when one CLI runs) → null.
+   * `resolveScpName()` already performs (and caches) the /scp-config read, so awaiting it here
+   * populates the origin cache on the same single fetch.
+   */
+  const resolveOriginEndpointForActions = async (fallback: string | null): Promise<string | null> => {
+    if (cachedOriginEndpoint === null) await resolveScpName();
+    if (cachedOriginEndpoint !== null && cachedOriginEndpoint.length > 0) return cachedOriginEndpoint;
+    return fallback;
+  };
+
   const resolveScpName = async (): Promise<string | null> => {
     if (cachedScpName !== null) return cachedScpName;
     if (scpNamePromise === null) {
@@ -627,6 +657,8 @@ export function createScsBridgeController(): ScsBridgeController {
       scpNamePromise = loadScpConfig()
         .then((cfg) => {
           cachedScpName = cfg?.scpName ?? null;
+          cachedOriginEndpoint = cfg?.originEndpoint ?? null;
+          cachedServerBootedAt = cfg?.bootedAt ?? null;
           if (cachedScpName === null) scpNamePromise = null; // clear so a later call retries
           return cachedScpName;
         })
@@ -761,7 +793,7 @@ export function createScsBridgeController(): ScsBridgeController {
   // is reserved for a future SCP-bound spawn lane (C1 spawns Template SCP default).
   // D-UP · manualMode (5th param) = fresh-worker spawn WITHOUT the auto-permission marker —
   // approval gate intact + the Stand By overlay on the primed session (the Gitm Resolver's flag).
-  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true, targetSuite8Name?: string): void => {
+  const triggerSpawnSuite8Session = (suite8Name: string, scpName?: string | null, asWorker = false, fresh = false, manualMode = false, initialDirective?: string, onboard = true, anchor = true, targetSuite8Name?: string, model?: string | null): void => {
     console.log('[ScsBridgeController] triggerSpawnSuite8Session · suite8Name=', suite8Name, '· scpName=', scpName ?? null, '· asWorker=', asWorker, '· fresh=', fresh, '· manualMode=', manualMode, '· initialDirectiveChars=', initialDirective?.length ?? 0, '· onboard=', onboard, '· anchor=', anchor);
     // C375 · THE ENGAGE AWAIT HARDENING · the S4 prescription — one loud line naming the Muxium state
     // BEFORE the try, so the relay pins whether the Engage reached a LIVE controller or a detached one.
@@ -807,6 +839,10 @@ export function createScsBridgeController(): ScsBridgeController {
           // EF-3′ · THE TARGET S8 THREAD · thread ONLY when supplied (→ the InvokeSpawnSuite8
           // principle → MCP targetSuite8Name → the bridge persists it on the registry entry).
           ...(targetSuite8Name ? { targetSuite8Name } : {}),
+          // RM-2 · THE ANCHOR MODEL ROW · thread ONLY when supplied (→ pendingSpawnSuite8Model → the
+          // InvokeSpawnSuite8 principle → MCP model). null = bypass the page-wide pin; a string = this
+          // spawn's model. Omitted → today's pendingSpawnModel pin behaviour.
+          ...(model !== undefined ? { model } : {}),
         });
         mux.dispatch(action);
         console.log('[ScsBridgeController] triggerSpawnSuite8Session dispatched · trigger field set · asWorker=', asWorker, '· scpName=', sovereignScpName, '· fresh=', fresh, '· anchor=', anchor);
@@ -1105,7 +1141,9 @@ export function createScsBridgeController(): ScsBridgeController {
     // the catch below returns { ok:false } → the menu re-enables and offers a retry.
     const SEND_TIMEOUT_MS = 8000;
     const timeoutId = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     // Per-SCP-Identity-Config · FKIS Origin · resolve THIS SCP's name (cached after first read) and
     // carry it as originScpName. The bridge guard is env-FIRST (agents/dev:self stay server-authoritative
     // & unspoofable) — this payload field only fills the UI-send gap where the shared workspace bridge
@@ -1201,7 +1239,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1248,7 +1288,9 @@ export function createScsBridgeController(): ScsBridgeController {
       console.warn('[SORD-TRACE] triggerGitmTurnOver BLOCKED · bridgeJson null/no-endpoint · bj=', bj);
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     console.log('[SORD-TRACE] triggerGitmTurnOver FETCHING', url, '· source=', source);
     // MD-C M2 · THE ORIGIN STAMP (see triggerGitmMean) — the turn-over routes to THE CALLER.
     const turnOverOrigin = (await resolveScpName()) ?? undefined;
@@ -1297,7 +1339,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     // MD-C M2 · THE ORIGIN STAMP — every gitm action carries THIS SCP's identity so the
     // bridge's resolveGitmTargetCwd routes the op (and its slice/rail writes) to THE CALLER,
     // never the active pointer (the FKIS originScpName precedent · the cached /scp-config name).
@@ -1367,7 +1411,9 @@ export function createScsBridgeController(): ScsBridgeController {
     const abort = new AbortController();
     const PAGE_CREATE_TIMEOUT_MS = 30000;
     const timeoutId = setTimeout(() => abort.abort(), PAGE_CREATE_TIMEOUT_MS);
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1460,7 +1506,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1492,6 +1540,63 @@ export function createScsBridgeController(): ScsBridgeController {
     }
   };
 
+  // C1104 · ruling A · the per-session RESUME model write leg. Faithful mirror of
+  // triggerSetAnchor's /mcp tools/call fetch shape (C1084 origin resolve → the CLI that
+  // OWNS this SCP, never the shared rendezvous). IDTND: sessionId is the ULID lookup key,
+  // passed verbatim. ACK-only — no parse; the sessions.json json-watcher relays the write
+  // back and repaints the row (no optimistic local mutation).
+  const triggerSetSessionModel = async (
+    sessionId: string,
+    model: string,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    console.log(
+      '[SCS-Bridge SET-MODEL-Vue] triggerSetSessionModel entry · sessionId=',
+      sessionId,
+      '· model=',
+      model,
+    );
+    if (typeof sessionId !== 'string' || sessionId.length === 0) {
+      return { ok: false, error: 'empty sessionId' };
+    }
+    if (typeof model !== 'string' || model.length === 0) {
+      return { ok: false, error: 'empty model' };
+    }
+    const bj = bridgeJson.value;
+    if (!bj || !bj.endpoint) {
+      return { ok: false, error: 'bridge endpoint not available' };
+    }
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
+    const body = {
+      jsonrpc: '2.0',
+      id: Date.now(),
+      method: 'tools/call',
+      params: {
+        name: 'scs_set_session_model',
+        arguments: { sessionId, model },
+      },
+    };
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+        },
+        body: JSON.stringify(body),
+        keepalive: true,
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        return { ok: false, error: `HTTP ${res.status} · ${errText.slice(0, 200)}` };
+      }
+      return { ok: true };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[SCS-Bridge SET-MODEL-Vue] triggerSetSessionModel failed:', message);
+      return { ok: false, error: message };
+    }
+  };
+
   // SAC.1 · ARFSP · "Release Anchor" un-anchor write leg. Faithful mirror of
   // triggerSetAnchor's /mcp tools/call fetch shape (same Bridge process · reads
   // bridgeJson.endpoint). IDTND: sessionId is the ULID lookup key (passed verbatim,
@@ -1512,7 +1617,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1560,7 +1667,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1607,7 +1716,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1823,7 +1934,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1869,7 +1982,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     const body = {
       jsonrpc: '2.0',
       id: Date.now(),
@@ -1924,7 +2039,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     // Per-SCP-Identity-Config · FKIS Origin · carry THIS SCP's name (cached · GET /scp-config). The
     // bridge guard is env-FIRST; this fills the UI-send gap where the shared workspace bridge muxium
     // has no per-SCP env. Mirrors triggerSendMessage's origin carry.
@@ -1975,7 +2092,9 @@ export function createScsBridgeController(): ScsBridgeController {
     if (!bj || !bj.endpoint) {
       return { ok: false, error: 'bridge endpoint not available' };
     }
-    const url = `${bj.endpoint}/mcp`;
+    // TOH-8 · BAND B · dial THE CLI THAT OWNS THIS SCP (published on our own /scp-config from the
+    // spawn env), falling back to the shared bridge.json only when no origin was published.
+    const url = `${(await resolveOriginEndpointForActions(bj.endpoint)) ?? bj.endpoint}/mcp`;
     // C404 · the origin lane at the source. The Cadmium sweep PREDATES the inducted SCP name
     // (scp.config.json arrived later) — the enqueue never threaded it, so every relayed send
     // arrived at the bridge origin-less (dropped before the C403/C404 downgrades; now
@@ -2290,6 +2409,9 @@ export function createScsBridgeController(): ScsBridgeController {
     triggerSpawnS8Session,
     // MD-9 · D-MC-3 · Per-Instance Model Control · dropdown → pendingSpawnModel state.
     setSpawnModel,
+    // C1104 · ruling A · per-session RESUME model → entry.model (a DIFFERENT lane from
+    // setSpawnModel: this writes an EXISTING session, that pins the NEXT spawn).
+    triggerSetSessionModel,
     triggerEngageSession,
     triggerSetTerminalRenderMode,
     triggerSetScpRenderMode,

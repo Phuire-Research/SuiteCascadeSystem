@@ -64,7 +64,8 @@ import { isWorkingBranchPer } from '../gitm/gitm.type';
 // STRATIPUNK TURN-OVER EXPRESSIONS (Pewter Tessera · C637) — the SPARKS register (RED · the
 // Compromise) mounted at the hard-turn-over trigger so the standby wears its honest color from the
 // click (the Sword-B button mounts SWORD at ITS click the same way).
-import { showBridgeStandby } from '../webSocketClient/model/bridgeStandbyOverlay.model';
+import { showBridgeStandby, hideBridgeStandby } from '../webSocketClient/model/bridgeStandbyOverlay.model';
+import { raiseSurface, lowerSurface } from '../../model/surfaceSupremacy.model';
 import { writeGitmTurnoverProgress, GITM_TURNOVER_DEADLINE_MS } from '../../model/gitmTurnover.model';
 // E13 fix · Cycle 160 R3 · TaskBar + popup hosted here (client-hydrated tree)
 // Shell.vue is SSR-only; all interactive Vue bindings dead there per R7 Rose diagnosis
@@ -368,6 +369,31 @@ function deactivateSidebarBarrel(): void {
 // (below) checks client-visible gitm.json (dirty ANOR on a b/* branch · a working B present) and
 // opens this modal INSTEAD of dispatching; Confirm runs the two-call safeguard handshake.
 const turnOverAConfirmOpen = ref<boolean>(false);
+
+// C1006 · THE SUPREMACY SEAM. The modal has TWO raise paths — the dock gesture AND a state-driven
+// `watch()` on pendingConfirm with no click at all — which is why a cure at the gesture could never
+// hold. BOTH now go through here, and the registry cancels whatever holds the slot.
+// TIER 'guarded': acting on a recovery state is the POINT of a recovery state, so the modal MAY
+// supersede the standby. What the registry forbids is the reverse class — a 'utility' surface
+// burying a live escape hatch, which is the wound that produced this.
+const TURNOVER_A_SURFACE_ID = 'gitm-turnover-a-confirm';
+function openTurnOverAConfirm(via: string): void {
+  const granted = raiseSurface(TURNOVER_A_SURFACE_ID, 'guarded', () => {
+    // ONLY the ref. The registry has already cleared its slot before invoking this, so calling
+    // closeTurnOverAConfirm() here would re-enter lowerSurface for a slot we no longer hold.
+    turnOverAConfirmOpen.value = false;
+  });
+  if (!granted) {
+    // A declined raise must be HONOURED, not painted anyway — otherwise the registry is decoration.
+    console.warn('[IslandWrapper] Turn Over A confirm DECLINED by the surface registry · via=', via);
+    return;
+  }
+  turnOverAConfirmOpen.value = true;
+}
+function closeTurnOverAConfirm(): void {
+  turnOverAConfirmOpen.value = false;
+  lowerSurface(TURNOVER_A_SURFACE_ID);
+}
 // In-flight latch — TRUE while the confirm handshake owns the token round, so the fallback watcher
 // (which also sees the call-1 minted token) does NOT re-open the modal mid-handshake.
 let turnOverAConfirmInFlight = false;
@@ -487,6 +513,20 @@ function handleTaskBarButtonClicked(id: string): void {
     // (mode 'turn-over' · class 'sparks'); the blind hard-restart tears the WS down and the
     // close-handler re-shows the plain 'turn-over' overlay (SHIELD-derived) across the respawn.
     showBridgeStandby('turn-over', null, 'sparks');
+    // C961 · THE HARD LEG STAMPS ITS OWN REGISTER. It wrote NO carrier at all, so a turn-over
+    // left behind by an earlier A/B round could re-dress this hard restart as SHIELD or SWORD on
+    // the WS-close re-show. Writing a fresh SPARKS carrier makes all four legs symmetric — no
+    // leg depends on what another leg left in localStorage. `overlayVariant` is deliberately
+    // OMITTED: the hard restart has no A/B seat, so the close handler's 'turn-over' fallback is
+    // the correct mode. `scpName` is likewise omitted and no longer needed — the overlay resolves
+    // its own SCP identity + origin from /scp-config (the C961 self-resolving cure).
+    writeGitmTurnoverProgress({
+      source: 'B',
+      turnClass: 'sparks',
+      deadline: Date.now() + GITM_TURNOVER_DEADLINE_MS,
+      stableA: gitmController.gitmJson.value?.stableBranch ?? '',
+      bridgeEndpoint: scsBridgeController.bridgeJson.value?.endpoint ?? '',
+    });
     scsBridgeController.triggerHardTurnOver();
     return;
   }
@@ -520,8 +560,15 @@ function handleTaskBarButtonClicked(id: string): void {
     // displays) — never the telemetry-tainted dirty flag, never being-on-B (the seat's location
     // does not warrant the confirm round; the bridge D-BN-5 gate mirrors this exactly).
     const hasWorkingChanges = (gj?.changesPrimedOnB ?? 0) > 0;
+    // C1000 · CLEAR THE CURRENT TURN-OVER OVERLAY AT THE GESTURE (the user's law). Placed ABOVE the
+    // fork so it covers BOTH: the carry-panel fork below RETURNS immediately, and used to leave a
+    // stale B standby mounted with the panel rendered over it AND over the dock; the clean fork
+    // then re-shows, and only a fresh mount yields the A register, the A copy, and a counter that
+    // starts at zero (the re-show branch updates copy only for 'b-still-rebuilding' and never
+    // reaches the timer). Take it down at the click; whichever fork runs next builds it true.
+    hideBridgeStandby();
     if (hasWorkingChanges) {
-      turnOverAConfirmOpen.value = true;
+      openTurnOverAConfirm('dock-gesture');
       return;
     }
     // C641 · the A leg mounts SHIELD explicitly at click (the recovery expression arrives at the
@@ -578,18 +625,58 @@ const turnOverAOnWorkingBranch = computed<boolean>(() =>
 
 // Cancel — the Bridge Turn Over is CANCELED; nothing moves (backdrop · ESC · Cancel all land here).
 function handleTurnOverAConfirmCancel(): void {
-  turnOverAConfirmOpen.value = false;
+  closeTurnOverAConfirm();
   console.log('[IslandWrapper] Turn Over A confirmation CANCELED — nothing dispatched');
 }
 
 // Hard Turn Over — THE C302 CONSOLIDATION (Cycle 312) · the modal's ground-reset fork. The blind
 // hard-restart (triggerHardTurnOver · BRTF · no branch switch, no carry) — the app reboots as-is;
 // working changes stay put, NOT carried onto B. Absorbs the retired panel's Hard Turn Over action.
+// C1001 · THE THIRD PATH — carry the working changes into B, then SERVE A.
+// DISTINCT FROM handleTurnOverAConfirmConfirm: that one carries into B and serves B (C791 · SERVE
+// THE CARRY — the app reboots onto B so you see your changes). This one serves A, the stable run,
+// and the observed seat-return brings the checkout back to B once A is proven booted — so A is
+// SERVED but never WORKED ON. That is the whole point: the stability of A is maintained by never
+// standing on it.
+// ONE CALL, NO TOKEN HANDSHAKE: the confirm modal the user just answered IS the confirmation, and
+// this quality carries its own guards (unknown stable · failed carry switch · failed A switch).
+async function handleTurnOverAConfirmCarryServeA(): Promise<void> {
+  closeTurnOverAConfirm();
+  console.log('[IslandWrapper] Turn Over A · CARRY INTO B & SERVE A (the third path)');
+  // SHIELD (C641) — this leg lands on the STABLE, so it wears the recovery register, exactly as the
+  // clean A leg does. Never inherit another leg's expression.
+  showBridgeStandby('shield-a', null, 'shield');
+  writeGitmTurnoverProgress({
+    source: 'A',
+    overlayVariant: 'shield-a',
+    turnClass: 'shield',
+    deadline: Date.now() + GITM_TURNOVER_DEADLINE_MS,
+    stableA: gitmController.gitmJson.value?.stableBranch ?? '',
+    bridgeEndpoint: scsBridgeController.bridgeJson.value?.endpoint ?? '',
+  });
+  const ack = await scsBridgeController.triggerGitmMean(
+    'gitm_carry_to_working_then_serve_stable',
+    {},
+  );
+  if (!ack.ok) {
+    console.error('[IslandWrapper] Carry into B & Serve A ACK failed:', ack.error);
+  }
+}
+
 function handleTurnOverAConfirmHard(): void {
-  turnOverAConfirmOpen.value = false;
+  closeTurnOverAConfirm();
   console.log('[IslandWrapper] Turn Over A · HARD — blind hard-restart (ground reset · no carry)');
   // SPARKS (C637) — the modal's ground-reset fork IS a hard turn-over; wear the RED register.
   showBridgeStandby('turn-over', null, 'sparks');
+  // C961 · the modal's ground-reset fork IS a hard turn-over — it stamps the same SPARKS carrier
+  // as the dock leg above, for the same reason (never inherit another leg's register).
+  writeGitmTurnoverProgress({
+    source: 'B',
+    turnClass: 'sparks',
+    deadline: Date.now() + GITM_TURNOVER_DEADLINE_MS,
+    stableA: gitmController.gitmJson.value?.stableBranch ?? '',
+    bridgeEndpoint: scsBridgeController.bridgeJson.value?.endpoint ?? '',
+  });
   scsBridgeController.triggerHardTurnOver();
 }
 
@@ -598,7 +685,7 @@ function handleTurnOverAConfirmHard(): void {
 // gitmJson.pendingConfirm; a bounded poll reads it back; call 2 carries it to execute the carry +
 // switch. The C300 Seat-Law auto-return then brings the seat home to B once the boot settles.
 async function handleTurnOverAConfirmConfirm(): Promise<void> {
-  turnOverAConfirmOpen.value = false;
+  closeTurnOverAConfirm();
   turnOverAConfirmInFlight = true;
   try {
   // C314 TOKEN-CONSUMPTION FIX — Confirm CONSUMES a HELD pendingConfirm token rather than always
@@ -668,7 +755,8 @@ watch(
       // checking the modal is closed AND no confirm is in flight). The confirm handler closes the
       // modal before call-1, so a token appearing while the modal is closed = a bridge-first hold.
       console.log('[IslandWrapper] bridge held Turn Over A — surfacing confirmation modal (fallback)');
-      turnOverAConfirmOpen.value = true;
+      // THE GESTURE-FREE PATH — state-raised, no click. This is the one C1000 could not reach.
+      openTurnOverAConfirm('pendingConfirm-watch');
     }
   },
 );
@@ -1017,6 +1105,7 @@ defineExpose({
       :changes-count="turnOverAChangesCount"
       :on-working-branch="turnOverAOnWorkingBranch"
       @confirm="handleTurnOverAConfirmConfirm"
+      @carry-serve-a="handleTurnOverAConfirmCarryServeA"
       @hard="handleTurnOverAConfirmHard"
       @cancel="handleTurnOverAConfirmCancel"
     />

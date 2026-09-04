@@ -5,7 +5,8 @@
 // pure READER + reactor, so a manual hand-edit of bridge.json.renderMode live-swaps a terminal
 // (the D3 Lambda · the headless proof before the D4 Settings panel dispatches through it).
 
-import chokidar, { type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
+import { createWatcher } from '../lib/bridge/watcherSingleton.model';
 import { readBridgeMetadata, bridgeMetadataPathPerProject } from '../lib/bridge/bridgeMetadata';
 import { isShaderRenderMode, clampShaderFps } from '../shared/shaderRenderMode';
 import {
@@ -14,7 +15,7 @@ import {
   setActiveScpRenderMode,
   getActiveScpRenderMode,
   setActiveDefaultModel,
-  getActiveDefaultModel,
+  getRecordedBridgeDefaultModel,
   setActiveShaderFps,
   getActiveShaderFps,
 } from './session';
@@ -64,8 +65,12 @@ async function applyFromBridgeJson(bridgeJsonPath: string): Promise<void> {
   // injects (`claude --model <id>`). Loose validation (any non-empty string) — the catalog
   // is advisory; the Settings UI may later add custom IDs/aliases. Applies at the NEXT
   // spawn — running instances keep their model (no live-swap possible).
+  // C1104 · ruling d-A: the field is INFORMATIONAL — the spawn default is derived. The
+  // recorded value is still tracked (diagnostics + the Settings UI read it back); it no
+  // longer steers a spawn, so the comparison is against the RECORDED value, never the
+  // derivation (comparing against the derivation would re-fire on every watch tick).
   const model = meta?.defaultModel;
-  if (typeof model === 'string' && model.length > 0 && model !== getActiveDefaultModel()) {
+  if (typeof model === 'string' && model.length > 0 && model !== getRecordedBridgeDefaultModel()) {
     setActiveDefaultModel(model);
     sdia('defaultModel.watch.applied', { model });
   }
@@ -79,7 +84,12 @@ export function startRenderModeWatch(userCwd: string): void {
     sdia('renderMode.watch.seed-FAIL', { error: String(err) }),
   );
   // awaitWriteFinish absorbs the tmp-file + atomic-rename write so we read the settled file once.
-  watcher = chokidar.watch(bridgeJsonPath, {
+  // C978 · THE OUTLIER, BROUGHT IN. This was the ONE chokidar arm bypassing the workspace fence
+  // (C976 §1) — Electron-main side, so a sweep keyed on `watch(fenceWatchTargets(` could never
+  // have caught it. It now takes the same singleton as every other arm, which both REGISTERS it
+  // for release and FENCES it for the first time. The fence cannot drop this path: bridgeJsonPath
+  // is DERIVED from userCwd two lines above, so it is inside the workspace by construction.
+  watcher = createWatcher('renderModeWatch', bridgeJsonPath, userCwd, {
     ignoreInitial: true,
     awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
   });

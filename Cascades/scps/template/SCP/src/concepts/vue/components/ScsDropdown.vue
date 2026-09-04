@@ -36,9 +36,15 @@ interface DropdownOption {
 interface Props {
   options: DropdownOption[];
   placeholder?: string;
+  /** C1120 · THE FLOATING DRAWER (opt-in). The drawer positions FIXED at the trigger's measured
+   *  viewport rect instead of absolute-within-the-wrap, so it escapes an overflow-clipped ancestor
+   *  (the session row's 9rem `overflow:hidden` ID cell, where the in-flow drawer opened INSIDE the
+   *  clip and never showed — indistinguishable from a native <select> on the offscreen surface).
+   *  Off by default: every existing mount keeps its in-flow drawer byte-for-byte. */
+  floating?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), { placeholder: 'Select…' });
+const props = withDefaults(defineProps<Props>(), { placeholder: 'Select…', floating: false });
 const model = defineModel<string>();
 
 defineOptions({ inheritAttrs: false });
@@ -65,6 +71,15 @@ function onOutside(e: MouseEvent): void {
   }
 }
 
+// C1120 · a FLOATING drawer does not ride its trigger, so any scroll away from under it closes
+// it (attached while OPEN and floating only). The drawer's OWN scroll (a long roster) happens
+// inside the wrap — ignored.
+function onScrollAway(e: Event): void {
+  const wrap = wrapEl.value;
+  if (wrap && e.target instanceof Node && wrap.contains(e.target)) return;
+  close();
+}
+
 function open_(): void {
   if (open.value) return;
   if (typeof window !== 'undefined' && wrapEl.value) {
@@ -73,11 +88,27 @@ function open_(): void {
     const above = rect.top - 12;
     dropUp.value = below < 140 && above > below;
     const space = dropUp.value ? above : below;
-    drawerStyle.value = { maxHeight: `${Math.max(100, Math.min(180, space))}px` };
+    const maxHeight = `${Math.max(100, Math.min(180, space))}px`;
+    // C1120 · floating: viewport-anchored at the measured rect. The 4px gap is baked into the
+    // offset (the class margins zeroed); min-width tracks the trigger because the class's 100%
+    // would resolve against the viewport once fixed.
+    drawerStyle.value = props.floating
+      ? {
+          maxHeight,
+          position: 'fixed',
+          left: `${Math.round(rect.left)}px`,
+          minWidth: `${Math.round(rect.width)}px`,
+          zIndex: '30',
+          ...(dropUp.value
+            ? { top: 'auto', bottom: `${Math.round(window.innerHeight - rect.top + 4)}px`, marginBottom: '0' }
+            : { top: `${Math.round(rect.bottom + 4)}px`, marginTop: '0' }),
+        }
+      : { maxHeight };
   }
   open.value = true;
   if (typeof document !== 'undefined') {
     document.addEventListener('mousedown', onOutside);
+    if (props.floating) document.addEventListener('scroll', onScrollAway, true);
   }
 }
 
@@ -86,6 +117,7 @@ function close(): void {
   open.value = false;
   if (typeof document !== 'undefined') {
     document.removeEventListener('mousedown', onOutside);
+    document.removeEventListener('scroll', onScrollAway, true);
   }
 }
 
@@ -113,6 +145,9 @@ function select(value: string): void {
   model.value = value;
   close();
 }
+
+// C1120 · an unmount while OPEN releases both document listeners (the import stood unused).
+onBeforeUnmount(close);
 </script>
 
 <template>

@@ -76,6 +76,20 @@ How Suites 1-7 operate within the Tessera pipeline:
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it. The eight Design Skills (D1-D8) are
+specified in the **Pewter Tessera Skill Reference** (`Skill.md`); the doors below are the standing procedures that sit beside it
+in `Skills/` — each one a complete procedure this Instance names but does not carry.
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| **Suite Colors** — the SCP's shipped `colors` map (D1 Color Token Architecture, applied) | `Skills/SetColorsViaJson.md` | a Suite Color is set or changed for an SCP — resolve the absolute SCP-rooted `hifiConfig.json` target BEFORE writing; a bare relative path lands outside the SCP and never applies |
+| **Suite Patterns** — the achromatic repeating tiles (D2 Pattern Tile Composition, applied) | `Skills/AddSvgPattern.md` | a pattern is assigned per spectrum via `hifiConfig.json`, or a new tileable achromatic motif enters `PATTERN_LIBRARY` |
+| **StratiPUNK** — the full-screen ceremonial register (D9, extending D1-D8) | `Skills/S-STRATIPUNK/Skill.md` | the SYSTEM itself takes the stage — turn-over, standby, boot, jump; the user is witnessing rather than working |
+
+---
+
 ## Muxonomy Framework
 
 ### The Compositional Measurement Topology

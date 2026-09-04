@@ -39,7 +39,8 @@
  * Citation: STRATIMUX-REFERENCE.md "🔄 Synchronizing Principle Pattern with setStage".
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import { appendFileSync, mkdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type {
@@ -184,7 +185,7 @@ export const graphiteScribeLocalityWatchPrinciple: GraphiteScribeLocalityWatchPr
           try {
             const libPath = resolveSyncLibraryPath(LOCALITY_DESIGNATION);
             const libBasename = path.basename(libPath);
-            libraryWatcher = chokidarWatch(path.dirname(libPath), {
+            libraryWatcher = createWatcher('graphiteScribeLocalityWatch#1', path.dirname(libPath), {
               persistent: true,
               ignoreInitial: true,
               depth: 0,

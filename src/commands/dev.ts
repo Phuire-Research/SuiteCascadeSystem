@@ -38,13 +38,14 @@ import { capLogFile } from '../lib/bridge/logCap';
 import { readScpConfigName } from '../lib/bridge/scpConfig.model';
 import { sendElectronQuitViaSocket, spawnElectronWindowForUrl } from '../lib/bridge/electronWindowSpawn';
 import { startAnimatedTui } from '../lib/tui/animatedTui';
+import { workspaceBridgeDir, scpsJsonBasename } from '../lib/bridge/paths';
 
 let devDebugLogPath: string | null = null;
 let templateDebugLogPath: string | null = null;
 
 function initDevDebugLog(): void {
   if (!isDebugEnabled()) return;
-  const dir = join(process.cwd(), 'Cascades', 'Bridge');
+  const dir = workspaceBridgeDir(process.cwd());
   mkdirSync(dir, { recursive: true });
   devDebugLogPath = join(dir, 'debug.json');
   templateDebugLogPath = join(dir, 'template-debug.json');
@@ -253,7 +254,7 @@ function scaffoldBridgeStateFiles(scpRoot: string): void {
   // name). It is a gitignored runtime artifact (untracked), so fresh clones no longer
   // receive it from git — seed an empty registry if absent so the upsert has a file to
   // write into. Idempotent: existsSync gate preserves a populated registry.
-  const scpsJsonPath = join(cascadesDir, 'SCPs.json');
+  const scpsJsonPath = join(cascadesDir, scpsJsonBasename());
   if (!existsSync(scpsJsonPath)) {
     writeFileSync(scpsJsonPath, JSON.stringify({ scps: [] }, null, 2) + '\n');
     process.stdout.write('[SCS dev] Scaffolded SCPs.json (empty registry)\n');
@@ -505,7 +506,7 @@ async function runDevMode(options: DevOptions): Promise<void> {
   // with cycle/Onyx state) is what the daemon's bridge.metadata.cascade-read
   // resolves (installState=unknown → safe-fallback complete → normal menu).
   process.stdout.write('[SCS dev] Starting animated TUI (boots SCS-Bridge daemon at junction · cwd=SCS root) ...\n');
-  appendDevDebug('dev-orchestrator', `Starting TUI · cwd=${process.cwd()} · bridge junction at ${join(process.cwd(), 'Cascades', 'Bridge')}`);
+  appendDevDebug('dev-orchestrator', `Starting TUI · cwd=${process.cwd()} · bridge junction at ${workspaceBridgeDir(process.cwd())}`);
   await startAnimatedTui();
 }
 

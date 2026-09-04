@@ -1,9 +1,11 @@
 import { emitKeypressEvents } from 'node:readline';
+import { createFileWatcher } from './watcherSingleton.model';
 import { watchFile, unwatchFile, existsSync } from 'node:fs';
 import { basename } from 'node:path';
 import { createSession, launchInformative } from './manager';
-import { listSessions, removeSession, setSessionScsLabel } from './registry';
+import { listSessions, removeSession, setSessionScsLabel, setSessionModel } from './registry';
 import { registryPath } from './paths';
+import { AVAILABLE_MODELS, DEFAULT_MODEL, modelLabel } from '../../shared/modelCatalog.model';
 import { rgbToAnsi, SUITE_COLORS, suiteColorForScp } from '../tui/colors';
 import { detectTerminalCaps } from '../tui/terminalCaps';
 import { getBridgeVersion } from './bridgeVersion';
@@ -146,6 +148,10 @@ export type MenuState = {
   // Diamond Q: rename modal — when defined, all keypresses route through the rename branch
   // until Enter (commit) or Esc (cancel) exits. Buffer is capped at 32 chars at keypress level.
   renameMode?: { ulid: string; buffer: string };
+  // C1104 · ruling A · the model picker modal. When defined, ALL keypresses route
+  // through the modelPickMode branch until Enter (commit) or Esc (cancel) exits —
+  // the renameMode discipline exactly. `index` is the cursor into AVAILABLE_MODELS.
+  modelPickMode?: { ulid: string; index: number };
   // Diamond B-1: Cascades/ existence at startup. Probed once via existsSync (Pattern 4 metadata-only).
   // strict-false gate (state.cascadesPresent === false) treats undefined as session-mode for
   // backward compatibility with existing fixtures.
@@ -342,6 +348,14 @@ export type KeyAction =
   | { type: 'rename-confirm' }
   | { type: 'rename-cancel' }
   | { type: 'rename-buffer-update'; buffer: string }
+  // C1104 · ruling A · the per-session RESUME model, from the Anchor Menu itself.
+  // 'm' opens the picker on a real selected row (SYNTHETIC_NEW/CLOSE protected —
+  // mirrors 'r'/'x'/'d'/'a'); ↑/↓ move; Enter commits; Esc cancels. The commit leg
+  // calls the SAME in-process registry setSessionModel the MCP quality calls (D3D).
+  | { type: 'set-model-selected' }
+  | { type: 'set-model-move'; index: number }
+  | { type: 'set-model-pick'; model: string }
+  | { type: 'set-model-cancel' }
   | { type: 'install-selected' }
   | { type: 'trust-confer-confirm' }
   | { type: 'trust-confer-decline' }
@@ -708,7 +722,38 @@ export function formatSessionRow(
   // padEnd ensures cwd column is exactly cwdMaxWidth visible chars wide.
   const cwdShort = safeCell(truncateMiddle(basename(s.cwd ?? ''), cwdMaxWidth).padEnd(cwdMaxWidth));
   const launched = safeCell(relativeTime(s.spawnedAt));
-  return `${prefix}${indicator} ${ulidShort}  ${nameOrUuid}  ${status}  ${cwdShort}  ${launched}${suite8Tag(s)}${anchorTag(s)}${suffix}`;
+  const rowCore = `${prefix}${indicator} ${ulidShort}  ${nameOrUuid}  ${status}  ${cwdShort}  ${launched}${suite8Tag(s)}${anchorTag(s)}`;
+  // C1104 · SHOW · the model tag rides the row's LEFTOVER width, truncated to fit, so
+  // the Diamond R "visible length ≤ termWidth" invariant holds at every terminal size
+  // (at 80 columns cwdShort is already at its 15-char floor, so there is no budget left
+  // to reclaim — the tag must measure the remainder itself rather than assume one).
+  const usedWidth = rowCore.replace(/\x1b\[[0-9;]*m/g, '').length;
+  return `${rowCore}${modelTag(s, termWidth - usedWidth)}${suffix}`;
+}
+
+/**
+ * C1104 · SHOW (law 5) · the session's RESUME model as a tag. The TUI carried NO model
+ * column at all before this. An entry with no recorded model renders the DEFAULT rather
+ * than nothing — the row must always say what the session will actually resume with.
+ *
+ * Width-aware by construction: `budget` is the row's remaining visible columns. The full
+ * form `<default (Opus 5)>` renders when it fits; the compact form `<Opus 5>` when it
+ * does not; a middle-truncated label when even that overruns; nothing at all below five
+ * columns. Never widens a row past termWidth.
+ */
+function modelTag(entry: { model?: string }, budget: number): string {
+  // CHROME = two leading spaces + the angle brackets: exactly 4 visible columns.
+  const CHROME = 4;
+  if (budget < CHROME + 1) return '';
+  const ochre = rgbToAnsi(SUITE_COLORS.Ochre, TERMINAL_CAPS);
+  const bare = entry.model
+    ? (modelLabel(entry.model) ?? entry.model)
+    : (modelLabel(DEFAULT_MODEL) ?? DEFAULT_MODEL);
+  const full = entry.model ? bare : `default (${bare})`;
+  const wrap = (label: string): string => `  ${ochre}<${label}>${ANSI.RESET}`;
+  if (full.length + CHROME <= budget) return wrap(full);
+  if (bare.length + CHROME <= budget) return wrap(bare);
+  return wrap(truncateMiddle(bare, budget - CHROME));
 }
 
 /**
@@ -1837,6 +1882,63 @@ export function renderExitConfirmPane(state: MenuState): string {
   out.push(clipAndPadToWidth(bodyLine(padCenter(`${ANSI.BOLD}${PEWTER}${q}${ANSI.RESET}`, q.length)), w));
   out.push(clipAndPadToWidth(blank(), w));
 
+  // ── C1020 · THE ORPHAN DISCLAIMER · HiFi Red ──────────────────────────────────────────────────
+  // *"Design a Disclaimer in HiFi Red to Inform if the SCS is not Properly Exited there will be
+  //   Orphaned Processes. That after Repeated Successive Forced Quits will Require a Computer
+  //   Restart to Free Resources."*
+  //
+  // WHY IT SITS HERE, BETWEEN THE QUESTION AND THE BUTTONS: this pane is the ONLY moment the user
+  // is choosing between the proper exit and every other way out. A warning anywhere else is read
+  // after the decision, which is no warning at all. It tells the user what THIS button buys them.
+  //
+  // HiFi Red is the DESIGN SYSTEM's red (`pewter.type.ts` · `red: '#ef4444'`), deliberately NOT a
+  // `SUITE_COLORS` entry — those are the internal profession aliases (Maroon, Rose …) and carry a
+  // different meaning. This is a functional danger register, not a Suite identity.
+  //
+  // WIDTH-TIERED SO IT CANNOT CORRUPT THE BOX: `padCenter` computes its padding from `innerWidth`,
+  // so a line longer than the box would push the right edge out of alignment. Each tier is sized to
+  // the frame it renders in, and the narrow tier still carries BOTH facts — the orphaning and the
+  // restart — because a small terminal is not a reason to withhold the consequence.
+  const HIFI_RED = rgbToAnsi({ r: 239, g: 68, b: 68 }, TERMINAL_CAPS);
+  const disclaimerWidth = innerWidth - 2;
+  // `bold` now marks the HEADLINE for meaning, not for weight — every line renders BOLD (see below).
+  const disclaimerLines: { text: string; bold: boolean }[] =
+    disclaimerWidth >= 70
+      ? [
+          { text: 'EXITING ANY OTHER WAY LEAVES ORPHANED PROCESSES', bold: true },
+          { text: 'Force Quit, or closing the terminal window, skips this teardown —', bold: false },
+          { text: 'spawned SCP lanes keep running after the window is gone.', bold: false },
+          { text: 'Repeated forced quits accumulate them until only a computer', bold: false },
+          { text: 'restart will free the resources they hold.', bold: false },
+        ]
+      : disclaimerWidth >= 46
+        ? [
+            { text: 'EXITING ANY OTHER WAY ORPHANS PROCESSES', bold: true },
+            { text: 'Force Quit skips this teardown; SCP lanes', bold: false },
+            { text: 'keep running. Repeated forced quits need', bold: false },
+            { text: 'a computer restart to free resources.', bold: false },
+          ]
+        : [
+            { text: 'FORCE QUIT ORPHANS PROCESSES', bold: true },
+            { text: 'Repeated quits need a restart', bold: false },
+          ];
+  for (const line of disclaimerLines) {
+    // BOLD ON EVERY LINE — NEVER `ANSI.DIM`. Field report: the body lines rendered "near black on a
+    // black background" and were effectively invisible. `ANSI.DIM` halves the luminance of an
+    // already-dark red, and on a dark terminal theme that lands at the background. A danger notice
+    // that cannot be read is worse than no notice, because it looks like it was delivered.
+    // The colour itself was never the problem — `rgbToAnsi` emits truecolor #ef4444, or a 256-colour
+    // index, neither of which is dark. The weight attribute was doing all the damage.
+    const weight = ANSI.BOLD;
+    out.push(
+      clipAndPadToWidth(
+        bodyLine(padCenter(`${weight}${HIFI_RED}${line.text}${ANSI.RESET}`, line.text.length)),
+        w,
+      ),
+    );
+  }
+  out.push(clipAndPadToWidth(blank(), w));
+
   const isApprove = ec.selected === 'approve';
   const yesText = '[Y] Yes, exit';
   const noText = '[N] No, stay';
@@ -1995,6 +2097,32 @@ export function applyKeypress(
       return {
         newState: { ...state, renameMode: { ...state.renameMode, buffer: newBuffer } },
         action: { type: 'rename-buffer-update', buffer: newBuffer },
+      };
+    }
+    return { newState: state, action: { type: 'noop' } };
+  }
+
+  // C1104 · ruling A · the model-pick modal early-return branch. Mirrors renameMode:
+  // while active ALL keypresses route here — ↑/↓ move the cursor within
+  // AVAILABLE_MODELS, Enter commits the row under it, Esc cancels, anything else
+  // noops. The standard switch (n, q, x, r, m, navigation) MUST NOT fire meanwhile.
+  if (state.modelPickMode !== undefined) {
+    const count = AVAILABLE_MODELS.length;
+    if (key.name === 'return') {
+      const picked = AVAILABLE_MODELS[state.modelPickMode.index];
+      if (!picked) return { newState: state, action: { type: 'set-model-cancel' } };
+      return { newState: state, action: { type: 'set-model-pick', model: picked.id } };
+    }
+    if (key.name === 'escape') {
+      return { newState: state, action: { type: 'set-model-cancel' } };
+    }
+    if (key.name === 'up' || key.name === 'down') {
+      if (count === 0) return { newState: state, action: { type: 'noop' } };
+      const delta = key.name === 'up' ? -1 : 1;
+      const index = (state.modelPickMode.index + delta + count) % count;
+      return {
+        newState: { ...state, modelPickMode: { ...state.modelPickMode, index } },
+        action: { type: 'set-model-move', index },
       };
     }
     return { newState: state, action: { type: 'noop' } };
@@ -2918,6 +3046,16 @@ export function applyKeypress(
       }
       return { newState: state, action: { type: 'noop' } };
     }
+    // C1104 · ruling A · 'm' opens the RESUME-model picker for the selected real-row.
+    // 'm' was verifiably unbound across the WHOLE handler (Lane 7 guard 10 — not just
+    // the top-level switch; every modal family was grepped). Sentinels protected.
+    case 'm': {
+      const ulid = state.selectedUlid;
+      if (ulid && ulid !== SYNTHETIC_NEW && ulid !== SYNTHETIC_CLOSE) {
+        return { newState: state, action: { type: 'set-model-selected' } };
+      }
+      return { newState: state, action: { type: 'noop' } };
+    }
     // TBHK · Dissolution + Archival Diamond · 'd' dissipate the selected real-row
     // (registry removal + DELETE real ClaudeCode session · anchor-guarded). Bounded
     // to a real ULID row; SYNTHETIC_NEW/CLOSE protected (mirror 'x').
@@ -3235,16 +3373,24 @@ export function renderMenu(state: MenuState): string {
     return ' '.repeat(pad) + text;
   };
   const isRenameMode = state.renameMode !== undefined;
+  // C1104 · the model picker's own footer line — the catalog row under the cursor,
+  // its position, and the modal keys. Sibling to the rename modal's line.
+  const pickedModel =
+    state.modelPickMode !== undefined
+      ? AVAILABLE_MODELS[state.modelPickMode.index]
+      : undefined;
   const footerLine = isRenameMode
     ? `${ANSI.DIM}Rename: ${state.renameMode?.buffer ?? ''}_  · Enter confirm · Esc cancel${ANSI.RESET}`
-    : '';
+    : state.modelPickMode !== undefined
+      ? `${ANSI.DIM}Model: ${pickedModel?.label ?? '—'} (${(state.modelPickMode.index + 1)}/${AVAILABLE_MODELS.length})  · ↑/↓ choose · Enter confirm · Esc cancel${ANSI.RESET}`
+      : '';
   // Diamond F · FKDF · Footer extension. 'z focus' hint added to footerRow1.
   // Unconditional (the hotkey is always present · HFGE handles graceful no-op
   // on synthetic/non-launched rows). Visible length: 39 → 49 chars; within
   // budget for 80+ col terminals · clipAndPadToWidth handles narrower.
   // Citation: D3RM-F-FOUNDATION-R7-FUCHSIA-CLINICAL.md §2 / §5 Wave 4a.
   const footerRow1 = `${ANSI.DIM}↑/↓ navigate · ←/→ page · Home/End jump · z focus${ANSI.RESET}`;
-  const footerRow2 = `${ANSI.DIM}Enter activate · n new · x remove · d dissipate · a archive · r rename${installScpHint}${installScpProgHint}${uninstallHint} · q quit${ANSI.RESET}`;
+  const footerRow2 = `${ANSI.DIM}Enter activate · n new · x remove · d dissipate · a archive · r rename · m model${installScpHint}${installScpProgHint}${uninstallHint} · q quit${ANSI.RESET}`;
 
   // Diamond R Fix R-2: clip-and-pad each line to termWidth before padToHeight.
   // Composes with formatBodyPage's existing termWidth-pre-padded slots (Diamond P).
@@ -3348,7 +3494,7 @@ export async function startMenu(): Promise<void> {
 
   render();
 
-  watchFile(registryPath(), { interval: 500 }, async () => {
+  createFileWatcher('menu.registry', registryPath(), { interval: 500 }, async () => {
     const newSessions = await listSessions();
     state = {
       ...state,
@@ -3481,6 +3627,37 @@ export async function startMenu(): Promise<void> {
         render();
         break;
       }
+      // C1104 · ruling A · the model-pick modal lifecycle (legacy startMenu path).
+      // The commit leg calls the SAME registry setSessionModel the MCP quality calls.
+      case 'set-model-selected': {
+        const ulid = state.selectedUlid;
+        if (ulid && ulid !== SYNTHETIC_NEW && ulid !== SYNTHETIC_CLOSE) {
+          const entry = state.sessions.find((s) => s.id === ulid);
+          const seeded = entry?.model
+            ? AVAILABLE_MODELS.findIndex((m) => m.id === entry.model)
+            : -1;
+          state = { ...state, modelPickMode: { ulid, index: seeded >= 0 ? seeded : 0 } };
+        }
+        render();
+        break;
+      }
+      case 'set-model-pick': {
+        if (state.modelPickMode) {
+          await setSessionModel(state.modelPickMode.ulid, action.model, 'set');
+          state = { ...state, modelPickMode: undefined };
+        }
+        render();
+        break;
+      }
+      case 'set-model-cancel': {
+        state = { ...state, modelPickMode: undefined };
+        render();
+        break;
+      }
+      case 'set-model-move':
+        // applyKeypress already moved state.modelPickMode.index; just re-render.
+        render();
+        break;
       case 'rename-buffer-update':
         // applyKeypress already updated state.renameMode.buffer; just re-render.
         render();

@@ -37,7 +37,7 @@ import type { SCPQualityMetadataRegistered, SCPToolDefinition } from '../scp.typ
 import { createSCPStrategyManifold } from '../strategies/scpToolManifold.strategy';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveBridgeRoot } from '../../scsBridge/bridgeRoot.model';
+import { resolveBridgeRoot, resolveOriginEndpoint } from '../../scsBridge/bridgeRoot.model';
 
 type ExpressTransportDeck = MuxiumDeck & SCPDeck & ServerDeck;
 
@@ -131,8 +131,9 @@ export const scpExpressTransportPrinciple: PrincipleFunction<
       try {
         const bj = JSON.parse(
           readFileSync(join(resolveBridgeRoot(), 'bridge.json'), 'utf8'),
-        ) as { endpoint?: string };
-        const endpoint = bj.endpoint ?? 'http://127.0.0.1:7111';
+        ) as unknown;
+        // C950 · the origin's endpoint — the named CLI that spawned this SCP, else the top level.
+        const endpoint = resolveOriginEndpoint(bj);
         const r = await fetch(`${endpoint}/mcp`, {
           method: 'POST',
           headers: {

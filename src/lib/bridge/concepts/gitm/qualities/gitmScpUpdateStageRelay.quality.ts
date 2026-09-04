@@ -38,6 +38,7 @@ import type {
   GitmScpUpdateStageRelay,
   GitmScpUpdateDiffStrategyData,
 } from './types';
+import { workspaceBridgeDir } from '../../../paths';
 
 export type { GitmScpUpdateStageRelay };
 
@@ -121,7 +122,7 @@ export const gitmScpUpdateStageRelay = createQualityCardWithPayload<
               : basename(activeScpDir !== '' ? activeScpDir : userCwd);
 
       log('gitm.update.stage-relay.entry', { scpName });
-      const diffPath = join(userCwd, 'Cascades', 'Bridge', `scp-update-diff.${scpName}.json`);
+      const diffPath = join(workspaceBridgeDir(userCwd), `scp-update-diff.${scpName}.json`);
       try {
         const raw = readFileSync(diffPath, 'utf8');
         const parsed = JSON.parse(raw) as {

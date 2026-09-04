@@ -35,7 +35,10 @@ import { worktreeArchivePreFlight } from './scpArchive.model';
 // rides bridge.json via the composer leg (the getNpmVersionCheck() precedent). Read from the
 // in-process cache at write time — the model's own timer performs the network fetch; the write
 // NEVER awaits a fetch inline (the non-blocking mandate).
-import { getCachedReleaseManifest, type UpdateManifest } from './updateManifest.model';
+import { getCachedReleaseManifest, resolveManifestSource, type UpdateManifest } from './updateManifest.model';
+import { SCS_INSTALL_REPO_URL } from './installConstants';
+import { workspaceBridgeDir, scpsJsonPath } from './paths';
+import { environmentName } from './workspaceSocket.model';
 
 // MD-ARC+C · Wave 7 · the worktree marker the roster serves. Probed CHEAPLY at
 // bridge.json write time from the SCP's package .git shape (WAPF): a .git FILE ⇒
@@ -87,6 +90,12 @@ export type BridgeMetadata = {
   writtenAt: number;
   port: number;
   endpoint: string;
+  // C950 · THE NAMED PORT REGISTRATION — the shared bridge.json carries the top-level port of the
+  // PRODUCTION CLI plus, per named CLI (`scs --name <Name>`), its own port under its own key. Each
+  // writer PRESERVES the other's field: a named CLI never rewrites the top-level port/endpoint, and
+  // production never drops `namedBridges`. An SCP spawned by a named CLI (it inherits SCS_ENV) reads
+  // its own key; every other reader keeps reading the top level, unchanged.
+  namedBridges?: Record<string, { port: number; endpoint: string; writtenAt: number }>;
   userCwd: string;
   boundScps: Record<string, BoundScpEntry>;
   installedScps: string[];
@@ -133,8 +142,44 @@ export type BridgeMetadata = {
   // 'both' → both · 'unknown' → a pre-counter publish, treat as both). All ride the
   // ...getNpmVersionCheck() composer spread — nothing else to thread.
   // MD-S8PM · PM-1 · TQNI: `s8` joins the schema (OPTIONAL-TOLERANT — a pre-s8 bridge.json omits it).
-  installedMuxameter?: { cli: number; scp: number; s8?: number } | null;
-  remoteMuxameter?: { cli: number; scp: number; s8?: number } | null;
+  // C1040 · `instructionSet` joins both counters on the same optional-tolerant terms as `s8`.
+  // WITHOUT IT HERE THE FIELD IS STRIPPED AT THE bridge.json BOUNDARY — getBridgeMuxameter()
+  // returns it, but a structural type that omits it drops it on the way out.
+  installedMuxameter?: { cli: number; scp: number; s8?: number; instructionSet?: number } | null;
+  remoteMuxameter?: { cli: number; scp: number; s8?: number; instructionSet?: number } | null;
+  // C1040 · THE PROJECT'S INSTRUCTION SET — read from the BASE PROJECT's own
+  // `<userCwd>/Cascades/Cascade.json` at the bridge.json write site.
+  //
+  // THIS IS A DIFFERENT FACT FROM `installedMuxameter.instructionSet`. That one is what the RUNNING
+  // CLI's package.json declares — the bridge's own revision. THIS is what the workspace's
+  // `.claude/CLAUDE.md` actually IS, stamped at install. A newer CLI beside an older project is the
+  // ordinary case, and it is exactly the drift the update affordance exists to surface.
+  //
+  // THE CLI OWNS THIS READ BECAUSE THE CLI IS THE BASE. The SCPs are Informatives — they receive it
+  // through the field-agnostic relay and never read the ground themselves. One ground, one reader,
+  // N informed: an SCP-side read would have added a reader per SCP to a file that already has
+  // exactly one watcher in this process.
+  //
+  // null = the workspace predates the iterator (UNKNOWN). NEVER a 0 floor — 0 reads as infinitely
+  // behind and would nag every legacy install forever.
+  instructionSetInstalled?: number | null;
+  instructionSetPublished?: number | null;
+  // C1041 · I6 · THE DRIFT VERDICT — the ONE boolean that gates the update affordance.
+  //
+  // THE COMPARISON IS REMOTE-vs-PROJECT, NOT LOCAL-vs-REMOTE: the published package.json's
+  // `scsMuxameter.instructionSet` against THIS project's `Cascade.json` stamp. The LOCAL
+  // package.json is never the comparison basis and is never updated to match — it is only the
+  // SOURCE of the stamp written into Cascade.json at install.
+  //
+  // WHY A FRESH INSTALL IS NEVER ALERTED — and it is by CONSTRUCTION, not by a suppression rule:
+  // the instruction set and its stamp are installed in the SAME act (markInstallationComplete
+  // stamps from getBridgeMuxameter), so project === the CLI that installed it. The user is informed
+  // only later, when the REMOTE moves past what their project carries.
+  //
+  // FALSE WHENEVER EITHER SIDE IS UNKNOWN. A pre-iterator workspace has no stamp through no fault of
+  // its own, and a bridge whose registry check has not landed has no remote — neither is drift, and
+  // a badge that fires on ignorance is a badge users learn to ignore.
+  instructionSetUpdateAvailable?: boolean;
   updateClass?: 'none' | 'cli' | 'scp' | 'both' | 'unknown';
   // Model Control · the PUBLISHED model catalog (the shared model · modelCatalog.model.ts) —
   // written on every bridge.json write (mirrors availableRenderModes · no drift between surfaces).
@@ -254,10 +299,80 @@ export function bridgeMetadataPath(homeDirOverride?: string): string {
 // the bridge root · never a thrown write). NEVER throws.
 // EXPORTED for the npm-version watch's sovereign fan-out (the Rose prescription — the lazy
 // perScpPaths getter enumerates the LIVE per-SCP bridge.json paths at RMW time).
+// C1040 · THE PROJECT INSTRUCTION-SET READ · the Base reading its own ground.
+//
+// Follows resolveScpInstallDirs' precedent exactly: a synchronous read at the bridge.json write
+// site, never a cached value and never a second watcher. The CLI is the workspace process — it does
+// not infer this path, it IS rooted here — so the read is one join and one parse.
+//
+// ABSENT anor UNPARSEABLE anor NON-NUMERIC → null. Every one of those means UNKNOWN, and unknown
+// must never render as behind: a workspace installed before the iterator existed has no stamp
+// through no fault of its own, and a 0 floor would nag it forever.
+// C1046 · EXPORTED so the /instruction-set endpoint serves the SAME reader the derivation uses.
+// Two readers of one ground is how two surfaces come to disagree about it.
+export function readProjectInstructionSet(userCwd: string): number | null {
+  try {
+    const raw = readFileSync(join(userCwd, 'Cascades', 'Cascade.json'), 'utf8');
+    const parsed = JSON.parse(raw) as { instructionSet?: unknown };
+    return typeof parsed.instructionSet === 'number' ? parsed.instructionSet : null;
+  } catch {
+    return null;
+  }
+}
+
+// C1041 · I6 · THE DRIFT VERDICT · computed where BOTH halves already live — the CLI.
+//
+// The project's stamp is read from disk here; the published counter rides the npm check's cache.
+// Both are in this process, so the comparison needs no relay hop and no SCP-side logic: the SCPs
+// receive the finished verdict as Informatives.
+//
+// DIFFERENT, NOT MERELY BEHIND (the user's word): any mismatch means the project's instruction set
+// is not what is published, and running the agent syncs it TO the published revision. A project
+// ahead of the registry — a development machine — is therefore also flagged, which is honest: it
+// too differs from what is published.
+// C1057 · THE TWO-LAYER PUBLISHED SOURCE. The instruction-set CONTENT routes already read from
+// `resolveManifestSource(SCS_INSTALL_REPO_URL)` (LSSI — a `file://` self-tree on every dev machine,
+// the github remote for an npm install). The COUNTER read npm alone — so on a dev machine the content
+// half saw the repo while the counter half saw a registry that has never carried the field:
+// `published` was null everywhere the circuit could be exercised, and the badge's reveal predicate
+// could never fire. ONE source for both halves; `source` names which layer answered.
+export type PublishedInstructionSet = { published: number | null; source: 'local' | 'npm' | null };
+export function resolvePublishedInstructionSet(repoUrl: string = SCS_INSTALL_REPO_URL): PublishedInstructionSet {
+  const manifestSource = resolveManifestSource(repoUrl);
+  if (manifestSource.kind === 'local') {
+    try {
+      const raw = readFileSync(join(manifestSource.root, 'package.json'), 'utf8');
+      const parsed = JSON.parse(raw) as { scsMuxameter?: { instructionSet?: unknown } };
+      const v = parsed.scsMuxameter?.instructionSet;
+      return { published: typeof v === 'number' ? v : null, source: 'local' };
+    } catch {
+      return { published: null, source: 'local' };
+    }
+  }
+  const v = getNpmVersionCheck().remoteMuxameter?.instructionSet;
+  return { published: typeof v === 'number' ? v : null, source: 'npm' };
+}
+
+function deriveInstructionSetDrift(userCwd: string): {
+  instructionSetInstalled: number | null;
+  instructionSetPublished: number | null;
+  instructionSetUpdateAvailable: boolean;
+} {
+  const installed = readProjectInstructionSet(userCwd);
+  const { published } = resolvePublishedInstructionSet();
+  const bothKnown = typeof installed === 'number' && typeof published === 'number';
+  return {
+    instructionSetInstalled: installed,
+    instructionSetPublished: published,
+    // UNKNOWN on either side collapses to false — never fire on ignorance.
+    instructionSetUpdateAvailable: bothKnown && installed !== published,
+  };
+}
+
 export function resolveScpInstallDirs(userCwd: string): Record<string, string> {
   const dirs: Record<string, string> = {};
   try {
-    const scpsPath = resolve(userCwd, 'Cascades', 'SCPs.json');
+    const scpsPath = scpsJsonPath(userCwd);
     const raw = readFileSync(scpsPath, 'utf8');
     const parsed = JSON.parse(raw) as { scps?: Array<{ name?: string; path?: string }> };
     if (!parsed || !Array.isArray(parsed.scps)) return dirs;
@@ -298,7 +413,7 @@ function resolveScpWorktreeRole(packageDirAbs: string): ScpWorktreeRole {
 export function resolveArchivedScpMeta(userCwd: string): ArchivedScpMetaEntry[] {
   const out: ArchivedScpMetaEntry[] = [];
   try {
-    const scpsPath = resolve(userCwd, 'Cascades', 'SCPs.json');
+    const scpsPath = scpsJsonPath(userCwd);
     const raw = readFileSync(scpsPath, 'utf8');
     const parsed = JSON.parse(raw) as {
       archivedScps?: Array<{ name?: string; archivedAt?: number }>;
@@ -326,7 +441,7 @@ export function resolveArchivedScpMeta(userCwd: string): ArchivedScpMetaEntry[] 
 // for new-style bridge launches. The global path remains supported via the
 // legacy bridgeMetadataPath() for test-isolation paths only.
 export function bridgeMetadataPathPerProject(userCwd: string): string {
-  return join(userCwd, 'Cascades', 'Bridge', 'bridge.json');
+  return join(workspaceBridgeDir(userCwd), 'bridge.json');
 }
 
 // MD-4 P1 · the single-writer funnel (FT-005/FT-006 ENOENT): Writer A (scsBridgeMuxium
@@ -388,28 +503,47 @@ async function writeBridgeMetadataUnsafe(
   let preservedRenderMode = state.renderMode;
   let preservedScpRenderMode = state.scpRenderMode;
   let preservedShaderFps = state.shaderFps;
-  if (
-    preservedRenderMode === undefined ||
-    preservedScpRenderMode === undefined ||
-    preservedShaderFps === undefined
-  ) {
-    try {
-      const existingRaw = await readFile(finalPath, 'utf8');
-      const existing = JSON.parse(existingRaw) as Partial<BridgeMetadata>;
-      preservedRenderMode = preservedRenderMode ?? existing.renderMode;
-      preservedScpRenderMode = preservedScpRenderMode ?? existing.scpRenderMode;
-      preservedShaderFps = preservedShaderFps ?? existing.shaderFps;
-    } catch {
-      /* no existing file — a fresh boot writes the fields absent (the honest default) */
+  // C950 · THE TWO-PERSPECTIVE MERGE. This CLI's own name ('' = production). A NAMED CLI keeps the
+  // existing top-level port/endpoint (production's rendezvous — it must never be repointed by a dev
+  // perspective) and registers ITS OWN port under `namedBridges[<Name>]`; PRODUCTION writes the top
+  // level as always and CARRIES `namedBridges` FORWARD so a named CLI's registration survives its
+  // neighbour's writes. Read-before-write on ONE existing-file read (shared with the shader fields).
+  const ownName = environmentName();
+  let topPort = state.port;
+  let topEndpoint = `http://127.0.0.1:${state.port}`;
+  let namedBridges: Record<string, { port: number; endpoint: string; writtenAt: number }> | undefined;
+  try {
+    const existingRaw = await readFile(finalPath, 'utf8');
+    const existing = JSON.parse(existingRaw) as Partial<BridgeMetadata>;
+    preservedRenderMode = preservedRenderMode ?? existing.renderMode;
+    preservedScpRenderMode = preservedScpRenderMode ?? existing.scpRenderMode;
+    preservedShaderFps = preservedShaderFps ?? existing.shaderFps;
+    namedBridges = existing.namedBridges ? { ...existing.namedBridges } : undefined;
+    if (ownName && typeof existing.port === 'number' && typeof existing.endpoint === 'string') {
+      topPort = existing.port;
+      topEndpoint = existing.endpoint;
     }
+  } catch {
+    /* no existing file — a fresh boot writes the fields absent (the honest default) */
+  }
+  if (ownName) {
+    namedBridges = {
+      ...(namedBridges ?? {}),
+      [ownName]: {
+        port: state.port,
+        endpoint: `http://127.0.0.1:${state.port}`,
+        writtenAt: Date.now(),
+      },
+    };
   }
 
   const metadata: BridgeMetadata = {
     schemaVersion: 1,
     bridgeVersion: state.bridgeVersion,
     writtenAt: Date.now(),
-    port: state.port,
-    endpoint: `http://127.0.0.1:${state.port}`,
+    port: topPort,
+    endpoint: topEndpoint,
+    ...(namedBridges !== undefined ? { namedBridges } : {}),
     userCwd: state.userCwd,
     boundScps,
     installedScps: state.installedScps,
@@ -432,6 +566,10 @@ async function writeBridgeMetadataUnsafe(
     // D-UP7 · THE COMPOSER LEG — the npm version-check cache rides EVERY bridge.json
     // write so the indicator survives all rewrite sites (boot · pong · TUI refresh).
     ...getNpmVersionCheck(),
+    // C1040 · THE PROJECT'S INSTRUCTION SET · read fresh at every bridge.json write, so the value
+    // refreshes on the same cadence the rest of this file does. The relay is field-agnostic, so it
+    // reaches every SCP client free — the SCPs never read the ground themselves.
+    ...deriveInstructionSetDrift(state.userCwd),
     // W6a · THE LIFECYCLE PROJECTION (SCM W6) · the scpName → FSM-state-string map (the TUI M17
     // caller projects lifecycleByScp; the boot-time writer passes {}). Default {} when absent so the
     // field is always present + discoverable. The per-SCP fan-out below carries it FREE (it spreads
@@ -488,6 +626,17 @@ async function writeBridgeMetadataUnsafe(
   // design), so the prior read-and-preserve of `turnOver` is RETIRED. Best-effort per SCP — a
   // failed per-SCP write never poisons the workspace write chain.
   for (const [scpName, scpDir] of Object.entries(scpInstallDirs)) {
+    // TOH-8 · BAND C · THE WRITE-SCOPE GUARD. A CLI has no business stamping its identity into the
+    // per-SCP bridge.json of an SCP IT DOES NOT RUN. The unfiltered fan-out (over the whole shared
+    // registry) is how a second perspective silently repoints another CLI's SCP — and, in the C952
+    // field, how an SCP was told to send its turn-over to a CLI that owned nothing of it.
+    // This guard binds the WRITER we control; an older peer still overwrites at will, which is why
+    // the ORIGIN travels in the spawn env (Band B) rather than through this file.
+    // Production behaviour preserved: with no environment name, the pre-C952 unfiltered write stands
+    // (a single-CLI machine owns everything it can see, and an early boot has an empty spawn map).
+    if (environmentName() && !state.spawnsByScp.has(scpName)) {
+      continue;
+    }
     try {
       const perScpPath = join(scpDir, 'Cascades', 'Bridge', 'bridge.json');
       const perScp = { ...metadata, scpName };

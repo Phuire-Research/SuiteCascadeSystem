@@ -39,15 +39,15 @@ import {
   strategySuccess,
   type Concept,
 } from 'stratimux';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 // F2 · SCP-WINDOW-CLOSURE-CONSUME · registryPath() = bridgeRoot()/sessions.json (the
 // single top-level registry file the F1 electron-side recordScpWindowClosure writer
 // appends scpWindowClosures onto). M73 Path-Diameter-Pairing-Doctrine: this watcher
 // root pairs with registryPath() — any move of the registry file MUST update both.
-import { registryPath } from '../../../paths';
-import { fenceWatchTargets } from '../../../watcherFence.model';
+import { registryPath, workspaceBridgeDir } from '../../../paths';
 import type { ScpMessageRouterState } from '../scpMessageRouter.type';
 import type {
   WatcherKind,
@@ -134,7 +134,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         console.log('[Scp Message Router] Arming chokidar watcher on:', bridgeJsonPath);
         let watcher: FSWatcher;
         try {
-          watcher = watch(fenceWatchTargets('scpMessageRouterWatcherArm.bridgeJson', bridgeJsonPath, userCwd), {
+          watcher = createWatcher('scpMessageRouterWatcherArm.bridgeJson', bridgeJsonPath, userCwd, {
             ignoreInitial: true,
             persistent: true,
             depth: 0,
@@ -180,7 +180,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         console.log('[Scp Message Router] Arming chokidar watcher on:', scpsRoot, '(depth: 4)');
         let watcher: FSWatcher;
         try {
-          watcher = watch(fenceWatchTargets('scpMessageRouterWatcherArm.sessionsDir', scpsRoot, userCwd), {
+          watcher = createWatcher('scpMessageRouterWatcherArm.sessionsDir', scpsRoot, userCwd, {
             ignoreInitial: true,
             persistent: true,
             depth: 4,
@@ -238,7 +238,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         console.log('[Scp Message Router] Arming chokidar watcher on (dir · hardened):', sessionsJsonDir, '(depth: 0)');
         let watcher: FSWatcher;
         try {
-          watcher = watch(fenceWatchTargets('scpMessageRouterWatcherArm.sessionsJson', sessionsJsonDir, userCwd), {
+          watcher = createWatcher('scpMessageRouterWatcherArm.sessionsJson', sessionsJsonDir, userCwd, {
             ignoreInitial: true,
             persistent: true,
             depth: 0,
@@ -290,7 +290,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         console.log('[Scp Message Router] Arming chokidar watcher on (dir · hardened):', scpsJsonDir, '(depth: 0)');
         let watcher: FSWatcher;
         try {
-          watcher = watch(fenceWatchTargets('scpMessageRouterWatcherArm.scpsJson', scpsJsonDir, userCwd), {
+          watcher = createWatcher('scpMessageRouterWatcherArm.scpsJson', scpsJsonDir, userCwd, {
             ignoreInitial: true,
             persistent: true,
             depth: 0,
@@ -332,7 +332,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
       }
 
-      const bridgeSessionsRoot = join(userCwd, 'Cascades', 'Bridge', 'sessions');
+      const bridgeSessionsRoot = join(workspaceBridgeDir(userCwd), 'sessions');
       try {
         mkdirSync(bridgeSessionsRoot, { recursive: true });
       } catch (err) {
@@ -355,7 +355,7 @@ export const scpMessageRouterWatcherArm = createQualityCardWithPayload<
         // line 228 gates which adds dispatch — depth limit is unnecessary and
         // harmful at the boundary.
         // Citation: SUITE-4-GREEN-BROWSER-LAUNCH-FAILURE.md Issue #1 (R4 diagnosis)
-        bridgeSessionsWatcher = watch(fenceWatchTargets('scpMessageRouterWatcherArm.bridgeSessionsDir', bridgeSessionsRoot, userCwd), {
+        bridgeSessionsWatcher = createWatcher('scpMessageRouterWatcherArm.bridgeSessionsDir', bridgeSessionsRoot, userCwd, {
           ignoreInitial: true,
           persistent: true,
           awaitWriteFinish: {

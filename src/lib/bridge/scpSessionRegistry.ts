@@ -40,6 +40,7 @@ import {
 } from './scpArchive.model';
 import { deleteSlice } from './concepts/gitm/model/gitmSliceStore.model';
 import { disarmWatchersForScp } from './concepts/gitm/model/gitmWatcherRegistry.model';
+import { scpsJsonPath } from './paths';
 
 export type ScpSessionEntry = {
   sessionId: string;
@@ -99,10 +100,6 @@ type ScpsJsonShape = {
   // (scpPersistence.ts) carries this field OPAQUELY through its parse/write.
   archivedScps?: ArchivedScpEntry[];
 };
-
-function scpsJsonPath(): string {
-  return resolve(process.cwd(), 'Cascades', 'SCPs.json');
-}
 
 let writeChain: Promise<void> = Promise.resolve();
 
@@ -396,7 +393,9 @@ export async function archiveScpEntry(
 // SRST · reinstate an archived SCP: the ledger guards (present · RROC name
 // collision) → the reverse move (the occupied-seat throw honors RROC at the
 // filesystem too) → the entry restored to scps[] at status 'pending' (launch is
-// manual — no auto-spawn). Port re-validation is deferred to the launch path.
+// manual — no auto-spawn). Port re-validation happens HERE (TOH-12 SOV-1 gate:
+// a pair-collision with any registered entry refuses the reinstate) AND at the
+// launch path (its own scps[]-scoped collision check).
 export async function reinstateScpEntry(scpName: string): Promise<ScpReinstateResult> {
   let result: ScpReinstateResult = { ok: false, reason: 'reinstate-not-run' };
   await chainWrite('reinstateScpEntry', async () => {
@@ -412,6 +411,32 @@ export async function reinstateScpEntry(scpName: string): Promise<ScpReinstateRe
     if (scps.some((entry) => entry?.name === scpName)) {
       result = { ok: false, reason: 'scp-name-collision-in-live-registry' };
       return;
+    }
+    // TOH-12 · BREAK 5 (SOV-1 at the reinstate gate): the comment above this function
+    // deferred port re-validation "to the launch path" — but the launch path only
+    // null-checked, so reinstating an SCP whose archived port was since re-allocated
+    // (the PortableExpanse 7702 → live Stratithon case) would land a silent collision.
+    // The gate refuses here; releasing/re-allocating the port is the user's explicit
+    // recorded act (SOV-3), never a side effect of reinstatement.
+    {
+      const rawPort = (archived as { boundBridgePort?: unknown }).boundBridgePort;
+      if (typeof rawPort === 'number' && Number.isFinite(rawPort)) {
+        const pair = [rawPort, rawPort + 1];
+        const collided = scps.find((entry) => {
+          const p = (entry as { boundBridgePort?: unknown } | null)?.boundBridgePort;
+          return (
+            typeof p === 'number' && Number.isFinite(p) && [p, p + 1].some((q) => pair.includes(q))
+          );
+        });
+        if (collided) {
+          result = {
+            ok: false,
+            reason: 'port-collision-with-live-registry',
+            detail: `archived port ${rawPort} pair-collides with registered SCP '${collided.name}'`,
+          };
+          return;
+        }
+      }
     }
     try {
       moveScpFromArchive(scpName, projectRoot);

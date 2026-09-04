@@ -30,6 +30,7 @@ import { suiteCascadeMuxonomic } from '../suiteCascade.muxonomy';
 import { SUITECASCADE_SUB_PAGE_OPTIONS } from '../suiteCascade.subPageRegistry';
 import { suiteFromCascadeFilePath } from '../model/suiteCascade.suiteDerivation';
 import SuiteCascadeSubPageNav from './components/SuiteCascadeSubPageNav.vue';
+import SuiteCascadeUpdateSubPage from './components/SuiteCascadeUpdateSubPage.vue';
 import SuiteCascadeCascadeFiles from './components/SuiteCascadeCascadeFiles.vue';
 import SuiteCascadeDiamondOnyxPane from './components/SuiteCascadeDiamondOnyxPane.vue';
 import SuiteCascadeComponentSubPage from './components/SuiteCascadeComponentSubPage.vue';
@@ -193,6 +194,10 @@ onUnmounted(() => {
 
       <!-- DOCUMENTATION · the Diamond-forms ladder + Commands (initial reference) -->
       <SuiteCascadeDocumentationSubPage v-else-if="activeSubPage === 'documentation'" />
+
+      <!-- UPDATE · C1053 · THE COMPUTER's update surface — the SCS itself (its instruction set).
+           Launch the Update Agent · view the instruction set · preview the diff BEFORE consenting. -->
+      <SuiteCascadeUpdateSubPage v-else-if="activeSubPage === 'update'" />
     </main>
   </div>
 </template>

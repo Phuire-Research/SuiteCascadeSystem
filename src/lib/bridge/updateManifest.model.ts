@@ -199,6 +199,42 @@ export async function fetchJson<T>(
 // RD §7 — the disk cache under ~/.scs-bridge/cache/. Two fields carry the load: `etag` makes
 // the next poll a 304; `value` makes offline operation possible.
 // ─────────────────────────────────────────────────────────────────────────────
+// C1053 · fetchText — the TEXT-MODE sibling of fetchJson, for the instruction-set diff.
+//
+// Same URL construction, same UA, same timeout, same size guard, same status ladder — ONLY the
+// JSON.parse and the schema validation are absent, because the payload is a Markdown document, not a
+// manifest. Extracted rather than parameterised: fetchJson's caller contract (CacheEntry<T> +
+// validate) has no meaning for raw text, and a boolean "skipParse" flag would make one function lie
+// about its return type in half its calls.
+//
+// NO CACHE. The diff compares against whatever is published NOW; a cached remote text would show the
+// user changes that were already superseded. The size guard is the only defence needed — the
+// instruction set is ~40 KB and MAX_BYTES is 2 MB.
+export type FetchTextOutcome =
+  | { status: 'ok'; text: string }
+  | { status: 'gone'; reason: string }
+  | { status: 'offline'; reason: string };
+
+export async function fetchText(owner: string, repo: string, ref: string, path: string): Promise<FetchTextOutcome> {
+  const url = `${RAW_BASE}/${owner}/${repo}/${ref}/${path}`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': UA }, signal: ctrl.signal });
+    if (res.status === 404) return { status: 'gone', reason: `not found: ${ref}/${path}` };
+    if (!res.ok) return { status: 'offline', reason: `http ${res.status}` };
+    const len = Number(res.headers.get('content-length') ?? 0);
+    if (len > MAX_BYTES) return { status: 'offline', reason: 'oversize' };
+    const text = await res.text();
+    if (text.length > MAX_BYTES) return { status: 'offline', reason: 'oversize' };
+    return { status: 'ok', text };
+  } catch (err) {
+    return { status: 'offline', reason: err instanceof Error ? err.message : String(err) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function manifestCachePath(homeDirOverride?: string): string {
   const home = homeDirOverride ?? homedir();
   return join(home, '.scs-bridge', 'cache', 'updateManifest.json');

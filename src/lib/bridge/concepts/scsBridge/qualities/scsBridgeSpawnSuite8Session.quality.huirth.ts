@@ -11,7 +11,8 @@
  * spawnElectronSessionForUlid. createSession writes the registry entry;
  * setSessionSuite8Name writes suite8Name onto that entry; spawnElectronSessionForUlid
  * then calls `open-session <ulid>` which triggers cli-handler `case 'open-session'`
- * where entry.suite8Name is read and fed into resolveComposedAppendPath. A swap
+ * where entry.suite8Name is read and fed into composeAppendedSystemPrompt (the ONE
+ * assembler · src/lib/bridge/baseSystemPrompt/). A swap
  * silently spawns a mis-identified General Agent (the S4 HIGH risk).
  *
  * Form-α (Method+Reducer). Reducer returns {} · no own-state mutation.

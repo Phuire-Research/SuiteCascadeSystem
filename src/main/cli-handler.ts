@@ -51,8 +51,9 @@ import { listSessions, updateSessionLaunchMeta, setSessionStandBy } from '../lib
 import { normalizeModelId } from '../shared/modelCatalog.model';
 import { loadSessionMeta } from '../lib/bridge/manager';
 import { writeSpawnSettings } from '../lib/bridge/spawnSettings';
+import { environmentName } from '../lib/bridge/workspaceSocket.model';
 import { bridgeMetadataPathPerProject } from '../lib/bridge/bridgeMetadata';
-import { spawnSettingsPath, bridgeRoot } from '../lib/bridge/paths';
+import { spawnSettingsPath, bridgeRoot, workspaceBridgeDir, scpsJsonPath } from '../lib/bridge/paths';
 import { resolveGeneratedBasePromptPath } from '../lib/bridge/baseSystemPrompt/baseSystemPrompt';
 import { resolveSuite8InstanceMd, resolveSuite8OnboardMd, resolveSuite8OnboardMdAcrossGrounds, resolveShatteriteMenuMd } from '../lib/bridge/instanceMdResolver.model';
 // THE GHOST-RESUME GUARD · the DAST/RSTM real-session path resolver — resume only what exists.
@@ -61,247 +62,41 @@ import { sdia } from './diagnostics';
 import { executeFkis } from './messageDispatch';
 import type { ControlCommand, ControlResponse } from './control-server';
 import { resolveOwningScpRoot } from '../lib/bridge/concepts/scsBridge/model/anchorConfig.model';
+// RESUME INDUCTION · the shared lib-side seat both doors reach (the daemon cannot import
+// src/main/*, which is exactly why the composer had to leave this file).
+import { composeAppendedSystemPrompt } from '../lib/bridge/baseSystemPrompt/composeAppendedSystemPrompt';
+import { resolveScpDir as resolveScpDirShared } from '../lib/bridge/scpDirResolver.model';
 
-// C1-D3 DOCK · reads the committed scs-bridge-dock-suite8.md skeleton (the
-// "Active Crystraline Suite 8" activation layer). Uses the SAME package-root
-// resolution as baseSystemPrompt.ts (realpathSync(process.argv[1]) → dist/cli.cjs
-// → grandparent = package root), which is bundling-surviving + format-agnostic.
-// Returns '' on read failure so the composer gracefully degrades to a 2-layer
-// Base→Instance compose if the Dock is missing.
-function resolveDockContent(): string {
-  try {
-    const rawPath = process.argv[1] ?? '';
-    if (!rawPath) return '';
-    let cliPath: string;
-    try {
-      cliPath = realpathSync(rawPath);
-    } catch {
-      cliPath = rawPath;
-    }
-    const pkgRoot = nodePath.resolve(nodePath.dirname(cliPath), '..');
-    // RELEASE W1: relocated from src/lib/bridge/baseSystemPrompt/ — src/ never
-    // ships in the npm tarball, so the Dock silently degraded to '' (a 2-layer
-    // compose, no Suite 8 activation layer) for every global-install user.
-    //
-    // C755 · THE DEV-BRIDGE FALLBACK RUNG: under the DEV electron launch argv[1]
-    // is the app DIRECTORY (not dist/cli.cjs), so the argv-derived pkgRoot lands a
-    // level too high and the Dock silently dropped (dockIncluded:false on EVERY dev
-    // spawn — the stamped geography never attached). The bundled module lives at
-    // dist/main/, so __dirname/../.. IS the package root — try both candidates and
-    // take the first whose assets/ Dock exists.
-    const candidates = [
-      nodePath.join(pkgRoot, 'assets', 'baseSystemPrompt', 'scs-bridge-dock-suite8.md'),
-      nodePath.resolve(__dirname, '..', '..', 'assets', 'baseSystemPrompt', 'scs-bridge-dock-suite8.md'),
-    ];
-    for (const dockPath of candidates) {
-      if (existsSync(dockPath)) {
-        return readFileSync(dockPath, 'utf8');
-      }
-    }
-    sdia('cli-handler.suite8.dock-missing', { candidates });
-    return '';
-  } catch {
-    return '';
-  }
-}
-
-// A-3 SAPR · BDAP+Suite8 composition.
-// When a session has a suite8Name, the BDAP base prompt (scs-bridge-base.generated.md),
-// the shared Dock (scs-bridge-dock-suite8.md · C1-D3), and the Suite 8's Instance.md
-// are COMPOSED into a single combined file written to bridgeRoot(). This preserves the
-// RM-D2 BDAP relay contract (base prompt is never dropped) while appending the Suite 8
-// activation + identity. The combined file is then passed as the single
-// --append-system-prompt-file argument.
-//
-// 3-layer order (C1-D3 BDAP): Base (generated · SORD contract) → Dock (static ·
-// Active Crystraline Suite 8 activation) → Instance.md (specific identity). The Dock
-// sits in the middle: it activates Suite-8 operating mode AFTER the tool contract and
-// BEFORE the specific identity.
-//
-// File naming: scs-bridge-suite8-<suite8Name>.generated.md (one per Suite 8 name,
-// regenerated on every engage so the Instance.md content is always current).
-//
-// General-skip preserved: no suite8Name → return basePath unchanged (Base only).
-// Graceful fallback: if Instance.md is absent (NDEP mismatch / Suite 8 not installed),
-// the function returns the plain BDAP base prompt path (unchanged behavior). If the
-// Dock is absent, the composer degrades to a 2-layer Base→Instance compose.
-function resolveComposedAppendPath(
-  basePromptPath: string | undefined,
-  suite8Name: string | undefined,
-  scpRoot?: string,
-): string | undefined {
-  if (!suite8Name) return basePromptPath;
-
-  // THE OWNING-SCP PROBE (the generated-page identity law): a Shatterite spawn from a
-  // GENERATED Suite 8 page carries suite8Name but often NO scpName (the session entry's
-  // scpName is unset → the caller's resolveScpDir yields undefined → the SCP-LOCAL
-  // Instance.md was unreachable and the compose silently degraded to base-only — the
-  // bare, identity-less spawn). When scpRoot is absent, PROBE which installed SCP OWNS
-  // the designation (the SCP whose Cascades/8_SUITES/<suite8Name>/ exists — the same
-  // C465 resolver the Extended relocation trusts). Covers every generated page AND the
-  // bare Step-2 mint (the 8_SUITES dir exists before the Entourage Forge builds the page).
-  if (!scpRoot || scpRoot.length === 0) {
-    const owningRoot = resolveOwningScpRoot(suite8Name);
-    if (owningRoot) {
-      scpRoot = owningRoot;
-      sdia('cli-handler.suite8.owning-scp-probe', { suite8Name, owningRoot });
-    }
-  }
-
-  // MD-1 · D-SB-3 · scpRoot re-root: when the session's SCP carries an install dir
-  // (resolved from boundScps[scpName].dir), the compose reads the SCP-LOCAL Instance.md
-  // (Cascades/8_SUITES/<name>/Instance.md under scpRoot) — the Sovereignty Boundary.
-  //
-  // C378 · THE ONBOARD SOVEREIGNTY THREAD (Instance.md leg — one rule, both documents).
-  // The prior single resolveSuite8InstanceMd(name, scpRoot) picked the SCP dir XOR the
-  // workspace root, so a defined-but-absent SCP-local Instance.md dropped to base-only
-  // with NO fall-through to the workspace Instance.md — the SAME BARE-spawn gap the
-  // Onboard read carried. Try BOTH grounds (SCP-local FIRST, workspace SECOND) and NAME
-  // which ground resolved via the same instance.resolve telemetry.
-  const workspaceInstancePath = resolveSuite8InstanceMd(suite8Name);
-  const scpLocalInstancePath =
-    scpRoot && scpRoot.length > 0 ? resolveSuite8InstanceMd(suite8Name, scpRoot) : undefined;
-  let instancePath: string;
-  let instanceGround: 'scp-local' | 'workspace' | 'absent';
-  if (scpLocalInstancePath && existsSync(scpLocalInstancePath)) {
-    instancePath = scpLocalInstancePath;
-    instanceGround = 'scp-local';
-  } else if (existsSync(workspaceInstancePath)) {
-    instancePath = workspaceInstancePath;
-    instanceGround = 'workspace';
-  } else {
-    instancePath = scpLocalInstancePath ?? workspaceInstancePath;
-    instanceGround = 'absent';
-  }
-  sdia('cli-handler.suite8.instance.resolve', {
-    suite8Name,
-    scpRoot: scpRoot ?? null,
-    ground: instanceGround,
-    resolvedPath: instanceGround === 'absent' ? null : instancePath,
-    scpLocalPathTried: scpLocalInstancePath ?? null,
-    workspacePathTried: workspaceInstancePath,
-  });
-  if (instanceGround === 'absent') {
-    // MD-1 FailureNode: both grounds absent → graceful fallback to the plain BDAP base
-    // prompt (the spawn never breaks · no bridge-root leak into the SCP compose).
-    sdia('cli-handler.suite8.instance-md-missing', {
-      suite8Name,
-      instancePath,
-      scpRoot: scpRoot ?? null,
-      ground: instanceGround,
-      scpLocalPathTried: scpLocalInstancePath ?? null,
-      workspacePathTried: workspaceInstancePath,
-    });
-    return basePromptPath;
-  }
-
-  let baseContent = '';
-  if (basePromptPath && existsSync(basePromptPath)) {
-    baseContent = readFileSync(basePromptPath, 'utf8');
-  }
-  // C754 · THE STAMPED DOCK (the Withheld-Answer fix): the bridge KNOWS the designation and
-  // — via the owning-SCP probe above — the SCP root at compose time; stamp both into the
-  // Dock §4 placeholders so the newborn receives its geography as a GIVEN. The discovery
-  // ladder in the newborn guard remains only as the fallback for an unresolved stamp.
-  const rawDockContent = resolveDockContent();
-  const dockContent = rawDockContent
-    .split('{{SUITE8_DESIGNATION}}')
-    .join(suite8Name)
-    .split('{{SCP_ROOT}}')
-    .join(
-      scpRoot && scpRoot.length > 0
-        ? scpRoot
-        : 'unresolved at spawn — use the fallback ladder in the newborn guard below',
-    );
-  const instanceContent = readFileSync(instancePath, 'utf8');
-
-  // 3-layer compose · Base → Dock → Instance, joined by `\n\n---\n\n`.
-  // Each layer is optional-by-presence: missing Base → start at Dock; missing Dock →
-  // Base→Instance directly; missing both → Instance only (unreachable here since
-  // suite8Name+Instance.md are guaranteed present at this point).
-  const layers = [baseContent, dockContent, instanceContent].filter(
-    (layer) => layer && layer.length > 0,
-  );
-  const composed = layers.join('\n\n---\n\n');
-
-  const safeName = suite8Name.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const outPath = nodePath.join(bridgeRoot(), `scs-bridge-suite8-${safeName}.generated.md`);
-  writeFileSync(outPath, composed, 'utf8');
-
-  sdia('cli-handler.suite8.composed-prompt-written', {
-    suite8Name,
-    outPath,
-    instancePath,
-    layers: layers.length,
-    dockIncluded: dockContent.length > 0,
-  });
-  return outPath;
-}
-
-// MD-1 · D-SB-3 · THE SCP-DIR RESOLVER (spawn re-root). Reads boundScps[scpName].dir
-// from the per-project bridge.json (the D-SB-1 field). Secondary source: SCPs.json
-// `path` resolved against process.cwd() (covers the pre-bind window where the SCP is
-// installed but not yet a live boundScp). FailureNode: unknown scpName / absent both
-// registries → undefined ⇒ the compose + roster fall back to the bridge root (unchanged
-// behavior · the SCP simply has no sovereign boundary yet). NEVER throws.
+// The Electron door's telemetry sink is sdia (electron-debug.json); the shared modules
+// default to log() (debug.json). This shim keeps the EXACT legacy event name this process
+// has always written for the scpDir miss, so no existing grep/diagnostic breaks.
+const scpDirEmit = (_event: string, payload: Record<string, unknown>): void => {
+  sdia('cli-handler.resolveScpDir.miss', payload);
+};
 function resolveScpDir(scpName: string | undefined): string | undefined {
-  if (!scpName || scpName.length === 0) return undefined;
-  // F2 · THE ROOT PIN · both registry reads resolve against bridgeRoot() (the C375
-  // setBridgeRootOverride-aware / SCS_BRIDGE_ROOT_OVERRIDE-aware junction root), NOT
-  // raw process.cwd(). The electron process's cwd can DIVERGE from the daemon's, so a
-  // cwd-relative read reaches a stray dev-repo Cascades/ instead of the live install —
-  // the same drift the paths.ts F3 pin cures for the registry write. bridgeRoot()
-  // returns <root>/Cascades/Bridge: bridge.json sits directly there; SCPs.json is its
-  // sibling one level up (<root>/Cascades/SCPs.json).
-  const bridgeJsonPath = nodePath.join(bridgeRoot(), 'bridge.json');
-  const scpsJsonPath = nodePath.join(bridgeRoot(), '..', 'SCPs.json');
-  // F4 · THE DOUBLED-PATH CURE (FrontierTest1 field wound): SCPs.json `path` entries
-  // are WORKSPACE-ROOT-relative ("Cascades/scps/<name>/SCP" — the SAME base
-  // anchorConfig.model.ts resolveScpRootByName resolves against), NOT
-  // Cascades-relative. The prior base (<root>/Cascades) doubled the segment —
-  // 04:39 instance.resolve scpRoot=<root>/Cascades/Cascades/scps/… → the SCP-local
-  // Instance.md probe failed → ground=workspace. Base = bridgeRoot()/../.. (the
-  // workspace root · SCPs.json's own grandparent).
-  const workspaceRoot = nodePath.resolve(bridgeRoot(), '..', '..');
-  // 1. bridge.json boundScps[scpName].dir — the live, bridge-resolved absolute root.
-  try {
-    const raw = readFileSync(bridgeJsonPath, 'utf8');
-    const bj = JSON.parse(raw) as { boundScps?: Record<string, { dir?: unknown }> };
-    const dir = bj.boundScps?.[scpName]?.dir;
-    if (typeof dir === 'string' && dir.length > 0) return dir;
-  } catch {
-    /* absent/malformed bridge.json → fall through to SCPs.json */
-  }
-  // 2. SCPs.json `path` resolved against the pinned Cascades dir (installed-but-not-
-  //    yet-bound fallback).
-  try {
-    const raw = readFileSync(scpsJsonPath, 'utf8');
-    const parsed = JSON.parse(raw) as { scps?: Array<{ name?: string; path?: string }> };
-    const entry = Array.isArray(parsed.scps)
-      ? parsed.scps.find((s) => s?.name === scpName && typeof s?.path === 'string')
-      : undefined;
-    if (entry && typeof entry.path === 'string' && entry.path.length > 0) {
-      // F4 normalization Concluder: an absolute stored path is used AS-IS; a
-      // relative one resolves exactly ONCE against the workspace root — never a
-      // blind join against a base that itself ends in Cascades (the doubled-path
-      // field wound).
-      return nodePath.isAbsolute(entry.path)
-        ? entry.path
-        : nodePath.resolve(workspaceRoot, entry.path);
-    }
-  } catch {
-    /* absent/malformed SCPs.json → undefined (bridge-root fallback downstream) */
-  }
-  // F2 · THE GUARD-TELEMETRY LAW · both pinned reads missed (unknown scpName / neither
-  // registry carried it). Name the two paths tried so the next spawn's bare-base cause
-  // is diagnosable from the sdia stream (was it a wrong-root read, or a genuine miss).
-  sdia('cli-handler.resolveScpDir.miss', {
-    scpName,
-    bridgeJsonPathTried: bridgeJsonPath,
-    scpsJsonPathTried: scpsJsonPath,
-  });
-  return undefined;
+  return resolveScpDirShared(scpName, scpDirEmit);
 }
+// The assembler's own named lines (prompt.assembled · prompt.instance-md-missing ·
+// prompt.dock-missing · prompt.legacy-root-twin · …) land in electron-debug.json.
+const composeEmit = (event: string, payload: Record<string, unknown>): void => {
+  sdia(event, payload);
+};
+
+// C1-D3 DOCK · RELOCATED (RESUME INDUCTION W1) → src/lib/bridge/baseSystemPrompt/dockContent.ts.
+// The daemon (manager.ts) cannot import src/main/*, so the Dock resolver had to sit where
+// BOTH doors reach. Body + the C755 dual-candidate comment moved verbatim; GUARD 8 folds the
+// package-root guess into baseSystemPrompt.resolvePackageRootCandidates (one helper, not three).
+
+// A-3 SAPR · BDAP+Suite8 composition · RETIRED (RESUME INDUCTION W3) → the ONE assembler
+// src/lib/bridge/baseSystemPrompt/composeAppendedSystemPrompt.ts. The local composer was
+// unreachable from the daemon (src/lib/* cannot import src/main/*), so the TUI / `scs attach`
+// / `scs bridge spawn` doors resumed with NOTHING appended — that unreachability WAS the
+// strip. Both open-session call sites below now call the shared assembler, which also
+// REGENERATES the base at fire time and seats the composed file PER ENVIRONMENT SEGMENT.
+
+// MD-1 · D-SB-3 · THE SCP-DIR RESOLVER · RELOCATED (RESUME INDUCTION W1) →
+// src/lib/bridge/scpDirResolver.model.ts (F2 root pin · F4 doubled-path cure · TOH-12 BREAK 2
+// comments carried verbatim). composeAppendedSystemPrompt needs it from the daemon side too.
 
 export interface SessionFactoryOptions {
   command: string;
@@ -325,11 +120,23 @@ export interface CliHandlerContext {
 // read idiom). The Electron never shares the daemon's activeBridgePort module; it reads the
 // file. 7111 fallback = the pre-scan world (single workspace · missing file).
 function resolveBridgePortFromMetadata(): number {
+  // C1076 · THE NAMED ORIGIN FIRST. Under two bridges in one workspace the top-level `port` is the OTHER
+  // bridge's (the unnamed production rendezvous); OUR port is `namedBridges[<env>]`. Reading the top level
+  // handed every session this Electron opened a hook base on the wrong bridge — its hook-borne state landed
+  // there as `session-not-found`, and the owning bridge could not place a relayed message. Mirrors the SCP
+  // client's resolveOriginPort (named first · top level otherwise); the 7111 literal is the last resort, named.
+  const env = environmentName();
   try {
     const raw = readFileSync(bridgeMetadataPathPerProject(process.cwd()), 'utf8');
-    const port = (JSON.parse(raw) as { port?: number }).port;
-    return typeof port === 'number' && port > 0 ? port : 7111;
+    const bj = JSON.parse(raw) as { port?: number; namedBridges?: Record<string, { port?: number }> };
+    if (env.length > 0) {
+      const named = bj.namedBridges?.[env]?.port;
+      if (typeof named === 'number' && named > 0) return named;
+      console.warn(`[cli-handler] bridge.port.named-unregistered · env=${env} · falling back to the top-level port`);
+    }
+    return typeof bj.port === 'number' && bj.port > 0 ? bj.port : 7111;
   } catch {
+    console.warn('[cli-handler] bridge.port.metadata-unreadable · falling back to 7111');
     return 7111;
   }
 }
@@ -341,11 +148,12 @@ interface SessionResolveOpts {
   scpName?: string;
   // A-3 SAPR · parallel to scpName — the Suite 8 assigned to this session (NDEP name).
   suite8Name?: string;
-  // MD-9 · D-MC-2 · Per-Instance Model Control · the per-session model recorded at spawn
-  // (entry.model · a full AVAILABLE_MODELS id). Threaded from the registry-resolve leg;
-  // buildBlcwSpawnOpts modelClause = `resolved.model ?? getActiveDefaultModel()`, so BOTH
-  // new AND resume (and the anchor bridge-restart resume) inject the recorded model OVER
-  // the global default. Absent ⇒ the global default (unchanged behavior).
+  // MD-9 · D-MC-2 · Per-Instance Model Control · the per-session model recorded on the
+  // entry (entry.model · a full AVAILABLE_MODELS id). Threaded from the registry-resolve
+  // leg. C1104 ruling A: a recorded value is a CHOICE (explicit SET or OBSERVED from the
+  // transcript) and is injected on new AND resume alike; ABSENT on a RESUME now injects
+  // NOTHING — no `--model` flag at all, so the user's own /model default applies. Absent
+  // on a NEW spawn falls to the derived spawn default (buildBlcwSpawnOpts).
   model?: string;
   settingsPath: string;
   mode: 'new' | 'resume';
@@ -450,13 +258,23 @@ function buildBlcwSpawnOpts(id: string, resolved: SessionResolveOpts): SessionFa
   if (s8AutoMode) {
     sdia('spawn.auto-mode', { suite8Name: resolved.suite8Name, source: 's8-json-toggle' });
   }
-  // Model Control · EVERY spawn AND resume (general agent or Suite 8 alike) runs a model.
-  // MD-9 · D-MC-2 · Per-Instance Model Control: the PER-SESSION recorded model (resolved.model,
-  // read from entry.model in the registry-resolve leg) OVERRIDES the bridge global default
-  // (bridge.json.defaultModel → activeDefaultModel · seeded Opus 4.8). Absent ⇒ the global.
-  // Applies to new AND resume (and the anchor bridge-restart resume — all flow through here).
+  // Model Control · C1104 · RULING A — THE WOUND, CURED AT ITS ONE LINE.
+  //   resolved.model defined  → inject it. A stamp MEANS A CHOICE now: an explicit SET
+  //                             (page · TUI · scs_set_session_model) or an OBSERVED model
+  //                             (the transcript's latest assistant turn).
+  //   resume, nothing recorded → NO CLAUSE AT ALL. The bridge stops forcing a model, so
+  //                             the user's own `/model` default applies. This is the whole
+  //                             of ruling A: it used to fall to getActiveDefaultModel() and
+  //                             re-assert the birth stamp on every single resume.
+  //   new, nothing chosen      → the SPAWN default (the derived highest Opus · d-A). A
+  //                             genuine new-session default, injected as a FLAG and never
+  //                             recorded on the entry, so it never becomes a forced stamp.
   // Full pinned ID (aliases drift). Same inline-clause idiom as autoModeClause.
-  const modelClause = ` --model ${shellQuote(resolved.model ?? getActiveDefaultModel())}`;
+  const modelClause = resolved.model
+    ? ` --model ${shellQuote(resolved.model)}`
+    : resolved.mode === 'resume'
+      ? ''
+      : ` --model ${shellQuote(getActiveDefaultModel())}`;
   const claudeCmd =
     resolved.mode === 'resume' && resolved.claudeSessionId
       ? `cd ${cwdQ} && claude --resume ${shellQuote(resolved.claudeSessionId)} --settings ${settingsQ}${modelClause}${autoModeClause}${appendClause}`
@@ -607,7 +425,7 @@ async function buildOnboardValues(scpName: string): Promise<OnboardValues> {
   // Graceful: absent or malformed bridge.json → STVI_ABSENT_FALLBACK.
   let endpoint = STVI_ABSENT_FALLBACK;
   try {
-    const bridgeJsonPath = nodePath.join(process.cwd(), 'Cascades', 'Bridge', 'bridge.json');
+    const bridgeJsonPath = nodePath.join(workspaceBridgeDir(process.cwd()), 'bridge.json');
     const meta = JSON.parse(readFileSync(bridgeJsonPath, 'utf8')) as {
       endpoint?: string;
     };
@@ -1118,7 +936,7 @@ export function createCliHandler(ctx: CliHandlerContext) {
           // running NO compose refresh — so a re-engaged / re-used session kept whatever
           // spawn-settings + append file it was born with (bare scs-bridge-base for a
           // session first created without suite8 compose). Run the SAME refresh the full
-          // open-session path runs below (resolveScpDir → resolveComposedAppendPath →
+          // open-session path runs below (resolveScpDir → composeAppendedSystemPrompt →
           // writeSpawnSettings with suite8Name + scpDir), so the composed suite8 append
           // file is (re)written to disk and the settings file carries the current
           // scpName/suite8Name/scpDir.
@@ -1147,21 +965,24 @@ export function createCliHandler(ctx: CliHandlerContext) {
               reuseSuite8Name,
               reuseScpDir,
             );
-            const reuseGeneratedBasePromptPath = resolveGeneratedBasePromptPath();
-            const reuseBasePath = existsSync(reuseGeneratedBasePromptPath)
-              ? reuseGeneratedBasePromptPath
-              : undefined;
-            const reuseComposedPath = resolveComposedAppendPath(
-              reuseBasePath,
-              reuseSuite8Name,
-              reuseScpDir,
-            );
+            // RESUME INDUCTION · the ONE assembler. Ordering (writeSpawnSettings → compose)
+            // is preserved; the assembler is idempotent, so repeated hot-reuses converge
+            // exactly as the F1 comment above promises.
+            const reuseComposed = await composeAppendedSystemPrompt(sessionUlid, {
+              emit: composeEmit,
+              endpoint: `http://127.0.0.1:${resolveBridgePortFromMetadata()}`,
+              port: resolveBridgePortFromMetadata(),
+              suite8NameOverride: reuseSuite8Name,
+              scpDirOverride: reuseScpDir,
+            });
             sdia('cli-handler.open-session.hot-reuse-compose-refresh', {
               ulid: sessionUlid,
               scpName: reuseScpName ?? null,
               suite8Name: reuseSuite8Name ?? null,
               scpDir: reuseScpDir ?? null,
-              composedPath: reuseComposedPath ?? null,
+              composedPath: reuseComposed.path ?? null,
+              layers: reuseComposed.layers.length,
+              unchanged: reuseComposed.unchanged,
               // NOTE: no respawn occurs on this branch — refresh targets the NEXT resume.
               refreshTargetsNextResume: true,
             });
@@ -1196,7 +1017,9 @@ export function createCliHandler(ctx: CliHandlerContext) {
           const suite8Name = entry?.suite8Name ?? meta?.suite8Name;
           // MD-9 · D-MC-2 · Per-Instance Model Control · the recorded per-session model
           // (registry only). Threaded into resolved.model so buildBlcwSpawnOpts injects it
-          // OVER the global default (new AND resume). Undefined ⇒ the global default.
+          // OVER the derived spawn default. C1104 ruling A: undefined ⇒ a RESUME injects
+          // no flag at all (the user's /model default applies); a NEW spawn takes the
+          // derived default as a flag, unrecorded.
           // Haiku pin shim: old-recorded sessions may carry the retired
           // 'claude-haiku-4-5' alias — forward it to the pinned id so resolved.model
           // still injects a valid catalog id (undefined ⇒ the global default).
@@ -1408,28 +1231,35 @@ export function createCliHandler(ctx: CliHandlerContext) {
             path: settingsPath,
           });
 
-          // RM-D2 · BDAP resolution (SSGH). The generated Base prompt is written at
-          // bridge startup (port already substituted) sibling to bridge.json. Resolve
-          // its deterministic path; gate on existence so a missing file (older bridge /
-          // generation skipped) yields undefined → appendClause omitted → graceful
-          // no-append spawn (--append-system-prompt-file at a nonexistent path would
-          // otherwise fail the spawn). Existence is normally guaranteed by Phase B startup.
+          // RM-D2 · BDAP resolution (SSGH) · RESUME INDUCTION · THE ONE ASSEMBLER.
+          // The base is no longer merely RESOLVED here — the assembler REGENERATES it from
+          // the committed skeleton with THIS bridge's live endpoint/port, then joins THE
+          // DOCK and the designation's Instance.md (LAST). Every layer is read fresh at
+          // fire time (the C1088 law). An unresolvable layer degrades gracefully: absent
+          // Instance.md → base only; absent base → `path: undefined` ⇒ the appendClause is
+          // OMITTED (a clause pointing at a missing file would fail the spawn).
+          // Ghost-resume ordering is UNTOUCHED: `mode` was decided above and the assembler
+          // is mode-independent.
           const generatedBasePromptPath = resolveGeneratedBasePromptPath();
-          const basePath = existsSync(generatedBasePromptPath)
-            ? generatedBasePromptPath
-            : undefined;
-          // A-3 SAPR · BDAP composition: when suite8Name is set, compose BDAP base +
-          // Instance.md into a single combined file. BDAP relay contract is preserved —
-          // the base prompt content is never dropped. If Instance.md is missing the
-          // plain basePath is returned (graceful fallback, no spawn breakage).
-          const appendSystemPromptFilePath = resolveComposedAppendPath(basePath, suite8Name, scpDir);
+          const livePort = resolveBridgePortFromMetadata();
+          const composed = await composeAppendedSystemPrompt(sessionUlid, {
+            emit: composeEmit,
+            endpoint: `http://127.0.0.1:${livePort}`,
+            port: livePort,
+            suite8NameOverride: suite8Name,
+            scpDirOverride: scpDir,
+          });
+          const appendSystemPromptFilePath = composed.path;
           sdia('cli-handler.open-session.base-prompt-resolved', {
             ulid: sessionUlid,
             path: generatedBasePromptPath,
-            exists: !!basePath,
+            exists: existsSync(generatedBasePromptPath),
             suite8Name: suite8Name ?? null,
             scpDir: scpDir ?? null,
             composedPath: appendSystemPromptFilePath ?? null,
+            layers: composed.layers.length,
+            instanceGround: composed.instanceGround,
+            segment: composed.segment,
           });
 
           // PISF · Per-Id-Session-Factory (BLCW + BPEI constructed inside makeSession).

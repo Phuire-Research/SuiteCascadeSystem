@@ -48,6 +48,9 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'confirm'): void;
+  // C1001 · THE THIRD PATH — carry into B, then serve A. Distinct from 'confirm', which carries
+  // into B and serves B (C791 · SERVE THE CARRY).
+  (e: 'carry-serve-a'): void;
   (e: 'hard'): void;
   (e: 'cancel'): void;
 }>();
@@ -59,6 +62,10 @@ const changeLabel = computed<string>(() => {
 
 function handleConfirm(): void {
   emit('confirm');
+}
+
+function handleCarryServeA(): void {
+  emit('carry-serve-a');
 }
 
 function handleHard(): void {
@@ -116,7 +123,10 @@ onUnmounted(() => {
           <p class="ta-confirm-fork">
             <strong>Carry into B &amp; Serve B</strong> — your changes ride into B and the app reboots onto B
             (you will be looking at your changes; A stays the guarded stable you can revert to).
-            <strong>Hard Turn Over</strong> — ground reset (the app reboots as-is; nothing carried).
+            <strong>Carry into B &amp; Serve A</strong> — your changes ride into B and the app reboots
+            onto <strong>A, the stable run</strong>; the seat returns to B once A is observed booted, so
+            A is served but never worked on.
+                        <strong>Hard Turn Over</strong> — ground reset (the app reboots as-is; nothing carried).
           </p>
 
           <div class="ta-confirm-actions">
@@ -127,8 +137,15 @@ onUnmounted(() => {
               <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
               Hard Turn Over
             </button>
+            <button class="ta-confirm-serve-a" type="button" @click="handleCarryServeA">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              Carry into B &amp; Serve A
+            </button>
             <button class="ta-confirm-primary" type="button" @click="handleConfirm">
-              <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+              <!-- C1003 · THE SWORD. Shield/Sword ride the SAME FA glyphs their Tactical Bridge
+                   buttons wear (fa-shield-halved · fa-khanda) — the pair the standby overlay already
+                   documents. A keeps the shield; B takes the sword it was missing. -->
+              <i class="fa-solid fa-khanda" aria-hidden="true"></i>
               Carry into B &amp; Serve B
             </button>
           </div>
@@ -253,12 +270,17 @@ onUnmounted(() => {
 .ta-confirm-actions {
   position: relative;
   display: flex;
+  /* C1002 · Pewter — WRAP, do not COMPRESS. At four actions the row had no way to fail gracefully:
+     flex-end + gap with no wrap can only squeeze, and the field squeezed the third button to a
+     sliver. Wrapping degrades a crowded row into two honest lines instead. */
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.7rem;
 }
 
 .ta-confirm-cancel,
 .ta-confirm-hard,
+.ta-confirm-serve-a,
 .ta-confirm-primary {
   display: inline-flex;
   align-items: center;
@@ -310,17 +332,61 @@ onUnmounted(() => {
   box-shadow: inset 0 0 12px 1px rgba(217, 148, 42, 0.32);
 }
 
-/* Neon-primary — the glowing viridian Confirm. */
+/* C1003 · THE A REGISTER — GREEN, taken from the TACTICAL BRIDGE's own Turn-Over-A control
+   (GitmTurnOverAButton.vue:157-186 · rgba(19,213,148)). The modal is a second surface onto the SAME
+   decision the dock offers, so it must speak the dock's colour — a destination that changes hue
+   between surfaces reads as a different destination. THE SEMANTIC CORRECTION (C1002): this button
+   was BLUE, and blue is Suite 5 Professional — IMPLEMENTATION — which declared the stable branch an
+   implementation seat, the inverse of what A is. Green is A's colour because the Tactical Bridge
+   already says so. */
+.ta-confirm-serve-a {
+  background:
+    radial-gradient(ellipse at 38% 30%, rgba(19, 213, 148, 0.15) 0%, rgba(8, 14, 12, 0) 62%),
+    rgb(9, 14, 12);
+  border: 1px solid rgba(19, 213, 148, 0.55);
+  color: rgb(19, 213, 148);
+  text-shadow: 0 0 6px rgba(19, 213, 148, 0.6);
+}
+
+.ta-confirm-serve-a:hover {
+  border-color: rgba(19, 213, 148, 0.9);
+  color: rgb(110, 245, 200);
+  box-shadow:
+    0 0 14px 1px rgba(19, 213, 148, 0.5),
+    inset 0 0 14px 0 rgba(19, 213, 148, 0.18);
+}
+
+.ta-confirm-serve-a:active {
+  box-shadow: inset 0 0 12px 1px rgba(19, 213, 148, 0.35);
+}
+
+/* C1003 · THE B REGISTER — YELLOW, taken from the TACTICAL BRIDGE's own Turn-Over-B control
+   (GitmTurnOverBButton.vue:325-354 · rgba(234,179,8)). THE FAULT THIS CORRECTS: this button was
+   rgba(19,213,148) — THE A TOKEN. Serve-B was wearing A's colour, so the two destinations were
+   telling the user the same thing in the same hue while doing opposite things. A and B now differ
+   by REGISTER, not by a single trailing glyph. */
 .ta-confirm-primary {
   background:
-    radial-gradient(ellipse at 40% 20%, rgba(19, 213, 148, 0.28) 0%, rgba(8, 16, 13, 0) 70%),
-    rgb(9, 16, 13);
-  border: 1px solid rgba(19, 213, 148, 0.7);
-  color: rgb(150, 250, 210);
+    radial-gradient(ellipse at 38% 30%, rgba(234, 179, 8, 0.16) 0%, rgba(16, 13, 5, 0) 62%),
+    rgb(15, 12, 6);
+  border: 1px solid rgba(234, 179, 8, 0.7);
+  color: rgb(255, 206, 9);
   box-shadow:
-    0 0 12px 0 rgba(19, 213, 148, 0.4),
-    inset 0 0 12px 0 rgba(19, 213, 148, 0.14);
-  text-shadow: 0 0 6px rgba(19, 213, 148, 0.6);
+    0 0 12px 0 rgba(234, 179, 8, 0.4),
+    inset 0 0 12px 0 rgba(234, 179, 8, 0.14);
+  text-shadow: 0 0 6px rgba(234, 179, 8, 0.6);
+}
+
+.ta-confirm-primary:hover {
+  border-color: rgba(234, 179, 8, 0.9);
+  color: rgb(255, 224, 120);
+  box-shadow:
+    0 0 14px 1px rgba(234, 179, 8, 0.5),
+    inset 0 0 14px 0 rgba(234, 179, 8, 0.18);
+}
+
+.ta-confirm-primary:active {
+  box-shadow: inset 0 0 12px 1px rgba(234, 179, 8, 0.35);
 }
 
 .ta-confirm-primary:hover {

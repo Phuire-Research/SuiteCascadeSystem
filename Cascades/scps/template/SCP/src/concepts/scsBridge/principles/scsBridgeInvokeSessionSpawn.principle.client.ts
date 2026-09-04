@@ -26,6 +26,7 @@
  * Citation: D3D-MANIFOLD-RECALL-R0-OBSIDIAN.md §A (shared-function discipline)
  */
 import { ref, type Ref } from 'vue';
+import { resolveOriginMcpUrl } from '../../../model/scpConfig.model';
 import type { PrincipleFunction, MuxiumDeck } from 'stratimux';
 import type {
   ScsBridgeClientState,
@@ -117,7 +118,9 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
 
         // MCP-Correct-RPC · /mcp single endpoint with JSON-RPC 2.0 tools/call
         // envelope · same pattern verified in M63 scsBridgePingPrinciple.
-        const url = `${bridgeJson.endpoint}/mcp`;
+        // C1084 · THE NAMED ANCHOR (client side) · the spawn rides THIS SCP's published origin
+        // (/scp-config · resolveOriginMcpUrl), never the shared top-level rendezvous.
+        const originUrl = resolveOriginMcpUrl(bridgeJson.endpoint, 'CMIA-Spawn');
         const rpcId = Date.now();
         const body = {
           jsonrpc: '2.0',
@@ -136,17 +139,18 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
 
         // Snapshot pendingScpName for finally-clear (avoid stale closure capture).
         const firedScpName = pendingScpName;
-
-        console.log('[SCS-Bridge CMIA-Spawn] Firing fetch · url=', url, '· bodyShape=', { tool: 'scp_launch_new_session', scpName: firedScpName }, '· rpcId=', rpcId);
-
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json, text/event-stream',
-          },
-          body: JSON.stringify(body),
-        })
+        originUrl
+          .then((url) => {
+            console.log('[SCS-Bridge CMIA-Spawn] Firing fetch · url=', url, '· bodyShape=', { tool: 'scp_launch_new_session', scpName: firedScpName }, '· rpcId=', rpcId);
+            return fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json, text/event-stream',
+              },
+              body: JSON.stringify(body),
+            });
+          })
           .then(async (res) => {
             const contentType = res.headers.get('content-type') ?? '';
             console.log(
@@ -225,6 +229,10 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // EF-3′ · THE TARGET S8 THREAD · read at fire-time (same lane) · threaded when set →
         // the bridge persists it on the registry entry (the Previous Conductions per-page filter).
         const pendingTargetName = k_.pendingSpawnSuite8TargetName.select();
+        // RM-2 · THE ANCHOR MODEL ROW · the explicit spawn argument WINS over the page-wide pin when
+        // supplied: undefined → the pin may ride · null → no model (the pin is bypassed) · string → it.
+        const pendingSuite8Model = k_.pendingSpawnSuite8Model.select();
+        const spawnModel = pendingSuite8Model === undefined ? pendingModel : (pendingSuite8Model ?? undefined);
 
         console.log(
           '[SCS-Bridge CMIA-Spawn-Suite8] Gate · pendingSpawnSuite8Name=',
@@ -256,7 +264,7 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         // spawns AGAIN → infinite "new session after new session". Clearing here means the clear
         // is applied DURING the fetch (while isSpawningSuite8=true blocks re-fires), so by the
         // time .finally() releases the guard the trigger is already undefined.
-        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined, initialDirective: undefined, onboard: undefined, anchor: undefined, targetSuite8Name: undefined }), {
+        dispatch(e_.scsBridgeSetPendingSpawnSuite8Name({ suite8Name: undefined, asWorker: undefined, scpName: undefined, fresh: undefined, manualMode: undefined, initialDirective: undefined, onboard: undefined, anchor: undefined, targetSuite8Name: undefined, model: undefined }), {
           throttle: 0
         });
         console.log('[SCS-Bridge CMIA-Spawn-Suite8] Gate FIRE · pendingSuite8Name=', pendingSuite8Name, '· asWorker=', pendingAsWorker ?? false, '· trigger cleared early (TFCD-EARLY)');
@@ -268,7 +276,9 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
           }
         }, 5000);
 
-        const url = `${bridgeJson.endpoint}/mcp`;
+        // C1084 · THE NAMED ANCHOR (client side) · the spawn rides THIS SCP's published origin
+        // (/scp-config · resolveOriginMcpUrl), never the shared top-level rendezvous.
+        const originUrl = resolveOriginMcpUrl(bridgeJson.endpoint, 'CMIA-Spawn');
         const rpcId = Date.now();
         const body = {
           jsonrpc: '2.0',
@@ -283,7 +293,7 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
             arguments: {
               suite8Name: pendingSuite8Name,
               ...(pendingAsWorker ? { asWorker: true } : {}),
-              ...(pendingModel ? { model: pendingModel } : {}),
+              ...(spawnModel ? { model: spawnModel } : {}),
               // C373 · THE SCP THREAD · thread scpName ONLY when set (the bridge quality already
               // consumes payload.scpName — no bridge edit). Omitted → the bridge resolves the SCP dir.
               ...(pendingScpName ? { scpName: pendingScpName } : {}),
@@ -309,17 +319,18 @@ export const scsBridgeInvokeSessionSpawnPrinciple: ScsBridgeInvokeSessionSpawnPr
         };
 
         const firedSuite8Name = pendingSuite8Name;
-
-        console.log('[SCS-Bridge CMIA-Spawn-Suite8] Firing fetch · url=', url, '· bodyShape=', { tool: 'scs_spawn_suite8_session', suite8Name: firedSuite8Name, asWorker: pendingAsWorker ?? false }, '· rpcId=', rpcId);
-
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json, text/event-stream',
-          },
-          body: JSON.stringify(body),
-        })
+        originUrl
+          .then((url) => {
+            console.log('[SCS-Bridge CMIA-Spawn-Suite8] Firing fetch · url=', url, '· bodyShape=', { tool: 'scs_spawn_suite8_session', suite8Name: firedSuite8Name, asWorker: pendingAsWorker ?? false }, '· rpcId=', rpcId);
+            return fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json, text/event-stream',
+              },
+              body: JSON.stringify(body),
+            });
+          })
           .then(async (res) => {
             const contentType = res.headers.get('content-type') ?? '';
             console.log(

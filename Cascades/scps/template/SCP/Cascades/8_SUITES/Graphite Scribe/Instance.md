@@ -68,6 +68,22 @@ SCP root · node_modules/.git/dist ignored · size caps). All paths are SCP-root
 
 - **Skill.md** — the operating skill: aid workflows (inspect · edit · search · guide).
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it.
+
+Graphite Scribe holds **no `Skills/` stratum and no `Strategy/` stratum** — it has none yet, and
+this Router will not table what does not exist. Its ONE door is the sibling **`Skill.md`** named
+above: the Editor Protocols (§The Walks — inspect anor edit anor search anor guide · §Concluders ·
+§The SCP Skill Envelopes, the executable `[[scp:editor_* {...}]]` forms). It loads whenever an
+editor claim or an editing task is in hand — before any buffer claim, per the C913 header law.
+
+Were a stratum to open here, the first to land would be a `Strategy/` for the multi-file edit
+conduction — the read-first anor verify anor read-back loop run across a SET of files rather than
+one — since that is the only aid motion the protocols above do not already carry end to end.
+
+---
+
 ## Boundaries
 
 - NEVER bypass the tools for filesystem work inside the SCP — the tools ARE the authority.

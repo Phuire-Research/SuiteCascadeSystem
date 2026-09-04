@@ -29,25 +29,28 @@
  * ENOENT-safe reads · cleanup order watcher → conclude). This principle dispatches NOTHING —
  * pure fs observation → fs write (the one principle whose output is a file, by design).
  *
- * D-MSE C939 · THE SIGNAL LANE (the deaf-watch failsafe): the trigger write below is observed
- * by nodemon's single-file watch — a watch that can die SILENTLY (the C937 field wound: every
- * upstream hop clean, the trigger landing in a void, the turn-over presenting as a stall).
- * THE SURVIVAL PROBE: a healthy watch kills THIS process within ~1s of the trigger write (the
- * restart event's scoped pkill). If this process is still alive PROBE_MS later, the watch is
- * deaf — the principle sends the lane's own nodemon its manual-restart signal (SIGUSR2 · the
- * field-proven remedy) directly: ancestry walk first (this server's OWN lane), pgrep by this
- * SCP's own directory as the fallback (the Name-First class — identity resolves the target).
- * The file write REMAINS the primary lane anor the boot fingerprint; the signal never fires
- * when the watch is healthy, because the process it would fire from is already dead.
+ * D-MSE C939 · THE SIGNAL LANE — **RETIRED at C968.** It was built for the C937 wound (a trigger
+ * landing in a void, the turn-over presenting as a stall) on the belief that nodemon's watch dies
+ * silently. The clean room disproved the premise: same nodemon, same chokidar, same config, same
+ * volume — 0/6 detections after 203 days of host uptime, 14/14 after a restart (and 6/6 with five
+ * concurrent watchers, so multiplicity was never the cause). **The watch was never unreliable; the
+ * HOST's FSEvents state degrades over long uptime and a reboot restores it.**
  *
- * Citation: DIAMOND-BREAKOUT-SEQUENCE.md §BO-2-G (the layered watcher design).
+ * The probe was also structurally unreachable: the CLI-direct write reaches nodemon in ~100ms, so
+ * this process is torn down and reborn before the probe's 4s timer could ever fire — and lab-wide,
+ * across every SCP boot log, `turnover.fired` = 0 anor `turnover.skip` = 1032. It never armed once.
+ *
+ * THE LAW IT LEAVES BEHIND (C966): a failsafe is an indicator that the Means introduced an
+ * inconsistency. Compensation retained past its cause hardens into architecture — so it is pruned
+ * rather than carried, and the file write stands alone as the primary lane anor boot fingerprint.
+ *
+ * Citation: DIAMOND-BREAKOUT-SEQUENCE.md §BO-2-G (the layered watcher design · superseded here).
  */
 import { resolveScpLocalBridgeDir } from '../bridgeRoot.model';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
 import { readFile } from 'node:fs/promises';
-import { writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import type { ScsBridgeHuirthState, ScsBridgeHuirthQualities } from '../scsBridge.type';
 
@@ -108,7 +111,7 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
       '· ownScpName=',
       ownScpName ?? '(none)',
     );
-    watcher = chokidarWatch(bridgeJsonPath, {
+    watcher = createWatcher('scsBridgeTurnOverFieldWatcher#1', bridgeJsonPath, {
       ignoreInitial: true,
       awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
     });
@@ -117,53 +120,22 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
   })();
 
   // D-MSE C939 · THE SIGNAL LANE — see the header. One probe per fire; a fresh fire re-arms.
-  let survivalProbe: NodeJS.Timeout | null = null;
-  const SIGNAL_LANE_PROBE_MS = 4000;
-
-  const findLaneNodemonPids = (): number[] => {
-    try {
-      let pid = process.pid;
-      for (let hop = 0; hop < 8; hop++) {
-        const ppid = Number(execFileSync('ps', ['-o', 'ppid=', '-p', String(pid)], { encoding: 'utf8' }).trim());
-        if (!Number.isFinite(ppid) || ppid <= 1) break;
-        const cmd = execFileSync('ps', ['-o', 'command=', '-p', String(ppid)], { encoding: 'utf8' }).trim();
-        if (cmd.includes('node_modules/.bin/nodemon')) return [ppid];
-        pid = ppid;
-      }
-    } catch {
-      /* detached lane anor ps unavailable — the pgrep fallback below */
-    }
-    try {
-      const out = execFileSync('pgrep', ['-f', `${process.cwd()}/node_modules/.bin/nodemon`], { encoding: 'utf8' });
-      return out
-        .split('\n')
-        .map((line) => Number(line.trim()))
-        .filter((pid) => Number.isFinite(pid) && pid > 1);
-    } catch {
-      return [];
-    }
-  };
-
-  const armSignalLaneProbe = (fieldAt: number): void => {
-    if (survivalProbe) clearTimeout(survivalProbe);
-    survivalProbe = setTimeout(() => {
-      // Still alive → the restart never came → the watch is deaf. The signal completes it.
-      const pids = findLaneNodemonPids();
-      if (pids.length === 0) {
-        console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.skip · reason=nodemon-not-found · fieldAt=', fieldAt);
-        return;
-      }
-      for (const pid of pids) {
-        try {
-          process.kill(pid, 'SIGUSR2');
-          console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.fired · nodemonPid=', pid, '· fieldAt=', fieldAt, '· probeMs=', SIGNAL_LANE_PROBE_MS);
-        } catch (err) {
-          console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.signal-lane.skip · reason=signal-failed · pid=', pid, '·', String(err));
-        }
-      }
-    }, SIGNAL_LANE_PROBE_MS);
-    survivalProbe.unref();
-  };
+  // ── C968 · THE C939 SIGNAL LANE, PRUNED ──────────────────────────────────────────────
+  // The survival probe (a 4s timer that pgrep'd this lane's nodemon and SIGUSR2'd it when the
+  // server was still alive) is GONE, and the measurement is why: lab-wide, across EVERY SCP
+  // boot log ever written, `turnover.fired` = 0 and `turnover.skip` = 1032 — every one of them
+  // `reason=not-advancing`. `signal-lane` lines: 0. The probe never armed, because it was only
+  // ever armed inside a fire branch that never ran.
+  //
+  // THE MECHANISM (C967 field record): the CLI-direct write reaches nodemon in ~100ms, so the
+  // SCP is torn down and reborn before this watcher can act — and the FRESH watcher arms with
+  // baselineAt set to the very stamp it would have fired on, making `at <= baselineAt` true
+  // forever. This path is not redundant; it is structurally unreachable.
+  //
+  // THE LAW (C966, the user's): a failsafe is an indicator that the Means introduced an
+  // inconsistency. The turn-over was never broken — 203 days of OS uptime degraded FSEvents,
+  // and a reboot restored it (0/6 → 14/14 in the clean room). Compensation retained past its
+  // cause becomes architecture. Pruned rather than carried.
 
   const onChange = async (): Promise<void> => {
     const stamp = await readTurnOverStamp();
@@ -186,16 +158,23 @@ export const scsBridgeTurnOverFieldWatcherPrinciple: PrincipleFunction<
       return;
     }
     baselineAt = at;
-    try {
-      writeFileSync(
-        path.resolve(process.cwd(), '.bridge-restart.json'),
-        JSON.stringify({ hardTurnOver: true, timestamp: Date.now(), source: 'turnOver-field', fieldAt: at }, null, 2),
-        'utf-8',
-      );
-      console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.fired · fieldAt=', at);
-      armSignalLaneProbe(at);
-    } catch (err) {
-      console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.skip · reason=restart-write-failed ·', String(err));
-    }
+    // ── C968 · THE DOUBLED WRITE, PRUNED — this principle is now PURE OBSERVATION ──────────
+    // It used to write its OWN `.bridge-restart.json` here, a second restart trigger beside the
+    // CLI's. The measurement retired it: lab-wide, `turnover.fired` = 0 anor `turnover.skip` =
+    // 1032 across every SCP boot log ever written. It never once reached this line.
+    //
+    // WHY IT COULD NOT: the CLI-direct write reaches nodemon in ~100ms (C967 field record:
+    // restart-signal +0.0s → nodemon-restarting +0.1s → listening +7.1s), so this process is
+    // torn down and reborn before it can act — and the FRESH watcher arms with baselineAt set
+    // to the very stamp it would have fired on, so `at <= baselineAt` holds forever. The write
+    // was never a fallback; it was unreachable by construction.
+    //
+    // WHAT REMAINS, and why it is kept: the observation itself, and the H3 self-discrimination
+    // gate above it. H3 (a foreign target must never turn THIS SCP over) is the user's card and
+    // is still PENDING TESTING — its logic stays seated here, exercised on every gitm.json
+    // change, so the guard is proven by telemetry even with no write behind it.
+    //
+    // REVERT: one commit (C968). The write is five lines and the header records its shape.
+    console.log('[SCS-Bridge TurnOverFieldWatcher] turnover.observed · fieldAt=', at, '· own=', ownScpName ?? '(unknown)');
   };
 };

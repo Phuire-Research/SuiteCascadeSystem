@@ -1,4 +1,5 @@
 import { readFileSync, watchFile, unwatchFile } from 'node:fs';
+import { createFileWatcher } from '../bridge/watcherSingleton.model';
 import { resolve } from 'node:path';
 import { registryPath } from '../bridge/paths';
 
@@ -112,12 +113,12 @@ export function createBridgeStateFeed(opts: BridgeStateFeedOptions = {}): Bridge
   readCascadeJson();
   readSessionsJson();
 
-  watchFile(cascadeJsonPath, { interval: watchInterval }, () => {
+  createFileWatcher('bridgeStateFeed.cascadeJson', cascadeJsonPath, { interval: watchInterval }, () => {
     // FIX-4 race guard: skip late callbacks after dispose
     if (disposed) return;
     if (readCascadeJson()) notify();
   });
-  watchFile(sessionsJsonPath, { interval: watchInterval }, () => {
+  createFileWatcher('bridgeStateFeed.sessionsJson', sessionsJsonPath, { interval: watchInterval }, () => {
     if (disposed) return;
     if (readSessionsJson()) notify();
   });

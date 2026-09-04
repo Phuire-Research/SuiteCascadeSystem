@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { sessionDir, spawnSettingsPath } from './paths';
 import { isDebugEnabled, log } from './debugLog';
+import { getActiveBridgePort } from './activeBridgePort.model';
 import { tdia } from './tdia';
 
 /**
@@ -102,7 +103,7 @@ function shellQuote(value: string): string {
 export function buildSpawnSettings(
   sessionId: string,
   scpName?: string,
-  bridgePort = 7111,
+  bridgePort?: number,
   suite8Name?: string,
   // MD-1 · D-SB-3 · the SCP install root (Sovereignty Boundary). When present, the
   // session's allow-list is EXTENDED with a targeted Write/Edit rule scoped to that
@@ -162,7 +163,15 @@ export function buildSpawnSettings(
   const commandUserPromptSubmit = `${debugPrefix}SCS_BRIDGE_ULID=${sessionId} ${binAndCli} __hook user-prompt-submit`;
   // RM-D3 · HTTP hook base — the CLI Bridge daemon owns this port (scpExpressTransport
   // listens on 7111; bridgeJson.endpoint uses the same 127.0.0.1 host).
-  const hookBase = `http://127.0.0.1:${bridgePort}`;
+  // C1075 · the silent `= 7111` default becomes a named event (Salvo M · R6 §3): a worker whose hooks point at
+  // a bridge that is not ours is a crossed wire, and it used to be invisible.
+  // C1076 · THE CASCADED PORT, NOT THE LITERAL. A discovered (adopted) session and a resumed session reached this seat
+  // with no port and fell to 7111 — under two bridges their hooks POSTed to PRODUCTION while Dev owned them, so every
+  // hook-borne fact (launch meta · processing state · turn state · transcript) landed in the wrong registry as
+  // `session-not-found`. The fallback is the port THIS bridge actually bound; the literal is the last resort, named.
+  const resolvedBridgePort = bridgePort ?? getActiveBridgePort();
+  if (bridgePort === undefined) log('spawn.hookBase.DEFAULTED', { sessionId, usedPort: resolvedBridgePort, source: 'activeBridgePort' });
+  const hookBase = `http://127.0.0.1:${resolvedBridgePort}`;
   // W1.1 · D2 Recurse-5 BNPC diagnostic · build-end log
   // Captures the binary-name-process-capture-at-write-time values + context discriminator.
   // Pre-fix expected: isElectronCtx=true, nodeBin contains 'Electron', cliPath = projectRoot.
@@ -332,7 +341,7 @@ export function buildInstallSpawnSettings(opts: {
 export async function writeSpawnSettings(
   sessionId: string,
   scpName?: string,
-  bridgePort = 7111,
+  bridgePort?: number,
   suite8Name?: string,
   // MD-1 · D-SB-3 · the SCP install root threaded to buildSpawnSettings for the
   // Sovereignty allow-list (Write/Edit scoped to <scpDir>/Cascades/**). Absent ⇒ no

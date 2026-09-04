@@ -8,6 +8,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables an outside contributor — TypeScript + Vue, zero Cascade context — to author a Concept after four reads: this front door, then S14 (What/Why), then S13 Phase 1 (the Hello World trace), then S15 (the messaging picture). What is enabled is a LINEARIZED path with gates over a runtime that is otherwise flat and compositional; the path is the Diameter, and it closes on itself.
+
+## Research
+No live read of its own today; this Skill ROUTES. The surface is the reading chain S16 → S14 → S13 → S15 — each of those Skills carries a full `## Research` that reads the associated SCP (`Skills/DemometricConceptPattern.md` · `Skills/ConceptAuthoring.md` · `Skills/MessagingMechanisms.md`). A dispatched Researcher answering "how do I get started here" runs THEIR step-1 reads first — identity `cat <SCP>/scp.config.json`; the concepts this SCP composes `ls <SCP>/src/concepts/` — so the front door names the SCP the contributor is actually entering, never a generic one. The §3 gates are the contributor's own Concluders; the Researcher does not claim to have walked them unless it did this session (`Instance.md` §B — a reading-path CITED is not a reading-path WALKED).
+
+## Return
+- Sentence: "Start at S16, then S14 → S13 Phase 1 → S15; on `<scpName>` the first Concept you will meet is `<name>`."
+- Section: the Sentence + the §2 glossary terms the ask touched + the gate the contributor must pass next.
+- Vermillion: Step 4 (S13 Phases 2-8) queued as a per-ask Vermillion — the authoring itself.
+- Diamond: a contributor path the chain does not cover — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## This is the front door
 
 If you are a contributor with no Renewable-Intelligence access — no Onyx, no Diamond, no Cascade.json, no CLAUDE.md manifold — **start here**. This Skill assumes you know TypeScript and Vue and nothing about the Suite Cascade. Every term you need is defined in §2 before any other Skill asks you to use it. You will read four files in total (this one, then S14, then part of S13, then S15) and you will be able to author a new Concept.

@@ -108,7 +108,7 @@ export async function checkNpmLatestVersion(currentVersion: string): Promise<Npm
     }
     const body = (await res.json()) as {
       version?: unknown;
-      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown };
+      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown; instructionSet?: unknown };
     };
     const latest = typeof body.version === 'string' ? body.version.trim() : '';
     if (latest === '') {
@@ -125,11 +125,18 @@ export async function checkNpmLatestVersion(currentVersion: string): Promise<Npm
     // The pair is the gate; `s8` is OPTIONAL-TOLERANT — present-as-number flows, absent on a
     // pre-s8 publish omits (the reader's `?? 0` floor supplies it · PM-1). Nothing consumes s8
     // in the verdict yet (THE NO-RED LAW — s8 never enters deriveUpdateClass); it lands as data.
+    // C1039 · `instructionSet` folds in on the same optional-tolerant terms as `s8`. It lands as
+    // DATA and does NOT enter deriveUpdateClass — THE NO-RED LAW holds: the instruction set is a
+    // SEPARATE AXIS from the CLI update class, surfaced by its own marker, never colouring the
+    // bridge's update chip.
     cache.remoteMuxameter =
       rm && typeof rm.cli === 'number' && typeof rm.scp === 'number'
-        ? typeof rm.s8 === 'number'
-          ? { cli: rm.cli, scp: rm.scp, s8: rm.s8 }
-          : { cli: rm.cli, scp: rm.scp }
+        ? {
+            cli: rm.cli,
+            scp: rm.scp,
+            ...(typeof rm.s8 === 'number' ? { s8: rm.s8 } : {}),
+            ...(typeof rm.instructionSet === 'number' ? { instructionSet: rm.instructionSet } : {}),
+          }
         : null;
     cache.installedMuxameter = getBridgeMuxameter();
     cache.updateClass = deriveUpdateClass(

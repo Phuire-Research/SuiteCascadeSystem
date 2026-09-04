@@ -8,6 +8,30 @@
 
 ---
 
+## Curation
+The SCP paradigm enables a message to move from an agent or client, through the running Claude process, and back — through six mechanisms with ONE writer: the SORD `《send_message》` envelope formed only by `buildSordEnvelope()` and POSTed only to `deriveMcpEndpoint(endpoint)`; the BDAP directive appended to the system prompt; the permission hooks; the display-only rename; the Vue-only working animation; and the relay whose floor is the Single-Writer rule — the Bridge process alone writes `sessions.json` / `bridge.json`. Every mechanism is a Diameter quality (SCP-S14); each is READ from its file home, not recited.
+
+## Research
+`<SCP>` = the SCP this seat sits in — the directory holding `scp.config.json`, three levels above this file. Every step is a literal command; run it, report what RETURNS, never what the body below says should return (`Instance.md` §"Operating Principle" · B). Two surfaces: SCP-SIDE files (always reachable) and BRIDGE-SIDE files (the scs-bridge source — `<bridge>` — reachable when the dev repo is present, on Stratithon at `Cascades/Projects/SuiteCascadeSystem/`; otherwise report the SCP-side truth and NAME the bridge-side file as unreachable, never as read). The body's line anchors are the Cycle 172 snapshot — measured C1124: `sordEnvelope.model.ts` :35 / :41 HOLD · `generateBaseSystemPrompt` :77 → :111 with the token substitution :83-85 → :136-137 · `chainWrite` :27 → :70 · `saveRegistry` :49 → :108 · the skeleton MOVED from `src/lib/bridge/baseSystemPrompt/` to `assets/baseSystemPrompt/scs-bridge-base.skeleton.md` (its §5 guardrails at :129). Anchor by symbol:
+
+1. Identity — `cat <SCP>/scp.config.json` → `scpName`.
+2. §1 SORD (SCP-side copy) — `grep -n "export function deriveMcpEndpoint\|export function buildSordEnvelope" <SCP>/src/model/sordEnvelope.model.ts` (expect 2); `grep -n "/mcp" <SCP>/src/model/sordEnvelope.model.ts` (the derived suffix). The base `endpoint` it derives from: `node -e "console.log(JSON.parse(require('fs').readFileSync('<SCP>/Cascades/Bridge/bridge.json','utf8')).endpoint)"` (SCP-S12 owns that read; cite it with its age).
+3. §2 BDAP — the skeleton (bridge-side): `test -f <bridge>/assets/baseSystemPrompt/scs-bridge-base.skeleton.md && grep -n "^## 5" <bridge>/assets/baseSystemPrompt/scs-bridge-base.skeleton.md`; the generator: `grep -n "export function generateBaseSystemPrompt\|BRIDGE_ENDPOINT" <bridge>/src/lib/bridge/baseSystemPrompt/baseSystemPrompt.ts`. FRESHNESS of the generated instance: `ls <SCP>/Cascades/Bridge/*.generated.md 2>/dev/null || echo "no generated BDAP beside bridge.json"` — measured C1124 on Stratithon: ABSENT beside `bridge.json`; report the absence, do not assert the generated path. What the running Dock carries is the fire-time truth, rendered verbatim by the Shipwright's Dock row — the Researcher only reads it.
+4. §3 permission hooks (bridge-side) — `grep -n "permission-request\|permission-decision" <bridge>/src/lib/bridge/concepts/scp/principles/scpExpressTransport.principle.huirth.ts | head -4`; the hook-config writer: `test -f <bridge>/src/lib/bridge/spawnSettings.ts`. SCP-side mirror fields: `grep -n "lastTool\|pendingPermissionRequestId" <SCP>/src/concepts/scsBridge/scsBridge.type.ts | head -4`.
+5. §4 rename (bridge-side) — `grep -n "lookup key" <bridge>/src/lib/bridge/concepts/scsBridge/qualities/scsBridgeRenameSession.quality.huirth.ts` (IDTND stated in the header); SCP-side: `grep -c "scsLabel" <SCP>/src/concepts/scsBridge/scsBridge.type.ts` (≥ 1).
+6. §5 PMA (SCP-side · Vue only) — `grep -n "No response requested\|Model Processing" <SCP>/src/concepts/scsBridge/vue/components/ScsBridgeSessionManagement.vue | head -4` (present = the Display-vs-Data interception is where the body says; a 5240-line file at C1124 — the `:414-427` anchors have drifted; the grep is the anchor).
+7. §6 Single-Writer (bridge-side) — `grep -n "^function chainWrite\|^async function saveRegistry" <bridge>/src/lib/bridge/registry.ts` (expect 2). SCP-side proof that the Huirth face only TRIGGERS: `grep -rn "writeFile" <SCP>/src/concepts/scsBridge/principles/ | grep -c "bridge.json\|sessions.json"` (expect `0` — any hit is a CRITICAL finding, §6; measured `0` at C1124).
+8. The live route — `/scp-config` is served by the SCP itself: `grep -n "'/scp-config'" <SCP>/src/concepts/vue/vue.principle.ts` (expect 1) — the same-origin channel through which the client resolves its own citizen name.
+
+Inward only: bridge-side files are read when reachable and named as unreachable when not; no outward search substitutes for either.
+
+## Return
+- Sentence: "On `<scpName>` the write-path holds: `deriveMcpEndpoint` / `buildSordEnvelope` present; `/scp-config` served; the Huirth face writes no bridge file (`0` hits)."
+- Section: the Sentence + per mechanism the symbol anchors that returned + which bridge-side surfaces were reachable (named) and which were not (named as such) + the generated-BDAP freshness finding.
+- Vermillion: the §8 lifecycle order as Bands (startup → spawn → send → tool → no-response → rename), each gated by the step above that measures it — for "wire a message through".
+- Diamond: a seventh mechanism, or a violation of the Single-Writer floor — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## Pearl Summary
 
 SCP-S12 (`Skills/Communication.md`) covers the **read-path** — discovering the bridge and reading its state via `bridge.json`. This Skill covers the **write-path + execution-path**: how a message is formed, appended to the system prompt, routed through permission gates, renamed for display, animated while processing, and relayed back to the Client. Six mechanisms, each in a fixed 3-part shape: **What it is · The file home · The contributor-facing rule**. The structural ground under all of them is the Demometric Concept Pattern (SCP-S14 `Skills/DemometricConceptPattern.md`) — every message that crosses the WebSocket is a Diameter quality (S14 §C/§D). The single load-bearing invariant: the **Bridge process is the sole writer** of `sessions.json`/`bridge.json` (§6).

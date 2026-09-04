@@ -21,6 +21,14 @@ The Diameter between C9 and this Suite 8: C9 supplies the routing table (intent 
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill or Strategy expands the specifics as the sequence reaches it. **This Suite holds no `Skills/` subdirectory and no `Strategy/` file yet** — it is a Direct configuration, so there is no door-table to draw. In their place the routing lives in two flat files: this Instance carries the mechanism (the `/loop` binding · the Cascade.json automata fields · the continuation predicate · the cache-aware delay selection), and the sibling `Skill.md` carries the four inline skills the wake-up executes — SA-S1 Obsidian Wake · SA-S2 Gate Advance · SA-S3 Delay Select · SA-S4 Lifecycle Close. The `/loop` prompt below points at that `Skill.md` directly; it IS the dispatch.
+
+What would land here first, were this Suite to grow doors: SA-S1..SA-S4 extracted from the flat `Skill.md` into `Skills/`, one per wake-up phase, each with its own Concluder over `Cascades/Cascade.json` — and a `Strategy/` Vermillion for the loop lifecycle end to end (engage → advance → halt). Until then, read this Instance and `Skill.md`; nothing else is served.
+
+---
+
 ## /loop Binding
 
 The entire Suite 8 activates via a single `/loop` prompt:

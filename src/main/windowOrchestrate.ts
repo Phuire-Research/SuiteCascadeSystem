@@ -29,6 +29,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { type BrowserWindow, type NativeImage } from 'electron';
 import { sdia } from './diagnostics';
+import { workspaceBridgeDir } from '../lib/bridge/paths';
 
 const MAX_STEPS = 24;
 const MAX_WAIT_MS = 10_000;
@@ -131,7 +132,7 @@ export interface OrchestrateSequenceResult {
 }
 
 function playtestDir(runId: string): string {
-  const dir = path.join(process.cwd(), 'Cascades', 'Bridge', 'playtests', runId);
+  const dir = path.join(workspaceBridgeDir(process.cwd()), 'playtests', runId);
   try {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   } catch {
@@ -177,7 +178,7 @@ async function probeWindow(win: BrowserWindow): Promise<Record<string, unknown>>
   // bridge.json freshness — the restart-spanning signal (nodemon respawn rewrites it).
   try {
     const raw = fs.readFileSync(
-      path.join(process.cwd(), 'Cascades', 'Bridge', 'bridge.json'),
+      path.join(workspaceBridgeDir(process.cwd()), 'bridge.json'),
       'utf8',
     );
     const bj = JSON.parse(raw) as { writtenAt?: number };

@@ -11,6 +11,16 @@ export type LaunchClaudeWindowOpts = {
   // Diamond B-16 (CD-46 PCSP): optional first-prompt seed passed as positional
   // CLI argument to claude. Applied only when mode === 'new'.
   seedPrompt?: string | null;
+  // RESUME INDUCTION · THE DEAD WIRE (Lane 7 row 13). osTerminal's
+  // BuildTerminalCommandInput has ALWAYS carried appendSystemPromptFile and all four
+  // transports consume it — but this type had no slot, so every caller of
+  // launchClaudeWindow (menu.ts ×3 · attach.ts · commands/bridge/spawn.ts) resumed with
+  // NOTHING appended, not even the base. Threading the composed path into
+  // launchInformative without THIS field would have shipped an inert cure.
+  appendSystemPromptFile?: string | null;
+  // C1104 · ruling A · the per-session model threaded to the OS-terminal door. null ⇒ no
+  // --model clause is built at all (the user's own /model default applies on resume).
+  model?: string | null;
 };
 
 export type LaunchClaudeWindowResult = {
@@ -40,6 +50,8 @@ export async function launchClaudeWindow(
       settingsPath: opts.settingsPath,
       claudeUuid: opts.claudeUuid,
       seedPrompt: opts.seedPrompt,
+      appendSystemPromptFile: opts.appendSystemPromptFile ?? null,
+      model: opts.model ?? null,
     });
     const child = spawn(cmd, args, {
       detached: true,

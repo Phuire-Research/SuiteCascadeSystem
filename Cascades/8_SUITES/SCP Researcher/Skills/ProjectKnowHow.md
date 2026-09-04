@@ -9,6 +9,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables a user to hold the whole shipped system in one mental model — one window, a bar, a handful of pages — and to Install → Spawn → Anchor → GitM → Update → Personalize without ever meeting a public endpoint. What is enabled is orientation: the inventory, the glossary, the how-to and the FAQ, in accessible names (the public-copy firewall).
+
+## Research
+No live read today; this Skill is user-facing synthesis (Cycle 244), not a technical trace. The surface behind its claims is `<SCP>/Cascades/Bridge/bridge.json` (via SCP-S12 — what is live, what is installed, how fresh) and `<SCP>/Cascades/Bridge/` itself (`ls` — `sessions.json` · `gitm.json` · the menu / watch relays this SCP's Suite 8s have registered). A Researcher asked "what does this do" answers from this inventory but FIRST runs SCP-S12's identity + freshness reads, so the answer names the SCP and states whether the bridge is presently writing. The §8 FAQ rows are symptom → check → fix; the "check" column names a runtime surface, and that check IS the read.
+
+## Return
+- Sentence: the one-line identity (§1) with `<scpName>` attached.
+- Section: the capability the ask touched (§2 row) + the how-to (§5) + the FAQ row if a symptom was named, with SCP-S12's freshness finding.
+- Vermillion: a workflow (§6 W1-W5) as Bands when the ask is "walk me through".
+- Diamond: a tenth capability, or a glossary term the shipped surface has outgrown — Mode A maintenance, or returned INLINE with the founding offer (`Instance.md` §B).
+---
+
 ## 1 · The One-Line Identity
 
 **The SCS-Bridge is the self-installing renewable-cognitive operating layer — the first public Stratimux product.** It installs the Suite Cascade System into any Claude Code project, manages the sessions you run there, lets you spawn project-domain working surfaces, gives you git visibility plus a clean update path over the installed template, and personalizes its own look at runtime — all while you keep using it (the running app rebuilds itself without losing your place).

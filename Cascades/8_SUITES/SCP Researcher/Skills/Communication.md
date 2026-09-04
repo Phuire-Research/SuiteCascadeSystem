@@ -8,6 +8,30 @@
 
 ---
 
+## Curation
+The SCP paradigm enables live bridge-awareness from inside any SCP session without a public endpoint and without a full MCP stdio handshake: the bridge WRITES its truth to a project-local file — `./Cascades/Bridge/bridge.json` (BJDP) — and this Skill READS it. What is live (`boundScps`), what is installed (`installedScps`), which NAMED bridges coexist (`namedBridges`), and how fresh the claim is (`writtenAt`) are measured, never recalled. This is a 5b (time-dependent) read: the same file an hour later may answer differently with nothing else changed (`Instance.md` §B · the Context-Dependence Law).
+
+## Research
+`<SCP>` = the SCP this seat sits in — the directory holding `scp.config.json`, three levels above this file. Every step is a literal command; run it, report what RETURNS, never what the body below says should return (`Instance.md` §"Operating Principle" · B).
+
+1. Identity first — `cat <SCP>/scp.config.json` → `scpName`. The answer is about THIS SCP; name it (the naming axis: report the identity; a port is a measurement).
+2. Root check — `test -d <SCP>/Cascades/Bridge/ && echo "bridge dir ok" || echo "not an SCS-installed root"` (§1 absence handling).
+3. The read — `cat <SCP>/Cascades/Bridge/bridge.json`, then the Concluder (the §"Concluder" below, widened to the fields this engine reports):
+   `node -e "const d=JSON.parse(require('fs').readFileSync('<SCP>/Cascades/Bridge/bridge.json','utf8')); console.log('schemaVersion:', d.schemaVersion, '| boundScps:', Object.keys(d.boundScps||{}), '| installedScps:', d.installedScps, '| namedBridges:', Object.keys(d.namedBridges||{}), '| age_s:', Math.round((Date.now()-d.writtenAt)/1000))"`
+4. Freshness — `age_s > 120` → the §5 staleness rule fires: carry the §7 warning VERBATIM in the answer; a stale file is a finding about the WRITER, not a truth about liveness.
+5. Schema — `schemaVersion !== 1` → report the §7 mismatch; interpret nothing further.
+6. The named-bridge axis — `namedBridges` lists OTHER bridge processes by NAME (e.g. `Dev`); the top-level `port` / `endpoint` is the unnamed seat's. Report names; cite ports as what the walk gave. Never resolve which is "authoritative" — that law is the Shipwright's to keep (`Instance.md` §"Not the Shipwright").
+7. The live route (optional, when the SCP server is up) — `curl -s http://127.0.0.1:<boundScps.<scpName>.port>/scp-config` returns `scpName` and the origin endpoint from the RUNNING server; the route is served by the SCP itself (`grep -n "'/scp-config'" <SCP>/src/concepts/vue/vue.principle.ts`). A failed fetch is an absence finding, not an error.
+
+Inward only: the reads above are the whole research surface of this Skill.
+
+## Return
+- Sentence: "`<scpName>`: `<N>` SCP(s) bound live (`<names>`), `<M>` installed; `bridge.json` written `<age>` ago" — Operation 1's shape (§6) with the identity and the age attached.
+- Section: the Sentence + `bridgeVersion` · the unnamed seat's `endpoint` · each `boundScps` entry `{port, status, browserUrl}` · the `namedBridges` names · the `installedScps` superset (§5: installed ≠ live).
+- Vermillion: a Band per SCP needing a status action (a restart · a turnover) — each Band a READ plus a hand-off; the acting is SCP-S11's contract on the page, the bridge process is the Shipwright's.
+- Diamond: only if `schemaVersion !== 1` — the bridge/Skill contract itself has drifted; returned INLINE to the caller with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## Invocation Context
 
 This skill is dispatched when a ClaudeCode session running inside (or alongside) an installed SCP needs to communicate with the SCS-Bridge process. Common triggers:

@@ -1,10 +1,11 @@
 {
   "name": "scs-bridge",
-  "version": "0.950.2",
+  "version": "1.157.1",
   "scsMuxameter": {
-    "cli": 13,
-    "scp": 15,
-    "s8": 2
+    "cli": 14,
+    "scp": 16,
+    "s8": 3,
+    "instructionSet": 1
   },
   "description": "SCS Bridge CLI \u2014 Suite Cascade System command-line interface",
   "keywords": [
@@ -57,6 +58,7 @@
     "dev": "tsx src/cli.ts",
     "dev:self": "npm run build:all && tsx src/cli.ts dev --self-dev --debug",
     "build": "npm run build:main && npm run build:renderer",
+    "postbuild": "node bin/stamp-build-identity.js",
     "build:renderer": "vite build --config vite.electron-renderer.config.ts",
     "build:all": "npm run build",
     "typecheck": "tsc --noEmit",

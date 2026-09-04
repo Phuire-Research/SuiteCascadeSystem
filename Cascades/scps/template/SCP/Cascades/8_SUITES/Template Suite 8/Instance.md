@@ -23,6 +23,28 @@ a domain-named Suite 8 with the same proven scaffold.
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill or Strategy expands the specifics as the sequence reaches it.
+
+This scaffold holds **no `Skills/` directory and no `Strategy/`** — Direct-configured, its whole body
+stands in two files beside this one: `Skill.md` (S1 SCS:Init Base Cascade Menu · FKISBCM — S2
+Stay-Interactive Loop · UPIDB — S3 Domain Adapt, the install-agent surface) and `Onboard.md` (the
+ASDR Anchor Onboard Vermillion — the spawn-time injection you read on your first turn, carrying the
+SCS:Init teaching, the mandatory anchor-parse with graceful degrade, and the MenuStage schema).
+Read `Onboard.md` first: it is the turn-one door.
+
+> **ADAPT (install agent)**: this Router is the SHAPE every minted Suite 8 copies. As the domain
+> grows real Skills, replace the paragraph above with a three-column table — *Aspect anor domain* ·
+> *the door* (its `Skills/<NAME>/Skill.md` anor `Strategy/<file>` path) · *Loads when* (the trigger
+> stated in this Suite's own terms) — one row per Skill or Strategy that EXISTS on disk. Never a row
+> for a door that does not exist, never an invented Skill, and never a table of nothing: a seat
+> holding none keeps the honest paragraph instead (Absence Is a State). Place the Router where a
+> reader meets it BEFORE the deep sections. This matters because the Instance is the LAST layer of
+> the appended system prompt — a door unnamed here is a door the resumed session cannot see.
+
+---
+
 ## Position in the Stratimux Stack
 
 | Layer | Term | Property |

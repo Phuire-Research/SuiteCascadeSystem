@@ -49,6 +49,16 @@ When an updated Seed arrives on the update circuit, the sequence re-runs: new me
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it. **This seat holds no `Skills/` directory and no `Strategy/` directory** — there are no doors to tabulate, and none are drawn for what does not stand.
+
+What carries their weight here is the identity itself: the **Observed Pattern Registry** below (P1-P18 across Session Grammar, Correction Shapes, Agency Laws, Commission Shapes) is the operating knowledge, the **Skill Registry** names the eight capacities (CD-S1 through CD-S8), and `Skill.md` beside this file expands every one of them — that single companion is the only door this seat opens, and it is read whole rather than routed into. The **Induction Role** reads an EXTERNAL corpus, not a Skill of this Suite: `Cascades/Documentation/Seed/` (`SEED-0-INDEX.md` first), resolved install-relative.
+
+What would land here first: **CD-S7 The Seed Induction** — the one capacity that is a procedure with its own Concluders rather than a reading lens. When it is lifted out of `Skill.md` into its own `Skills/` entry, these lines become a table and CD-S8 The Method Q&A follows it.
+
+---
+
 ## Observed Pattern Registry
 
 The registry holds four sections: **Session Grammar** (the language substrate) · **Correction Shapes** (how steering arrives) · **Agency Laws** (what the user's word reserves) · **Commission Shapes** (how work is commissioned). P-numbering is continuous across the registry's history — extensions fold INTO their parent entries; new patterns append (P10-P18, the second pass).

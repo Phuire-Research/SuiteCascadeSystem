@@ -3,15 +3,28 @@
 **Suite 8**: SCP Researcher — Suite Cascade Protocol Type Definition
 **Configuration**: Conductor
 **Skills**: SCP-S1 through SCP-S8 (initial register · grows per maintenance cycle · skill identifiers retain the `SCP-S{N}` prefix since they describe SCP protocol operations, not the meta-Suite-8 itself)
-**Version**: 1.0
+**Version**: 1.1 · v-next (C1124 · the Live-Documentation wrapper — three classes)
 **Last Diamond**: SCP-4 (renamed SCP → SCP Researcher)
 **Created**: SCP-3
+**v-next**: Salvo FTR · Cycle C1124 · 2026-09-03 — every SCP-S1..S11 entry carries `#### Curation` / `#### Research` / `#### Return` per its class (§"The Live-Documentation Wrapper" below); read by `Instance.md` §"Operating Principle" · B
 
 ---
 
 ## Skill Register
 
 The base skills below are inherited by every instantiated SCP Suite 8 (Personal / Organizational / Project). An instance may override specific skills with mode-conditioned variants by editing its own `Skill.md` after clone-init; defaults are these.
+
+### The Live-Documentation Wrapper (v-next · C1124 · read by `Instance.md` §"Operating Principle" · B)
+
+This register is answered FROM, not by: when the Researcher is asked about the SCP it runs in, the Aperture (S1) opens the entry, the Conferral (S2) runs its `#### Research`, and the Scaled Result (S5) takes the shape its `#### Return` names. Research is INWARD — reads of this SCP; never WebSearch, which the Cadmium Researcher owns outward. `<SCP>` = the SCP root holding `scp.config.json` (three levels above this seat). Three classes:
+
+| Class | Entries | What the wrapper adds |
+|---|---|---|
+| **1 · Research-shaped** | S1 · S4 · S8 · S11 | `#### Curation` · `#### Research` (the reads that already exist here, made a numbered procedure with Concluders — and a FRESHNESS check on any generated artifact) · `#### Return` |
+| **2 · Doctrinal primitive** | S2 · S3 · S5 · S6 · S7 | `#### Curation` · an HONEST `#### Research` ("no live read — this primitive is executed, not queried; the surface a reader can measure is …") · `#### Return` (inherently Vermillion / Diamond shape) |
+| **3 · Cascade orchestrator** | S9 · S10 | a one-line note only — OUTSIDE the engine: they produce implementation in a target instance; they do not read this one |
+
+S13 · S14 · S15 · S16 (and S17..S21) carry their wrappers as `## Curation` / `## Research` / `## Return` in their own `Skills/*.md` files. The existing Inputs / Outputs / Concluder text of every entry is kept whole; the wrapper points into it.
 
 ### SCP-S1 · Designation Bind
 
@@ -30,6 +43,21 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 
 **Concluder**: `test -f Cascades/8_SUITES/<designation>/Instance.md` returns true; `grep <designation> Cascades/SUITE8-REGISTRY.md` returns the new row.
 
+#### Curation
+The paradigm enables identity anchoring: a user-chosen designation becomes a dispatchable Suite 8 whose name IS its access boundary (Identity-As-Perimeter) and whose mode sets its defaults. Removing the entry is the decommission — nothing else needs defending.
+
+#### Research
+1. `cat <SCP>/scp.config.json` → `scpName` — the SCP whose roster is being read.
+2. `ls "<SCP>/Cascades/8_SUITES/"` — the designations THIS SCP carries (context-dependent: Stratithon adds `MeteoricShipwright`; Amberlight Studio adds `Amberlight Studio` + `DamascusWriter` over the shared 14 · measured C1124).
+3. `test -f "<SCP>/Cascades/8_SUITES/<designation>/Instance.md" && echo bound || echo absent` — the entry's own Concluder, run now.
+4. `grep -n "<designation>" "<SCP>/Cascades/SUITE8-REGISTRY.md" | head -3` — the registry row; a directory present with no row is a finding (a directory is not a designation until registered).
+
+#### Return
+- Sentence: "`<scpName>` carries `<N>` Suite 8 designations; `<designation>` is bound / absent."
+- Section: the Sentence + the roster + the registry row's mode and configuration level.
+- Vermillion: an instantiation (Pattern A · `Conductor.md`) — the Templates/ clone as Bands, gated by steps 3-4.
+- Diamond: the designation contract itself changing — Mode A maintenance.
+
 ### SCP-S2 · Runtime Bind
 
 **Aspect**: Runtime composition
@@ -38,6 +66,16 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 **Decision (default)**: Reference mode for first-instance templates (saves disk; the runtime is identical across modes anyway). Copy mode is opted-in when an instance needs runtime divergence.
 
 **Concluder**: Either `Cascades/8_SUITES/<designation>/SCP/` exists with the runtime tree (copy mode), OR `Cascades/8_SUITES/<designation>/Instance.md` declares `Runtime: ../../scps/template/SCP/` reference (reference mode).
+
+#### Curation
+The paradigm enables the runtime to be REFERENCED rather than owned: an instance points at the shared template runtime, or copies it when it needs to diverge — one runtime, many perimeters.
+
+#### Research
+No live read — this primitive is executed at clone-init, not queried. The surface a reader can measure: `test -d "<SCP>/src" && echo "owns a runtime (copy mode)"` and `grep -n "Runtime:" "<SCP>/Cascades/8_SUITES/<designation>/Instance.md"` (reference mode declared). Every lab SCP root owns its own `src/` (copy mode in effect · C1124).
+
+#### Return
+- Sentence: "`<designation>` runs in copy / reference mode."
+- Vermillion / Diamond: a mode change is a plan the caller executes (the SCP-S6 shape), never a read.
 
 ### SCP-S3 · Transport Deploy
 
@@ -52,6 +90,16 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 
 **Concluder**: Transport configuration declared in instance `Instance.md` Identity Configuration section.
 
+#### Curation
+The paradigm enables transport to follow mode — WebSocket + HTTP on loopback for Personal, behind an org proxy for Organizational, stdio for Project — so the identity boundary, not the wire, is what is defended.
+
+#### Research
+No live read — this primitive DECLARES a transport class. The surface a reader can measure is the bound port and endpoint the bridge wrote for this citizen: `<SCP>/Cascades/Bridge/bridge.json` → `boundScps.<scpName>.port` / `browserUrl` (SCP-S12 owns that read; its `writtenAt` age travels with the answer). The table's `localhost:7111` is a DEFAULT; the measured port is what the walk gave (the naming axis — report the identity, cite the port).
+
+#### Return
+- Sentence: "`<scpName>` is served on `<port>` (`<browserUrl>`), loopback."
+- Vermillion / Diamond: a transport change — a plan the caller executes in Mode A.
+
 ### SCP-S4 · Skill Surface
 
 **Aspect**: Tool registration
@@ -59,12 +107,37 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 
 **Concluder**: Instance's `muxonomyRegistry.generated.ts` lists the intended tools; `scpRegisterToolsWithMetadata.quality.huirth.ts` execution registers them at runtime.
 
+#### Curation
+The paradigm enables tool visibility to be Concept-driven: a quality declares `scpToolMetadata`, the registry enumerates it, `scpRegisterToolsWithMetadata.quality.huirth.ts` registers it at startup — add a Concept with tool-bearing qualities and the tools appear.
+
+#### Research
+1. `cat <SCP>/scp.config.json` → `scpName`.
+2. `test -f "<SCP>/src/concepts/scp/qualities/scpRegisterToolsWithMetadata.quality.huirth.ts" && echo "registrar present"`; `grep -rln "scpToolMetadata" "<SCP>/src/concepts" | head` — where tool metadata is declared on THIS SCP.
+3. FRESHNESS of the generated registry (the Freshness Proof · `Instance.md` §B): `grep -n "conceptCount\|generatedAt" "<SCP>/src/concepts/muxonomyRegistry.generated.ts"` against `ls -d "<SCP>"/src/concepts/*/ | wc -l`. Measured C1124 on Stratithon and on the template alike: `conceptCount: 0`, `generatedAt: '2026-01-28…'`, `REGISTERED_MUXONOMICS = []` — a STALE EMPTY STUB against 23 / 22 concept directories; its named regenerator (`npm run strativerse:scan`) is not in the template's `package.json`. Report the staleness as a FINDING; never report `conceptCount: 0` as "no tools / no concepts". The concepts actually wired at boot: `grep -n -A 12 "export const BASE_CONCEPTS_CREATORS" "<SCP>/src/concepts/client/client.muxonomy.ts"`.
+4. The live tool roster, when the SCP server is up, is what the runtime registered — `tools/list` on the SCP's own `/mcp` at `boundScps.<scpName>.port` — not this file; cite whichever you actually read.
+
+#### Return
+- Sentence: "`<scpName>`: registrar present; `<K>` files declare `scpToolMetadata`; the generated registry is stale (`conceptCount: 0` vs `<N>` directories)."
+- Section: the Sentence + the declaring files + the `BASE_CONCEPTS_CREATORS` set.
+- Vermillion: a tool-surface addition — SCP-S13 Phases 3 and 7 as Bands, with this freshness check as the first gate.
+- Diamond: regenerating the registry is a wound on the Shipwright's own board (carded FTR-D1), not this Skill's to cure.
+
 ### SCP-S5 · Conference Maintenance
 
 **Aspect**: Self-maintenance per dispatch
 **Function**: Every dispatch to an SCP S8 instance includes a Conference Decide block evaluating Skill currency. Stale skills updated; gaps become new skills. (Per CLAUDE.md §9 Suite 8 Maintenance Dispatch standard.)
 
 **Concluder**: Onyx S8AT entry per dispatch confirms Conference fired.
+
+#### Curation
+The paradigm enables Skills that stay evergreen: every dispatch closes with a Conference that judges Skill currency — stale updated, gaps carded — so drift surfaces from inside the work, not from a sweep.
+
+#### Research
+No live read — this primitive is EXECUTED at cycle close, not queried. The surface a reader can measure is its record: the `SUITE8-REGISTRY.md` trajectory cell for this Suite (`grep -n "SCP Researcher" "<SCP>/Cascades/SUITE8-REGISTRY.md"`) and the Researcher's own Onyx when founded (`ls "<SCP>/Cascades/Extended/SCP Researcher/Working/" 2>/dev/null || echo UNFOUNDED` — UNFOUNDED on both live lab SCPs at C1124).
+
+#### Return
+- Sentence: "Conference last recorded at `<cycle>` / no Onyx yet (unfounded)."
+- Vermillion / Diamond: the Conference itself is Mode A's second Band.
 
 ### SCP-S6 · Mode Migration
 
@@ -74,6 +147,17 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 **Pattern**: Update Instance.md `Mode` field · re-derive defaults · update transport binding · update registry row · run integration test in target mode environment.
 
 **Concluder**: Mode field declares the new mode; transport reachable in target mode environment.
+
+#### Curation
+The paradigm enables evolution without destruction: a Personal SCP S8 graduating to Organizational changes its `Mode`, re-derives defaults and re-binds transport — the designation (the perimeter) survives.
+
+#### Research
+No live read — this primitive is a state transition the caller executes. The surface a reader can measure is the declared mode: `grep -n "Mode" "<SCP>/Cascades/8_SUITES/<designation>/Instance.md" | head -3`, and the transport it implies (SCP-S3's measured port via SCP-S12).
+
+#### Return
+- Sentence: "`<designation>` declares mode `<Mode>`."
+- Vermillion: the migration Pattern as Bands (Mode field · defaults · transport · registry · integration test).
+- Diamond: a fourth mode — Mode A maintenance of the type spec.
 
 ### SCP-S7 · Designation Retire
 
@@ -87,12 +171,37 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 
 **Concluder**: `Cascades/8_SUITES/<designation>/` removed; registry row removed; transport binding released.
 
+#### Curation
+The paradigm enables clean perimeter removal: retiring a designation removes the directory, the registry row and the binding — the ABSENCE of the entry is the defense completed.
+
+#### Research
+No live read — this primitive is a removal the caller executes. The surface a reader can measure is the absence: `test -d "<SCP>/Cascades/8_SUITES/<designation>" || echo "retired: directory absent"`; `grep -c "<designation>" "<SCP>/Cascades/SUITE8-REGISTRY.md"` (0 = row removed). Absence is a state — report it as one.
+
+#### Return
+- Sentence: "`<designation>` is retired / still present (directory · registry row)."
+- Vermillion: the mode-specific retirement sequence as Bands (the archive / data-export / discard gate first).
+
 ### SCP-S8 · S8AT (Suite 8 Aspect Trajectory)
 
 **Aspect**: Onyx authoritative trajectory tracking
 **Function**: Per CLAUDE.md §9 Fuchsia S8AT pattern — Onyx authoritative, Memory derived. Every maintenance Diamond on the SCP type or on an instance updates the trajectory entry in `Cascades/SUITE8-REGISTRY.md` and (for instance Diamonds) in the instance's own Onyx-Tier-N.
 
 **Concluder**: SUITE8-REGISTRY trajectory column reflects most recent diamond; Onyx S8AT entry exists.
+
+#### Curation
+The paradigm enables Onyx-authoritative trajectory: every Diamond touching the type or an instance writes the trajectory cell and the instance's own Onyx, so lifecycle history is retrievable per session without re-reading every Diamond — the Onyx carries the Lambda-events, the trajectory names them.
+
+#### Research
+1. `grep -n "SCP Researcher" "<SCP>/Cascades/SUITE8-REGISTRY.md" | head -3` — the trajectory cell as it stands on THIS SCP (the registry ships with the template; the cell is the template's unless this SCP's own maintenance wrote it).
+2. `cat "<SCP>/Cascades/Extended/SCP Researcher/Cascade.json"` — the Researcher's own manifest: `activeDiamond` / `activeOnyx` present = FOUNDED; `{"schemaVersion":"1","cycles":[]}` = UNFOUNDED (measured on Stratithon and Amberlight Studio at C1124).
+3. `ls "<SCP>/Cascades/Extended/SCP Researcher/Working/" 2>/dev/null || echo UNFOUNDED`.
+4. The Diamond rung's law applies (`Instance.md` §B): an unfounded seat returns any Diamond-scale content INLINE and offers the founding; it never writes into `Working/` first.
+
+#### Return
+- Sentence: "`<scpName>`: the Researcher is founded / UNFOUNDED (manifest lists `<keys>`); trajectory last names `<Diamond>`."
+- Section: the Sentence + the manifest verbatim + the trajectory cell's tail.
+- Vermillion: the First Goal Conference offered as the plan — the user's act, not the Researcher's.
+- Diamond: only after founding — then the pair lands in ITS `Working/`.
 
 ### SCP-S11 · Bridge Turnover · ClientState Lifecycle
 
@@ -145,6 +254,23 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 - Runtime surfaces touched: `SCP/src/concepts/webSocketServer/` · `webSocketClient/` · `localStorage/` · `nodemon.json`
 - User surface (after Next Macro implements): `SM-SCP.md` `[T]` Turnover option
 
+#### Curation
+The paradigm enables ClientState to survive a server turnover through the Perfect Circular Reference — Soft respawns the server under an unreloaded window; Hard clears a wedged client state — and in both the designation (the perimeter) survives. Modify the app while using it; turn over; keep your place.
+
+#### Research
+1. `cat <SCP>/scp.config.json` → `scpName`.
+2. The trigger and the process law exist: `test -f "<SCP>/.bridge-restart.json" && echo trigger-present`; `test -f "<SCP>/nodemon.json" && echo nodemon-present`.
+3. The Hard variant — FRESHNESS of this entry's own text: `ls "<SCP>/src/concepts/scsBridge/qualities/" | grep -i hardturnover` — measured C1124: `triggerHardTurnOver.quality.client.diameter.ts` + `triggerHardTurnOver.quality.huirth.diameter.ts` PRESENT. The text above and the Skill Index still say "PENDING-IMPLEMENTATION"; the Trajectory says the Next Macro SHIPPED. The files are the truth: report Hard as present-by-file, and report this entry's text as a frozen snapshot (a Mode A card).
+4. The initial-sync guard the failure-mode table names: `grep -n "hasReceivedServerState" "<SCP>/src/concepts/webSocketClient/webSocketClient.principle.ts" | head -3` — `:129-134` is the Refine-Macro snapshot; the grep is the anchor.
+5. Whether a turnover is in flight is a 5b read of `bridge.json` (`boundScps.<scpName>.status`) via SCP-S12 — cite its age.
+6. Turning the bridge over is the USER's act (the page) or the Shipwright's tool; the Researcher reads the lifecycle, it never fires it (`Instance.md` §"Not the Shipwright").
+
+#### Return
+- Sentence: "`<scpName>`: Soft trigger present; Hard qualities present (`<2>` files); status `<status>` (`<age>` old)."
+- Section: the Sentence + the failure-mode row the ask touched + the guard's live anchor.
+- Vermillion: a turnover sequence as Bands the user executes on the page — each Band a read here, never a `touch`.
+- Diamond: the contract itself (a new turnover class) — Mode A.
+
 ### SCP-S10 · Reference Design Generation
 
 **Aspect**: RD-first discipline for adaptation cascades
@@ -171,6 +297,8 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 - Invoked by SCP-S9 Band 1
 - Strategy: `Strategy/SCP-Adapt.md` Band 1 detailed spec
 - Doctrine: `Conductor.md` Pattern F · `Instance.md` Identity-as-Perimeter
+
+**Live-Documentation (§B · Class 3)**: OUTSIDE the engine — SCP-S10 CAPTURES a Target into a Reference Design; it does not read this SCP. Not wrapped, by design (`Instance.md` §"Operating Principle" · B).
 
 ### SCP-S13 · Concept Authoring on the Template SCP
 
@@ -260,6 +388,8 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 - Conductor pattern: Pattern E in `Conductor.md`
 - Reference Design: `SM-SCP-Adapt.md` (user-surface menu)
 
+**Live-Documentation (§B · Class 3)**: OUTSIDE the engine — SCP-S9 dispatches a generation cascade that PRODUCES implementation in a target instance; it does not read this one. Not wrapped, by design (`Instance.md` §"Operating Principle" · B).
+
 ---
 
 ## Skill Composition Notes
@@ -284,3 +414,4 @@ The base skills below are inherited by every instantiated SCP Suite 8 (Personal 
 | 2026-05-10 | Refine-Macro | SCP-S11 (Bridge Turnover · ClientState Lifecycle · NEW) | Refining Diamond staging the Next Macro. Project-wide auto-format via canonical .prettierrc applied · `.bridge-restart.json` restored (wrongly pruned in SCP-1) · bridge turnover Lambda-event verified (npm run bridge in SCP/ · ts-node killed + respawned · `Bridge Restart Manifold: READY` Concluder). Three-Suite parallel dispatch (R2 + R4 + R6) produced naming + bidirectional examine + orchestration. Captures Perfect Circular Reference doctrine (BRTSP · PCRSC) + Hard Turn Over escape spec (HTOSLE) + 5 known soft-lock failure modes + 3 implementation refinements required (Suite 4 REFINE verdict). Pattern G added to Conductor; doctrine subsection added to Instance.md; `[T]` Turnover entry added to SM-SCP (placeholder for Next Macro). v0.38.2 → v0.38.3 patch. |
 | 2026-05-19 | Notification-Manifold-Formalization (Cycle 154) | SCP-S13 (Concept Authoring on the Template SCP · NEW) | Phase 3 Cobalt-B Lambda landing. Eight-Phase procedural walk-through at `Skills/ConceptAuthoring.md` (1160 lines). 17 Rust pattern abbreviations (FNES, CISV, DQWDS, DCQF, MSDT, AESR, ZKHP, GCRM, TOBM, DTEC, UPCT, RWCP, SCST, MCUC, VCIP, PACP, FKSD) constitute the authoritative vocabulary. All 5 Viridian Hazards (H1 CISV · H2 TOBM controller.fire · H3 FNDR+AESR drift · H4 raw ws.send · H5 SSR module-counter) appear in Anti-Patterns table as CRITICAL/HIGH/MEDIUM severity. Bridge Model Phase 5 promoted from conditional to REQUIRED for Diameter Junction Qualities in Strategy context (per Viridian H2 non-negotiable). Forward Diameter section sources SCS-Bridge substrate (BMTI/MASN/MTAM/SCSER/DCQI/CSEP/SSBM) for SBM Macro 2 Aspirant (scsBridgeMirror Concept authoring). Conductor.md Pattern E Band 5 annotated with `(+ SCP-S13 when addition_scope = new_concept)` routing. Skill.md.template extended with light-touch pointer comment. Cross-Suite Diameter: invokes Stratimuxian Scholar S15+S16 for framework theory; precedes scsBridgeMirror Foundation Suite dispatch. |
 | 2026-05-30 | RM-D-Close (Cycle 172 · #592) | SCP-S14/S15/S16 (NEW) · Communication.md Section 4 split · ConceptAuthoring.md forward pointers + H4 hedge removed · Instance Pattern-4 invariant + Skill Index + trajectory close | SCP Researcher Full Suite Refinement. SCP-S14 DemometricConceptPattern (DCFM/WSDM/CISV/AESR/FNES/ECK/dual-state/relay) · SCP-S15 MessagingMechanisms (SORD/BDAP/permission-means RM-D3/rename RM-D4/PMA #596/single-writer) · SCP-S16 ContributorOnboarding (no-RI Architecture Primer + 5-step reading path S16→S14→S13→S15). Communication.md Section 4 directional split (Direction A `/mcp` NOW LIVE via RM-D2 · Direction B CRCEP STILL DEFERRED). ConceptAuthoring.md Phase 1 item 0 → S14 forward pointer · Phase 4.2 H4 "when available" hedge removed (canonical broadcast path stated) · Phase 3 ClientToServer+dual-state note. Instance.md Skill Index table + Contributor Dispatch + Relay Refinement Macro trajectory rows + Pattern-4 named invariant block. Conductor.md SCP-S14/S15/S16 registry + Pattern H (Messaging Wire-Through RM-D2) + Pattern I (Session Surface Means RM-D3/D4). |
+| 2026-09-03 | Salvo FTR (C1124 · v-next) | SCP-S1..S8 + S11 (wrapped · Classes 1-2) · S9/S10 (Class 3 note) | The Live-Documentation wrapper: `#### Curation` / `#### Research` / `#### Return` per entry in three classes (Research-shaped · Doctrinal primitive · Cascade orchestrator). Class 1 Research is a numbered procedure with Concluders and a FRESHNESS check on generated artifacts (S4: `muxonomyRegistry.generated.ts` measured a stale empty stub — `conceptCount: 0` against 23 concept directories on Stratithon; S11: the Hard Turn Over qualities measured PRESENT by file against this entry's "PENDING-IMPLEMENTATION" text — a Mode A card). Class 2 Research is honest ("no live read — executed, not queried; the surface is …"). Version 1.0 → 1.1. Engine and laws: `Instance.md` §"Operating Principle" · B. |

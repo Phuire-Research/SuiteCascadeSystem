@@ -120,6 +120,78 @@ export function cancelSelfShutdownTimer(): void {
  * An already-armed timer is left in place (a second 0-remaining event does not restart it).
  * Called from the unregisterClient reducer with the post-removal connection count.
  */
+/**
+ * C1018 · THE LANE-ROOT REACH — take the WHOLE LANE down, not just this process.
+ *
+ * ── WHY THIS LIVES HERE AND NOT IN A WATCHDOG (the C1017 failure, in one paragraph) ─────────────
+ * C1017 put a poller in this server: read the lane's owner pid, confirm it dead 3× at 5s, then
+ * signal the lane root. **It never logged a single line.** The grace below is 8000ms and the
+ * confirmation window was 15000ms — so THIS mechanism killed that one at t+8s, mid-count, every
+ * time. Two self-shutdown mechanisms in one process where the faster silently voids the slower:
+ * **the PRE-EMPTION HAZARD.** Nothing declared their relationship, so `8 < 15` was discovered in
+ * the field instead of at the desk.
+ *
+ * The cure is not a faster poll — that only re-times the same race. **The mechanism that WINS the
+ * race is the one that must carry the teardown.** This one is alive at the moment of the event
+ * because it IS the event; it cannot be pre-empted because it is the pre-emptor.
+ *
+ * ── WHAT IT COMPLETES ───────────────────────────────────────────────────────────────────────────
+ * This file's own opening line already promises that a spawned server *"exits itself when its window
+ * closes, rather than lingering as an orphaned process."* It kept that promise for ONE process and
+ * left four behind: `npm run bridge` → `sh -c …` → `npm exec nodemon` → nodemon, which reparent to
+ * `ppid 1` and keep running. **This finishes the sentence the file already started.**
+ *
+ * ── WHY NO CONFIRMATION COUNTING IS NEEDED ──────────────────────────────────────────────────────
+ * The 8s grace IS the confirmation: it fires only after the window stayed gone, and a reconnect
+ * cancels it. A turn-over therefore never reaches here — the window persists and reconnects — so
+ * the discrimination C1017 tried to build with a counter is **inherited free** from the guard that
+ * already exists.
+ *
+ * SIGTERM, NEVER `-9` — field-proven sufficient this session, and it lets nodemon and the npm
+ * wrapper run their own teardown. DECLINE ON DOUBT: an unreadable lane, an absent root pid, or a
+ * root that is already gone all mean DO NOTHING. Never guess a pid; a wrong signal reaches a
+ * stranger, and leaving a process alive is strictly safer than that.
+ */
+function signalLaneRoot(): void {
+  try {
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    // The C996 seat, then the retired one — a lane written by an older CLI must still be readable.
+    const seats = [
+      path.join(process.cwd(), 'Cascades', 'Bridge', 'lane.json'),
+      path.join(process.cwd(), '.bridge-lane.json'),
+    ];
+    let root = 0;
+    for (const seat of seats) {
+      if (!fs.existsSync(seat)) continue;
+      try {
+        const rec = JSON.parse(fs.readFileSync(seat, 'utf-8')) as { pid?: unknown };
+        if (typeof rec.pid === 'number' && rec.pid > 0) {
+          root = rec.pid;
+          break;
+        }
+      } catch {
+        continue; // a corrupt lane at one seat must not hide a good one at the other
+      }
+    }
+    if (root <= 0) {
+      console.log('[SCP Server] lane-root teardown SKIPPED · reason=no-root-pid-in-lane');
+      return;
+    }
+    if (root === process.pid) {
+      // Cannot happen with the current spawn shape, but signalling ourselves here would pre-empt
+      // the writeOwnStatusPendingSync below and lose the status transition.
+      console.log('[SCP Server] lane-root teardown SKIPPED · reason=root-is-self', root);
+      return;
+    }
+    process.kill(root, 'SIGTERM');
+    console.log('[SCP Server] lane-root SIGTERM sent · pid=' + String(root));
+  } catch (err) {
+    // A teardown that throws must never block the exit it precedes.
+    console.log('[SCP Server] lane-root teardown failed ·', String(err));
+  }
+}
+
 export function armSelfShutdownTimer(remainingConnections: number): void {
   if (remainingConnections !== 0) return; // still-connected clients — nothing to do
   if (!isSpawnedScpServer()) return; // guard (1) — dev bridge never self-kills
@@ -136,6 +208,11 @@ export function armSelfShutdownTimer(remainingConnections: number): void {
     // daemon's SCPs.json dir-watch fires the live → pending transition. try/catch inside
     // the helper — never blocks the graceful exit.
     writeOwnStatusPendingSync();
+    // C1018 · take the LANE down, not just this process. Ordered AFTER the status write so the
+    // daemon's live → pending transition is already on disk: the SIGTERM below may reap this
+    // process along with the rest of the tree, and a status write that never landed would leave
+    // the rail claiming a lane that is gone.
+    signalLaneRoot();
     // Graceful exit — detached spawned process releases its port + resources.
     process.exit(0);
   }, SELF_SHUTDOWN_GRACE_MS);

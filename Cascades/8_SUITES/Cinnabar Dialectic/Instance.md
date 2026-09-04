@@ -26,6 +26,16 @@ The Diameter between them: prompting methodology SHAPES Cascade utilization, and
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it. **This seat holds no `Skills/` directory and no `Strategy/` directory** — there are no doors to tabulate, and none are drawn for what does not stand.
+
+What carries their weight here is the identity itself: the **Observed Pattern Registry** below (P1-P9) is the operating knowledge, the **Skill Registry** names the six capacities (CD-S1 through CD-S6), and `Skill.md` beside this file expands every one of them with its Informative/Actionable pair — that single companion is the only door this seat opens, and it is read whole rather than routed into.
+
+What would land here first: an extracted **CD-S1 Prompting Pattern Analysis** — the capacity this Suite actually runs, and the one whose transcript-reading procedure earns a standing `Skills/` entry the moment it is executed twice the same way.
+
+---
+
 ## Observed Pattern Registry
 
 ### P1: Pearl Dialectic

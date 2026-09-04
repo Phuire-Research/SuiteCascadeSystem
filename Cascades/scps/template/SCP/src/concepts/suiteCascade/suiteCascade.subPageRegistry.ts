@@ -49,4 +49,9 @@ export const SUITECASCADE_SUB_PAGE_OPTIONS: SuiteCascadeSubPageOption[] = [
   // C894 · Documentation FIRST (the leading default tab) · Components pluralized.
   { value: 'documentation', label: 'Documentation', deferred: false, suite: 'amethyst' },
   { value: 'component',     label: 'Components',    deferred: false, suite: 'viridian' },
+  // C1053 · UPDATE — the SCS's own maintenance tab: launch the Update Agent, view the instruction
+  // set, preview the diff. COBALT: the concept's HOME colour, vacant since C882 pruned 'home' — the
+  // concept's own colour for the concept's own maintenance. (GitM's Update page is the PROGRAM's;
+  // this is THE COMPUTER's.)
+  { value: 'update',        label: 'Update',        deferred: false, suite: 'cobalt' },
 ];

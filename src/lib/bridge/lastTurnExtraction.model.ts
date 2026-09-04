@@ -37,6 +37,13 @@ export interface LastTurnExtractionResult {
   transcriptLastModelOutput: string;
   transcriptLastReadAt: number; // Date.now() at read
   transcriptPath: string; // resolved .jsonl path (LSSD/diagnostic)
+  // OBSERVE (C1104 · ruling A law 4) — the model the session ACTUALLY RAN on its latest
+  // assistant turn (`message.model`), plus that turn's OWN timestamp normalised to epoch
+  // ms. Captured ABOVE the content guard: a turn whose content is only thinking/tool_use
+  // yields empty text and is skipped for the snippet, and that is exactly the turn a
+  // /model switch often lands on. null when no assistant turn carried a usable model.
+  transcriptLastModelId: string | null;
+  transcriptLastModelAt: number | null;
 }
 
 // PUTR · Per-Ulid-Transcript-Reader (lifted quality :43-53)
@@ -85,10 +92,14 @@ function extractContentText(entry: Record<string, unknown>): string {
 function extractLastTurn(jsonlContent: string): {
   lastUser: string;
   lastModel: string;
+  lastModelId: string | null;
+  lastModelAt: number | null;
 } {
   const lines = jsonlContent.split('\n').filter((l) => l.trim().length > 0);
   let lastUser = '';
   let lastModel = '';
+  let lastModelId: string | null = null;
+  let lastModelAt: number | null = null;
 
   for (const line of lines) {
     try {
@@ -96,6 +107,26 @@ function extractLastTurn(jsonlContent: string): {
       const obj = JSON.parse(line) as Record<string, unknown>;
       const role = (obj?.role ?? obj?.type) as string | undefined;
       if (!role) continue;
+
+      // OBSERVE · the model capture sits ABOVE the content guard by design (a
+      // thinking-only / tool_use-only turn yields '' and would be skipped below —
+      // and that is often the very turn a /model switch lands on). The
+      // '<synthetic>' literal is MANDATORY to exclude: Claude Code writes synthetic
+      // assistant turns carrying that exact model string, and without the guard
+      // every idle beat would log an unknown-model observation. Subagent turns are
+      // already structurally excluded — readJsonlForSession opens the exact
+      // `${claudeSessionId}.jsonl` by name and never scans the subagents/ dir — but
+      // isSidechain is filtered defensively all the same.
+      if (role === 'assistant' && obj?.isSidechain !== true) {
+        const msg = obj?.message as Record<string, unknown> | undefined;
+        const observed = msg?.model;
+        if (typeof observed === 'string' && observed.length > 0 && observed !== '<synthetic>') {
+          lastModelId = observed;
+          const ts = obj?.timestamp;
+          const parsed = typeof ts === 'string' ? Date.parse(ts) : NaN;
+          lastModelAt = Number.isNaN(parsed) ? null : parsed;
+        }
+      }
 
       const content = extractContentText(obj);
       if (!content) continue;
@@ -110,7 +141,7 @@ function extractLastTurn(jsonlContent: string): {
     }
   }
 
-  return { lastUser, lastModel };
+  return { lastUser, lastModel, lastModelId, lastModelAt };
 }
 
 // CSJP encoding — single home for Path-B policy (S3 §1 Path Helper)
@@ -130,7 +161,7 @@ export async function extractLastTurnSnippet(
   const result = await readJsonlForSession(sessionDir, claudeSessionId);
   if (!result) return null;
   const { content, filePath } = result;
-  const { lastUser, lastModel } = extractLastTurn(content);
+  const { lastUser, lastModel, lastModelId, lastModelAt } = extractLastTurn(content);
   // TSTR: 120-char truncated snippet (lifted quality :155-158)
   const transcriptSnippet =
     lastModel.length > 0 ? lastModel.slice(0, 120) + (lastModel.length > 120 ? '…' : '') : '';
@@ -140,5 +171,7 @@ export async function extractLastTurnSnippet(
     transcriptLastModelOutput: lastModel,
     transcriptLastReadAt: Date.now(), // lifted quality :169
     transcriptPath: filePath,
+    transcriptLastModelId: lastModelId,
+    transcriptLastModelAt: lastModelAt,
   };
 }

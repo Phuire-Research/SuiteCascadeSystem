@@ -103,6 +103,24 @@ deterministic CLI, that is a SEPARATE promotion to Advanced — noted, not pre-b
 | S4 | Conference-Surface | Skill.md | `collisionZone === false` true overlaps → surface to the Staging Tool · default keep-ours |
 | S5 | Resolution-Emit | Skill.md | emit `scp-update-resolved.<name>.json` · flat decisions[] · pending gate · totality invariant |
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it.
+
+This seat holds **no `Skills/` stratum and no `Strategy/` stratum**, and that absence is
+DOCTRINE rather than omission — the Engagement section above rules it: the resolver composes
+nothing outside itself, so a `Conductor.md` anor `Strategy/` (Conductor) or a `package.json`
+anor `Skills/` (Advanced) would be unexercised scaffold, Credentialed-Lambda (CLAUDE.md C4 E6).
+Its ONE door is the sibling **`Skill.md`**, where S1-S5 (Diff-Ingest · Auto-Path · Zone-Union ·
+Conference-Surface · Resolution-Emit) live inline; it loads on every dispatch, with the diff
+JSON path as the single input.
+
+What would land first, if anything did: the Instance already names it — a future Diamond that
+mechanizes the resolution as a deterministic CLI would be a SEPARATE promotion to Advanced,
+noted and not pre-built.
+
+---
+
 ## References
 
 - `Cascades/8_SUITES/Template Suite 8/` — the Direct scaffold pattern (Instance.md + Skill.md)

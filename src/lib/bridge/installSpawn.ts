@@ -1,3 +1,27 @@
+// ── THE SIBLING ASSEMBLER · A NAMED BOUNDARY (RESUME INDUCTION · Conference (b) = A) ──
+//
+// `assembleJoinedSuite8` (below) is the INSTALL-TIME assembler. Its sibling is
+// `composeAppendedSystemPrompt` (src/lib/bridge/baseSystemPrompt/) — the RESUME-TIME
+// assembler. They are deliberately SEPARATE, and the boundary is stated here so the
+// separation stays a decision rather than a drift:
+//
+//   | axis      | install (this file)                     | resume (the sibling)                |
+//   |-----------|-----------------------------------------|-------------------------------------|
+//   | when      | PRE-BRIDGE (no port, no endpoint, no    | live bridge, live endpoint/port     |
+//   |           | registry ULID exists yet)               | regenerated INTO the base layer     |
+//   | root      | the freshly CLONED repo                 | the installed workspace/SCP grounds |
+//   | output    | `tempDir` (discarded post-spawn)        | `<bridgeLogDir()>/…` per segment    |
+//   | layers    | Instance + Conductor + Skill + 9        | base → THE DOCK → Instance.md LAST  |
+//   |           | Strategy files (SOURCES, order-bound)   |                                     |
+//   | failure   | FAIL-FAST (unguarded read + a throwing  | NEVER throws — degrades to base-only|
+//   |           | pre-spawn invariant)                    | anor to no --append clause          |
+//
+// Folding them would force the resume assembler to grow a pre-bridge mode for exactly ONE
+// caller. Two assemblers with a NAMED boundary is not a parallel path; two assemblers that
+// silently overlap is. THE FIRE-TIME LAW (C1088 · "the Resume Always Calls for the Most
+// Recent of All the Files we are Joining for the Dock") governs the sibling, not this one:
+// the install envelope is built once, from a clone, for a single spawn.
+
 import { execFile as execFileCb } from 'node:child_process';
 import {
   copyFileSync,
@@ -14,6 +38,9 @@ import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { promisify } from 'node:util';
 import { buildInstallSpawnSettings } from './spawnSettings';
+// C1039 · the instruction-set stamp reads the SINGLE SOURCE (package.json) rather than duplicating
+// a literal into either flip seat — duplication is the drift class this Diamond exists to close.
+import { getBridgeMuxameter } from './bridgeVersion';
 // SCS Install Epoch D1 · §1.5 · install spawn surface swapped from the OS terminal
 // (osTerminal.buildTerminalCommand) to the proven Electron xterm window. osTerminal.ts
 // itself stays live (spawn.ts / menu.ts / commands/bridge/* still consume it) — only
@@ -667,6 +694,11 @@ export async function runInstallScaffoldOnly(
         claudeMdPresent: muxState.userState.hasRootClaudeMd,
         installedAt: new Date().toISOString(),
         installVersion: scsBridgeVersion,
+        // C1039 · the stamp rides the generate path too, at BOTH flip pairs (the fresh scaffold and
+        // the muxified scaffold). markInstallationComplete re-stamps at the completion mark, which
+        // is the one point both pairs pass through — so this is belt-and-braces. A Cascade.json
+        // should nonetheless be BORN correct rather than corrected a step later.
+        instructionSet: getBridgeMuxameter()?.instructionSet,
       });
       const tmpLivePath = `${livePath}.tmp`;
       writeFileSync(tmpLivePath, cascadeContent, 'utf8');
@@ -913,6 +945,11 @@ export async function runInstallMuxifiedPath(opts: {
         claudeMdPresent: muxState.userState.hasRootClaudeMd,
         installedAt: new Date().toISOString(),
         installVersion: scsBridgeVersion,
+        // C1039 · the stamp rides the generate path too, at BOTH flip pairs (the fresh scaffold and
+        // the muxified scaffold). markInstallationComplete re-stamps at the completion mark, which
+        // is the one point both pairs pass through — so this is belt-and-braces. A Cascade.json
+        // should nonetheless be BORN correct rather than corrected a step later.
+        instructionSet: getBridgeMuxameter()?.instructionSet,
       });
       const tmpLivePath = `${livePath}.tmp`;
       writeFileSync(tmpLivePath, cascadeContent, 'utf8');

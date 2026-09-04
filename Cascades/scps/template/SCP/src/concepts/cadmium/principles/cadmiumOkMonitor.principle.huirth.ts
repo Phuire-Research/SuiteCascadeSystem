@@ -45,7 +45,8 @@
  * Citation: CADMIUM-C3-OCHRE-BLUEPRINT.md §C3-D3-b · CADMIUM-C3-S4-VIRIDIAN-SCSF.md §Q4 RISK-2 (NCEC).
  */
 import type { PrincipleFunction, Concept, AnyAction } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import {
@@ -344,7 +345,7 @@ export const cadmiumOkMonitorPrinciple: CadmiumOkMonitorPrincipleType = ({ d_, p
     if (cadmiumWatchArmed) return; // idempotent — already armed.
     const cadmiumDir = path.resolve(SCS_ROOT, 'Cascades', 'Extended', CADMIUM_RI_DIR_BASENAME);
     try {
-      cadmiumFolderWatcher = chokidarWatch(cadmiumDir, {
+      cadmiumFolderWatcher = createWatcher('cadmiumOkMonitor#1', cadmiumDir, {
         persistent: true,
         ignoreInitial: false,
         awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
@@ -477,7 +478,7 @@ export const cadmiumOkMonitorPrinciple: CadmiumOkMonitorPrincipleType = ({ d_, p
     if (researchJsonWatchArmed) return; // idempotent — already armed.
     const riDir = path.resolve(SCS_ROOT, 'Cascades', 'Extended', CADMIUM_RI_DIR_BASENAME);
     try {
-      researchJsonWatcher = chokidarWatch(riDir, {
+      researchJsonWatcher = createWatcher('cadmiumOkMonitor#2', riDir, {
         persistent: true,
         ignoreInitial: false,
         awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
@@ -607,7 +608,7 @@ export const cadmiumOkMonitorPrinciple: CadmiumOkMonitorPrincipleType = ({ d_, p
     }
 
     try {
-      okWatcher = chokidarWatch(jsonlPath, {
+      okWatcher = createWatcher('cadmiumOkMonitor#3', jsonlPath, {
         persistent: true,
         ignoreInitial: false,
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },

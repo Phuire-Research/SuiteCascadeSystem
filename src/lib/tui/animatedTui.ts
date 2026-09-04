@@ -1,4 +1,5 @@
 import { emitKeypressEvents } from 'node:readline';
+import { createFileWatcher } from '../bridge/watcherSingleton.model';
 import {
   applyKeypress,
   renderMenu,
@@ -40,9 +41,19 @@ import {
   markAllSessionsOffline,
   pruneGhostSessions,
   setSessionScsLabel,
+  // C1104 · ruling A · the TUI model-pick leg calls the SAME in-process registry
+  // writer the scs_set_session_model MCP quality calls (D3D shared-function law —
+  // the TUI runs inside the bridge process, so it never round-trips its own MCP).
+  setSessionModel,
+  // C1104 · ruling m-A · the one-time birth-stamp sweep, fired once at daemon boot.
+  reconcileSessionModels,
   setSessionPreferredScp,
 } from '../bridge/registry';
-import { registryPath } from '../bridge/paths';
+import { registryPath, bridgeRoot, scpsJsonPath } from '../bridge/paths';
+// C1104 · ruling A · the model roster the picker walks (the SAME catalog the MCP tool,
+// the page and the resume doors read — one roster, every surface).
+import { AVAILABLE_MODELS } from '../../shared/modelCatalog.model';
+import { environmentName } from '../bridge/workspaceSocket.model';
 // PSSM · W4 · the SCPs.json boot consistency sweep (markAllSessionsOffline mirror).
 // MD-ARC+C · Wave 5a (MD-ARC-R3-BLUEPRINT §5) — Archive / Reinstate direct calls.
 // The TUI hosts the bridge in-process, so these are AWAITed directly (NOT quality
@@ -93,7 +104,7 @@ import {
   getActiveScsBridgeMuxiumHandle,
 } from '../bridge/scsBridgeMuxium';
 import { findFreeBridgePort, setActiveBridgePort } from '../bridge/activeBridgePort.model';
-import { acquireGlobalBridgeMutex, releaseGlobalBridgeMutex } from '../bridge/globalBridgeMutex.model';
+import { acquireGlobalBridgeMutex, listSiblingHolders, releaseGlobalBridgeMutex } from '../bridge/globalBridgeMutex.model';
 import { createEnvelope, enqueueMessage } from '../bridge/message';
 import {
   writeBridgeMetadata,
@@ -116,6 +127,7 @@ import {
 } from './bridgeStateFeed';
 import { rgbToAnsi, SUITE_COLORS, suiteColorForScp } from './colors';
 import { log } from '../bridge/debugLog';
+import { askSpawnedLanesToExit, signalSpawnedLaneGroups } from '../bridge/spawnedLaneTeardown.model';
 import { appendTerminalOutput } from '../bridge/logCap';
 import { buildScpBootOverlay, computeScpBootOverlayBox } from './bootOverlay';
 import type { ScpOverlayEntry } from '../bridge/concepts/scpBootOverlay/scpBootOverlay.type';
@@ -328,19 +340,36 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // SELF-REPORTS and stands down. Same-workspace re-runs pass through (the C410 relay).
   const bridgeMutex = acquireGlobalBridgeMutex(process.cwd());
   if (!bridgeMutex.acquired) {
+    // C1075 · SALVO M · THE SAME-KEY WARN. The lock is now per (directory, environment): a live holder in OUR key
+    // means this exact bridge is already running here. A second UNNAMED daemon in one directory would clobber the
+    // shared bridge.json top-level record (Lane R4 · bridgeMetadata.ts:511-525) and run a second watcher over the
+    // same registry — so the honest answer is the WARNING the user asked for, then exit. A DIFFERENT directory
+    // never reaches this branch any more: it has its own key, and its ports walk (the C797 refusal is retired).
     const holder = bridgeMutex.holder;
+    const holderEnv = holder.env ?? '';
     process.stderr.write(
-      '\n  scs: another SCS-Bridge is already running on this machine.\n' +
-      '      workspace: ' + holder.userCwd + '\n' +
-      '      pid:       ' + holder.pid + '\n\n' +
-      '  This release supports ONE bridge at a time. Close the other bridge\n' +
-      '  (Ctrl+C its TUI, then quit its windows) and run scs again.\n\n',
+      '\n  scs: an SCS-Bridge is already active for this directory.\n\n' +
+      '      running    ' + (holderEnv.length > 0 ? holderEnv : 'production (unnamed)') +
+        '  ·  pid ' + holder.pid + '\n' +
+      '      its dir    ' + holder.userCwd + '\n\n' +
+      '  append --name <x> to run a second instance here (a name spaces its logs, socket and bridge record).\n' +
+      '  A different directory needs no name — its ports walk.\n\n',
     );
-    log('bridge.mutex.refused', { holderPid: holder.pid, holderCwd: holder.userCwd });
+    log('bridge.mutex.warn-same-dir', { holderPid: holder.pid, holderCwd: holder.userCwd, holderEnv, ownCwd: process.cwd() });
     exit(1);
     return;
   }
-  log('bridge.mutex.acquired', { sameWorkspace: bridgeMutex.sameWorkspace });
+  log('bridge.mutex.acquired', { claimedStale: bridgeMutex.claimedStale });
+  if (bridgeMutex.claimedStale) log('bridge.mutex.claim-stale', { ownCwd: process.cwd(), env: environmentName() });
+  {
+    // C1075 · COEXISTENCE IS THE DEFAULT. Other live bridges (other workspaces anor environments) are named, never
+    // refused; their ports and ours walk (findFreeBridgePort · resolveActualScpPortPair).
+    const siblings = listSiblingHolders(process.cwd());
+    if (siblings.length > 0) {
+      log('bridge.mutex.coexist', { ownCwd: process.cwd(), env: environmentName(), siblings: siblings.map((s) => ({ pid: s.pid, userCwd: s.userCwd, env: s.env ?? '' })) });
+      process.stderr.write(`  scs: coexisting with ${siblings.length} other SCS-Bridge${siblings.length === 1 ? '' : 's'} on this machine · ports walk.\n`);
+    }
+  }
 
   const caps = detectTerminalCaps();
 
@@ -357,6 +386,26 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   const bridgePort = await findFreeBridgePort(7111);
   setActiveBridgePort(bridgePort);
   log('bridge.port.scanned', { bridgePort, base: 7111 });
+  // C947 · THE BOOT ASSERTION (the MS-1 C-6 precondition · never silent): name the
+  // environment, the port, the sink root, and the WATCH MODE this daemon will run under.
+  // The C946 root: a production install missing `fsevents.node` makes chokidar 3.6 fall
+  // back to `usePolling` on macOS (100ms stat-poll per watched file) — the hot daemon. A
+  // boot that says `polling` on darwin is the wound announcing itself, not a mystery.
+  const bridgeEnvironment = environmentName();
+  let watchMode: 'fsevents' | 'polling' | 'fs.watch' = 'fs.watch';
+  if (process.platform === 'darwin') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('fsevents');
+      watchMode = 'fsevents';
+    } catch {
+      watchMode = 'polling';
+    }
+  }
+  log('bridge.boot', { env: bridgeEnvironment || 'production', bridgePort, bridgeRoot: bridgeRoot(), watchMode });
+  process.stderr.write(
+    `[scs] bridge.boot · env=${bridgeEnvironment || 'production'} · port=${bridgePort} · root=${bridgeRoot()} · watch=${watchMode}\n`,
+  );
   bootBridgeDaemon({ userCwd: process.cwd(), port: bridgePort });
 
   // Diamond 3H Bug A Recurse · Boot-Reset-As-Clean-Slate: write ALL sessions
@@ -365,10 +414,34 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // within this process lifecycle. Failure is non-fatal — the TUI must still
   // start; worst case is stale LAUNCHED entries (pre-fix behavior).
   // Citation: D3H-BUG-A-RECURSE-R7-FUCHSIA-CLINICAL.md §3
-  try {
-    await markAllSessionsOffline();
-  } catch (err) {
-    process.stderr.write(`[scs] boot-reset sessions offline failed: ${(err as Error).message}\n`);
+  // C950 · the same owner law as the SCP sweep below — a NAMED CLI never marks the shared
+  // sessions.json offline (production's live sessions are not its to reset).
+  if (!environmentName()) {
+    try {
+      await markAllSessionsOffline();
+    } catch (err) {
+      process.stderr.write(`[scs] boot-reset sessions offline failed: ${(err as Error).message}\n`);
+    }
+  }
+
+  // C1104 · RULING m-A · THE ONE-TIME RECONCILE SWEEP. Runs once at boot, right after the
+  // registry is grounded, guarded by its own bridge.json `modelReconcile` sentinel — a
+  // second boot skips it in full. Clears the birth stamps that ruling A would otherwise
+  // turn into permanent forced overrides of the user's own /model default, and writes the
+  // one entry whose transcript proves a real mid-session change. Owner law: a NAMED CLI
+  // never sweeps the shared registry (the markAllSessionsOffline discipline above).
+  // Non-fatal: the TUI must still start.
+  if (!environmentName()) {
+    try {
+      const rec = await reconcileSessionModels();
+      if (!rec.alreadyRun) {
+        process.stderr.write(
+          `[scs] model reconcile · total=${rec.total} cleared=${rec.cleared} written=${rec.written} left=${rec.left}\n`,
+        );
+      }
+    } catch (err) {
+      process.stderr.write(`[scs] model reconcile failed: ${(err as Error).message}\n`);
+    }
   }
 
   // D-SJP · GHOST-SESSION PRUNE · runs right after the boot-reset so it judges the
@@ -391,10 +464,19 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // scpMessageRouter status watcher arms (armed in bootBridgeDaemon's setTimeout(50) above;
   // this awaited chainWrite completes well inside that window). No SCP is 'live' until the
   // launch path (W3) re-writes it — the consistency point. Non-fatal (TUI must still start).
-  try {
-    await markAllScpsPending();
-  } catch (err) {
-    process.stderr.write(`[scs] boot-reset SCPs pending failed: ${(err as Error).message}\n`);
+  // C950 · THE BOOT SWEEPS BELONG TO THE OWNER. Under the shared environment (one sessions.json ·
+  // one SCPs.json · two perspectives) a NAMED CLI is a perspective, not the owner of shared state —
+  // it must NOT flip production's live sessions/SCPs to offline/pending on its own boot. Production
+  // (no name) sweeps exactly as before.
+  if (environmentName()) {
+    process.stderr.write(`[scs] boot sweeps SKIPPED · env=${environmentName()} · shared state belongs to the production perspective\n`);
+    log('bridge.boot.sweeps-skipped', { env: environmentName() });
+  } else {
+    try {
+      await markAllScpsPending();
+    } catch (err) {
+      process.stderr.write(`[scs] boot-reset SCPs pending failed: ${(err as Error).message}\n`);
+    }
   }
 
   // REF-D2 · BJLM bridge.json write helper · fire-and-forget · debounced via
@@ -447,7 +529,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
     rendered: Record<string, number>;
     statuses: Record<string, string>;
   } => {
-    const scpsPath = path.join(process.cwd(), 'Cascades', 'SCPs.json');
+    const scpsPath = scpsJsonPath();
     try {
       const mtimeMs = statSync(scpsPath).mtimeMs;
       if (mtimeMs === _scpWindowIdCacheMtimeMs) {
@@ -623,7 +705,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // populates initial installedScps so bridge.json reflects installed inventory
   // even before chokidar M17 closure has dispatched its first sentinel-driven
   // refresh (R3 M9 source-read finding).
-  const initialScpRegistry = readScpRegistry(process.cwd());
+  const initialScpRegistry = readScpRegistry();
   const initialInstalledScps = initialScpRegistry.scps.map((s) => s.name);
   refreshBridgeMetadata(new Map(), initialInstalledScps);
 
@@ -671,6 +753,9 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // the gap where MCP-driven Activate launched SCP but TUI did not surface PSM
   // Active Display (per Cycle 152 S7 Fuchsia Tier 0 · Installation Agent diagnosis).
   let latestActiveScpFromMcp: string | undefined = undefined;
+  // C948 · the activation nonce + the last nonce MTAM consumed (edge trigger).
+  let latestActiveScpFromMcpAt = 0;
+  let _mtamConsumedActivationAt = 0;
   // Cycle 142 LAAD Fix A · SSAR restoration. Tracks the prior synced value so the
   // M17 closure dispatches the 'scp-installed-state-sync' action ONLY when the
   // value changes (prevents action storm on every lifecycle tick). null sentinel
@@ -791,6 +876,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
               const dockedScps = d.scsBridge.k.connectedScps.select();
               // MASF select · MCP-Active-Scp-Filter from scsBridge state · MTAM source
               const nextActiveScpFromMcp = d.scsBridge.k.activeScpFromMcp.select();
+              const nextActiveScpFromMcpAt = d.scsBridge.k.activeScpFromMcpAt.select();
               latestLifecycleSnapshot = nextLifecycle;
               latestSessionCountSnapshot = nextSessionCount;
               latestPortSnapshot = nextPort;
@@ -798,6 +884,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
               latestDockServerPort = dockPort;
               latestConnectedScpsSnapshot = dockedScps;
               latestActiveScpFromMcp = nextActiveScpFromMcp;
+              latestActiveScpFromMcpAt = nextActiveScpFromMcpAt;
               // R4 Fix B · pendingLaunchScps clear-site. When the FSM has
               // transitioned a scpName out of 'pending' (i.e. now 'booting',
               // 'idle', or 'live'), the in-flight guard releases so future
@@ -1079,7 +1166,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // Diamond α RM-Fix-2: read SCPs.json at startup · drives Install SCP row label
   // discrimination ("Install SCP" first time · "Install Another SCP" thereafter)
   // and (β) sub-menu surfacing. Defensive empty on missing file (PFP-DEFENSIVE-EMPTY).
-  const scpRegistry = readScpRegistry(process.cwd());
+  const scpRegistry = readScpRegistry();
   const anyScpsInstalled = scpRegistry.scps.length > 0;
   // Template Citizenship (BO-2-C): AFFINITY-DECLARED-BOOT-PRIORITY-SELECTION.
   // The autoLaunch field on a registry entry is the EXPLICIT replacement for the
@@ -1092,7 +1179,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   // Confirms what SCPs.json contained at bridge start · closes runtime-diagnosis gap
   // where startup-read result went silently into menuState.anyScpsInstalled.
   log('tui.scpRegistry.startup', {
-    path: path.join(process.cwd(), 'Cascades', 'SCPs.json'),
+    path: scpsJsonPath(),
     count: scpRegistry.scps.length,
     anyScpsInstalled,
     scpNames: scpRegistry.scps.map((s) => s.name),
@@ -1237,10 +1324,17 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
       // PSM surfaces Active Display for the MCP-activated SCP · matching
       // keypress-driven activate path semantic (Cycle 148 ALHOC M130).
       // Renderframe is the canonical post-init sync site (LAAD Cycle 142 pattern).
+      // C948 · EDGE, NOT LEVEL. The level form (`filter !== activeScpFromMcp`) fought D-WC-3
+      // below: an activated SCP whose surface is 'pending' (its window closed — or, in a
+      // named environment, an SCP merely MIRRORED from production and never launched here)
+      // was re-pinned by MTAM every frame and cleared by D-WC-3 every frame — ~28 flips/s,
+      // each flip a bridge.json rewrite (the Dev bench caught it: 5,041 sync/cleared pairs
+      // in three minutes). MTAM now fires ONCE per activation nonce.
       if (
         latestActiveScpFromMcp !== undefined &&
-        menuState.activeScpFilter !== latestActiveScpFromMcp
+        latestActiveScpFromMcpAt !== _mtamConsumedActivationAt
       ) {
+        _mtamConsumedActivationAt = latestActiveScpFromMcpAt;
         menuState = { ...menuState, activeScpFilter: latestActiveScpFromMcp };
         // D3C · AFSW · Update module-scoped tracker so next refreshBridgeMetadata
         // call picks up the new activeScp (TDZ-safe · tracker is module-scope let).
@@ -1600,6 +1694,49 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
     // D-LHT Fix A · restore the real console/stdout/stderr now that the alt-screen is released,
     // so any error during/after teardown surfaces to the terminal normally (not swallowed to log).
     restoreTerminalIO();
+
+    // ── C1020 · SEAT 3 · THE SPAWNED-LANE TEARDOWN ────────────────────────────────────────────
+    // *"We Need the Graceful Close Route with the Back Up SIGTERM like our Nodemon Means."*
+    //
+    // THE LEAK THIS CLOSES: this daemon spawns each SCP lane `detached: true`, so when it exits the
+    // lane root (`npm run bridge`) reparents to `ppid 1` and keeps nodemon and ts-node alive. Live
+    // at the time of writing: pid 7658 at ppid 1 with its own running subtree. Repeated exits
+    // accumulate them until only a reboot frees the resources — which is exactly what the HiFi Red
+    // disclaimer on the exit-confirm pane now warns the user about.
+    //
+    // WHY HERE AND NOT INSIDE THE LANE: two prior seats lived inside the process being torn down and
+    // both died of THE PRE-EMPTION HAZARD — the faster self-shutdown silently voiding the slower.
+    // The daemon is the one seat that is ALIVE AT THE EVENT and OUTLIVES what it tears down.
+    //
+    // THE SHAPE IS `nodemon.json`'s, deliberately: the graceful route first, a signal as the backup.
+    // The difference is that nodemon supplies its own backup and we have none, so we supply it.
+    //
+    // FIRE-AND-FORGET, NEVER AWAITED — the precedent is `sendElectronQuitViaSocket(1200)` above.
+    // `cleanExit` must never become async: the daemon registers no `unhandledRejection` handler, so
+    // a single rejected lane would kill it here, before `SHOW_CURSOR + EXIT_ALT` — stranding the
+    // user's terminal in the alt-screen AND skipping every lane after the first.
+    try {
+      const lanesAsked = askSpawnedLanesToExit();
+      if (lanesAsked > 0) {
+        // NOT `.unref()`'d — DELIBERATELY. An unref'd timer is discarded the instant the loop
+        // empties, and that is precisely how the C1018 seat died without ever firing. The 1500ms
+        // exit-defer below holds the loop open well past this, so it is guaranteed its turn.
+        //
+        // 600ms is a real window for the RELEASE, not a wind-up for the signal: the graceful route
+        // answers immediately and lets its watchers and listeners go afterwards. It runs INSIDE the
+        // existing 1500ms budget rather than adding to it, so the exit does not get slower.
+        setTimeout(() => {
+          signalSpawnedLaneGroups();
+        }, 600);
+      }
+      // lanesAsked === 0 falls straight through: a bridge that never spawned an SCP must not wait
+      // one millisecond longer to close than it always has.
+    } catch (err) {
+      // NOTHING here may fail the exit. The teardown is a courtesy to the machine; the user's quit
+      // is the contract.
+      log('tui.laneTeardown.failed', { message: err instanceof Error ? err.message : String(err) });
+    }
+
     // ULT exit-defer · 200ms grace for sendElectronQuitViaSocket (above)
     // to propagate the quit command before the Node process terminates.
     setTimeout(() => exit(0), 1500);
@@ -2035,17 +2172,41 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
     pendingLaunchScps.add(scpName);
     log('tui.launch.scp.start', { scpName, tuiSessionId: TUI_SESSION_ID });
     try {
-      const registry = readScpRegistry(process.cwd());
+      const registry = readScpRegistry();
       const entry = registry.scps.find((s) => s.name === scpName);
       if (!entry) {
         pendingLaunchScps.delete(scpName);
         log('tui.launch.scp.error', { scpName, message: 'scpName not found in SCPs.json registry' });
         return;
       }
-      if (entry.boundBridgePort === null) {
+      // TOH-12 · BREAK 4: `== null` catches an ABSENT key (undefined) as well as null —
+      // a hand-authored entry without the key previously fell through to port=undefined.
+      if (entry.boundBridgePort == null) {
         pendingLaunchScps.delete(scpName);
         log('tui.launch.scp.error', { scpName, message: 'boundBridgePort is null in registry' });
         return;
+      }
+      // TOH-12 · BREAK 5 (SOV-1 at the launch gate): refuse to spawn onto a port pair
+      // another REGISTERED entry holds — the EADDRINUSE embrace caught at the registry
+      // level instead of the socket. scps[]-scope ONLY: archived entries are deliberately
+      // excluded here (an archived twin of a live port is the recorded historical reclaim,
+      // not a reason to ground the live SCP).
+      {
+        const pair = [entry.boundBridgePort, entry.boundBridgePort + 1];
+        const collided = registry.scps.find(
+          (o) =>
+            o.name !== scpName &&
+            o.boundBridgePort != null &&
+            [o.boundBridgePort, o.boundBridgePort + 1].some((p) => pair.includes(p)),
+        );
+        if (collided) {
+          pendingLaunchScps.delete(scpName);
+          log('tui.launch.scp.error', {
+            scpName,
+            message: `port pair collision with registered SCP '${collided.name}' (${collided.boundBridgePort})`,
+          });
+          return;
+        }
       }
       const scpPath = path.join(process.cwd(), entry.path);
       const port = entry.boundBridgePort;
@@ -2208,7 +2369,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
         if (!textModalActive && key.sequence !== undefined && /^[1-9]$/.test(key.sequence)) {
           const digit = parseInt(key.sequence, 10);
           const scpIndex = digit - 1;
-          const registrySnapshot = readScpRegistry(process.cwd());
+          const registrySnapshot = readScpRegistry();
           if (scpIndex < registrySnapshot.scps.length) {
             const targetScp = registrySnapshot.scps[scpIndex];
             if (targetScp !== undefined) {
@@ -2392,6 +2553,36 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
       }
       case 'rename-buffer-update':
         // applyKeypress already updated menuState.renameMode.buffer via newState; renderFrame picks up next tick.
+        return;
+      // C1104 · ruling A · the RESUME-model picker lifecycle (the Anchor Menu leg).
+      case 'set-model-selected': {
+        const ulid = menuState.selectedUlid;
+        if (ulid && ulid !== SYNTHETIC_NEW && ulid !== SYNTHETIC_CLOSE) {
+          const entry = menuState.sessions.find((s) => s.id === ulid);
+          // Seed the cursor on the session's CURRENT model when it has one, so the
+          // picker opens where the session actually stands; else the first row.
+          const seeded = entry?.model
+            ? AVAILABLE_MODELS.findIndex((m) => m.id === entry.model)
+            : -1;
+          menuState = { ...menuState, modelPickMode: { ulid, index: seeded >= 0 ? seeded : 0 } };
+        }
+        return;
+      }
+      case 'set-model-pick': {
+        if (menuState.modelPickMode) {
+          // D3D · the SAME function the MCP handler's quality calls. source 'set'
+          // stamps modelSetAt, so the next transcript OBSERVE cannot clobber it.
+          void setSessionModel(menuState.modelPickMode.ulid, action.model, 'set');
+          menuState = { ...menuState, modelPickMode: undefined };
+        }
+        return;
+      }
+      case 'set-model-cancel': {
+        menuState = { ...menuState, modelPickMode: undefined };
+        return;
+      }
+      case 'set-model-move':
+        // applyKeypress already moved menuState.modelPickMode.index via newState.
         return;
       // Diamond B-6 (APEX): Install sentinel wired to full pipeline.
       // Diamond B-8 Fix 3 (HWMTUC-SURFACE): present trust-confer TUI before pipeline.
@@ -2644,7 +2835,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
       }
       // Diamond β RM-Asp-2: open SCP sub-menu — refresh SCPs.json then init slot
       case 'open-scp-menu': {
-        const reg = readScpRegistry(process.cwd());
+        const reg = readScpRegistry();
         menuState = {
           ...menuState,
           scpSubMenu: { items: reg.scps, selectedIdx: 0 },
@@ -2684,7 +2875,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
         // direction: "Function Only when Activating via the Enter Hotkey on
         // the Specified SCP that would be Passed to the Composed Launch
         // Function." Cycle 148 R4 calibration · ALHOC M130 placement-correct.
-        const reg = readScpRegistry(process.cwd());
+        const reg = readScpRegistry();
         log('tui.menu.scp-manage.opened', {
           cwd: process.cwd(),
           scpCount: reg.scps.length,
@@ -2863,7 +3054,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
             const result = await archiveScpEntry(scpName, force ? { force: true } : undefined);
             if (result.ok) {
               // Clear the confirm slot + re-read the roster and the fold.
-              const reg = readScpRegistry(process.cwd());
+              const reg = readScpRegistry();
               const archivedItems = await listArchivedScps();
               menuState = {
                 ...menuState,
@@ -2927,7 +3118,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
           try {
             const result = await reinstateScpEntry(scpName);
             if (result.ok) {
-              const reg = readScpRegistry(process.cwd());
+              const reg = readScpRegistry();
               const archivedItems = await listArchivedScps();
               menuState = {
                 ...menuState,
@@ -2959,7 +3150,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
         const scpName = action.scpName;
         log('tui.bssps.start', { scpName, tuiSessionId: TUI_SESSION_ID });
         try {
-          const registry = readScpRegistry(process.cwd());
+          const registry = readScpRegistry();
           const entry = registry.scps.find((s) => s.name === scpName);
           if (!entry) {
             log('tui.bssps.error', {
@@ -2968,12 +3159,31 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
             });
             return;
           }
-          if (entry.boundBridgePort === null) {
+          // TOH-12 · BREAK 4: `== null` catches an ABSENT key as well as null.
+          if (entry.boundBridgePort == null) {
             log('tui.bssps.error', {
               scpName,
               message: 'boundBridgePort is null in registry',
             });
             return;
+          }
+          // TOH-12 · BREAK 5 (SOV-1 at the boot gate · scps[]-scope only, twin of the
+          // launch-path check — archived entries deliberately excluded).
+          {
+            const pair = [entry.boundBridgePort, entry.boundBridgePort + 1];
+            const collided = registry.scps.find(
+              (o) =>
+                o.name !== scpName &&
+                o.boundBridgePort != null &&
+                [o.boundBridgePort, o.boundBridgePort + 1].some((p) => pair.includes(p)),
+            );
+            if (collided) {
+              log('tui.bssps.error', {
+                scpName,
+                message: `port pair collision with registered SCP '${collided.name}' (${collided.boundBridgePort})`,
+              });
+              return;
+            }
           }
           const scpPath = path.join(process.cwd(), entry.path);
           const port = entry.boundBridgePort;
@@ -3204,7 +3414,7 @@ export async function startAnimatedTui(opts: StartAnimatedTuiOptions = {}): Prom
   };
 
   // Registry watcher refreshes session list (fire-and-forget on each tick)
-  watchFile(registryPath(), { interval: 500 }, async () => {
+  createFileWatcher('animatedTui.registry', registryPath(), { interval: 500 }, async () => {
     if (exited) return;
     try {
       const newSessions = await listSessions();

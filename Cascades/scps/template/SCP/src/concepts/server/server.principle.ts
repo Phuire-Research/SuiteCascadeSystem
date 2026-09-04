@@ -3,6 +3,7 @@ For the graph programming framework Stratimux and a Server Concept, generate a p
 $>*/
 /*<#*/
 import { ServerPrinciple, ServerState } from './server.concept';
+import { holdHttpServer } from './httpServerHandles.model';
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -97,11 +98,21 @@ export const serverPrinciple: ServerPrinciple = ({ concepts_, k_, plan, nextA })
     server.use('/files', express.static(path.join(__dirname, '../../../static')));
 
     setTimeout(() => {
-      server.listen(initialServerState.port, HOST, () => {
+      // C984 · step 0 · CAPTURE THE HANDLE. app.listen() returns the http.Server; discarding
+      // it left the process with nothing closable at all. Held for the graceful-exit path.
+      const mainHttpServer = server.listen(initialServerState.port, HOST, () => {
         console.log(`Running on http://${HOST}:${initialServerState.port}}`);
         console.log(`Static files available at http://${HOST}:${initialServerState.port}/files`);
         // THE BRANCH SELF-REPORT — boot-settled (inside the .listen callback · every boot, every run).
         writeScpBootReport();
+      });
+      holdHttpServer('main', initialServerState.port, mainHttpServer);
+      // C1075 · NEVER SILENCE THE FAILURE SIGNAL: an EADDRINUSE here used to be an unhandled 'error' — the SCP died
+      // with no boot report, no port named, and the bridge's window fallback could open ANOTHER workspace's SCP on
+      // this port. Name it, then exit — a crash with its cause is the honest failure; a zombie without a server is not.
+      mainHttpServer.once('error', (err: NodeJS.ErrnoException) => {
+        console.error(`[SCP] bind FAILED on ${HOST}:${initialServerState.port} (${err.code ?? err.message}) — the port is held by another process; this SCP's boot report will never reach the bridge. Exiting.`);
+        process.exit(1);
       });
     }, 1000);
     if (initialServerState.syncClientState) {
@@ -126,9 +137,15 @@ export const serverPrinciple: ServerPrinciple = ({ concepts_, k_, plan, nextA })
       server: reflectedServer,
     });
     setTimeout(() => {
-      reflectedServer.listen(reflectedPort, HOST, () => {
+      // C984 · step 0 · the reflected listener's handle, captured for the same reason.
+      const reflectedHttpServer = reflectedServer.listen(reflectedPort, HOST, () => {
         console.log(`Running on http://${HOST}:${reflectedPort}}`);
         console.log(`Static files available at http://${HOST}:${reflectedPort}/files`);
+      });
+      holdHttpServer('reflected', reflectedPort, reflectedHttpServer);
+      reflectedHttpServer.once('error', (err: NodeJS.ErrnoException) => {
+        console.error(`[SCP] reflected bind FAILED on ${HOST}:${reflectedPort} (${err.code ?? err.message}). Exiting.`);
+        process.exit(1);
       });
     }, 1000);
     if (initialServerState.syncClientState) {
