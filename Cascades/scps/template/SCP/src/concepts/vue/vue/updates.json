@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "current": "1.157.0",
+  "current": "1.157.1",
   "muxameter": {
     "cli": 14,
     "scp": 16,
@@ -9,9 +9,9 @@
   },
   "releases": [
     {
-      "id": "v1157",
-      "version": "1.157.0",
-      "label": "New in 1.157.0",
+      "id": "v11571",
+      "version": "1.157.1",
+      "label": "New in 1.157.1",
       "muxameter": {
         "cli": 14,
         "scp": 16,
@@ -31,12 +31,12 @@
           ]
         },
         {
-          "title": "Why 1.157.0: the Cascade Position",
+          "title": "Why 1.157.1: the Cascade Position",
           "color": "yellow",
-          "summary": "Why 1.157.0: the version is the Cascade Position \u2014 207 completed cycles of the method closed since 0.950.2.",
+          "summary": "Why 1.157.1: the version is the Cascade Position \u2014 207 completed cycles of the method closed since 0.950.2.",
           "detail": [
-            "The version is the <span class=\"hifi-hl-yellow\">Cascade Position</span>, written X.Y.Z: Y is the count of completed cycles of the method that builds this software, X is the carry when that count passes three digits, and Z counts hotfixes shipped on the same position. 0.950.2 was cycle 950 with two hotfixes; 1.157.0 is cycle 1157 with none yet \u2014 the count never restarted.",
-            "The count is kept this way as a <span class=\"hifi-hl-yellow\">study</span>: it tracks the literal cycles of the method against the project's compounding complexity \u2014 what reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost. Between 0.950.2 and 1.157.0, <span class=\"hifi-hl-green\">207 cycles</span> closed, and the length is by design: they crossed one tier, the live turn-over, and everything else in this release stands on it.",
+            "The version is the <span class=\"hifi-hl-yellow\">Cascade Position</span>, written X.Y.Z: Y is the count of completed cycles of the method that builds this software, X is the carry when that count passes three digits, and Z counts hotfixes shipped on the same position. 0.950.2 was cycle 950 with two hotfixes; 1.157.1 is cycle 1157 with none yet \u2014 the count never restarted.",
+            "The count is kept this way as a <span class=\"hifi-hl-yellow\">study</span>: it tracks the literal cycles of the method against the project's compounding complexity \u2014 what reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost. Between 0.950.2 and 1.157.1, <span class=\"hifi-hl-green\">207 cycles</span> closed, and the length is by design: they crossed one tier, the live turn-over, and everything else in this release stands on it.",
             "Two sessions carried cycles of this one product in parallel, and the release cycle is their sum. The shipped document <span class=\"hifi-hl-blue\">Cascades/Documentation/Cascades/THE-CASCADE-POSITION.md</span> explains the number, the study, and the record so far; every release adds a row to it."
           ]
         },
