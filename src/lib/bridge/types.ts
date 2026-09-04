@@ -150,7 +150,16 @@ export type RegistryEntry = {
   // injects it OVER the global default (resolved.model ?? getActiveDefaultModel() in
   // cli-handler modelClause). Absent ⇒ the session rides the bridge global default.
   // Optional · additive · undefined = no per-instance pin (the default, global-riding).
+  // C1104 · ruling A: undefined now MEANS something — the resume omits `--model`
+  // entirely so the user's own /model default applies. A stamp means a CHOICE.
   model?: string;
+  // C1104 · the DURABLE half of the precedence law ("last writer wins BY TIME").
+  // Epoch ms, written by setSessionModel on EVERY accepted write — an explicit SET
+  // stamps Date.now(); an OBSERVED write stamps the observed TURN's own timestamp.
+  // An observation older than this is refused (registry.model.observed-stale), so a
+  // page/menu SET on an ALIVE session is never clobbered by the next transcript beat.
+  // Optional · additive · undefined = never written (pre-C1104 entries).
+  modelSetAt?: number;
   // A-D1 · ARF (Anchor Registry Field) · Anchor Pattern. true iff THIS session is
   // the page-bound continuous "Anchor" for its suite8Name (the auto-spawned PPOL
   // session, or one set via the reassignment tool). Invariant: ≤1 isAnchor=true per

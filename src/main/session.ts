@@ -142,7 +142,21 @@ let activeDefaultModel: string = MODEL_DEFAULT;
 export function setActiveDefaultModel(model: string): void {
   activeDefaultModel = model;
 }
+/**
+ * C1104 · RULING d-A — THE DERIVATION SUPERSEDES bridge.json.defaultModel.
+ * The SPAWN default is highestOpusId(AVAILABLE_MODELS) (MODEL_DEFAULT), derived from the
+ * catalog so a new Opus row moves it with zero edits; the hand-editable bridge.json field
+ * is now INFORMATIONAL (its last-seen value is still recorded above and readable through
+ * getRecordedBridgeDefaultModel — card RM-D1 re-points the Settings editor at the list).
+ * NOTE the second half of ruling A: this value is a SPAWN default only. A resume whose
+ * registry entry carries no model injects NO `--model` flag at all, so the user's own
+ * /model default applies (cli-handler buildBlcwSpawnOpts).
+ */
 export function getActiveDefaultModel(): string {
+  return MODEL_DEFAULT;
+}
+/** the bridge.json.defaultModel value as last seen — INFORMATIONAL under ruling d-A. */
+export function getRecordedBridgeDefaultModel(): string {
   return activeDefaultModel;
 }
 
@@ -1044,7 +1058,13 @@ export class Session {
    * strand a session the relaunch would resume.
    *
    * Two guards:
-   *  (a) isTearingDown() — app-quit / turn-over closes EVERY window via disposeAll; those
+   *  (a) isTearingDown() — app-quit / turn-over mass-closes windows; those
+   *      (C1015 CORRECTION: this used to read "closes EVERY window via disposeAll". That was
+   *      FALSE for SCP windows — disposeAll() iterates TERMINAL PTY sessions only
+   *      (session-registry.ts:34-43) and never touched the SCP pair. The quit-time sweep in
+   *      index.ts performQuit() is what now closes them. The old wording is why the gap went
+   *      unseen: a wrong comment is worse than none, because it answers the question you were
+   *      about to ask.)
    *      mass-closes must NOT storm the registry (and boot-reset markAllSessionsOffline
    *      already offlines every entry on next launch). Skip during teardown.
    *  (b) statusRecorded — fire-once; the shader-wrap presenter close + the offscreen

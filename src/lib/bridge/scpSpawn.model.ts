@@ -84,6 +84,31 @@ export function isPortFree(port: number): Promise<boolean> {
 }
 
 /**
+ * C1075 · SALVO M · REGISTRY PROPOSES, OS DISPOSES. `preferred` is the registry's PREFERRED pair (SOV-3's identity
+ * anchor — this function never writes the registry). The pair is PROBED (both p and p+1 — the PORT-PAIR LAW) before
+ * the SCP binds; when another process holds it (another workspace's SCP, a stray server), the walk moves to the next
+ * free pair not reserved by `excludePorts` (the registry's other pairs). Exhaustion THROWS — a named failure, never
+ * a silent reuse. The caller logs `scp.port.walked{from,to}` when `walked` is true.
+ */
+export async function resolveActualScpPortPair(
+  preferred: number,
+  excludePorts: Set<number> = new Set(),
+  start: number = SCP_PORT_RANGE_START,
+  end: number = SCP_PORT_RANGE_END,
+): Promise<{ port: number; walked: boolean; from: number }> {
+  if ((await isPortFree(preferred)) && (await isPortFree(preferred + 1))) {
+    return { port: preferred, walked: false, from: preferred };
+  }
+  for (let p = start; p <= end - 1; p += 2) {
+    if (excludePorts.has(p) || excludePorts.has(p + 1)) continue;
+    // eslint-disable-next-line no-await-in-loop
+    if ((await isPortFree(p)) && (await isPortFree(p + 1))) return { port: p, walked: true, from: preferred };
+  }
+  throw new Error(`scp-port-pair-walk-exhausted: preferred ${preferred} held and no free pair in [${start},${end}]`);
+}
+
+
+/**
  * Scans the SCP port range [start, end] inclusive for the first free port.
  * Uses net.createServer().listen() + immediate close per candidate. Returns
  * the resolved port number. Throws Error if range is exhausted.
@@ -134,6 +159,8 @@ export interface BuildBridgeSpawnDescriptorOptions {
   // tool scs_bridge_bind_caller_session → scsBridgeBindCallerSessionToScp Quality.
   callerSessionUlid?: string;
   mcpEndpoint?: string;
+  /** TOH-8 · the spawning CLI's OWN endpoint (`http://127.0.0.1:<its port>`) — the origin it presents. */
+  bridgeEndpoint?: string;
 }
 
 /**
@@ -190,6 +217,16 @@ export function buildBridgeSpawnDescriptor(
   }
   if (typeof opts.mcpEndpoint === 'string' && opts.mcpEndpoint.length > 0) {
     env.SCS_BRIDGE_MCP_ENDPOINT = opts.mcpEndpoint;
+  }
+  // TOH-8 · BAND B · THE ORIGIN PRESENTATION. The SPAWNING CLI names ITSELF to the child, so the
+  // SCP can publish its true origin on its own /scp-config and its client can dial the CLI that
+  // actually owns it. This is the ONLY origin channel an older peer cannot erase — it never rides
+  // the shared bridge.json a pre-namedBridges build rewrites on every heartbeat (C952's root:
+  // a Dev-owned SCP sent its Turn Over B to production, and nothing happened at all).
+  // NOTE the naming Diameter: `SCP_BRIDGE_PORT`/`PORT` are the SCP's OWN listen port — a different
+  // Demometer entirely. `SCS_BRIDGE_ENDPOINT` is the BRIDGE's address (SCS_ prefix · full URL).
+  if (typeof opts.bridgeEndpoint === 'string' && opts.bridgeEndpoint.length > 0) {
+    env.SCS_BRIDGE_ENDPOINT = opts.bridgeEndpoint;
   }
   return {
     command: 'npm',

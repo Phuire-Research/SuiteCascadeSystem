@@ -6,6 +6,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables two Suite 8s designed to interact — this Researcher and the SCS Bridge — to answer a question that needs the bridge's INTERNAL composition by loading the Bridge's Instance inline and holding two Muxonomies in co-focus, coherent through the shared Pattern-4 invariant. What is enabled is depth on demand: output questions read `bridge.json` (SCP-S12); composition questions load the Bridge Muxonomy, answer, and release it.
+
+## Research
+The read here is of a DOCUMENT, not of implementation: `test -f "<SCP>/Cascades/8_SUITES/SCS Bridge/Instance.md"`, then read it whole into the frame (the LOAD leg). Concluder for coherence: `grep -c "~/.claude" "<SCP>/Cascades/8_SUITES/SCS Bridge/Instance.md"` ≥ 1 and the same on this seat's `Instance.md` (Pattern-4 load-bearing in BOTH — measured 13 and 3 at C1124). Apply the depth discriminant FIRST — run SCP-S12's `## Research` for the output half; open this door only when the ask reasons inside the composition. The muxified Concepts named in leg 1 are verified by name in the LOADED Instance (`grep -n "scpDockHost\|scpMessageRouter" …`), never recalled. On answering, truncate the Bridge frame (leg 4).
+
+## Return
+- Sentence: the composition fact the ask needed, cited to the loaded Instance's section.
+- Section: the Sentence + the two Muxonomies named + the Pattern-4 Diameter that made the co-focus coherent + the truncation stated.
+- Vermillion: an architecture walk as Bands, each a section of the loaded Instance — for "explain how the bridge composes".
+- Diamond: a change to the interchange protocol itself — Mode A maintenance, or returned INLINE with the founding offer (`Instance.md` §B).
+---
+
 ## The depth discriminant (when this fires — NOT SCP-S12)
 
 There are two question classes about the bridge, and they route differently by **depth**, not keyword:

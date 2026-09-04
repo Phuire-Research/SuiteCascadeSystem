@@ -76,6 +76,9 @@ export type ScsBridgeState = {
   // but TUI did not surface PSM Active Display (per Cycle 152 S7 Fuchsia Tier 0).
   // Non-optional per Stratimuxian Scholar S13 (state-design discipline · no optionals).
   activeScpFromMcp: string | undefined;
+  // C948 · the activation nonce — MTAM syncs on a NEW activation (edge), never on mere
+  // difference from the filter (level) — the level form oscillated against D-WC-3.
+  activeScpFromMcpAt: number;
   // ────────────────────────────────────────────────
   // SBMRQ · Synchronous Blocking Message Relay Queue · MVP-RC3 D1
   // ────────────────────────────────────────────────
@@ -99,6 +102,7 @@ export const createScsBridgeState = (userCwd: string): ScsBridgeState => ({
   suite8Registrations: {},
   openedBrowserTabs: {},
   activeScpFromMcp: undefined,
+  activeScpFromMcpAt: 0,
   messageRelayQue: [],      // SBMRQ safe-init (empty queue)
   relayBlocked: false,      // RBGF safe-init (H1: never starts blocked)
 });
@@ -329,6 +333,16 @@ export type ScsBridgeChatSessionPayload = {
 export type ScsBridgeRenameSessionPayload = {
   sessionId: string;
   name: string;
+};
+
+// C1104 · ruling A · scsBridgeSetSessionModel payload. MCP tool 'scs_set_session_model'.
+// IDTND: sessionId is the ULID lookup key (never routed/mutated); model is a full pinned
+// AVAILABLE_MODELS id. BOTH are required — unlike rename, an empty model is meaningless
+// rather than a clear. Validated in registry.setSessionModel (an off-catalog id is
+// refused there and can never reach `claude --model`).
+export type ScsBridgeSetSessionModelPayload = {
+  sessionId: string;
+  model: string;
 };
 
 // A-D3b · ARFSP · scsBridgeSetSessionAnchor payload. MCP tool 'scs_set_anchor_session'.
@@ -772,6 +786,13 @@ export type ScsBridgeChatSession =
 export type ScsBridgeRenameSession =
   Quality<ScsBridgeState, ScsBridgeRenameSessionPayload>;
 
+// C1104 · scsBridgeSetSessionModel · the page/MCP write leg onto entry.model. Quality
+// routes the scs_set_session_model MCP tool to setSessionModel(sessionId, model, 'set').
+// Side-effect-only Quality; no state mutation. IDTND: ULID immutable, model only writes.
+// The TUI leg calls the SAME registry function in-process (D3D shared-function law).
+export type ScsBridgeSetSessionModel =
+  Quality<ScsBridgeState, ScsBridgeSetSessionModelPayload>;
+
 // A-D3b · ARFSP · scsBridgeSetSessionAnchor · "Set as Anchor" reassignment write leg.
 // Quality routes scp/set_anchor MCP tool 'scs_set_anchor_session' to
 // setSessionAnchor(sessionId). Side-effect-only Quality; no state mutation. The
@@ -990,6 +1011,8 @@ export type ScsBridgeQualities = {
   scsBridgeChatSession: ScsBridgeChatSession;
   // RM-D4 · SNDF/DUAL · scp_rename_session MCP tool · TQNI key matches renameSessionMetadata
   scsBridgeRenameSession: ScsBridgeRenameSession;
+  // C1104 · scs_set_session_model MCP tool · TQNI key matches setSessionModelMetadata
+  scsBridgeSetSessionModel: ScsBridgeSetSessionModel;
   // A-D3b · ARFSP · scs_set_anchor_session MCP tool · TQNI key matches setAnchorMetadata
   scsBridgeSetSessionAnchor: ScsBridgeSetSessionAnchor;
   // SAC.1 · ARFSP · scs_unset_anchor_session MCP tool · TQNI key matches unsetAnchorMetadata

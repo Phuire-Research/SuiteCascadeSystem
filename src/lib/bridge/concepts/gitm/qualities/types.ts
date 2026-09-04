@@ -385,6 +385,15 @@ export type GitmTurnOverWithSourcePayload = WithOrigin<{
   confirmToken?: string; // A-turn-over carry-into-B double-confirm (WATCHKEY · call 2)
 }>;
 
+// gitmCarryToWorkingThenServeStable · C1001 · THE THIRD PATH (the user's design).
+// The ONLY quality that does: merge to B → checkout A → turn over on A → (armed) checkout back to
+// B. It exists so the STABILITY OF A IS MAINTAINED BY NEVER STANDING ON IT — the worktree returns
+// to B once A is OBSERVED booted, so A is only ever served, never worked on.
+// DELIBERATELY SEPARATE FROM gitmTurnOverWithSource: C791 · SERVE THE CARRY makes a confirmed carry
+// there converge onto B on purpose; a flag through that hinge would seat two opposing intents in
+// one quality. This leaves C791 untouched.
+export type GitmCarryToWorkingThenServeStablePayload = WithOrigin<Record<string, never>>;
+
 // gitmRevertToStable · the failsafe · auto-commit B (if dirty) THEN switch A THEN restart.
 // D-TOH · H1 — the payload IS the origin thread alone: the never-record base rejected the
 // very originScpName the name-first deadline fire now carries.
@@ -498,6 +507,7 @@ export type GitmStageAllAndCommit = Quality<GitmState, GitmStageAllAndCommitPayl
 export type GitmRegisterStable = Quality<GitmState, GitmRegisterStablePayload>;
 export type GitmCreateWorking = Quality<GitmState, GitmCreateWorkingPayload>;
 export type GitmTurnOverWithSource = Quality<GitmState, GitmTurnOverWithSourcePayload>;
+export type GitmCarryToWorkingThenServeStable = Quality<GitmState, GitmCarryToWorkingThenServeStablePayload>;
 export type GitmRevertToStable = Quality<GitmState, GitmRevertToStablePayload>;
 export type GitmMergeWorking = Quality<GitmState, GitmMergeWorkingPayload>;
 export type GitmConfirmSuccess = Quality<GitmState, GitmConfirmSuccessPayload>;

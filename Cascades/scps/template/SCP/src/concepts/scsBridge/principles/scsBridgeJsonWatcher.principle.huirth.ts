@@ -28,8 +28,9 @@
  * Citation: SCP-Researcher SCP-S13 §4.2 Broadcast Principle Pattern
  */
 import { resolveBridgeRoot } from '../bridgeRoot.model';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import type { PrincipleFunction, MuxiumDeck, Concept, AnyAction } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type {
@@ -239,7 +240,7 @@ export const scsBridgeJsonWatcherPrinciple: ScsBridgeJsonWatcherPrincipleType = 
     }),
     stage(({ d, dispatch }) => {
       try {
-        bridgeJsonWatcher = chokidarWatch(BRIDGE_JSON_PATH, {
+        bridgeJsonWatcher = createWatcher('scsBridgeJsonWatcher#1', BRIDGE_JSON_PATH, {
           persistent: true,
           ignoreInitial: false,
           awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },
@@ -293,7 +294,7 @@ export const scsBridgeJsonWatcherPrinciple: ScsBridgeJsonWatcherPrincipleType = 
 
       // §B.3 Watcher arm · sessions.json (Cycle 160 R11 · chokidar parity).
       try {
-        sessionsJsonWatcher = chokidarWatch(SESSIONS_JSON_PATH, {
+        sessionsJsonWatcher = createWatcher('scsBridgeJsonWatcher#2', SESSIONS_JSON_PATH, {
           persistent: true,
           ignoreInitial: false,
           awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },

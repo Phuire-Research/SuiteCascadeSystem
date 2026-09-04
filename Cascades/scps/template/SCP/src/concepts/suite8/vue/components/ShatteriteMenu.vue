@@ -88,6 +88,7 @@ import { s8MenuPath, S8_MENU_STAGE_SET_PATH } from '../../../scsBridge/model/s8R
 import ScsInput from '../../../vue/components/ScsInput.vue';
 // SB-DS6 · native <select> can never open on the offscreen SCP surface → the in-DOM ScsDropdown.
 import ScsDropdown from '../../../vue/components/ScsDropdown.vue';
+import { SCS_AVAILABLE_MODELS, SCS_DEFAULT_MODEL, scsModelLabel } from '../../../scsBridge/model/scsModelCatalog.model';
 
 interface Props {
   // The current agent-authored stage (page-muxium state · IAJW relay drives it).
@@ -293,6 +294,60 @@ const didAutoDecide = ref<boolean>(false);
 
 // P1.1 · the AD-Auto settle poll handle (parallel to spawnPoll/reengagePoll · cleared on resolve + unmount).
 let autoDecidePoll: ReturnType<typeof setInterval> | null = null;
+
+// RM-2 · THE ANCHOR MODEL ROW — one row, three semantics; the ref FOLLOWS entry.model (the relay),
+// never the page-wide pin. Seeds write the ref directly; handleAnchorModelPick only HOLDS a pick.
+// RM-3 · THE FOLD — the row is ALWAYS available; the ACTIVATING functions induct the held choice
+// (Spawn + Anchor's 10th argument · Re-engage's set-then-engage · the ALIVE 'Apply at next resume').
+const anchorModelChoice = ref<string | undefined>(undefined);
+const anchorModelOptions = computed(() =>
+  SCS_AVAILABLE_MODELS.map((m) => ({ value: m.id, label: m.label, hint: m.tier, title: m.blurb })),
+);
+const anchorModelDefaultLabel = `default (${scsModelLabel(SCS_DEFAULT_MODEL) ?? SCS_DEFAULT_MODEL})`;
+const anchorModelState = computed<'resolving' | 'boot' | 'resume' | 'running'>(() =>
+  anchorAlive.value ? 'running' : anchor.value ? 'resume' : didAutoDecide.value ? 'boot' : 'resolving',
+);
+const anchorModelCaption = computed<string>(() => ({
+  resolving: 'Model',
+  boot: 'Boot model',
+  resume: 'Resume model — set before Re-engage',
+  running: 'Running · a change takes effect at the next resume',
+})[anchorModelState.value]);
+const settingAnchorModel = ref<boolean>(false);
+const anchorModelBusy = computed<boolean>(() =>
+  spawning.value || isReengaging.value || settingAnchorModel.value,
+);
+// RM-3 · ALIVE has no activating moment — the held choice applies at the NEXT resume by an explicit action.
+const anchorModelApplyVisible = computed<boolean>(() =>
+  anchorAlive.value && !!anchorModelChoice.value && anchorModelChoice.value !== (anchor.value?.model ?? undefined),
+);
+// The seed: multi-source so only an id/model CHANGE repaints the ref (a relay tick with the same
+// anchor never wipes a held boot pick). NO anchor → undefined; OFFLINE/ALIVE → the stamped truth.
+watch(
+  [() => anchor.value?.id, () => anchor.value?.model],
+  ([, model]) => { anchorModelChoice.value = model; },
+  { immediate: true },
+);
+function handleAnchorModelPick(v: string | undefined): void {
+  // RM-3 · THE FOLD — a pick NEVER writes on its own; it is HELD in the ref and inducted by the
+  // activating function (the spawn's 10th argument · the re-engage · the ALIVE apply action).
+  if (!v) return;
+  anchorModelChoice.value = v;
+}
+// RM-3 · the ONE write the row itself owns — the ALIVE anchor's next-resume model, on the SAME id the
+// menu's own option dispatches use (the SessionManager's in-flight idiom, single-anchor form).
+async function handleAnchorModelApply(): Promise<void> {
+  const target = anchor.value;
+  const choice = anchorModelChoice.value;
+  if (!target || !choice || settingAnchorModel.value) return;
+  settingAnchorModel.value = true;
+  try {
+    const res = await controller.value?.triggerSetSessionModel(target.id, choice);
+    if (res && !res.ok) console.error('[ShatteriteMenu RM-3] apply-at-next-resume · set-session-model failed:', res.error);
+  } finally {
+    settingAnchorModel.value = false;
+  }
+}
 
 // ============================================================
 // STAGE RENDER STATE
@@ -930,7 +985,8 @@ async function handleSpawnAnchor(): Promise<void> {
   // Spawn — the bridge claimAnchorIfUnclaimed auto-anchors the new session to this page.
   // C373 · triggerSpawnS8Session (rename-proof alias) — survives the suite8:page domain-token rewrite.
   const origin = await ensureOriginScpName();
-  ctrl.triggerSpawnS8Session(props.suite8Name, targetAtPress || origin || undefined);
+  // RM-2 · the boot model rides as the EXPLICIT 10th argument (null = default → the page-wide pin is bypassed).
+  ctrl.triggerSpawnS8Session(props.suite8Name, targetAtPress || origin || undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, anchorModelChoice.value ?? null);
 
   // Readiness poll — settle on the launched anchor, else fall back to an explicit set-anchor.
   const SOE_STEP_MS = 250;
@@ -1022,6 +1078,17 @@ async function handleReengageAnchor(): Promise<void> {
   isReengaging.value = true;
   console.log('[ShatteriteMenu P1] re-engage offline anchor · suite8Name=', props.suite8Name, '· anchorId=', target.id);
 
+  // RM-3 · THE FOLD — induct the held model on the SAME id the engage targets, THEN engage.
+  // A failed set logs and still engages (the model never blocks the engage).
+  const heldModel = anchorModelChoice.value;
+  if (heldModel && heldModel !== (target.model ?? undefined)) {
+    try {
+      const set = await ctrl.triggerSetSessionModel(target.id, heldModel);
+      if (set && !set.ok) console.error('[ShatteriteMenu RM-3] re-engage · set-session-model failed (engaging anyway):', set.error);
+    } catch (err) {
+      console.error('[ShatteriteMenu RM-3] re-engage · set-session-model threw (engaging anyway):', err);
+    }
+  }
   // Engage — relaunch the same offline anchor (keeps isAnchor; no new spawn).
   ctrl.triggerEngageSession(target.id);
 
@@ -1514,6 +1581,32 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
         >&rsaquo;</button>
       </div>
     </header>
+
+    <!-- RM-2 · THE ANCHOR MODEL ROW · one ScsDropdown, three semantics by anchor state (boot · resume · running).
+         RM-3 · THE FOLD · ALWAYS available (busy only while a spawn/engage/write is in flight); a pick is HELD,
+         the activating function inducts it; ALIVE shows an explicit 'Apply at next resume' beside the dropdown.
+         Hoisted ABOVE the v-if/else-if chain so a 250ms state flip never patches a reused node (Lane 7 F2).
+         One-way :model-value + an explicit pick handler — a relay seed can never WRITE (Lane 7 F4 · C1104). -->
+    <div v-if="isAnchorAuthority" class="menu-anchor-model" :data-state="anchorModelState">
+      <span class="menu-stub-text menu-anchor-model-caption">{{ anchorModelCaption }}</span>
+      <ScsDropdown
+        class="menu-input-field menu-input-select menu-anchor-model-dropdown"
+        :options="anchorModelOptions"
+        :model-value="anchorModelChoice"
+        :placeholder="anchorModelDefaultLabel"
+        :disabled="anchorModelBusy"
+        :title="anchorModelCaption"
+        @update:model-value="handleAnchorModelPick"
+      />
+      <button
+        v-if="anchorModelApplyVisible"
+        type="button"
+        class="menu-input-submit menu-anchor-model-apply"
+        :disabled="anchorModelBusy"
+        title="Write the held model to this anchor for its next resume (the running process is unchanged)"
+        @click="handleAnchorModelApply"
+      >Apply at next resume</button>
+    </div>
 
     <!-- WIRE.1 · SOE · the menu is the ORIGIN of engagement. With NO live anchor AND auto-spawn off
          ('prompt'), the inert waiting stub is replaced by a Spawn + Anchor button: clicking spawns
@@ -2092,6 +2185,35 @@ async function handleSubmit(option: MenuOption, i: number): Promise<void> {
 .menu-input-row > :deep(.scs-dropdown-wrap) {
   flex: 1;
   min-width: 0;
+}
+
+/* RM-2 · THE ANCHOR MODEL ROW · the .menu-stub register (no new colours); the trigger takes
+   .menu-input-field .menu-input-select exactly as the in-file select-row precedent. */
+.menu-anchor-model {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1.25rem;
+  margin-bottom: 0.5rem;
+  background: #0e0c08;
+  border: 1px dashed #5b5347;
+  border-radius: 4px;
+  color: #b5ad9f;
+  font-size: 0.75rem;
+}
+.menu-anchor-model-caption {
+  flex: 1 1 auto;
+}
+.menu-anchor-model > :deep(.scs-dropdown-wrap) {
+  flex: 0 1 14rem;
+  min-width: 9rem;
+}
+.menu-anchor-model-dropdown {
+  width: 100%;
+}
+.menu-anchor-model-apply {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .menu-input-submit {

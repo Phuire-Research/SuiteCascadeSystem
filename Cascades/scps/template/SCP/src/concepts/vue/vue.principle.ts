@@ -19,6 +19,8 @@
  */
 
 import * as express from 'express';
+import { releaseAllWatchers } from '../../model/watcherSingleton.model';
+import { closeAllHttpServers } from '../server/httpServerHandles.model';
 // C822 D2/D3 · the manifest routes' node imports + the SCP-side validator (the twin table).
 import { execSync, exec } from 'node:child_process';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
@@ -45,7 +47,7 @@ import { pewterMuxonomic } from '../pewter/pewter.muxonomy';
 // MD-A D2 · resolveScpLocalBridgeDir carries the /gitm-status read (the SCP's OWN rail);
 // resolveBridgeRoot REMAINS for the workspace-territory reads (the update-diff/resolved
 // staging artifacts + the Suite 8 RI SCS-root compute).
-import { resolveBridgeRoot, resolveScpLocalBridgeDir } from '../scsBridge/bridgeRoot.model';
+import { resolveBridgeRoot, resolveScpLocalBridgeDir, resolveOriginPort, resolveOriginEndpoint, originEnvironmentName, resolveComposedDockPath } from '../scsBridge/bridgeRoot.model';
 import type { GitmJsonShape } from '../gitm/gitm.type';
 // SMSP · the Skill-Priming SORD wrapper for the /suite8-skill-prime endpoint (load Skill → 《SCS:Skill》).
 import { buildSordSkillEnvelope } from '../../model/sordEnvelope.model';
@@ -153,6 +155,11 @@ import { seedPatternLibraryIfAbsent } from '../../model/patternLibrary.model';
 import { resolveCascadeSubscriptionDir } from '../../model/cascadeSubscriptionRegistry.model';
 // CMLS-R · the fetch-on-demand query surface (roster + by-name memory · held registration).
 import { registerCascadeMemoryQueryRoutes } from '../../model/cascadeMemoryQuery.model';
+
+// TOH-8 · BAND A · THE BOOT WITNESS — stamped ONCE at module load (this server process's own
+// birth). Served on /scp-config so a client can prove, from same-origin evidence alone, whether
+// the server it is talking to has restarted since a given moment.
+const SCP_SERVER_BOOTED_AT = Date.now();
 const REGISTERED_MUXONOMICS: MuxonomicConfig[] = [
   DEFAULT_LANDING_MUXONOMIC,
   notificationMuxonomic,
@@ -1610,11 +1617,15 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   let mcpProxyRequestId = 1;
   const invokeBridgeTool = async (toolName: string, args: Record<string, unknown>): Promise<{ ok: boolean; error?: string; result?: unknown }> => {
     const meta = readOwnBridgeJson();
-    if (!meta || typeof meta.port !== 'number' || meta.port <= 0) {
+    // C950 · the ORIGIN's port — a named CLI (`scs --name <Name>`, inherited here as SCS_ENV)
+    // registers its own port under namedBridges inside the SHARED bridge.json; production reads
+    // the top level exactly as before.
+    const originPort = resolveOriginPort(meta);
+    if (!meta || typeof originPort !== 'number' || originPort <= 0) {
       return { ok: false, error: 'Bridge not discovered — the per-SCP bridge.json is absent or portless. Is the SCS-Bridge running?' };
     }
     try {
-      const res = await fetch(`http://127.0.0.1:${meta.port}/mcp`, {
+      const res = await fetch(`http://127.0.0.1:${originPort}/mcp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: mcpProxyRequestId++, method: 'tools/call', params: { name: toolName, arguments: args } }),
@@ -2234,6 +2245,108 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
   registerSuite8DocReader(`${prefix}/:name/conductor`, 'conductor');
   registerSuite8DocReader(`${prefix}/:name/maintainer`, 'maintainer');
 
+  // ── THE DOCK · GET {prefix}/:name/dock ─────────────────────────────────────────────
+  // THE DOCK is a LOCATION: the WHOLE fully appended system prompt file the bridge CLI
+  // composes at EVERY resume (the base skeleton + the dock layer + Instance.md, joined) and
+  // writes atomically to <bridgeRoot>[/<Name>]/scs-bridge-suite8-<safeName>.generated.md.
+  // ("the dock layer" — lower case — is the composer's MIDDLE layer alone; THE DOCK is the
+  // whole composed file. The two are never conflated in this handler.)
+  //
+  // THE SCP ONLY READS IT. GET-only: no write leg, no mkdir, NEVER a fallback compose — a
+  // compose here would be a SECOND composer racing the CLI's own tmp+rename writer
+  // (composeAppendedSystemPrompt.ts:114-139 already guarantees a reader sees whole-old or
+  // whole-new, never partial · nothing to re-solve on this side).
+  //
+  // THE NAMING AXIS rides `originEnvironmentName()`: a bridge is UNNAMED (seat = the Bridge
+  // root itself, never a dir named `unnamed`) or carries a NAME (seat = Bridge/<Name>/).
+  // Reading the segment-blind root from a named bridge would serve a Dock naming the WRONG
+  // bridge (the two seats' bytes differ in their embedded ENDPOINT: port lines) — so this
+  // route reads its OWN seat only and NEVER falls back across seats, exactly as the composer
+  // announces-but-never-borrows a legacy root twin.
+  expressApp.get(`${prefix}/:name/dock`, (req, res) => {
+    // GATE 1 · OWNERSHIP + the family's uniform 400/403 contract. The Dock filename can never
+    // escape its seat (safeDesignationName maps `.` and `/` to `_`), so this gate is not the
+    // traversal guard — it is the ROSTER gate: an SCP must not answer for a Suite 8 it does
+    // not own, even when it can compute a path that happens to exist on the shared seat.
+    const dir = resolveSuite8Dir(suite8RiBase, req.params.name);
+    if (!dir.ok) {
+      res.status(dir.reason === 'empty' ? 400 : 403).json({ error: dir.reason });
+      return;
+    }
+    const designation = req.params.name;
+    const bridgeName = originEnvironmentName() || 'unnamed';
+    const dockPath = resolveComposedDockPath(designation);
+    // GATE 2 · CONTAINMENT, rebased onto the BRIDGE SEAT (not 8_SUITES). The verbatim family
+    // idiom `resolved !== base && startsWith(base + sep)` (suite8ReaderPaths.model.ts:57-75),
+    // inlined here as the file's other route-local twins already do (:2048-2055, :2097-2100)
+    // because the base differs per request seat.
+    const seatDir = path.dirname(dockPath);
+    if (!(dockPath !== seatDir && dockPath.startsWith(seatDir + path.sep))) {
+      console.log(`[SCP Dock] dock.guard-reject · ${designation} · bridge ${bridgeName} · ${dockPath}`);
+      res.status(403).json({ error: 'traversal' });
+      return;
+    }
+    // THE FRESHNESS BASIS · Instance.md by the COMPOSER'S OWN LADDER — SCP-LOCAL FIRST,
+    // WORKSPACE SECOND (composeAppendedSystemPrompt.ts:303-317). The existing reader trio is
+    // SCP-local ONLY; a workspace-grounded designation would mis-stat without this second rung.
+    // One-directional heuristic only: `instanceMtime > mtime` says the Dock REFRESHES at the
+    // next resume. The converse is never asserted — writeAtomicIfChanged skips an unchanged
+    // write, so mtime is a change-stamp, not a compose-stamp, and a content-identical touch
+    // produces a harmless false positive. Freshness covers Instance.md ONLY; the base skeleton,
+    // the dock layer asset and the bridge port move the composed bytes invisibly to this read.
+    const workspaceRoot = path.dirname(path.dirname(resolveBridgeRoot()));
+    const workspaceSuite8Base = path.resolve(workspaceRoot, 'Cascades', '8_SUITES');
+    const workspaceDir = resolveSuite8Dir(workspaceSuite8Base, designation);
+    const instanceCandidates = [
+      suite8DocPath(dir.path, 'instance'),
+      ...(workspaceDir.ok ? [suite8DocPath(workspaceDir.path, 'instance')] : []),
+    ];
+    let instanceMtime: number | null = null;
+    for (const candidate of instanceCandidates) {
+      try {
+        instanceMtime = fs.statSync(candidate).mtimeMs;
+        break;
+      } catch {
+        /* this rung absent → fall through to the next (never a throw) */
+      }
+    }
+    try {
+      // `bytes` from stat, NEVER text.length — the composer measures UTF-8 with
+      // Buffer.byteLength (:384); a .length would disagree with every telemetry number.
+      const stat = fs.statSync(dockPath);
+      const text = fs.readFileSync(dockPath, 'utf-8');
+      console.log(
+        `[SCP Dock] dock.read · ${designation} · bridge ${bridgeName} · ${stat.size} B · ${dockPath}`,
+      );
+      res.json({
+        designation,
+        bridgeName,
+        path: dockPath,
+        exists: true,
+        bytes: stat.size,
+        mtime: stat.mtimeMs,
+        instanceMtime,
+        text,
+      });
+    } catch {
+      // HONEST ABSENCE is a first-class 200 answer, not an error: the Dock for this
+      // designation has not been composed ON THIS SEAT yet. The path TRIED is always named
+      // (the FailureNode idiom) so a wrong-workspace walk-up landing is diagnosable. Never a
+      // fallback to another seat's file, and never to a pre-rename filename.
+      console.log(`[SCP Dock] dock.absent · ${designation} · bridge ${bridgeName} · ${dockPath}`);
+      res.json({
+        designation,
+        bridgeName,
+        path: dockPath,
+        exists: false,
+        bytes: 0,
+        mtime: null,
+        instanceMtime,
+        text: null,
+      });
+    }
+  });
+
   // C833 · THE DESCRIPTION ASPECT PAIR — the Suite 8 description is a FILE-SYSTEM aspect
   // (Description.md beside Instance.md): user-editable in the card AND session-editable as a
   // file (ONE truth; the manifest generator reads the same resolver). GET = the effective
@@ -2761,14 +2874,128 @@ export const vueSSRPrinciple: VueSSRPrincipleType = ({ concepts_, k_ }) => {
     });
   });
 
+  // ══════════════════════════════════════════════════════════════════════════════════════
+  // C985 · THE CLEAN EXIT · POST /graceful-exit — the SCP releases what it holds and leaves.
+  //
+  // THE SEQUENCE THIS SERVES (the user's design, C982): the nodemon `events.restart` script runs in
+  // ITS OWN PROCESS, so it can sequence what nodemon itself cannot — it reads the lane file beside
+  // it, calls THIS route by port, waits a bounded delay, then signals the recorded pid ONLY if
+  // pid+startedAt still verify. That replaces `pkill -9 -f`, which matched the full command line of
+  // EVERY process on the machine and could kill a user's unrelated work.
+  //
+  // WHY THE ANSWER IS SENT BEFORE THE RELEASE: the caller needs to know the request was ACCEPTED,
+  // not wait out our teardown. It has its own bounded timeout and a SIGKILL backstop, so a long
+  // release must never look to it like an unreachable server. We answer, then leave.
+  //
+  // THE INVARIANT IT MUST NOT BREAK (C980): the caller's restart-trigger write is UNCONDITIONAL.
+  // Nothing here can make the turn-over depend on this route succeeding — a 404 from an older SCP
+  // build, a refused connection from a dead one, and a clean 200 must all lead to the same restart.
+  expressApp.post('/graceful-exit', (_req, res) => {
+    res.json({ ok: true, scpName: process.env.SCP_NAME ?? null, pid: process.pid });
+    // C990 · THE USAGE LEDGER. The graceful exit is the PRIMARY means, not a nicety — clogging the
+    // host's filesystem reactive stream is a no-go, and SIGKILL releases nothing. So we must be
+    // able to PROVE this path fired rather than assume it: a durable one-line record beside the
+    // restart trigger, written BEFORE the release begins, so it survives even if the release
+    // itself wedges. Its ABSENCE after a turn-over is the diagnosis — it means the SIGKILL
+    // fallback carried the teardown and the watchers were abandoned.
+    try {
+      // C996 · THE BRIDGE LOG PASSAGE. The ledger is a per-SCP RUNTIME LOG, so it belongs with
+      // `boot.log` and `timing.jsonl` under `Bridge/scp-boot-logs/<scpName>/` — not loose in the
+      // SCP package dir, where it dirtied the citizen's git tree and blocked a B→A merge.
+      //
+      // WHY THE WORKSPACE BRIDGE IS REACHABLE FROM HERE: `resolveBridgeRoot()` walks up and PREFERS
+      // the workspace ancestor (the BO-2-I "own-package skip" · C450). This module already writes
+      // there — see the update-diff/resolved and install-progress writes above.
+      //
+      // WHY IT IS DELIBERATELY *NOT* ENVIRONMENT-SEGMENTED: the boot-log family hangs off
+      // `bridgeRoot()`, not `bridgeLogDir()` — field-proven (`Bridge/Dev/scp-boot-logs/` does not
+      // exist). That is correct: an SCP's own runtime facts belong to the SCP, not to whichever
+      // bridge environment happens to drive it. One ledger per SCP, whether `scs` or `scs-dev`.
+      //
+      // THE EMPTY-NAME GUARD: the name is a DIRECTORY SEGMENT here, so an empty `SCP_NAME` would
+      // create a directory literally called "". When the name is absent we fall back to the SCP's
+      // OWN rail, which needs no name at all. **Never write a nameless directory.**
+      const ledgerScpName = (process.env.SCP_NAME ?? '').trim();
+      const ledgerPath =
+        ledgerScpName !== ''
+          ? path.join(resolveBridgeRoot(), 'scp-boot-logs', ledgerScpName, 'graceful-exit.log')
+          : path.join(resolveScpLocalBridgeDir(), 'graceful-exit.log');
+      // THE NO-FAILURE-ON-ABSENCE LAW (the user's word). `Bridge/` is GITIGNORED, so in a fresh
+      // clone or a never-yet-booted citizen NONE of this path exists. A write into a missing
+      // directory throws ENOENT — and the ledger's whole purpose is to be there when the graceful
+      // exit ran. So the directory is created every time, recursively; `recursive: true` is a
+      // no-op when it already exists, which is the common case.
+      fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
+      fs.appendFileSync(
+        ledgerPath,
+        JSON.stringify({
+          at: new Date().toISOString(),
+          pid: process.pid,
+          scpName: process.env.SCP_NAME ?? null,
+          port: process.env.PORT ?? null,
+          uptimeMs: Math.round(process.uptime() * 1000),
+        }) + '\n',
+        'utf-8',
+      );
+    } catch {
+      /* the ledger must never block the exit it records */
+    }
+    void (async (): Promise<void> => {
+      try {
+        // 1 · the watchers — the whole reason this Diamond exists. Awaited: chokidar's close() is
+        //     async by contract, and an unawaited close leaves fsevents state unreleased (C974).
+        const released = await releaseAllWatchers();
+        console.log('[SCS-Bridge GracefulExit] watchers released ·', released);
+        // 2 · the listeners. close() stops ACCEPTING; closeAllConnections() drops established
+        //     keep-alive sockets, which otherwise hold the loop open past exit(0) (C984).
+        const closed = await closeAllHttpServers();
+        console.log('[SCS-Bridge GracefulExit] http servers closed ·', closed);
+      } catch (err) {
+        // A failed release must still exit — leaving a half-released process alive is the worst
+        // outcome available, because SIGKILL then arrives with MORE state held, not less.
+        console.log('[SCS-Bridge GracefulExit] release error ·', String(err));
+      } finally {
+        // THE MUXIUM IS DELIBERATELY NOT AWAITED. `close: (exit?) => void` returns void and merely
+        // dispatches into the RxJS stream, with teardown on a later tick and nothing to await
+        // (measured C980). Gating exit on it would hang forever; skipping it loses nothing the OS
+        // does not reclaim.
+        console.log('[SCS-Bridge GracefulExit] exiting 0');
+        // exit(0) is the CONTRACT: nodemon treats `code === 0` as the intended stop exactly like
+        // its configured signal (run.js:233), so it respawns normally rather than reporting a crash.
+        process.exit(0);
+      }
+    })();
+  });
+
   expressApp.get('/scp-config', (_req, res) => {
+    // TOH-8 · BAND B · THE ORIGIN PUBLICATION. The SCP knows, at birth, WHICH CLI spawned it:
+    // `SCS_BRIDGE_ENDPOINT` rides the spawn env (bridge side · scpSpawn.model.ts), and `SCS_ENV`
+    // names that CLI's environment. Publishing them HERE — on the SCP's OWN same-origin endpoint —
+    // is the one channel an older peer cannot erase: it never touches the shared bridge.json that
+    // a pre-namedBridges production build rewrites on every heartbeat (the C952 erasure class).
+    // The client's gitm actions dial THIS, never the raw bridge.json endpoint (the C952 root: the
+    // Turn Over B click went to a CLI that did not own this SCP, so nothing happened at all).
+    //
+    // TOH-8 · BAND A · THE BOOT WITNESS. `bootedAt` is this server process's own start time. The
+    // standby overlay compares it to the moment the user clicked: a server that ANSWERS while its
+    // bootedAt still PRECEDES the click has demonstrably never restarted — the honest FACT behind
+    // 'the turn-over did not fire', with no clock-based guessing (the TOH-6 Agency Cure holds).
+    // C1080 · THE ONE ORDER, inherited by the client: `/scp-config.originEndpoint` derives through the same resolver the
+    // server's own proxy uses (named → handed → conventional), so every action — proxy or direct — resolves identically.
+    const resolvedOrigin = resolveOriginEndpoint(readOwnBridgeJson(), '');
+    const originEndpoint = resolvedOrigin.length > 0 ? resolvedOrigin : null;
+    const originEnv =
+      typeof process.env.SCS_ENV === 'string' && process.env.SCS_ENV.trim().length > 0
+        ? process.env.SCS_ENV.trim()
+        : null;
+    const bootedAt = SCP_SERVER_BOOTED_AT;
     try {
       const raw = fs.readFileSync(scpConfigPath, 'utf-8');
       const parsed = JSON.parse(raw) as { scpName?: unknown };
       const scpName = typeof parsed?.scpName === 'string' ? parsed.scpName : null;
-      res.json({ scpName, extendedRoot: scpExtendedRoot });
+      res.json({ scpName, extendedRoot: scpExtendedRoot, originEndpoint, originEnv, bootedAt });
     } catch {
-      res.json({ scpName: null, extendedRoot: scpExtendedRoot });
+      res.json({ scpName: null, extendedRoot: scpExtendedRoot, originEndpoint, originEnv, bootedAt });
     }
   });
 

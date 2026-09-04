@@ -10,6 +10,15 @@ import {
 } from './registry';
 import { launchClaudeWindow } from './spawn';
 import { writeSpawnSettings } from './spawnSettings';
+// RESUME INDUCTION · THE ONE ASSEMBLER — reachable from the daemon precisely because it
+// lives in lib/ (src/main/* is not importable from here; that was the strip).
+import { composeAppendedSystemPrompt } from './baseSystemPrompt/composeAppendedSystemPrompt';
+import { resolveScpDir } from './scpDirResolver.model';
+// C1104 · ruling A + d-A · the daemon door's model resolution. DEFAULT_MODEL is the
+// DERIVED highest Opus (it supersedes bridge.json.defaultModel), and src/main/* is not
+// importable from lib/ so getActiveDefaultModel() is unreachable here — the derivation is
+// the same value by construction, which is exactly why d-A makes the two doors agree.
+import { DEFAULT_MODEL, normalizeModelId } from '../../shared/modelCatalog.model';
 import { getActiveBridgePort } from './activeBridgePort.model';
 import { log } from './debugLog';
 import type { SessionMeta, SpawnOptions } from './types';
@@ -97,7 +106,12 @@ export async function scaffoldDiscoveredSession(
   if (existsSync(metaPath(ulid))) return;
 
   await createSessionDirs(ulid);
-  await writeSpawnSettings(ulid);
+  // C1076 · the DISCOVERED session's hooks must reach THIS bridge — the cascaded port, never the literal.
+  // RESUME INDUCTION: deliberately still 3-arg. A DISCOVERED transcript has no registry
+  // row yet, so neither suite8Name nor scpDir is known at scaffold time; the identity
+  // arrives on its first launchInformative, which now writes the full 5-arg settings and
+  // composes. Nothing to thread here — not an omission.
+  await writeSpawnSettings(ulid, undefined, getActiveBridgePort());
 
   const meta: SessionMeta = {
     id: ulid,
@@ -235,11 +249,38 @@ export async function launchInformative(
     throw new Error(`Session ${sessionId} has no cwd in registry or meta.json.`);
   }
 
+  // RESUME INDUCTION · the daemon door's own identity resolution. The dual-source rail
+  // (registry FIRST, meta.json SECOND — the D3RM-H wound) so a TUI/attach resume reaches
+  // parity with an Electron-born one.
+  const suite8Name = entry?.suite8Name ?? meta.suite8Name;
+  const scpName = entry?.scpName ?? meta.scpName;
+  // C1104 · MODEL CONTROL AT THIS DOOR (it injected nothing at all before). Registry-only
+  // — SessionMeta carries no model field, and that asymmetry is deliberate, not an
+  // oversight: entry.model is the single source of truth (law 4).
+  const entryModel = entry?.model ? normalizeModelId(entry.model) : undefined;
+  // Ruling A, three-way, identical to the Electron door's modelClause: a recorded CHOICE
+  // is injected; a resume with nothing recorded injects NOTHING (the user's own /model
+  // default applies); a new spawn with nothing recorded takes the derived spawn default.
+  const launchModel = mode === 'resume' ? (entryModel ?? null) : (entryModel ?? DEFAULT_MODEL);
+  const scpDir = resolveScpDir(scpName);
   // D3RM-G Bug A · SSRF · refresh spawn-settings on every engage to propagate
   // any new hook entries (e.g., chat-message asyncRewake from Diamond G).
   // Pre-Diamond-G sessions had stale settings missing the 2nd Stop entry.
-  await writeSpawnSettings(sessionId, meta.scpName);
+  // C1076 · the resumed session's hooks must reach THIS bridge — the cascaded port, never the literal.
+  // RESUME INDUCTION (Lane 7 row 14): this call passed only 3 of 5 params, so
+  // SCS_BRIDGE_SUITE8_NAME was silently omitted from the SessionStart hook command on
+  // EVERY TUI resume — the hook disagreed with the composed prompt's own identity.
+  await writeSpawnSettings(sessionId, scpName, getActiveBridgePort(), suite8Name, scpDir);
   const settingsPath = spawnSettingsPath(sessionId);
+  // RESUME INDUCTION · THE STRIP, CURED. Compose the appended system prompt at FIRE TIME
+  // (base regenerated → THE DOCK → Instance.md LAST) for BOTH modes, then thread the
+  // path into the launch. Every caller of launchInformative — menu.ts ×3, `scs attach`,
+  // `scs bridge spawn`, the discovered-transcript scaffolding — inherits it. The
+  // assembler never throws: an unresolved layer degrades to base-only or to no clause.
+  const composed = await composeAppendedSystemPrompt(sessionId, {
+    suite8NameOverride: suite8Name,
+    scpDirOverride: scpDir,
+  });
   log('manager.launch', { ulid: sessionId, mode });
   const { pid, terminalCommand, terminalWindowId } = await launchClaudeWindow({
     cwd,
@@ -250,6 +291,8 @@ export async function launchInformative(
     // Diamond B-16 (CD-46 PCSP): seed only applies in 'new' mode; resume reserves
     // positional for next-message semantics.
     seedPrompt: mode === 'new' ? seedPrompt : undefined,
+    appendSystemPromptFile: composed.path ?? null,
+    model: launchModel,
   });
 
   const launchedAt = Date.now();

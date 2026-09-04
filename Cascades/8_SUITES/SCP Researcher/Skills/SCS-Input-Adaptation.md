@@ -8,6 +8,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables text entry that renders correctly under an OFFSCREEN shader pipeline — where a plain `<input>` paints no caret and fires no focus — by shipping two self-contained components (`ScsInput` · `ScsTextarea`) whose three layers (SELF-CLASS · SELF-CSS · SELF-VAR-FALLBACK) travel into any island, plus the three OSR facts an adopter must honour. What is enabled is a CONTRACT an adopter can satisfy, stated as a checklist.
+
+## Research
+No line-level live read today; this Skill states the contract. The surface is: `test -f <SCP>/src/concepts/vue/components/ScsInput.vue && test -f <SCP>/src/concepts/vue/components/ScsTextarea.vue && echo "components ship here"`; `grep -n "inheritAttrs\|caret-color\|scs-input-field\|--input-accent" <SCP>/src/concepts/vue/components/ScsInput.vue | head -6` (the three layers, visible in the file). The focus-emulation seam is BRIDGE-side (`src/main/electronWindow.ts` · `grep -n "setFocusEmulationEnabled"` — measured C1124 at :263-269, not the body's `~:186`); read it when the scs-bridge source is reachable, else name it unreachable.
+
+## Return
+- Sentence: "`ScsInput` / `ScsTextarea` ship on `<scpName>` at `src/concepts/vue/components/`; use them for any text-entry `type`."
+- Section: the Sentence + the three-layer checklist (§2) + the three OSR facts (§3) as the adopter's Concluders.
+- Vermillion: the §4 adopter walk-through as Bands (read · copy · re-skin · self-audit the three layers).
+- Diamond: a fourth self-containment layer or a new OSR fact — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## Why this Skill exists
 
 The SCS-Bridge does not render the SCP page the ordinary way. It renders the page **offscreen** through a shader/presenter (post-processing). A plain `<input>` that works perfectly in an ordinary browser renders WRONG under this paradigm — no visible cursor, no focus border, a focus event that never fires. The SCS-Bridge ships two drop-in text-entry components that already solve this — `ScsInput` and `ScsTextarea`. This Skill is two things: (1) how to USE those components, and (2) the **adapt-your-own** discipline — the exact set of properties any custom text-entry element must satisfy to replicate without adaptation, so that an adopter building their own input on this paradigm gets it right the first time.
@@ -141,5 +154,3 @@ The fastest correct path is to copy `ScsInput`/`ScsTextarea` and re-skin via the
 | **SCP-S16** `Skills/ContributorOnboarding.md` | the no-RI onboarding front door | before this Skill if new |
 
 The Diameter is circular-structural: Instance.md routes to this Skill for the How; this Skill routes back to Instance.md for the Why; neither is parent.
-</content>
-</invoke>

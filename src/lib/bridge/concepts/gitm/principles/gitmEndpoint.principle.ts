@@ -58,6 +58,7 @@ import {
   type GitmRepoSlice,
 } from '../model/gitmSliceStore.model';
 import { GITM_SCHEMA_VERSION, createGitmLocationSubState } from '../gitm.types';
+import { workspaceBridgeDir } from '../../../paths';
 
 type GitmEndpointDeck = Deck<MuxiumDeck & ServerDeck>;
 
@@ -256,8 +257,9 @@ async function writeGitmJsonUnsafe(
   userCwd: string,
   snapshot: GitmStatusSnapshot,
 ): Promise<void> {
-  const base = scpDir !== '' ? scpDir : userCwd;
-  const finalPath = join(base, 'Cascades', 'Bridge', 'gitm.json');
+  // C947 · SCP-local gitm.json stays SCP-local; the WORKSPACE fallback partitions per environment.
+  const bridgeDir = scpDir !== '' ? join(scpDir, 'Cascades', 'Bridge') : workspaceBridgeDir(userCwd);
+  const finalPath = join(bridgeDir, 'gitm.json');
   const tmpPath = `${finalPath}.tmp`;
 
   // W2b · THE HOLD — never regress a previously non-empty decision field to blank OUTSIDE a
@@ -293,7 +295,7 @@ async function writeGitmJsonUnsafe(
     }
   }
 
-  await mkdir(join(base, 'Cascades', 'Bridge'), { recursive: true });
+  await mkdir(bridgeDir, { recursive: true });
   await writeFile(tmpPath, JSON.stringify(outgoing, null, 2), 'utf8');
   await rename(tmpPath, finalPath);
 }

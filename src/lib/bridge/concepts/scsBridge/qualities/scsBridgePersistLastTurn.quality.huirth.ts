@@ -33,10 +33,19 @@ import type {
   ScsBridgePersistLastTurn,
 } from '../scsBridge.types';
 import { extractLastTurnSnippet, resolveClaudeProjectDir } from '../../../lastTurnExtraction.model';
-import { updateSessionTranscriptSnippets, listSessions } from '../../../registry';
+import { updateSessionTranscriptSnippets, listSessions, setSessionModel } from '../../../registry';
 import { log } from '../../../debugLog';
 
 export type { ScsBridgePersistLastTurn };
+
+/**
+ * OBSERVE · the IN-PROCESS half of the precedence law (C1104). Remembers the model
+ * last OBSERVED per ulid so an unchanged observation never re-enters the chainWrite
+ * queue on the 4,984-events/day beat — and, crucially, never re-clobbers a page-fired
+ * SET with a value nothing changed. The DURABLE half is entry.modelSetAt in the
+ * registry; this map is only the throttle.
+ */
+const lastObservedModel = new Map<string, string>();
 
 export const scsBridgePersistLastTurn = createQualityCardWithPayload<
   ScsBridgeState,
@@ -78,6 +87,9 @@ export const scsBridgePersistLastTurn = createQualityCardWithPayload<
             transcriptLastReadAt?: number;
             transcriptPath?: string;
           }> = [];
+          // OBSERVE · accumulated alongside the snippet patches, written AFTER the
+          // batch so the snippet write stays ONE json-watcher event.
+          const observations: Array<{ ulid: string; id: string; at: number | null }> = [];
           for (const sessionId of sessionIds) {
             const entry = sessions.find((s) => s.id === sessionId);
             if (!entry) {
@@ -102,6 +114,13 @@ export const scsBridgePersistLastTurn = createQualityCardWithPayload<
               transcriptLastReadAt: result.transcriptLastReadAt,
               transcriptPath: result.transcriptPath,
             });
+            if (result.transcriptLastModelId) {
+              observations.push({
+                ulid: sessionId,
+                id: result.transcriptLastModelId,
+                at: result.transcriptLastModelAt,
+              });
+            }
           }
           if (patches.length > 0) {
             const out = await updateSessionTranscriptSnippets(patches); // C2 batch · ONE chainWrite
@@ -120,6 +139,15 @@ export const scsBridgePersistLastTurn = createQualityCardWithPayload<
             );
           } else {
             console.warn('[SCS-Bridge LASTTURN] no patches accumulated · skip write');
+          }
+          // OBSERVE · one setSessionModel per CHANGED observation, after the batch.
+          // chainWrite serialises these against the batch and any concurrent SET;
+          // setSessionModel re-guards the id against the catalog and enforces the
+          // modelSetAt precedence gate, so nothing invalid or stale can land.
+          for (const obs of observations) {
+            if (lastObservedModel.get(obs.ulid) === obs.id) continue;
+            lastObservedModel.set(obs.ulid, obs.id);
+            await setSessionModel(obs.ulid, obs.id, 'observed', obs.at);
           }
         } catch (err) {
           const messageStr = err instanceof Error ? err.message : String(err);

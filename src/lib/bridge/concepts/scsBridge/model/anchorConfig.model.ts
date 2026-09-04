@@ -30,6 +30,7 @@
 import { existsSync, readFileSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { log } from '../../../debugLog';
+import { scpsJsonPath } from '../../../paths';
 
 // The system default — absent/malformed config everywhere → today's behavior (auto-anchor on).
 export const ANCHOR_CONFIG_SYSTEM_DEFAULT = true;
@@ -69,9 +70,9 @@ function scsRoot(scsRootOverride?: string): string {
 export function resolveOwningScpRoot(suite8Name: string): string | undefined {
   try {
     const root = scsRoot();
-    const scpsJsonPath = resolve(root, 'Cascades', 'SCPs.json');
-    if (!existsSync(scpsJsonPath)) return undefined;
-    const parsed = JSON.parse(readFileSync(scpsJsonPath, 'utf-8')) as unknown;
+    const scpsJsonFile = scpsJsonPath(root);
+    if (!existsSync(scpsJsonFile)) return undefined;
+    const parsed = JSON.parse(readFileSync(scpsJsonFile, 'utf-8')) as unknown;
     const entries: Array<{ path?: string }> = Array.isArray(parsed)
       ? (parsed as Array<{ path?: string }>)
       : Object.values((parsed as { scps?: Record<string, { path?: string }> }).scps ?? {});
@@ -114,9 +115,9 @@ export function resolveScpRootByName(scpName: string): string | undefined {
   if (typeof scpName !== 'string' || scpName.trim() === '') return undefined;
   try {
     const root = scsRoot();
-    const scpsJsonPath = resolve(root, 'Cascades', 'SCPs.json');
-    if (!existsSync(scpsJsonPath)) return undefined;
-    const parsed = JSON.parse(readFileSync(scpsJsonPath, 'utf-8')) as unknown;
+    const scpsJsonFile = scpsJsonPath(root);
+    if (!existsSync(scpsJsonFile)) return undefined;
+    const parsed = JSON.parse(readFileSync(scpsJsonFile, 'utf-8')) as unknown;
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       const rec = (parsed as { scps?: Record<string, { path?: string }> }).scps;
       const hit = rec?.[scpName]?.path;

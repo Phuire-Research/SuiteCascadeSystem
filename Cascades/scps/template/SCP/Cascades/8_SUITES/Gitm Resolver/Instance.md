@@ -96,6 +96,18 @@ update circuit's own renewal.
 | S4 | Conference-Surface | Strategy §Step 2 | true overlaps → AskUserQuestion (Shatterite Update Variant) · default keep-ours |
 | S5 | Resolution-Emit | Strategy §Steps 3-4 | emit `scp-update-resolved.<name>.json` · dispositions · pending gate |
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Strategy expands the specifics as the sequence reaches it.
+The resolver holds NO `Skills/` stratum — S1-S5 above are aspects of the ONE doctrine below,
+which is why the Configuration reads *Direct + Strategy*.
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| The resolution doctrine — every ground, every law, every step of the staging-update resolution | `Strategy/GR-S1-Staging-Update-Resolution.md` | EVERY dispatch, once the `SCS:Vermillion` anchor has delivered `<scpName>` anor `<diffJsonPath>` anor `<resolvedPath>` (absent the anchor: HALT — the parameters cannot be derived). The file IS the Vermillion: the ORIENTATION Three Grounds (the `git -C <provenance.scpRepoRoot>` law) then Steps 1-4, whose steps ARE the S1-S5 skills — §Step 1 Diff-Ingest · §Step 2 Auto-Path anor Zone-Union anor Conference-Surface · §Steps 3-4 Resolution-Emit |
+
+---
+
 ## References
 
 - `Strategy/GR-S1-Staging-Update-Resolution.md` — the doctrine (authoritative)

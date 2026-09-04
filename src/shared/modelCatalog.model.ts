@@ -22,8 +22,43 @@ export interface ModelCatalogEntry {
   blurb: string;
 }
 
-/** the default spawn/resume model — Opus 5 (C929 · the pending-release default). */
-export const DEFAULT_MODEL = 'claude-opus-5';
+/**
+ * numeric version vector: 'claude-opus-4-5-20251101' → [4,5,20251101]; a non-numeric
+ * segment sorts -1. NEVER a string compare — 'claude-opus-5-8' > 'claude-opus-5-10' is
+ * TRUE lexically and WRONG numerically (shipped as the regression fixture in
+ * modelCatalog.test.ts).
+ */
+function opusVersion(id: string): number[] {
+  return id
+    .slice('claude-opus-'.length)
+    .split('-')
+    .map((s) => (/^\d+$/.test(s) ? Number(s) : -1));
+}
+
+/** segment-wise numeric compare; a missing segment sorts -1. */
+function compareOpusVersion(a: string, b: string): number {
+  const va = opusVersion(a);
+  const vb = opusVersion(b);
+  const len = Math.max(va.length, vb.length);
+  for (let i = 0; i < len; i += 1) {
+    const sa = i < va.length ? va[i] : -1;
+    const sb = i < vb.length ? vb[i] : -1;
+    if (sa !== sb) return sa - sb;
+  }
+  return 0;
+}
+
+/**
+ * THE HIGHEST OPUS · the spawn default BY LAW (C1102 law 1 — "we Default to the Highest
+ * Version of Opus"). Filters the `claude-opus-*` rows and reduces by NUMERIC segment
+ * compare; ties break by catalog order (first wins). No Opus row ⇒ AVAILABLE_MODELS[0].id
+ * — this NEVER throws at module load (a throw at import time bricks boot).
+ */
+export function highestOpusId(rows: ModelCatalogEntry[]): string {
+  const opus = rows.filter((m) => m.id.startsWith('claude-opus-'));
+  if (opus.length === 0) return rows[0]?.id ?? '';
+  return opus.reduce((best, m) => (compareOpusVersion(m.id, best.id) > 0 ? m : best)).id;
+}
 
 export const AVAILABLE_MODELS: ModelCatalogEntry[] = [
   {
@@ -39,6 +74,13 @@ export const AVAILABLE_MODELS: ModelCatalogEntry[] = [
     tier: 'flagship',
     blurb:
       'Prior Opus flagship — complex reasoning, long-horizon agentic coding, high-autonomy work. 1M context.',
+  },
+  {
+    id: 'claude-fable-5-1',
+    label: 'Fable 5.1',
+    tier: 'formative',
+    blurb:
+      'The newest Formative upgrade-in-scale — the Fable 5.1 generation. 1M context.',
   },
   {
     id: 'claude-fable-5',
@@ -98,6 +140,36 @@ export const AVAILABLE_MODELS: ModelCatalogEntry[] = [
   },
 ];
 
+/**
+ * the default spawn model — DERIVED from the catalog (C1102 law 1; ruling d-A: this
+ * derivation SUPERSEDES bridge.json.defaultModel, which becomes informational). Adding a
+ * higher Opus row moves the default with ZERO edits; modelCatalog.test.ts PINS today's
+ * value so a malformed catalog edit fails loudly. SPAWN default only — a resume whose
+ * registry entry carries no model omits `--model` entirely (ruling A · cli-handler.ts).
+ */
+export const DEFAULT_MODEL = highestOpusId(AVAILABLE_MODELS);
+
+/**
+ * C1104 · ruling m-A · THE HISTORICAL BIRTH DEFAULTS. Every id this project's spawn
+ * default has ever been. The one-time reconcile sweep (registry.reconcileSessionModels)
+ * CLEARS a stamp only when it is one of these AND the transcript agrees — that is the
+ * forced flag's own echo, not a choice.
+ *
+ * EXPLICIT, NEVER DERIVED. Deriving this from DEFAULT_MODEL would mean a future Opus 6
+ * default retroactively clearing real, deliberate Opus 5 choices. Append here only when
+ * the spawn default actually moves; never remove.
+ *
+ * Measured evidence for the two entries (Lane 3 Gate 0 · 85 live sessions):
+ *   claude-opus-5   ×59 — the current era's stamp
+ *   claude-opus-4-8 ×17 — every one spawned BEFORE the default moved on 2026-07-27
+ * The 2 `claude-fable-5` stamps are NOT here: Fable 5 was never a default, so those are
+ * real choices and the sweep leaves them standing.
+ */
+export const HISTORICAL_BIRTH_DEFAULTS: readonly string[] = Object.freeze([
+  'claude-opus-5',
+  'claude-opus-4-8',
+]);
+
 export function isAvailableModel(id: string): boolean {
   return AVAILABLE_MODELS.some((m) => m.id === id);
 }
@@ -114,4 +186,10 @@ export function isAvailableModel(id: string): boolean {
 export function normalizeModelId(id: string): string {
   if (id === 'claude-haiku-4-5') return 'claude-haiku-4-5-20251001';
   return id;
+}
+
+/** resolve a recorded model id to its friendly label (falls back to the raw id). */
+export function modelLabel(id: string | undefined): string | undefined {
+  if (!id) return undefined;
+  return AVAILABLE_MODELS.find((m) => m.id === id)?.label ?? id;
 }

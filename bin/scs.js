@@ -11,14 +11,13 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 const DIST_MAIN = path.join(PROJECT_ROOT, 'dist', 'main', 'index.js');
 const DIST_CLI = path.join(PROJECT_ROOT, 'dist', 'cli.cjs');
 
-// C416 · INLINE MIRROR of src/lib/bridge/workspaceSocket.model.ts (plain JS cannot
-// import the TS canonical) — kept in sync BY HAND; change one, change both.
-const crypto = require('node:crypto');
-const WORKSPACE_KEY = crypto.createHash('sha1').update(process.cwd()).digest('hex').slice(0, 12);
-const SOCKET_PATH =
-  process.platform === 'win32'
-    ? '\\\\.\\pipe\\scs-bridge-' + WORKSPACE_KEY
-    : path.join(os.tmpdir(), 'scs-bridge-' + (process.getuid?.() ?? 'user') + '-' + WORKSPACE_KEY + '.sock');
+// C947 · THE ONE SHARED DERIVATION — bin/scsEnvironment.js is required by BOTH this
+// launcher and the TS tree (workspaceSocket.model.ts re-exports it); the C416 by-hand
+// inline mirror is retired. THE ENVIRONMENT CARRIER (`SCS_ENV`) is established in main()
+// BEFORE these are read — they are functions, not constants, so the fold lands.
+const scsEnvironment = require('./scsEnvironment.js');
+function WORKSPACE_KEY() { return scsEnvironment.workspaceSingletonKey(); }
+function SOCKET_PATH() { return scsEnvironment.csspSocketPath(); }
 
 const ELECTRON_SUBCOMMANDS = new Set([
   'run',
@@ -59,11 +58,11 @@ const ELECTRON_SUBCOMMANDS = new Set([
 ]);
 
 function relayToRunningInstance(argv, onSuccess, onFailure) {
-  if (process.platform !== 'win32' && !fs.existsSync(SOCKET_PATH)) {
+  if (process.platform !== 'win32' && !fs.existsSync(SOCKET_PATH())) {
     onFailure();
     return;
   }
-  const client = net.createConnection(SOCKET_PATH);
+  const client = net.createConnection(SOCKET_PATH());
   let buffer = '';
   client.on('connect', () => {
     const payload = JSON.stringify({ cmd: argv }) + '\n';
@@ -109,9 +108,9 @@ function userDataDir() {
 // only the BASE dir — after a crash the REAL stale lock survived every sweep and the fresh
 // Electron silently self-quit (the C917 "no recovery via the TUI"). Both sweeps now run
 // against the workspace lock dir (the base dir kept as the pre-C410 legacy sweep).
-// WORKSPACE_KEY above = sha1(cwd)[:12] — the C416 inline mirror of workspaceSingletonKey().
+// WORKSPACE_KEY() = the C947 shared derivation (sha1(cwd [+ \0 + SCS_ENV])[:12]).
 function workspaceLockDir() {
-  return path.join(userDataDir(), 'workspaces', WORKSPACE_KEY);
+  return path.join(userDataDir(), 'workspaces', WORKSPACE_KEY());
 }
 
 // C918 · pid-reuse impostor check — an ALIVE holder pid whose process command is NOT an
@@ -206,7 +205,7 @@ function aliveForeignSingletonHolder() {
 
 function appendDebugEvent(event, fields) {
   try {
-    const sinkDir = path.join(process.cwd(), 'Cascades', 'Bridge');
+    const sinkDir = path.join(process.cwd(), 'Cascades', 'Bridge', scsEnvironment.environmentSegment());
     fs.mkdirSync(sinkDir, { recursive: true });
     const line = JSON.stringify(Object.assign({ ts: new Date().toISOString(), event: event }, fields)) + '\n';
     fs.appendFileSync(path.join(sinkDir, 'debug.json'), line, 'utf8');
@@ -253,7 +252,20 @@ function fallbackToLegacyCli(argv) {
 }
 
 function main() {
-  const argv = process.argv.slice(2);
+  // C947 · THE ENVIRONMENT CARRIER — resolved ONCE here from `--name <Env>` ONLY (C1083: the
+  // calling name is never a name — `scs-dev` is an npm link), stripped from argv, exported as SCS_ENV to the whole process
+  // tree, and the N4 link applied (`<ENV>_SCS_*` → `SCS_*` for THIS tree only — a production
+  // launch never sees a namespaced pin). Everything below (socket · lock · sinks) reads it.
+  const resolved = scsEnvironment.resolveEnvironmentName(process.argv.slice(2));
+  if (resolved.name) {
+    process.env[scsEnvironment.ENV_VAR] = resolved.name;
+    const linked = scsEnvironment.linkNamespacedVariables(resolved.name);
+    console.error('[scs] environment · ' + resolved.name + ' · linked ' + (linked.length ? linked.join(', ') : 'no namespaced variables'));
+  }
+  const argv = resolved.argv;
+  // The legacy CLI (dist/cli.cjs · commander) parses process.argv ITSELF — the strip must
+  // land there too, or `--name` reaches commander as an unknown option.
+  process.argv = [process.argv[0], process.argv[1], ...argv];
   const sub = argv[0];
 
   if (!sub || !ELECTRON_SUBCOMMANDS.has(sub)) {

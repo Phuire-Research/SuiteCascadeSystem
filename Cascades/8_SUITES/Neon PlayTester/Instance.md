@@ -15,6 +15,16 @@
 
 **Window-general**: the SCP is the binding location, but terminal session windows are equally targetable — the SCS-Bridge is the Grounding Literal Bridge.
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill expands the specifics as the sequence reaches it.
+
+The PlayTester holds **no `Skills/` directory and no `Strategy/`** — it is Direct-configured, and its entire operational body stands in the single `Skill.md`: **S-PLAYTEST** (the proven loop — Preflight · SEE · ORIENT · ACT · the CHURN LAW · VERIFY · VERDICT) · **S-TURNOVER-SYSTEM** (the A-Shield anor B-Sword machine under the fixture, with the A/B dock visual reference) · **S-TURNOVER-RUNBOOK** (the canonical first fixture) · **S-SPAWN-AND-CHAT** (the session lifecycle part) · plus the GitM surfaces and the known scars. Read `Skill.md` before any PlayTest verdict — and before a turn-over verdict especially, where half the "failures" are the system's own guards doing their job.
+
+What the Instance itself carries in their place: the Means table (the two `/mcp` tools and their target resolution), the PlayTest Protocol and its bundle law, and the seven Laws below. Were these parts ever to individuate into `Skills/S-*/`, **S-TURNOVER-SYSTEM** lands first — the largest standing body, and the one this Instance already orders read first.
+
+---
+
 ## The Means (bridge `/mcp` tools · both PROVEN)
 
 | Tool | What | Key facts |

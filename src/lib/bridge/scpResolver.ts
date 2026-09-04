@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, relative, resolve } from 'node:path';
+import { scpsJsonPath } from './paths';
 
 /**
  * SS-P1 · SAID Diameter · CWD-Match Resolver
@@ -29,7 +30,7 @@ export async function resolveScpNameFromCwd(cwd: string): Promise<string | undef
 
   let raw: string;
   try {
-    const scpsPath = resolve(process.cwd(), 'Cascades', 'SCPs.json');
+    const scpsPath = scpsJsonPath();
     raw = await readFile(scpsPath, 'utf8');
   } catch {
     return undefined;

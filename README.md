@@ -206,6 +206,103 @@ racing line directly; subscriptions are continued support of the paradigm shift 
 donate; both move the project forward, neither requires the other. The same door rides
 every SCP's Home page as the Open Race section.
 
+## Release Notes — v1.157.0 · The Renewable Resume
+
+### The Achievement
+
+This is a major release, and its title is earned by measure. Two plain terms carry it. The
+**bridge** is the process the `scs` command starts: it conducts your Claude Code sessions and
+serves your apps. An **SCP** is one of those apps — a project the bridge installed, runs, and
+updates for you. The **Tactical Bridge** is the system's turn-over: your app rebuilds and
+re-serves itself under you while you use it, with a safe way back.
+
+The crown of this release is the enhancement to that turn-over system: the bridge now survives
+its own restart and turns over live without losing the sessions it carries. Five mechanisms had
+to hold in the field before that sentence could be written — the graceful exit (one order on
+every way out: ask, a short grace, then the signal as backstop), the watcher registry (48
+creation sites, 18 in the bridge and 30 in the app, released as one set), the crash fact (a
+mid-rebuild crash shown as its own excerpt, restarted at most twice, cleared on a healthy boot),
+port sovereignty (an archived app's ports stay reserved; the version string stamped honestly),
+and named coexistence (two bridges in one workspace, each owning its own sessions). Measured:
+five consecutive clean exits, six app lanes each, about six tenths of a second, zero orphaned
+processes; two bridges with seven sessions each, none carrying the other's address.
+
+Everything after the crown stands on that crossing: every resume re-assembles the session's full
+appended prompt at the moment it fires — base, dock, the page's identity last; the model a session
+resumes with is your choice per session; and the system's own instruction set gains a counter, a
+badge, a reading surface with a diff, and an update that stamps what it applied.
+
+That is the Total this release proves: a bridge that turns over live, and a resume that
+re-assembles everything it is. The counters read it plainly — 1.157.0 · cli 14 · scp 16 · s8 3 ·
+instruction set 1, the fourth counter new here and beginning at 1.
+
+### The Cascade Position — why this is 1.157.0
+
+The version is the **Cascade Position**, written `X.Y.Z`: `Y` is the count of completed cycles of
+the method that builds this software, up to three digits; `X` is the carry when that count passes
+three digits (`0` until cycle 1000, `1` now); `Z` counts hotfixes shipped on the same position
+without a completed cycle and resets when `Y` advances. `0.950.2` was cycle 950 with two hotfixes;
+`1.157.0` is cycle 1157 with none yet — the count never restarted. It is kept this way as a study:
+it tracks the literal cycles of the method against the project's compounding complexity — what
+reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost, and what
+breaking past a tier costs against feature-after-feature work. 207 cycles closed between the two
+releases, and the length is by design: they crossed one tier, the live turn-over, and the rest of
+the release stands on it. Two sessions carried cycles of this one product in parallel, and the
+release cycle is their sum. The shipped document
+`Cascades/Documentation/Cascades/THE-CASCADE-POSITION.md` carries the full explanation and the
+record so far; every release adds a row. The npm badge above always carries the published version.
+
+- **1.157.0 — the turn-over that survives itself**: closing the terminal, an SCP window, or the
+  app follows one law on every path — a graceful ask, six tenths of a second of grace, then the
+  process group signaled as the backstop. Each SCP answers the ask and releases its own watchers and
+  listeners; the bridge tears down every lane it spawned on its own exit; every file watcher in the
+  bridge and the app template is created through one registry released on the way out. Five clean
+  exits measured, zero orphans; the machine that motivated the work went from 332 leaked lanes to
+  eight. A server crash mid-rebuild shows its excerpt on the standby overlay, licenses a bounded
+  restart (at most two), and clears itself on the next healthy boot; the overlay resolves its own
+  bridge, keeps a status line, reloads when it witnesses the new server's birth, and a timing
+  record shows where every second went. A third path, **Carry into B & Serve A**, keeps A only ever
+  served — green into A, yellow into B — and any overlay cancels the other. Archived apps keep their
+  ports reserved; the version string is stamped honestly at build.
+- **1.157.0 — two bridges in one workspace, by name**: `scs --name <Name>` runs a second bridge
+  beside the first with its own logs, socket, lock and registration; an unnamed second in the same
+  directory is refused with the hint, a bridge from another directory simply proceeds. Port walking
+  is the default — the bridge and every SCP probe before binding and walk when taken, every walk
+  logged, every failed bind loud. Sessions and SCPs resolve their owning bridge by name, so relays
+  land where they belong with three bridges alive.
+- **1.157.0 — resume whole: the induction and the Dock**: every resume door — the terminal menu,
+  `scs attach`, the page's open-session — re-assembles the appended prompt at fire time: base, dock,
+  identity last, per page per bridge name. The Suite 8 card gains a **Dock** row showing the exact
+  prompt your anchor resumes with, its size, when it was composed, and whether the identity moved.
+  Every shipped Suite 8 identity carries a Router naming which Skill or Strategy expands each aspect
+  and when it loads. Twelve base Suite 8s ship; the template carries fourteen.
+- **1.157.0 — the resume model and Fable 5.1**: set the model a session resumes with from the
+  Session Manager, the terminal menu, or the anchor menu; saved with the session, honored by every
+  door. No choice means no flag — your own default applies. The bridge observes the model from the
+  transcript, the catalog gains Fable 5.1, and the default derives as the highest Opus, shown as
+  `default (Opus 5)`.
+- **1.157.0 — the instruction set: counter, badge, page, agent**: the SCS is the computer, the SCP
+  the program; GitM updates the program, and this updates the computer. A fourth counter is stamped
+  into your project at install — a fresh install is never told to update. The badge gains a fourth
+  register (red behind · orange unstamped · fuchsia ahead · purple current) and a button that
+  launches the Update Agent. The agent shows `#current → #target`, can mark current without copying,
+  stamps only after applying, never applies a shrinking instruction set without your word, and stays
+  inside the computer's own files; base Suite 8s are offered one at a time, never by default.
+- **1.157.0 — page system 3 and the Shatterite model row**: pages minted under 2 flag amber and
+  refresh page by page through the Forge. The Shatterite anchor menu on both page variants gains a
+  model row — Boot model · Resume model, set before Re-engage · Running, applies at next resume —
+  always available, held until Spawn, Re-engage, or Apply. The Session Manager's picker opens as a
+  floating drawer, no longer clipped.
+- **1.157.0 — the SCP Researcher reads your SCP**: ask what your SCP can do and it reads the running
+  SCP it operates from, every Skill running Curation → Research → Return at the scale you asked; four
+  Skills carry live reads with freshness checks, the rest say plainly they hold none.
+- **1.157.0 — the instruction-set viewer in spectrum**: Suite table rows in their own spectrum color,
+  the nine numbered protocol headers rotating through the spectrum, a source-line gutter, a diff
+  numbered from its hunks, and a two-cell installed · published readout with a drift pill.
+- **1.157.0 — for existing installs**: the badge reads orange until the Update Agent stamps your
+  instruction set once; run the SCP update per app for the graceful-exit route, the watcher registry,
+  the Dock row and the model row; an app not yet updated still exits through the signal backstop.
+
 ## Release Notes — v0.950.2 · The Diametric SCP
 
 ### The Achievement

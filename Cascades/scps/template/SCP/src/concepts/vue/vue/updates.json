@@ -1,12 +1,121 @@
 {
   "schemaVersion": 1,
-  "current": "0.950.2",
+  "current": "1.157.0",
   "muxameter": {
-    "cli": 13,
-    "scp": 15,
-    "s8": 2
+    "cli": 14,
+    "scp": 16,
+    "s8": 3,
+    "instructionSet": 1
   },
   "releases": [
+    {
+      "id": "v1157",
+      "version": "1.157.0",
+      "label": "New in 1.157.0",
+      "muxameter": {
+        "cli": 14,
+        "scp": 16,
+        "s8": 3,
+        "instructionSet": 1
+      },
+      "magnitude": 2,
+      "features": [
+        {
+          "title": "The Tactical Bridge turns over live",
+          "color": "red",
+          "summary": "The Tactical Bridge turns over live: the bridge survives its own restart without losing the sessions it carries.",
+          "detail": [
+            "The bridge now survives its own restart and turns over live without losing the sessions it carries. Five mechanisms had to hold in the field before that sentence could be written: the <span class=\"hifi-hl-red\">graceful exit</span>, the watcher registry, the crash fact, port sovereignty, and <span class=\"hifi-hl-blue\">named coexistence</span>.",
+            "Measured: five consecutive clean exits, six app lanes each, about six tenths of a second, <span class=\"hifi-hl-green\">zero orphaned processes</span>; two bridges alive in one workspace with seven sessions each, every session carrying its own bridge's address and none the other's.",
+            "Everything after the crown stands on that crossing: a resume re-assembles the session's full appended prompt at the moment it fires, the model a session resumes with is your choice, and the system's own <span class=\"hifi-hl-red\">instruction set</span> gains a counter, a badge, a reading surface with a diff, and an update that stamps what it applied."
+          ]
+        },
+        {
+          "title": "Why 1.157.0: the Cascade Position",
+          "color": "yellow",
+          "summary": "Why 1.157.0: the version is the Cascade Position \u2014 207 completed cycles of the method closed since 0.950.2.",
+          "detail": [
+            "The version is the <span class=\"hifi-hl-yellow\">Cascade Position</span>, written X.Y.Z: Y is the count of completed cycles of the method that builds this software, X is the carry when that count passes three digits, and Z counts hotfixes shipped on the same position. 0.950.2 was cycle 950 with two hotfixes; 1.157.0 is cycle 1157 with none yet \u2014 the count never restarted.",
+            "The count is kept this way as a <span class=\"hifi-hl-yellow\">study</span>: it tracks the literal cycles of the method against the project's compounding complexity \u2014 what reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost. Between 0.950.2 and 1.157.0, <span class=\"hifi-hl-green\">207 cycles</span> closed, and the length is by design: they crossed one tier, the live turn-over, and everything else in this release stands on it.",
+            "Two sessions carried cycles of this one product in parallel, and the release cycle is their sum. The shipped document <span class=\"hifi-hl-blue\">Cascades/Documentation/Cascades/THE-CASCADE-POSITION.md</span> explains the number, the study, and the record so far; every release adds a row to it."
+          ]
+        },
+        {
+          "title": "Every exit releases what it created",
+          "color": "green",
+          "summary": "Every exit releases what it created: graceful ask, short grace, signal backstop \u2014 zero orphaned processes, measured five times.",
+          "detail": [
+            "Closing the terminal, closing an SCP's window, or quitting the app now follows one law on every path: <span class=\"hifi-hl-green\">ask gracefully</span>, wait six tenths of a second, then signal the whole process group as the backstop. Each SCP's server answers the ask first and then releases its own watchers and listeners, so the bridge never waits on a teardown to know it was heard.",
+            "The bridge keeps a record of every lane it spawned and tears them down on its own exit, so a closed terminal no longer leaves app servers running under nobody. Every file watcher in the bridge and the app template \u2014 <span class=\"hifi-hl-blue\">48 creation sites</span>, 18 in the bridge and 30 in the app \u2014 is born through one registry that releases the whole set on the way out."
+          ]
+        },
+        {
+          "title": "Two bridges in one workspace",
+          "color": "blue",
+          "summary": "Run two bridges in one workspace with `scs --name <Name>`; port walking is the default, never a silent failure.",
+          "detail": [
+            "Start a second bridge in the same directory with <span class=\"hifi-hl-blue\">scs --name &lt;Name&gt;</span> and it gets its own logs, socket, lock and registration, while the first keeps every session it holds. A second unnamed bridge in the same directory is refused with a message pointing at --name; a bridge started from a different directory simply proceeds.",
+            "<span class=\"hifi-hl-green\">Port walking</span> is now the default everywhere: the bridge probes its port pair and walks to the next free one, each SCP's preferred ports are checked against the operating system before binding and walked when taken, and every walk is logged by name. A port that still fails to bind is loud \u2014 the app names the port and exits with a report \u2014 instead of dying silently and opening the wrong window.",
+            "Every session and every SCP now resolves the bridge that owns it <span class=\"hifi-hl-blue\">by name</span>, so hooks, relays and spawns land on the right bridge even with three running at once. Proven in the field with a production bridge and a named bridge in one workspace and a third in another directory, all alive."
+          ]
+        },
+        {
+          "title": "Every resume re-assembles the prompt",
+          "color": "purple",
+          "summary": "Every resume re-assembles the full prompt \u2014 base, dock, page identity; the Dock row shows it exactly.",
+          "detail": [
+            "A session's appended prompt is a sandwich: the base prompt, then the general Suite 8 dock, then the page's identity last. One assembler now serves every door \u2014 the terminal menu's session rows, scs attach, and the page's own open-session \u2014 and <span class=\"hifi-hl-purple\">re-reads every layer at the moment you resume</span>, so a resumed anchor always inducts the current identity of its page and the current address of its bridge.",
+            "Each Suite 8 card gains a <span class=\"hifi-hl-purple\">Dock</span> row: read the exact composed prompt your anchor will resume with, labelled by bridge name, with its size, when it was composed, and whether the identity file changed since. Every shipped Suite 8's identity file now carries a Router \u2014 which Skill or Strategy expands each aspect and when it loads \u2014 and twelve base Suite 8s ship, the app template carrying fourteen."
+          ]
+        },
+        {
+          "title": "The resume model and Fable 5.1",
+          "color": "fuchsia",
+          "summary": "Choose the model each session resumes with; Fable 5.1 joins the catalog; your default stays yours.",
+          "detail": [
+            "Set the model a session resumes with, per session: from the Session Manager's per-row picker, from the terminal menu, or from the anchor menu on the page. The choice is saved with the session and <span class=\"hifi-hl-fuchsia\">honored by every resume door</span>.",
+            "A session with no chosen model omits the flag, so your own Claude Code default applies \u2014 the saved value always means a choice you made, never a birth stamp nobody picked. The catalog gains <span class=\"hifi-hl-fuchsia\">Fable 5.1</span>, the bridge observes the model from the session's own transcript, and the default is derived as the highest Opus available, shown as default (Opus 5)."
+          ]
+        },
+        {
+          "title": "The instruction set gains a counter",
+          "color": "orange",
+          "summary": "The instruction set gains a counter, a badge register, a spectrum-colored diff page, and an update that stamps itself.",
+          "detail": [
+            "The SCS is the computer that loads an SCP; the SCP is the program. A fourth counter, <span class=\"hifi-hl-orange\">instruction set</span>, joins cli \u00b7 scp \u00b7 s8, and is stamped into your project at install, so a fresh install is never told to update.",
+            "The version badge gains a fourth register \u2014 <span class=\"hifi-hl-red\">red</span> when your project is behind the published instruction set, <span class=\"hifi-hl-orange\">orange</span> when unstamped, fuchsia when ahead, purple when current \u2014 and a button that launches the Update Agent. The agent shows Instruction set: #current \u2192 #target, offers to mark current without copying, stamps only after it has applied, and never applies an instruction set the diff shows shrinking without your word.",
+            "The instruction-set viewer is now a reading surface: Suite table rows in their own spectrum color, the nine numbered protocol headers rotating through the spectrum, a source-line gutter, and a diff numbered from its hunks. A two-cell readout shows installed and published, with a <span class=\"hifi-hl-purple\">drift pill</span> beside it."
+          ]
+        },
+        {
+          "title": "Turn-over failures speak",
+          "color": "green",
+          "summary": "Turn-over failures speak: the crash excerpt shows, a bounded restart follows, a healthy boot clears it.",
+          "detail": [
+            "The turn-over now tells the truth when it fails: if the app's server crashes mid-rebuild, the standby overlay shows the <span class=\"hifi-hl-red\">crash excerpt</span> instead of a spinner, a bounded automatic restart is attempted at most twice, and the failure clears itself the moment a healthy boot lands. The overlay resolves its own bridge, keeps an always-on status line, and reloads when it witnesses the new server's birth.",
+            "A timing record beside the boot log shows where every second of a turn-over went. Ports an archived app once held <span class=\"hifi-hl-green\">stay reserved</span> to it, and the version string the bridge reports is stamped honestly at build time."
+          ]
+        },
+        {
+          "title": "Carry into B & Serve A",
+          "color": "blue",
+          "summary": "Carry into B & Serve A: A is only ever served, never worked on \u2014 green into A, yellow into B.",
+          "detail": [
+            "A third path joins the Tactical Bridge: <span class=\"hifi-hl-blue\">Carry into B &amp; Serve A</span> \u2014 merge your work into B, serve from A, and step back onto B, so A is only ever served and never worked on. Turning over into A is <span class=\"hifi-hl-green\">green</span>, into B yellow.",
+            "Any overlay now cancels the other, so no confirm dialog can bury the dock. A stays the served face while B carries the work \u2014 <span class=\"hifi-hl-yellow\">yellow into B</span>, green into A."
+          ]
+        },
+        {
+          "title": "The SCP Researcher reads your SCP",
+          "color": "purple",
+          "summary": "The SCP Researcher reads your running SCP and answers from it \u2014 live documentation, at your scale.",
+          "detail": [
+            "Ask the SCP Researcher what your SCP can do and it no longer refers you to a shelf of Skills \u2014 it <span class=\"hifi-hl-purple\">reads the running SCP it operates from</span> and answers from that reality. Each of its ten Skills now runs as Curation \u2192 Research \u2192 Return: what you asked, where that meets your SCP's actual source and records, and the result at the scale you asked for.",
+            "Four Skills carry <span class=\"hifi-hl-green\">live-read procedures with freshness checks</span>; the rest say plainly that they hold no live read. The maintenance mode it always had is unchanged, and the base and template copies are identical."
+          ]
+        }
+      ]
+    },
     {
       "id": "v09502",
       "version": "0.950.2",

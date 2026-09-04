@@ -24,11 +24,11 @@
  */
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { bridgeRoot } from './paths';
+import { bridgeLogDir } from './paths';
 import { capLogFile } from './logCap';
 
 function fdiaLogPath(): string {
-  return join(bridgeRoot(), 'electron-debug.json');
+  return join(bridgeLogDir(), 'electron-debug.json');
 }
 
 export function fdia(event: string, data: Record<string, unknown> = {}): void {

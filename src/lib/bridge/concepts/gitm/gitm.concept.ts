@@ -81,6 +81,7 @@ import { gitmStageAllAndCommit, type GitmStageAllAndCommit } from './qualities/g
 import { gitmRegisterStable, type GitmRegisterStable } from './qualities/gitmRegisterStable.quality';
 import { gitmCreateWorking, type GitmCreateWorking } from './qualities/gitmCreateWorking.quality';
 import { gitmTurnOverWithSource, type GitmTurnOverWithSource } from './qualities/gitmTurnOverWithSource.quality';
+import { gitmCarryToWorkingThenServeStable, type GitmCarryToWorkingThenServeStable } from './qualities/gitmCarryToWorkingThenServeStable.quality';
 import { gitmRevertToStable, type GitmRevertToStable } from './qualities/gitmRevertToStable.quality';
 import { gitmMergeWorking, type GitmMergeWorking } from './qualities/gitmMergeWorking.quality';
 import { gitmConfirmSuccess, type GitmConfirmSuccess } from './qualities/gitmConfirmSuccess.quality';
@@ -186,6 +187,7 @@ export type GitmQualities = {
   gitmRegisterStable: GitmRegisterStable;
   gitmCreateWorking: GitmCreateWorking;
   gitmTurnOverWithSource: GitmTurnOverWithSource;
+  gitmCarryToWorkingThenServeStable: GitmCarryToWorkingThenServeStable;
   gitmRevertToStable: GitmRevertToStable;
   gitmMergeWorking: GitmMergeWorking;
   gitmConfirmSuccess: GitmConfirmSuccess;
@@ -280,6 +282,7 @@ export const createGitmConcept = (options: CreateGitmConceptOptions) =>
       gitmRegisterStable,
       gitmCreateWorking,
       gitmTurnOverWithSource,
+      gitmCarryToWorkingThenServeStable,
       gitmRevertToStable,
       gitmMergeWorking,
       gitmConfirmSuccess,

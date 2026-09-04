@@ -10,8 +10,8 @@
 // Interactive input (mouse + inverseWarp, DOM keyboard) is the next wave — until then the shaded
 // SCP is a non-interactive PREVIEW (flag off = the normal interactive SCP).
 
-import { BrowserWindow } from 'electron';
-import { setLatestWindowFrame } from './windowOrchestrate';
+import { BrowserWindow, type NativeImage } from 'electron';
+import { setLatestWindowFrame, clearLatestWindowFrame } from './windowOrchestrate';
 import { wireDevToolsOnWindow } from './devToolsBinding';
 import { attachRealCursorStyle, setRealCursorCombined } from './cursorOverlay.model';
 import { getActiveScpRenderMode, getActiveShaderFps } from './session';
@@ -68,7 +68,12 @@ export function createScpPresenter(
   }
 
   let paintCount = 0;
-  offscreenScpWin.webContents.on('paint', (_details, _dirty, image) => {
+  // C1016 · THE NAMED SUBSCRIPTION (the user's ruling: *"Remove the Individual Painter
+  // Subscription"*). Hoisted out of the inline arrow so it can be removed BY REFERENCE. The prior
+  // form used `removeAllListeners('paint')` from electronWindow.ts, which was correct today but
+  // took EVERY paint listener on that webContents — including any Electron or a future component
+  // might own. **A targeted removal cannot surprise a later reader; a blanket one can.**
+  const onPaint = (_details: unknown, _dirty: unknown, image: NativeImage): void => {
     if (presenter.isDestroyed()) return;
     paintCount += 1;
     // D-N2 · Neon PlayTester · keep the CURRENTLY STREAMED pre-shader frame — scs_render_capture
@@ -83,6 +88,29 @@ export function createScpPresenter(
     } catch (err) {
       sdia('scp.osr.paint-FAIL', { error: String(err) });
     }
+  };
+  offscreenScpWin.webContents.on('paint', onPaint);
+
+  // C1016 · THE TARGETED TEARDOWN, seated AT THE REGISTRATION SITE — the only scope where the
+  // handler reference exists. `once` so it cannot double-fire.
+  //
+  // WHAT ACTUALLY LEAKS: `latestFrames` (windowOrchestrate.ts:45) is a MODULE-LEVEL
+  // Map<number, NativeImage>. The webContents and its listeners die with the window on their own —
+  // but that Map entry does NOT, so every SCP window that ever painted left a full bitmap resident
+  // for the life of the main process. The terminal path has always released it (session.ts:592,
+  // :1189 · the WRA-DARK marker); the SCP path never did. **Clearing the frame is the cure; removing
+  // the listener is hygiene.**
+  offscreenScpWin.once('closed', () => {
+    try {
+      // Guard: a destroyed webContents has already dropped its listeners — removing again would
+      // throw, and a teardown that throws is worse than one that no-ops.
+      if (!offscreenScpWin.isDestroyed()) {
+        offscreenScpWin.webContents.removeListener('paint', onPaint);
+      }
+    } catch {
+      /* nothing to remove — the contents went with the window */
+    }
+    clearLatestWindowFrame(offscreenScpWin.id);
   });
 
   presenter.webContents.on('did-finish-load', () => {

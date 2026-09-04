@@ -72,6 +72,7 @@ Cascades/Extended/
 Cascades/Archive/
 
 # C938 · THE PRIVACY PARTITION (dev zones stay local · never committed)
+Cascades/Working/
 Cascades/Archive/*
 !Cascades/Archive/.gitkeep
 Cascades/Bridge/

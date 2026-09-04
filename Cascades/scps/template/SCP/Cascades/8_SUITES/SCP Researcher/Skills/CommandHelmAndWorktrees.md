@@ -6,6 +6,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables the operator to manage every installed SCP from the Session Manager itself — spawn, focus, multiply into worktree instances, exit — and to build while using through a three-class git turn-over (Shield · Sword · Sparks) that always resumes the last chosen ground. What is enabled is an OPERATOR surface over the same machinery the bridge's tools expose.
+
+## Research
+No live read today; this Skill describes the operator surface. The surface is: `<SCP>/Cascades/Bridge/bridge.json` — `scpStatuses` (the roster the helm renders · poll-authoritative) · `boundScps` · `installedScps` (via SCP-S12's read, with its age); `<SCP>/Cascades/Extended/<designation>/S8.json` — `grep -n "boundSessionId" … || echo "no binding"` (DF1); `test -f <SCP>/Cascades/Bridge/gitm.json` (the Tactical Bridge's own state). Worktree instances are sibling directories `<name>--wt-<slug>` beside the SCP root (`ls -d <SCP>/../*--wt-* 2>/dev/null || echo none`). Operating the helm — spawn · exit · turn over · multiply — is the user's act through the page or the Shipwright's tools; the Researcher reads the roster, it does not drive it (`Instance.md` §"Not the Shipwright").
+
+## Return
+- Sentence: "`<scpName>`: `<N>` SCPs online, `<M>` offline per `scpStatuses`; `<K>` worktree instances beside it."
+- Section: the Sentence + the per-row controls the ask touched (§1) + the Flow-1 / Flow-2 law if worktrees were asked + the S8 binding state.
+- Vermillion: a multiply / merge sequence as Bands (create → register → install → ready → Flow-1 merge) — a plan the user executes on the helm.
+- Diamond: a fourth turn-over class or a roster law change — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## 1. The Command Helm (the Session Manager IS the SCP helm)
 
 The Session Manager's left-detail column now converts into direct SCP management. The old three metric cards collapse into ONE compact footer strip (Last Update · Bridge version · Connected); the freed space becomes **SCP COMMAND** — every installed SCP as a row.

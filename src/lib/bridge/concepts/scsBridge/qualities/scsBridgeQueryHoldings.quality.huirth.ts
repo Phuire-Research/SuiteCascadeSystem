@@ -37,6 +37,7 @@ import { log } from '../../../debugLog';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { connect } from 'node:net';
+import { scpsJsonPath } from '../../../paths';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -110,7 +111,7 @@ const collectSeeds = (): { meta: LooseRecord | null; metaPath: string; seeds: Ro
       seed.windowId = typeof windows[name] === 'number' ? windows[name] : seed.windowId;
     }
     const userCwd = typeof meta.userCwd === 'string' ? meta.userCwd : scsRoot;
-    const registry = readJson(join(userCwd, 'Cascades', 'SCPs.json'));
+    const registry = readJson(scpsJsonPath(userCwd));
     const scps = Array.isArray(registry?.scps) ? (registry?.scps as LooseRecord[]) : [];
     for (const row of scps) {
       const name = typeof row.name === 'string' ? row.name : null;

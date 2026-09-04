@@ -93,8 +93,13 @@ describe('launchClaudeWindow', () => {
     expect(osTerminal.buildTerminalCommand).toHaveBeenCalledWith({
       cwd: '/p/q',
       mode: 'new',
+      // C1104: the model slot is always threaded; null = no --model clause built.
+      model: null,
       settingsPath: '/p/q/spawn-settings.json',
       claudeUuid: undefined,
+      // RESUME INDUCTION (Lane 7 row 13): the append path is part of the contract now.
+      // Absent on the opts ⇒ an EXPLICIT null, so osTerminal omits the clause.
+      appendSystemPromptFile: null,
     });
   });
 
@@ -112,7 +117,29 @@ describe('launchClaudeWindow', () => {
       mode: 'resume',
       settingsPath: '/c/s.json',
       claudeUuid: 'real-uuid',
+      appendSystemPromptFile: null,
+      // C1104 · ruling A: a resume with no recorded model threads null, and osTerminal
+      // then builds NO --model clause — the user's own /model default applies.
+      model: null,
     });
+  });
+
+  // RESUME INDUCTION · THE DEAD WIRE CLOSED (Lane 7 row 13). Before this, the type had no
+  // slot for the composed path, so every TUI/attach/CLI resume dropped it at THIS boundary
+  // even though all four osTerminal transports already consumed it.
+  it('threads appendSystemPromptFile through to buildTerminalCommand', async () => {
+    childProcess.spawn.mockReturnValue(makeMockChild(1));
+    await launchClaudeWindow({
+      ...baseOpts,
+      mode: 'resume',
+      claudeUuid: 'real-uuid',
+      appendSystemPromptFile: '/b/Cascades/Bridge/scs-bridge-suite8-Anchor.generated.md',
+    });
+    expect(osTerminal.buildTerminalCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appendSystemPromptFile: '/b/Cascades/Bridge/scs-bridge-suite8-Anchor.generated.md',
+      }),
+    );
   });
 
   it('does not block — resolves before any external process completion', async () => {
@@ -121,5 +148,44 @@ describe('launchClaudeWindow', () => {
     await launchClaudeWindow(baseOpts);
     const elapsed = Date.now() - start;
     expect(elapsed).toBeLessThan(100);
+  });
+});
+
+// C1104 · ruling A · launchClaudeWindow THREADS the model into buildTerminalCommand.
+// LaunchClaudeWindowOpts had no model slot at all before, so the daemon door could not
+// reach the clause even once osTerminal grew one (the RESUME-INDUCTION dead-wire shape).
+describe('launchClaudeWindow · the model thread (C1104)', () => {
+  beforeEach(() => {
+    childProcess.spawn.mockReset();
+    osTerminal.buildTerminalCommand.mockReset();
+    osTerminal.buildTerminalCommand.mockReturnValue({
+      cmd: 'test-cmd',
+      args: ['arg1'],
+      platform: 'macos',
+      terminalChoice: 'Terminal',
+      humanReadable: 'test-cmd arg1',
+    });
+    childProcess.spawn.mockReturnValue(makeMockChild(1));
+  });
+
+  it('T3 · passes model: null when the caller supplies none', async () => {
+    await launchClaudeWindow(baseOpts);
+    expect(osTerminal.buildTerminalCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ model: null }),
+    );
+  });
+
+  it('passes model: null through explicitly (a resume with no recorded model)', async () => {
+    await launchClaudeWindow({ ...baseOpts, mode: 'resume', claudeUuid: 'u', model: null });
+    expect(osTerminal.buildTerminalCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ model: null }),
+    );
+  });
+
+  it('threads a recorded model verbatim', async () => {
+    await launchClaudeWindow({ ...baseOpts, model: 'claude-fable-5-1' });
+    expect(osTerminal.buildTerminalCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'claude-fable-5-1' }),
+    );
   });
 });

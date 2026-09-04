@@ -8,6 +8,19 @@
 
 ---
 
+## Curation
+The SCP paradigm enables a runtime that loads only the user's own localhost code and is edge-hardened at the Electron layer without touching the rendering topology: loopback-only bind, an app-level navigation guard that redirects off-origin (Cadmium's PDF citations open in the user's browser), a per-session CSP, and sandbox on every window. What is enabled is a stated, additive posture — never a topology change.
+
+## Research
+No live read today; this Skill states doctrine. The surface is BRIDGE-side, outside the SCP's own tree: `src/main/navigationGuard.ts` (`grep -n "installAppNavigationGuard\|web-contents-created"`), `src/main/index.ts` (`grep -n "installScpContentSecurityPolicy"` — the CSP installer is wired there, not in `electronWindow.ts`), `src/main/electronWindow.ts` (`grep -n "sandbox: true"`), and the bridge's `/mcp` bind — read them when the scs-bridge source is reachable (on Stratithon at `Cascades/Projects/SuiteCascadeSystem/`), else name them unreachable. The one SCP-side measurement: the host the SCP's own citizen reports — `node -e "const d=JSON.parse(require('fs').readFileSync('<SCP>/Cascades/Bridge/bridge.json','utf8')); console.log(d.boundScps['<scpName>']?.browserUrl)"` (a `127.0.0.1` / `localhost` host = loopback holds for this citizen). The Researcher reports the posture; it never audits the bridge daemon's health or changes a bind (`Instance.md` §"Not the Shipwright").
+
+## Return
+- Sentence: "`<scpName>` binds loopback (`browserUrl` host `<host>`); the posture is the four additive edges (§1-§4)."
+- Section: the Sentence + the edge the ask touched + its rejected alternative (topology change · partitions) and why.
+- Vermillion: rare — a hardening review as Bands, each a bridge-side read; the change itself is the Shipwright's.
+- Diamond: a fifth edge or a new threat class — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## 1. Loopback bind (the one live vulnerability, closed)
 
 The `/mcp` HTTP tool transport AND all SCP-citizen servers were bound to `0.0.0.0` (every network interface) — meaning the whole tool roster (`send_message` · spawn · `gitm_*` · `scp_stop`) was reachable **unauthenticated from any device on the LAN**. Flipped to **`127.0.0.1`** across all seams (the bridge `/mcp` transport + its free-port probe, and each SCP citizen's Express transport + primary server + the reported bind).

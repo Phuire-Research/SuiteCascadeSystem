@@ -65,6 +65,7 @@ import { log } from '../../../debugLog';
 import { getBridgeMuxameter } from '../../../bridgeVersion';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
 import type { GitmScpUpdateApplyPayload, GitmScpUpdateApply } from './types';
+import { workspaceBridgeDir } from '../../../paths';
 
 export type { GitmScpUpdateApply };
 
@@ -400,7 +401,7 @@ export const gitmScpUpdateApply = createQualityCardWithPayload<
             ? stateScpName
             : basename(opCwd);
 
-      const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+      const bridgeDir = workspaceBridgeDir(userCwd);
       const resolvedPath = join(bridgeDir, `scp-update-resolved.${scpName}.json`);
       const diffPath = join(bridgeDir, `scp-update-diff.${scpName}.json`);
 

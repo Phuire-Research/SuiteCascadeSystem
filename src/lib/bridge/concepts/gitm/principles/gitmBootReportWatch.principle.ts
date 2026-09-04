@@ -29,12 +29,12 @@
  */
 
 import type { PrincipleFunction } from 'stratimux';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { existsSync, readFileSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { log } from '../../../debugLog';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
-import { fenceWatchTargets } from '../../../watcherFence.model';
 import { gitmExec } from '../model/gitmExec.model';
 import { disarmSeatReturn, readSeatReturnArm } from '../model/seatReturnArm.model';
 // MD-C M5 · THE ORIGIN-THREADED CONFIRM (the C570 field find) — the B-proof gate compared the
@@ -58,6 +58,7 @@ import type { GitmState, GitmABMode } from '../gitm.types';
 import { UPDATE_APPLIED_NOTE } from '../gitm.types';
 import type { GitmQualities } from '../gitm.concept';
 import type { GitmSetStatusPayload, GitmScpUpdateProgressPayload } from '../qualities/types';
+import { workspaceBridgeDir } from '../../../paths';
 
 // Module-scope arm guard (the watcher itself is STANDING — armed ONCE, never concluded) + per-file
 // mtime dedup (a re-fired chokidar event on the same write is a no-op).
@@ -180,7 +181,7 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
             k_.updateStatus.select().scpName !== ''
               ? k_.updateStatus.select().scpName
               : basename(k_.activeScpDir.select() !== '' ? k_.activeScpDir.select() : userCwd);
-          const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+          const bridgeDir = workspaceBridgeDir(userCwd);
           for (const artifact of [
             `scp-update-diff.${scpName}.json`,
             `scp-update-resolved.${scpName}.json`,
@@ -229,7 +230,7 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
               : originUpdateStatus.scpName !== ''
                 ? originUpdateStatus.scpName
                 : basename(k_.activeScpDir.select() !== '' ? k_.activeScpDir.select() : userCwd);
-          const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+          const bridgeDir = workspaceBridgeDir(userCwd);
           for (const artifact of [
             `scp-update-diff.${finalizeScpName}.json`,
             `scp-update-resolved.${finalizeScpName}.json`,
@@ -367,10 +368,10 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
         }
         const userCwd = k_.userCwd.select();
         if (userCwd === '') return; // not yet populated · retry on the next beat
-        const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+        const bridgeDir = workspaceBridgeDir(userCwd);
         if (!existsSync(bridgeDir)) return; // no Bridge dir yet · retry on the next beat
         try {
-          bootReportWatcher = watch(fenceWatchTargets('gitmBootReportWatch', [bridgeDir], userCwd), {
+          bootReportWatcher = createWatcher('gitmBootReportWatch', [bridgeDir], userCwd, {
             ignored: [/(^|[/\\])\.git([/\\]|$)/],
             ignoreInitial: true,
             persistent: true,
@@ -414,7 +415,7 @@ export const gitmBootReportWatchPrinciple: PrincipleFunction<
           // the 45s failsafe fires phantom reverts (the C449 class).
           const rehydrateScpDir = k_.activeScpDir.select();
           const gitmBase = rehydrateScpDir !== '' ? rehydrateScpDir : userCwd;
-          const gitmJsonPath = join(gitmBase, 'Cascades', 'Bridge', 'gitm.json');
+          const gitmJsonPath = rehydrateScpDir !== '' ? join(gitmBase, 'Cascades', 'Bridge', 'gitm.json') : join(workspaceBridgeDir(gitmBase), 'gitm.json');
           if (existsSync(gitmJsonPath)) {
             const persisted = JSON.parse(readFileSync(gitmJsonPath, 'utf8')) as {
               turnOverAttempt?: { source?: string; targetBranch?: string; ts?: number } | null;

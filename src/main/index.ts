@@ -414,6 +414,34 @@ async function performQuit(): Promise<void> {
     console.error('[main] gracefulCloseAll failed (non-fatal · continuing quit):', err);
   }
   sessionRegistry.disposeAll();
+  // C1015 · THE SCP-WINDOW SWEEP (the user's preventative ruling · the Salvo's L3 finding).
+  //
+  // THE GAP, MEASURED: `sessionRegistry.disposeAll()` iterates `this.sessions` — TERMINAL PTY
+  // SESSIONS ONLY (`session-registry.ts:34-43`). It never touches the SCP window pair, which is
+  // tracked in a structurally separate system (`urlWindowMap` / `scpPresenterMap` /
+  // `scpPresenterByWinId` in electronWindow.ts) that NOTHING in src/main/ ever sweeps.
+  //
+  // AND THE CODE CLAIMED OTHERWISE: `session.ts:1047` says *"app-quit / turn-over closes EVERY
+  // window via disposeAll"* — factually wrong for SCP windows. That comment is why the gap went
+  // unseen; a wrong comment is worse than no comment, because it answers the question you were
+  // about to ask.
+  //
+  // Until now SCP windows were closed only by Electron's IMPLICIT native window pass during
+  // app.quit() — unowned, untimed, and untelemetered (no `will-quit` handler exists anywhere). We
+  // close them OURSELVES, so their 'closed' handlers run on OUR schedule and release their cached
+  // frames (C1015, electronWindow.ts) before the process dies.
+  //
+  // `close()`, NEVER `destroy()`: the SCP pair's teardown is BIDIRECTIONAL and rides the 'closed'
+  // event — destroy() skips it and would strand the partner window (the Salvo's L2 ruling).
+  try {
+    for (const w of BrowserWindow.getAllWindows()) {
+      if (!w.isDestroyed()) w.close();
+    }
+  } catch (err) {
+    // A window that refuses to close must never wedge the quit — the implicit native pass still
+    // runs behind us, so this sweep is an improvement on the floor, never a new gate.
+    console.error('[main] SCP window sweep failed (non-fatal · continuing quit):', err);
+  }
   // F2 · THE QUIT FLUSH · the class cure for the quit-race. disposeAll() above
   // win.close()s every window, which can enqueue async registry writes (the D-WC-1
   // session-offline leg on a last-window close). Await the registry writeChain tail

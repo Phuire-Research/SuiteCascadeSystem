@@ -435,6 +435,10 @@ export interface CascadeJsonInitOptions {
   claudeMdPresent: boolean;
   installedAt: string;
   installVersion: string;
+  // C1039 · THE INSTRUCTION SET STAMP. Which revision of the shipped `.claude/CLAUDE.md` this
+  // workspace carries. OPTIONAL on the type so a caller predating the iterator still compiles —
+  // but the install path SUPPLIES it, because installing writes the instruction set.
+  instructionSet?: number;
 }
 
 export function buildFreshCascadeJson(opts: CascadeJsonInitOptions): string {
@@ -464,6 +468,9 @@ export function buildFreshCascadeJson(opts: CascadeJsonInitOptions): string {
     claudeMdPresent: opts.claudeMdPresent,
     installedAt: opts.installedAt,
     installVersion: opts.installVersion,
+    // C1039 · omitted from the JSON entirely when absent (JSON.stringify drops undefined) —
+    // ABSENCE IS UNKNOWN, and an absent stamp must never read as "behind".
+    instructionSet: opts.instructionSet,
   };
   return JSON.stringify(cascade, null, 2) + '\n';
 }
@@ -530,6 +537,37 @@ export function markInstallationComplete(userCwd: string): MarkInstallationCompl
     // Only set when absent — never clobber a CONSUMED (true) value on a reinstall.
     if (cascade.scpInstallAgentNoteShown === undefined) {
       cascade.scpInstallAgentNoteShown = false;
+    }
+    // C1039 · THE INSTRUCTION SET STAMP · *"The Cascade.json that is Scaffolded for the User should
+    // Carry the Stamp from Here On Out."*
+    //
+    // WHY HERE AND NOT IN THE TEMPLATE: the flip has TWO seats — the template rename
+    // (installSpawn.ts:643-645, the path that actually WINS) and buildFreshCascadeJson
+    // (installSpawn.ts:663-673, the fallback). A value seated in only ONE is permanently absent from
+    // the other — MEASURED, not feared: `installVersion` and `claudeMdPresent` live in the builder
+    // alone and are absent from every template-rename install today. THIS site is the ONE point both
+    // paths pass through (installSpawn.ts:725 and :999), so the stamp lands once, for both.
+    //
+    // WHY A LITERAL IN Cascade.template.json WOULD BE WRONG: a hardcoded number there would drift
+    // from package.json the first time the instruction set changed — the exact drift class already
+    // visible in this file's own suiteColors block versus the template's. Read from the SINGLE
+    // SOURCE (package.json via getBridgeMuxameter) so drift is structurally impossible.
+    //
+    // WHY UNCONDITIONAL RATHER THAN ONLY-WHEN-ABSENT: an install WRITES `.claude/CLAUDE.md`
+    // (installSpawn.ts:340), so the workspace genuinely carries THIS bridge's instruction set when
+    // this mark fires. The stamp records what the workspace HAS, so a reinstall must refresh it —
+    // only-when-absent would leave a stale stamp claiming an older revision than the file on disk.
+    //
+    // NEVER-BLOCK: an unreadable grandparent package.json yields undefined and the field is simply
+    // not written — absence stays UNKNOWN and the install completes regardless.
+    try {
+      const { getBridgeMuxameter: _gbm } = require('./bridgeVersion') as typeof import('./bridgeVersion');
+      const _instructionSet = _gbm()?.instructionSet;
+      if (typeof _instructionSet === 'number') {
+        cascade.instructionSet = _instructionSet;
+      }
+    } catch {
+      /* the stamp is a courtesy to the marker; it must never fail an install */
     }
     const tmpPath = `${cascadePath}.tmp`;
     fs.writeFileSync(tmpPath, JSON.stringify(cascade, null, 2) + '\n', 'utf8');

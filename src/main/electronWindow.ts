@@ -15,6 +15,7 @@
  * Citation: FOUNDATION-CSCB-DOCTRINE.md §3.1
  */
 
+import { clearLatestWindowFrame } from './windowOrchestrate';
 import { BrowserWindow } from 'electron';
 import { existsSync } from 'node:fs';
 import type { ShaderRenderMode } from '../shared/shaderRenderMode';
@@ -355,6 +356,28 @@ export function openUrlWindow(opts: OpenUrlWindowOptions): BrowserWindow {
 
   win.on('closed', () => {
     signalScpWindowClosed();
+    // C1015 · THE PREVENTATIVE (the user's ruling). The SCP path never released what the terminal
+    // path always has — an ASYMMETRY, not an unknown mechanism: `session.ts:592` and `:1189` both
+    // call clearLatestWindowFrame under the WRA-DARK marker, and this path simply never got it.
+    //
+    // WHAT LEAKS WITHOUT IT: `latestFrames` (windowOrchestrate.ts:45) is a module-level
+    // Map<number, NativeImage>. Every painted frame is stored by window id, and the SCP path never
+    // deletes its key — so EVERY SCP window that ever painted leaves a full bitmap resident for the
+    // life of the main process. Removing the 'paint' listener first stops any in-flight frame from
+    // re-populating the entry we are about to delete.
+    //
+    // WHY IT SHIPS EVEN THOUGH THE PROCESS-LEAK THESIS WAS REFUTED: the Salvo disproved that OSR
+    // leaks RENDERER PROCESSES over minutes. It did NOT — and could not — disprove heap growth over
+    // the EXTENDED sessions where the user measured ~10 GB. A snapshot cannot falsify a slow
+    // accumulator. This costs two lines, changes nothing while a window lives, and mirrors a pattern
+    // already proven in this codebase. **A cheap preventative beats a leak that only reveals itself
+    // by breaking the user's trust in the application.**
+    // C1016 · THE BLANKET REMOVAL IS GONE (the user's ruling). `removeAllListeners('paint')` took
+    // EVERY paint listener on this webContents, not just ours. The removal now lives at the
+    // REGISTRATION SITE (scpPresenter.ts) where the handler reference exists, removed BY REFERENCE.
+    // This clear stays as the net: it is idempotent, and it also covers the NON-shader path, where
+    // no presenter and no paint listener ever existed.
+    clearLatestWindowFrame(win.id);
     urlWindowMap.delete(url);
     scpPresenterByWinId.delete(win.id);
     const p = scpPresenterMap.get(url);
@@ -363,6 +386,9 @@ export function openUrlWindow(opts: OpenUrlWindowOptions): BrowserWindow {
   });
   if (presenter) {
     presenter.on('closed', () => {
+      // C1015 · the presenter holds no paint listener of its own (the offscreen source owns it),
+      // but it CAN hold a cached frame keyed by its own id. Release it symmetrically.
+      clearLatestWindowFrame(presenter.id);
       scpPresenterMap.delete(url);
       const w = urlWindowMap.get(url);
       if (w && !w.isDestroyed()) w.close();

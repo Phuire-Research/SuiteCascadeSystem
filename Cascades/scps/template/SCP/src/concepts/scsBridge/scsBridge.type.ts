@@ -192,6 +192,10 @@ export type ScsBridgeClientState = {
   // targetSuite8Name → the bridge persists it on the registry entry → the Previous Conductions
   // row filters per page. Cleared alongside the name (TFCD).
   pendingSpawnSuite8TargetName: string | undefined;
+  // RM-2 · THE ANCHOR MODEL ROW · companion read at fire time. undefined = not supplied (the
+  // page-wide pendingSpawnModel pin may ride) · null = explicitly "default" (the pin is BYPASSED;
+  // the spawn carries no model) · a string = THIS spawn's model. Cleared alongside the name (TFCD).
+  pendingSpawnSuite8Model: string | null | undefined;
   // MD-9 · D-MC-3 · Per-Instance Model Control · the selected model id (a full
   // AVAILABLE_MODELS id) read at spawn fire-time by BOTH the CMIA-Spawn and CMIA-Spawn-Suite8
   // principles and threaded into the MCP `arguments` (field-agnostic → payload.model → the
@@ -422,6 +426,9 @@ export type ScsBridgeSetPendingSpawnSuite8NamePayload = {
   // principle → MCP targetSuite8Name arg → the bridge persists it on the registry entry).
   // Omitted = a target-less conduction (legacy · matches every page's row).
   targetSuite8Name?: string;
+  // RM-2 · THE ANCHOR MODEL ROW · optional companion. A string = THIS spawn's model; null =
+  // explicitly "default" (bypass the page-wide pendingSpawnModel pin); omitted = the pin may ride.
+  model?: string | null;
 };
 
 // MD-9 · D-MC-3 · Per-Instance Model Control · the model-selection setter payload. Vue

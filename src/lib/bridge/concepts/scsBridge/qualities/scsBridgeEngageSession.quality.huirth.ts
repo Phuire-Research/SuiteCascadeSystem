@@ -2,10 +2,15 @@
  * scsBridgeEngageSession · D3D · CMIA-Engage · Cycle 163 R0
  *
  * BMTI Quality · MCP tool 'scp_engage_session'. Sibling to CMIA-Spawn
- * (scsBridgeSpawnNewScpSession). Mirrors the TUI handleResume path at
- * animatedTui.ts:L1109 — calls launchInformative(sessionId, 'resume') via
- * the SAME shared manager.ts function. Shared-function discipline (SFDS)
- * maintained for the engage path.
+ * (scsBridgeSpawnNewScpSession). Mirrors the TUI handleResume path.
+ *
+ * DOCBLOCK DRIFT CORRECTED (RESUME INDUCTION · RI-D3): this block narrated
+ * launchInformative(sessionId, 'resume'), but the D2 Electron transition (below)
+ * moved the body to spawnElectronSessionForUlid → the Electron `open-session` verb.
+ * BOTH doors now compose through the ONE assembler
+ * (src/lib/bridge/baseSystemPrompt/composeAppendedSystemPrompt.ts), so the engage
+ * path receives base → Dock → Instance.md whichever door it travels. Shared-function
+ * discipline (SFDS) is maintained on the assembler, not on launchInformative alone.
  *
  * Per user clarification 2026-05-23: "the MCP Tool Calling the Same
  * Functionality. Where if Such is Not a Function, should be Made One to
@@ -13,7 +18,7 @@
  * and the MCP Tool Would Call the Function."
  *
  * Form-α (Method+Reducer). Reducer returns {} · no own-state mutation.
- * Async launchInformative fire-and-forget via void promise (parallels
+ * Async spawnElectronSessionForUlid fire-and-forget via void promise (parallels
  * scsBridgeSpawnNewScpSession L66-76).
  *
  * Template: scsBridgeSpawnNewScpSession.quality.huirth.ts (form-α pattern)
@@ -76,8 +81,9 @@ export const scsBridgeEngageSession = createQualityCardWithPayload<
       // for the no-claudeSessionId case.
       //
       // Imperative async — fire-and-forget per scsBridgeSpawnNewScpSession pattern.
-      // launchInformative(sessionId, 'resume') is the SAME shared manager function
-      // the TUI handleResume calls at animatedTui.ts:L1109. SFDS preserved.
+      // RI-D3 · the call below is spawnElectronSessionForUlid (the CSSP relay to the
+      // Electron `open-session` verb), NOT launchInformative — the D2 transition note
+      // inside the closure is the accurate one. SFDS is preserved at the assembler.
       void (async (): Promise<void> => {
         try {
           // D2 Electron transition: launchInformative (Terminal.app via osTerminal)

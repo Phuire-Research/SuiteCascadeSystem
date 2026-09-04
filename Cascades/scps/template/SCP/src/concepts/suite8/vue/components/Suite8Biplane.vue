@@ -411,10 +411,11 @@ const effectiveMenuStage = computed<MenuStage>(() => props.menuStage ?? EMPTY_ME
 onMounted(() => {
   if (typeof window === 'undefined') return;
   void loadWorkingDocs();
-  // MD-9 · seed pendingSpawnModel with the picker's initial default so the first Forge spawn threads
-  // it (the Session Management onMounted idiom). Best-effort — the host page binds the controller
-  // Muxium; setSpawnModel no-ops safely if unbound, and the on-change handler is the reliable path.
-  getGlobalScsBridgeController()?.setSpawnModel(selectedModel.value);
+  // MD-9 · C1104 ruling A · THE SEED IS DELETED (not moved). Pushing the picker's own
+  // default into pendingSpawnModel on mount stamped a model nobody chose onto the registry
+  // entry, and every later resume re-forced it over the user's /model. Only the on-change
+  // handler writes now, so a stamp means a CHOICE; an unstamped new spawn still runs the
+  // derived highest Opus as a bridge-injected flag.
   // C386 · W3 · resolve THIS SCP's name (best-effort) so the previous-conductions row filters to this
   // SCP's OFFLINE Forge sessions. Null on failure → the row matches by suite8Name alone (safe superset).
   void (async () => {

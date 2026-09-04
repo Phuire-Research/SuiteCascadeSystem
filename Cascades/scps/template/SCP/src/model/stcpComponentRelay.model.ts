@@ -31,7 +31,8 @@
  * Citation: scsBridgeJsonWatcher.principle.huirth.ts:295 — nextA Base→Relay async-callback idiom.
  */
 import type { AnyAction } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from './watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 
@@ -203,7 +204,7 @@ export function createStcpComponentRelay<TPayload>(
   ): FSWatcher | null => {
     const dir = path.dirname(config.jsonPath);
     try {
-      const watcher = chokidarWatch(dir, {
+      const watcher = createWatcher('stcpComponentRelay#1', dir, {
         persistent: true,
         // SD-5 · ignoreInitial:true — the watcher fires only on LIVE add/change after arm.
         // The already-present-on-connect case is owned by MOCH (HTTP GET) + BOCR (Huirth-state
@@ -355,7 +356,7 @@ export function createStcpComponentRelay<TPayload>(
     const watchDir = config.watchDir;
     if (!watchDir) return null;
     try {
-      const watcher = chokidarWatch(watchDir, {
+      const watcher = createWatcher('stcpComponentRelay#2', watchDir, {
         persistent: true,
         ignoreInitial: true, // first-load owned by readAndDispatchFolderTree (C1 correction).
         awaitWriteFinish: { stabilityThreshold, pollInterval: 50 },

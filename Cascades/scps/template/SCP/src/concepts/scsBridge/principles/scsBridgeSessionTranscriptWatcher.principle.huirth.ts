@@ -38,8 +38,9 @@
  * Citation: D3F-AUDIT-R4-GREEN-11-ANGLES.md (NCEC Angle 5, GCWP Angle 6, Path Angle 7)
  */
 import { resolveBridgeRoot } from '../bridgeRoot.model';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
 import os from 'node:os';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
@@ -165,7 +166,7 @@ export const scsBridgeSessionTranscriptWatcherPrinciple: ScsBridgeSessionTranscr
       );
 
       try {
-        const watcher = chokidarWatch(transcriptDir, {
+        const watcher = createWatcher('scsBridgeSessionTranscriptWatcher#1', transcriptDir, {
           persistent: true,
           ignoreInitial: false,
           awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },

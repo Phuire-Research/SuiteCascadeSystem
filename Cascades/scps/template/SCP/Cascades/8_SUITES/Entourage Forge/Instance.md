@@ -47,6 +47,20 @@ entry point and hands the Suite 8 to its user.
 **The user can deviate as needed** — the Banded Vermillion is the default conduction,
 never a cage. See Conductor.md for the Band assignments; Strategy/EF-S1 for the flow.
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Strategy expands the specifics as the conduction reaches it.
+The Forge holds NO `Skills/` stratum — its aspect is the process, so every door below is a
+Strategy (the Five Skill Signatures above are the aspects; the Strategies are how they run).
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| The Creation Conduction — the retinue dispatched from mint to hand-off (F1 → F5) | `Strategy/EF-S1-Creation-Conduction.md` | A minted scaffold is to become a domain-bearing Suite 8 — the file IS the executable Banded Vermillion (Band 1 F1 Conference · Band 2 F2 dispatches the Cadmium Researcher · Band 3 F4 grounds · Band 3.5 the page duplication · Band 4 F3 enhancement) |
+| S8 Page Update — an existing page raised to the current Suite 8 Page System standard | `Strategy/EF-S1-S8-Page-Update.md` | The page's own Forge anchor runs an update; the anchor carries only the run — this file carries every ground and law (a doctrine change is a STRATEGY edit, never an anchor edit) |
+| The Sync Library — the per-designation locality record and its accounted anor registered surfaces | `Strategy/EF-S2-Sync-Library.md` | A locality motion touches `Cascades/Extended/<designation>/SyncLibrary.json` — the usher's replace anor vault anor restore iterate ONLY `registered`; the structural exclusion law governs |
+
+---
+
 ## The PGED Pattern — the Capability the Forge Cascades
 
 **PGED — Page-Grounded Entourage Dispatch**: the ability to prepare, by way of UI, the

@@ -16,8 +16,41 @@ export interface ScsModelCatalogEntry {
   blurb: string;
 }
 
-/** the default spawn model — Opus 5 (C929 · mirrors bridge DEFAULT_MODEL). */
-export const SCS_DEFAULT_MODEL = 'claude-opus-5';
+/**
+ * numeric version vector: 'claude-opus-4-5-20251101' → [4,5,20251101]; a non-numeric
+ * segment sorts -1. NEVER a string compare — 'claude-opus-5-8' > 'claude-opus-5-10' is
+ * TRUE lexically and WRONG numerically. LOCAL by the SYNC-NOTE (no path alias into the
+ * bridge lib); the bridge twin is highestOpusId in src/shared/modelCatalog.model.ts.
+ */
+function scsOpusVersion(id: string): number[] {
+  return id
+    .slice('claude-opus-'.length)
+    .split('-')
+    .map((s) => (/^\d+$/.test(s) ? Number(s) : -1));
+}
+
+/** segment-wise numeric compare; a missing segment sorts -1. */
+function scsCompareOpusVersion(a: string, b: string): number {
+  const va = scsOpusVersion(a);
+  const vb = scsOpusVersion(b);
+  const len = Math.max(va.length, vb.length);
+  for (let i = 0; i < len; i += 1) {
+    const sa = i < va.length ? va[i] : -1;
+    const sb = i < vb.length ? vb[i] : -1;
+    if (sa !== sb) return sa - sb;
+  }
+  return 0;
+}
+
+/**
+ * THE HIGHEST OPUS · the spawn default BY LAW (C1102 law 1). Mirrors the bridge's
+ * highestOpusId exactly; NEVER throws at module load.
+ */
+export function scsHighestOpusId(rows: ScsModelCatalogEntry[]): string {
+  const opus = rows.filter((m) => m.id.startsWith('claude-opus-'));
+  if (opus.length === 0) return rows[0]?.id ?? '';
+  return opus.reduce((best, m) => (scsCompareOpusVersion(m.id, best.id) > 0 ? m : best)).id;
+}
 
 export const SCS_AVAILABLE_MODELS: ScsModelCatalogEntry[] = [
   {
@@ -33,6 +66,13 @@ export const SCS_AVAILABLE_MODELS: ScsModelCatalogEntry[] = [
     tier: 'flagship',
     blurb:
       'Prior Opus flagship — complex reasoning, long-horizon agentic coding, high-autonomy work. 1M context.',
+  },
+  {
+    id: 'claude-fable-5-1',
+    label: 'Fable 5.1',
+    tier: 'formative',
+    blurb:
+      'The newest Formative upgrade-in-scale — the Fable 5.1 generation. 1M context.',
   },
   {
     id: 'claude-fable-5',
@@ -91,6 +131,13 @@ export const SCS_AVAILABLE_MODELS: ScsModelCatalogEntry[] = [
       'Fastest model — low latency, lowest cost for simple tasks and high-volume work. 200K context.',
   },
 ];
+
+/**
+ * the default spawn model — DERIVED (mirrors the bridge DEFAULT_MODEL derivation). SPAWN
+ * default only: a resume whose registry entry carries no model omits `--model` entirely
+ * (ruling A), so the user's own /model default applies.
+ */
+export const SCS_DEFAULT_MODEL = scsHighestOpusId(SCS_AVAILABLE_MODELS);
 
 export function isScsAvailableModel(id: string): boolean {
   return SCS_AVAILABLE_MODELS.some((m) => m.id === id);

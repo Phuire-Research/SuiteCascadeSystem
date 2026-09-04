@@ -38,7 +38,8 @@
  * Citation: suite8Registration.model.ts KNOWN_SUITE8_ENTRIES (the boot designation seed).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept, AnyAction } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import path from 'node:path';
 import { appendFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import type {
@@ -255,7 +256,7 @@ export const suite8InstallRequirementsWatchPrinciple: Suite8InstallRequirementsW
         // (the Forge/mint built the dir mid-session) arms its install watcher IMMEDIATELY. Debounced
         // lightly; NEVER throws (arm failure = skip + telemetry). Mirrors the menuWatch addDir pattern.
         try {
-          suite8DirWatcher = chokidarWatch(SUITE8_ROOT_ABS, {
+          suite8DirWatcher = createWatcher('suite8InstallRequirementsWatch#1', SUITE8_ROOT_ABS, {
             persistent: true,
             // ignoreInitial:true — the boot sweep already armed the existing dirs; the live watch only
             // reacts to NEW dirs forged after boot (no double-arm of the initial set).

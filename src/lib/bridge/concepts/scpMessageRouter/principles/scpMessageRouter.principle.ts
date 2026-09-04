@@ -46,7 +46,7 @@ import type { ScpMessageRouterQualities } from '../scpMessageRouter.concept';
 import { log } from '../../../debugLog';
 // F1 · THE BOOT BACKFILL · registryPath() = bridgeRoot()/sessions.json — the watched
 // file AND the electron-side F1 writer target (M73 Path-Diameter-Pairing-Doctrine).
-import { registryPath } from '../../../paths';
+import { registryPath, scpsJsonPath, scpsJsonBasename } from '../../../paths';
 
 // WGHA · separate WeakSets per watcher kind for clearer telemetry
 const boundBridgeJsonWatchers = new WeakSet<FSWatcher>();
@@ -538,14 +538,14 @@ export const scpMessageRouterPrinciple: PrincipleFunction<
       console.log('[Scp Message Router Principle] Binding handlers to scpsJsonWatcher');
       boundScpsJsonWatchers.add(watcher);
 
-      const scpsJsonPath = join(userCwd, 'Cascades', 'SCPs.json');
-      const isScpsJson = (fp: string): boolean => basename(fp) === 'SCPs.json';
+      const scpsJsonFile = scpsJsonPath(userCwd);
+      const isScpsJson = (fp: string): boolean => basename(fp) === scpsJsonBasename();
 
       // THE STATUS CONSUME · re-read SCPs.json, edge-detect status changes, drive rows.
       const consumeScpStatuses = (trigger: 'initial' | 'change'): void => {
         let raw: string;
         try {
-          raw = readFileSync(scpsJsonPath, 'utf-8');
+          raw = readFileSync(scpsJsonFile, 'utf-8');
         } catch (err) {
           // Fresh install: SCPs.json may not exist yet — best-effort (the 'add'/'change' fires later).
           if (trigger === 'change') {
@@ -598,7 +598,7 @@ export const scpMessageRouterPrinciple: PrincipleFunction<
       // dispatching (nothing is a live surface at boot). Record-only: mark each entry's status as
       // already-derived so only a POST-boot flip (a launch → 'live', then a close → 'pending') drives a row.
       try {
-        const raw = readFileSync(scpsJsonPath, 'utf-8');
+        const raw = readFileSync(scpsJsonFile, 'utf-8');
         const parsed = JSON.parse(raw) as { scps?: Array<{ name?: unknown; status?: unknown }> };
         if (Array.isArray(parsed.scps)) {
           for (const entry of parsed.scps) {
@@ -629,7 +629,7 @@ export const scpMessageRouterPrinciple: PrincipleFunction<
       const runReAdoptionSweep = (): void => {
         let entries: Array<{ name: string; port: number }> = [];
         try {
-          const raw = readFileSync(scpsJsonPath, 'utf-8');
+          const raw = readFileSync(scpsJsonFile, 'utf-8');
           const parsed = JSON.parse(raw) as {
             scps?: Array<{ name?: unknown; boundBridgePort?: unknown }>;
           };

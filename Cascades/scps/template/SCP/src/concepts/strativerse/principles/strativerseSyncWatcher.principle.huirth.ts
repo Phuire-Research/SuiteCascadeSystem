@@ -20,7 +20,8 @@
  * Citation: POC-4-STRATIVERSE-PROJECT-MANAGEMENT-WORKGAMEBOARD.md
  * Citation: Suite 7 Rose Diagnostic - Single-stage architecture fix
  */
-import { watch, FSWatcher } from 'chokidar';
+import { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { StrativersePrinciple } from '../strativerse.concept';
@@ -149,7 +150,7 @@ export const strativerseSyncWatcher: StrativersePrinciple = ({ k_, d_, plan, nex
           // Create new watcher
           console.log(LOG, 'Creating watcher for', key, 'at', concept.conceptPath);
 
-          var watcher = watch(concept.conceptPath, {
+          var watcher = createWatcher('strativerseSyncWatcher#1', concept.conceptPath, {
             ignoreInitial: true,
             persistent: true,
             depth: 99,

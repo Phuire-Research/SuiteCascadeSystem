@@ -32,11 +32,11 @@ import {
   strategySuccess,
   type Concept,
 } from 'stratimux';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { mkdirSync } from 'node:fs';
 import type { ScpRegistryWatcherState } from '../scpRegistryWatcher.type';
 import { log } from '../../../debugLog';
-import { fenceWatchTargets } from '../../../watcherFence.model';
 import type {
   ScpRegistryDirectoryWatcherArmPayload,
   ScpRegistryDirectoryWatcherArm,
@@ -102,7 +102,7 @@ export const scpRegistryDirectoryWatcherArm = createQualityCardWithPayload<
       log('scpregistry.watcher.armed', { observedPath });
       let watcher: FSWatcher;
       try {
-        watcher = watch(fenceWatchTargets('scpRegistryDirectoryWatcherArm', observedPath, registryUserCwd), {
+        watcher = createWatcher('scpRegistryDirectoryWatcherArm', observedPath, registryUserCwd, {
           ignoreInitial: true,
           persistent: true,
           depth: 0,

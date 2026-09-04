@@ -49,7 +49,8 @@
  * Citation: feedback_stratidian_base_informative_state.md (SBIS).
  * Citation: STRATIMUX-REFERENCE.md "🎯 Critical Planning Context Patterns".
  */
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import { appendFileSync, mkdirSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -537,7 +538,7 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
       try {
         const syncLibraryPath = resolveSyncLibraryPath(cascadeName);
         const syncLibraryBasename = path.basename(syncLibraryPath);
-        const libraryWatcher = chokidarWatch(path.dirname(syncLibraryPath), {
+        const libraryWatcher = createWatcher('suiteCascadeJsonWatcher#1', path.dirname(syncLibraryPath), {
           persistent: true,
           ignoreInitial: true,
           depth: 0,
@@ -626,7 +627,7 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
         // PARENT DIRECTORIES (depth 0) and gate on the listed basenames — rename-immune.
         const watchedBasenames = new Set(resolvedPaths.map((p) => path.basename(p)));
         const parentDirs = Array.from(new Set(resolvedPaths.map((p) => path.dirname(p))));
-        const contentWatcher = chokidarWatch(parentDirs, {
+        const contentWatcher = createWatcher('suiteCascadeJsonWatcher#2', parentDirs, {
           persistent: true,
           ignoreInitial: true, // the initial content is already in-hand from this load.
           depth: 0,
@@ -804,7 +805,7 @@ export const suiteCascadeJsonWatcherPrinciple: SuiteCascadeHuirthPrinciple = ({ 
         // (the Hello-World-vs-Lorem field evidence). Watch the PARENT DIR (depth 0), gate on
         // the manifest basename — rename-immune.
         const manifestBasename = path.basename(cascadeJsonPath);
-        const watcher = chokidarWatch(path.dirname(cascadeJsonPath), {
+        const watcher = createWatcher('suiteCascadeJsonWatcher#3', path.dirname(cascadeJsonPath), {
           persistent: true,
           ignoreInitial: false,
           depth: 0,

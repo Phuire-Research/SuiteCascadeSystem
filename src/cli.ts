@@ -14,12 +14,30 @@ import { setDebugEnabled } from './lib/bridge/debugLog';
 const pkgPath = resolve(__dirname, '../package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string };
 
+// TOH-12 · BREAK 6 · the build-identity stamp (deploy-drift witness). The built cli.cjs
+// sits in dist/ beside build-identity.json (written by bin/stamp-build-identity.js on
+// every `npm run build`); --version therefore names the BUILD, not just the package —
+// a stale deploy can no longer wear a fresher version string. Absent stamp (a dev tsx
+// run, or a pre-epoch build) reports itself honestly as unstamped.
+let buildIdentity = 'unstamped build';
+try {
+  const stamp = JSON.parse(readFileSync(resolve(__dirname, 'build-identity.json'), 'utf8')) as {
+    builtAt?: string;
+    gitSha?: string;
+  };
+  if (typeof stamp.builtAt === 'string') {
+    buildIdentity = `build ${stamp.builtAt}${typeof stamp.gitSha === 'string' ? ` · ${stamp.gitSha}` : ''}`;
+  }
+} catch {
+  /* no stamp beside this entry point — honest 'unstamped build' */
+}
+
 const program = new Command();
 
 program
   .name('scs')
   .description('Suite Cascade System CLI')
-  .version(pkg.version)
+  .version(`${pkg.version} (${buildIdentity})`)
   .option('--debug', 'Pipe trace events to ./Cascades/Bridge/debug.log')
   .hook('preAction', (thisCommand) => {
     if (thisCommand.opts().debug) setDebugEnabled(true);

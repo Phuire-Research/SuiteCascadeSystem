@@ -35,7 +35,7 @@
 
 import {
   createQualityCardWithPayload,
-  createMethodWithConcepts,
+  createAsyncMethodWithConcepts,
   selectPayload,
   muxiumConclude,
   strategySuccess,
@@ -53,13 +53,47 @@ import { validateScpName } from './scpNameValidation';
 import {
   getChildProcess,
   setChildProcess,
+  setScpPath,
   deleteChildProcess,
   dispatchFromHandler,
   consumeVoluntaryClose,
 } from './childProcessRegistry';
-import { buildBridgeSpawnDescriptor } from '../../../scpSpawn.model';
+import { buildBridgeSpawnDescriptor, resolveActualScpPortPair } from '../../../scpSpawn.model';
+import { readScpRegistry } from '../../../../scp/scpPersistence';
 import { log } from '../../../debugLog';
 import { appendScpBootLogLine } from '../../../scpBootLog';
+import { writeScpLaneFile, DEFAULT_LANE_CONFIG } from '../../../scpLaneFile.model';
+
+// C1075 · SALVO M · the double-dispatch window the port probe opens (idempotency is checked synchronously, the
+// probe awaits) is closed by this set: a second request for the same SCP during resolution is skipped, loudly.
+const pendingSpawns = new Set<string>();
+// The registry's OTHER pairs (live + archived) — never walk onto a sibling's reserved pair.
+function reservedPairsExcluding(scpName: string): Set<number> {
+  const out = new Set<number>();
+  try {
+    const reg = readScpRegistry();
+    const all = [...reg.scps, ...(reg.archivedScps ?? [])] as Array<{ name?: string; boundBridgePort?: number | null }>;
+    for (const e of all) {
+      if (e.name === scpName) continue;
+      const p = e.boundBridgePort;
+      if (typeof p === 'number') { out.add(p); out.add(p + 1); }
+    }
+  } catch { /* no registry → no excludes */ }
+  return out;
+}
+// TOH-10 · step 5 · THE TIMING INSTRUMENT. The drain already SEES every build-stage line;
+// the 500-line ring buffer simply ate them before anyone could read them (L3: 449 lines
+// recovered after a 7-minute turn-over, ZERO of them build stages). Stamping at ARRIVAL
+// into an append-only jsonl is the whole cure — same line, a seat that does not forget.
+import { observeScpBootTimingLine } from '../../../scpBootTiming.model';
+// TOH-7 · THE CRASH-STATE RELAY — the live drain is the ONLY witness when nodemon survives its
+// own server (`child.on('exit')` cannot fire: the child held here is the LANE, not the server).
+import {
+  observeScpOutputLine,
+  observeScpLaneExit,
+  clearScpCrashState,
+  requestFactLicensedRestart,
+} from '../../../scpCrashState.model';
 import { setScpStatus } from '../../../scpSessionRegistry';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
 import type { GitmSetStatusPayload } from '../../gitm/qualities/types';
@@ -202,15 +236,16 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
   type: 'Scp Spawn Manager Spawn Requested',
   reducer: () => ({}),
   methodCreator: () =>
-    createMethodWithConcepts(({ action, deck }) => {
+    createAsyncMethodWithConcepts(async ({ controller, action, deck }) => {
       const payload = selectPayload<ScpSpawnManagerSpawnRequestedPayload>(action);
-      const { scpName, scpPath, command, args, port, sessionId, bootRequestUlid } = payload;
+      const { scpName, scpPath, command, args, port: requestedPort, sessionId, bootRequestUlid } = payload;
 
       // ─── LOCK 5 · scpName validation (TOP of Method body) ───
       const validation = validateScpName(scpName);
       if (!validation.ok) {
         console.error('[Scp Spawn Manager] invalid scpName:', scpName, 'reason:', validation.reason);
-        return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
+        controller.fire(action.strategy ? strategySuccess(action.strategy) : muxiumConclude());
+        return;
       }
 
       // ─── LOCK 2 · idempotency guard (prevent double-spawn) ───
@@ -224,7 +259,8 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
           const force = (selectPayload<ScpSpawnManagerSpawnRequestedPayload>(action)).forceRestart === true;
           if (!childDead && !force) {
             console.warn('[Scp Spawn Manager] scpName already has live ChildProcess, skipping:', scpName);
-            return action.strategy ? strategySuccess(action.strategy) : muxiumConclude();
+            controller.fire(action.strategy ? strategySuccess(action.strategy) : muxiumConclude());
+        return;
           }
           if (!childDead && force) {
             console.warn('[Scp Spawn Manager] C905 forceRestart · SIGTERM the surviving child:', scpName);
@@ -254,6 +290,31 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
         }).d.scp.d.scpBootOverlay.e.scpBootOverlayShow({ scpName }),
       );
 
+      // C1075 · REGISTRY PROPOSES, OS DISPOSES (Salvo M · D2). `requestedPort` is the registry's PREFERRED pair —
+      // SOV-3's identity anchor, never mutated here. The pair is probed before the child binds and WALKED to the
+      // next free pair when another process holds it (another workspace's SCP, a stray server). Every dispatch
+      // path converges on this method, so this is the ONE seat. The walk is loud; the preferred stays the
+      // registry's truth; the ACTUAL rides the spawn record, the env PORT, and the boot report.
+      if (pendingSpawns.has(scpName)) {
+        console.warn('[Scp Spawn Manager] spawn already pending during port resolution, skipping:', scpName);
+        controller.fire(action.strategy ? strategySuccess(action.strategy) : muxiumConclude());
+        return;
+      }
+      pendingSpawns.add(scpName);
+      let port = requestedPort;
+      try {
+        const resolved = await resolveActualScpPortPair(requestedPort, reservedPairsExcluding(scpName));
+        port = resolved.port;
+        if (resolved.walked) log('scp.port.walked', { scpName, from: resolved.from, to: resolved.port });
+      } catch (err) {
+        pendingSpawns.delete(scpName);
+        const message = err instanceof Error ? err.message : String(err);
+        log('scp.port.walk-FAILED', { scpName, requestedPort, message });
+        console.error('[Scp Spawn Manager] no free SCP port pair for', scpName, '—', message);
+        controller.fire(action.strategy ? strategySuccess(action.strategy) : muxiumConclude());
+        return;
+      }
+
       const startedAt = Date.now();
 
       // ─── spawn() synchronously · canonical descriptor (scpSpawn.model.ts) ───
@@ -268,6 +329,21 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
       // child env contains SCS_BRIDGE_CALLER_SESSION + SCS_BRIDGE_MCP_ENDPOINT.
       // Without this passthrough, BMTI Activate Quality's CSEP prep is discarded
       // and SCP-side scsRegisterSession.ts cannot find the env vars to dispatch.
+      // TOH-8 · BAND B · THE ORIGIN PRESENTATION. THIS CLI names ITSELF to the child it spawns, so
+      // the SCP publishes a true origin on its own /scp-config and its client dials the CLI that
+      // OWNS it — never the shared bridge.json endpoint an older peer rewrites (the C952 root).
+      // Unconditional: every spawn path (Activate · LaunchScp · the TUI's [L] · engage-via-bridge)
+      // carries it, closing the gap where a TUI-launched SCP received no bridge identity at all.
+      let ownBridgeEndpoint: string | undefined;
+      try {
+        const ownHandle = getActiveScsBridgeMuxiumHandle();
+        const ownPort = ownHandle?.muxium?.deck?.d?.server?.k?.port?.select();
+        if (typeof ownPort === 'number' && ownPort > 0) {
+          ownBridgeEndpoint = `http://127.0.0.1:${ownPort}`;
+        }
+      } catch {
+        /* best-effort — an unpublished origin degrades to the legacy bridge.json path, never a throw */
+      }
       const descriptor = buildBridgeSpawnDescriptor({
         scpName,
         installPath: scpPath,
@@ -275,7 +351,9 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
         parentEnv: process.env as Record<string, string>,
         callerSessionUlid: payload.callerSessionUlid,
         mcpEndpoint: payload.mcpEndpoint,
+        bridgeEndpoint: ownBridgeEndpoint,
       });
+      log('scpspawnmgr.origin.presented', { scpName, bridgeEndpoint: ownBridgeEndpoint ?? null });
       if (payload.callerSessionUlid !== undefined || payload.mcpEndpoint !== undefined) {
         log('scpspawnmgr.csep.env-applied', {
           scpName,
@@ -293,6 +371,7 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
         stdio: descriptor.stdio,
         env: descriptor.env,
       });
+      pendingSpawns.delete(scpName);
       // SABO · shouldUnref: prevent the bridge event-loop from being held open
       // by the child. Process-group teardown (B.6) uses process.kill(-pid).
       if (descriptor.shouldUnref) {
@@ -315,6 +394,18 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
           const trimmed = part.replace(/\r$/, '');
           if (trimmed.length === 0) continue;
           appendScpBootLogLine(scpName, trimmed);
+          // TOH-10 · the stage stamp rides the SAME line, one match ahead of the crash matcher.
+          // Returns null for the overwhelming majority (runtime chatter) at the cost of a few
+          // string tests, and NEVER throws — a lost timing line must not cost a boot line.
+          observeScpBootTimingLine(scpName, trimmed);
+          // TOH-7 · CLASS B · match on ARRIVAL — the instant `[nodemon] app crashed` lands, the
+          // silence ends and the fact file carries it to the status endpoint anor the overlay.
+          // BAND 4 · a NEW crash fact (true only on the transition, never on repeats) LICENSES the
+          // restart: the bounded `.bridge-restart.json` write — the one key a waiting nodemon
+          // answers to. The fact stands either way; the overlay tells the truth regardless.
+          if (observeScpOutputLine(scpName, trimmed)) {
+            requestFactLicensedRestart(scpName, scpPath, 'nodemon app crashed');
+          }
           dispatchFromHandler((h) =>
             (h.muxium.deck as unknown as {
               d: {
@@ -351,6 +442,14 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
 
       // ─── MMUI registration ───
       setChildProcess(scpName, child);
+      // C1020 · the dir rides alongside the child — the daemon's teardown needs it to resolve this
+      // lane's graceful-exit address, and at teardown the registry is the only thing that still
+      // knows which SCPs this daemon spawned.
+      setScpPath(scpName, scpPath);
+
+      // TOH-7 · THE CLEAR-BACK (restart-begun): a spawn is fresh evidence that the prior crash is
+      // no longer the present truth — a fact that only ever SETS becomes a lie.
+      clearScpCrashState(scpName, 'restart-begun');
 
       // ─── FSTW M125 · Wave 1 · pending → booting on spawn entry ───
       // LSTM (M129) · Spawn-Event → FSM-Transition mapping:
@@ -382,6 +481,8 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
             port,
             elapsedMs: result.elapsedMs,
           });
+          // TOH-7 · THE CLEAR-BACK (healthy-boot): the server answered — the honest present truth.
+          clearScpCrashState(scpName, 'healthy-boot');
           // ─── FSTW M125 · Wave 2 · booting → ready (live surface) on probe success ───
           // D147 ALC Wave 2 dependency · this FSTW transition UNLOCKS the LOADED branch.
           // Pre-D148: fsmState stuck at 'pending' · Wave 2 never fires · every Enter routes
@@ -445,6 +546,9 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
         // marked exit is a deliberate user window-close (KillRequested); an
         // unmarked exit is a crash / teardown death (today's behavior EXACTLY).
         const wasVoluntaryClose = consumeVoluntaryClose(scpName);
+        // TOH-7 · CLASS A · the OS fact. A NON-voluntary lane exit is a crash without any text;
+        // a voluntary close is the user's own gesture and clears the fact.
+        observeScpLaneExit(scpName, code, signal ?? null, wasVoluntaryClose);
         // Q3 self-Concept dispatch via Tier-2 deck path
         dispatchFromHandler((h) =>
           h.muxium.deck.d.scp.d.scpSpawnManager.e.scpSpawnManagerSpawnExited({
@@ -574,6 +678,31 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
         browserUrl: 'http://localhost:' + port + '/',
       };
 
+      // C986 · step 2 · STAMP THE LANE. The ONE moment all four facts the surgical teardown needs
+      // are in scope together: the sovereign PORT (registry-read before spawn), the child's PID,
+      // its START TIME, and the SCP dir. The nodemon events.restart script reads this beside
+      // .bridge-restart.json and can then do what nodemon itself cannot — graceful-exit by port,
+      // wait, then signal by VERIFIED pid — which is what lets `pkill -9 -f` be DELETED, not
+      // narrowed.
+      //
+      // Written HERE, not in the SpawnSucceeded reducer: that quality carries the same four fields
+      // in one payload and looks like the obvious seat, but it is a `reducer:` only, and a file
+      // write in a pure state transition is wrong. THIS method is the side-effect-legal seat — it
+      // already writes the boot log and the C961 timing instrument.
+      //
+      // C995 · CARD 13 · THE CONFIG RIDES THE SAME STAMP. `nodemon.json` is consumed by nodemon
+      // ONCE, at launch, so nothing that can change may live there — a corrected hook on disk
+      // cannot reach a running lane (measured C994). Everything variable is written HERE instead,
+      // fresh on every spawn, and `lane-teardown.sh` SOURCES it. One writer per file: the mirror
+      // owns nodemon.json and the script; this method owns the lane.
+      writeScpLaneFile(scpPath, {
+        scpName,
+        port,
+        pid: succeededPayload.pid,
+        startedAt,
+        config: DEFAULT_LANE_CONFIG,
+      });
+
       console.log(
         '[Scp Spawn Manager] SpawnRequested → spawn():',
         scpName,
@@ -657,6 +786,7 @@ export const scpSpawnManagerSpawnRequested = createQualityCardWithPayload<
           };
         }).scpSpawnManager.e.scpSpawnManagerSpawnSucceeded(succeededPayload);
 
-      return strategyDetermine(succeededAction as never);
+      controller.fire(strategyDetermine(succeededAction as never));
+      return;
     }),
 });

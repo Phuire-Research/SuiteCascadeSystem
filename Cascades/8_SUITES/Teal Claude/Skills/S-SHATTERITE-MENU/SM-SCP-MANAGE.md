@@ -31,6 +31,13 @@ This menu is the bridge tools/call surface for installed SCPs — engagement, mo
 ║      → MCP tools/call dock_scp                           ║
 ║        {scpName, scpPort, logEndpoint}                   ║
 ║                                                          ║
+║  [M] Set Session Model <ulid>               [Yellow]     ║
+║      Choose the model this session RESUMES with.         ║
+║      → MCP tools/call scs_set_session_model              ║
+║        {sessionId, model}                                ║
+║      Current: <label> · undefined → default (Opus 5)     ║
+║      Alive session: takes effect at the next resume.     ║
+║                                                          ║
 ║  [S] Status — All Connected SCPs            [Yellow]     ║
 ║      Snapshot of bridge-registered SCPs.                 ║
 ║      → MCP tools/call get_scp_status {}                  ║
@@ -75,6 +82,7 @@ Each row carries the four-field MSCM annotation per Orange §3 — `toolName` ·
 |---|---|---|---|---|---|---|---|
 | `[L]` | Launch SCP | `scp_launch_session_management` | `scsBridge` | `scsBridgeActivateScpSession` | — | `scs scp launch <name>` | `{ ok: true, pid?, port? }` anor MCP error · composes ALHOC double-bind (Boot Overlay + spawn) · legacy `launch_scp` retained for backward-compat only |
 | `[D]` | Dock SCP | `dock_scp` | `scsBridge` | `scsBridgeRegisterScp` | — | `scs scp dock <name> --port <N> --log-endpoint <URL>` | `{ ok: true }` |
+| `[M]` | Set Session Model | `scs_set_session_model` | `scsBridge` | `scsBridgeSetSessionModel` | — | TUI hotkey `m` on the selected session row (the TUI calls registry `setSessionModel` in-process — the SAME function this tool's quality calls) | `{ ok: true }` · ACK-only · an unknown ULID is REFUSED · an off-catalog id no-ops (`registry.model.skipped`) |
 | `[S]` | Status | `get_scp_status` | `scsBridge` | `''` (strategy route) | `getScpStatusStrategy` | `scs scp status [name]` | `{ scps: [...], count: N }` |
 | `[O]` | Logs | `get_scp_logs` | `scsBridge` | `''` (strategy route) | `getScpLogsStrategy` | `scs scp logs <name>` | `{ logs: [...], count: N }` |
 | `[B]` | Open Browser | — (CLI direct) | `scsBridge` | `scsBridgeOpenBrowserTab` (direct dispatch) | — | `scs scp open <name>` | Browser tab opened |

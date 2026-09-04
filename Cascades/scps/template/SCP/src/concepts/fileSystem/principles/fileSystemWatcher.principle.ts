@@ -1,5 +1,5 @@
-import { watch } from 'chokidar';
 import { createPathSelector } from '../fileSystem.pathTransform';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import { FileSystemPrinciple } from '../fileSystem.concept';
 
 /**
@@ -27,7 +27,7 @@ export const fileSystemWatcherPrinciple: FileSystemPrinciple = ({ k_, d_, nextA,
           currentObservedPaths.forEach(pathToWatch => {
             // Only create watcher if it doesn't already exist
             if (!currentActiveWatchers.has(pathToWatch)) {
-              const watcher = watch(pathToWatch, {
+              const watcher = createWatcher('fileSystemWatcher#1', pathToWatch, {
                 ignoreInitial: true,
                 persistent: true,
                 depth: 99,

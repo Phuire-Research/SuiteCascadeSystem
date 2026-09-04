@@ -86,6 +86,7 @@ import { getBridgeVersion } from './bridgeVersion';
 import { resolveInstallState } from './installConstants';
 import { generateBaseSystemPrompt } from './baseSystemPrompt/baseSystemPrompt';
 import { log } from './debugLog';
+import { scpsJsonPath } from './paths';
 
 // ============================================
 // FACTORY OPTIONS
@@ -466,7 +467,7 @@ export function getActiveScsBridgeMuxiumHandle(): ScsBridgeMuxiumHandle | null {
 
 async function readInstalledScps(userCwd: string): Promise<string[]> {
   try {
-    const scpsPath = resolve(userCwd, 'Cascades', 'SCPs.json');
+    const scpsPath = scpsJsonPath(userCwd);
     const raw = await readFile(scpsPath, 'utf8');
     const parsed = JSON.parse(raw) as { scps?: Array<{ name?: string }> };
     if (!parsed || !Array.isArray(parsed.scps)) return [];

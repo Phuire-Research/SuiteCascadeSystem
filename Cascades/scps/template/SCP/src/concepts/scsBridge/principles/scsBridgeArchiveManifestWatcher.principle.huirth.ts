@@ -35,7 +35,8 @@
  * Citation: EPOCH-EXT-SE-S1-RED-CURATION.md Card 3 · EPOCH-EXT-SE-S4-GREEN-SCULPT.md Angle 1/2b.
  */
 import type { PrincipleFunction, MuxiumDeck, Concept, AnyAction } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import path from 'node:path';
 import type {
   ScsBridgeHuirthState,
@@ -123,7 +124,7 @@ export const scsBridgeArchiveManifestWatcherPrinciple: ScsBridgeArchiveManifestW
   const armArchiveWatcher = (d: any): void => {
     if (archiveWatchArmed) return; // idempotent — already armed (SSEB/PPOL).
     try {
-      archiveWatcher = chokidarWatch(ARCHIVE_ROOT, {
+      archiveWatcher = createWatcher('scsBridgeArchiveManifestWatcher#1', ARCHIVE_ROOT, {
         persistent: true,
         ignoreInitial: false,
         awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 50 },

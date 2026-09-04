@@ -15,6 +15,7 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
+import { workspaceBridgeDir } from '../bridge/paths';
 
 export type ScpInstallStage = 'cloning' | 'installing' | 'ready' | 'failed';
 
@@ -31,7 +32,7 @@ export type ScpInstallProgress = {
 };
 
 export function installProgressPath(projectRoot: string, designation: string): string {
-  return path.join(projectRoot, 'Cascades', 'Bridge', `scp-install-progress.${designation}.json`);
+  return path.join(workspaceBridgeDir(projectRoot), `scp-install-progress.${designation}.json`);
 }
 
 export function writeInstallProgress(projectRoot: string, p: ScpInstallProgress): void {

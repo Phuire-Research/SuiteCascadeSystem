@@ -27,7 +27,7 @@
 
 import { readFileSync, writeFileSync, realpathSync } from 'node:fs';
 import * as path from 'node:path';
-import { bridgeRoot } from '../paths';
+import { bridgeRoot, bridgeLogDir } from '../paths';
 
 const GENERATED_NAME = 'scs-bridge-base.generated.md';
 
@@ -46,7 +46,7 @@ const SKELETON_REL = path.join(
 // it: process.argv[1] is the cli entry (e.g. dist/cli.cjs, possibly a symlink);
 // realpathSync resolves the symlink; the package root is its grandparent
 // (dist/cli.cjs → <root>). Optional override for tests / direct callers.
-function resolvePackageRoot(cliPathOverride?: string): string {
+export function resolvePackageRoot(cliPathOverride?: string): string {
   const rawPath = cliPathOverride ?? process.argv[1] ?? '';
   if (!rawPath) {
     // Last-resort: assume the process cwd is the package root (dev / test).
@@ -62,13 +62,46 @@ function resolvePackageRoot(cliPathOverride?: string): string {
   return path.resolve(path.dirname(cliPath), '..');
 }
 
+// GUARD 8 (RESUME INDUCTION · Lane 7) · THE ONE PACKAGE-ROOT HELPER. Three
+// independently-maintained resolvers previously guessed the package root (paths.ts's
+// F3 pin, resolvePackageRoot above, and cli-handler's own copy inside
+// resolveDockContent) — and only the third carried the C755 second candidate, so a
+// packaging change could silently blank ONE layer while the others stayed correct.
+// The DUAL CANDIDATE lives here now and dockContent.ts reads through it.
+//
+// Candidate 1 — argv[1]-derived (dist/cli.cjs → grandparent = package root).
+// Candidate 2 — C755 · THE DEV-BRIDGE FALLBACK RUNG: under the DEV electron launch
+//   argv[1] is the app DIRECTORY (not dist/cli.cjs), so the argv-derived root lands a
+//   level too high. The bundled module lives at dist/main/, so __dirname/../.. IS the
+//   package root.
+// Order is load-bearing (argv FIRST); an empty argv[1] yields NO candidates, exactly as
+// the relocated cli-handler body did (`if (!rawPath) return ''`).
+export function resolvePackageRootCandidates(cliPathOverride?: string): string[] {
+  const rawPath = cliPathOverride ?? process.argv[1] ?? '';
+  if (!rawPath) return [];
+  let cliPath: string;
+  try {
+    cliPath = realpathSync(rawPath);
+  } catch {
+    cliPath = rawPath;
+  }
+  return [
+    path.resolve(path.dirname(cliPath), '..'),
+    path.resolve(__dirname, '..', '..'),
+  ];
+}
+
 function resolveSkeletonPath(cliPathOverride?: string): string {
   return path.join(resolvePackageRoot(cliPathOverride), SKELETON_REL);
 }
 
 // Deterministic generated-instance path · sibling to bridge.json under bridgeRoot().
 export function resolveGeneratedBasePromptPath(): string {
-  return path.join(bridgeRoot(), GENERATED_NAME);
+  // C1076 · PER ENVIRONMENT SEGMENT. The generated base carries THIS bridge's endpoint and port; written at the
+  // shared root, a named bridge's boot overwrote the unnamed production bridge's copy (measured: production's
+  // sessions received Dev's `ENDPOINT …:7113/mcp`). The segment dir (Cascades/Bridge/<Env>/) is the same sink
+  // the logs and the named sessions already use; production stays at the root, unchanged.
+  return path.join(bridgeLogDir(), GENERATED_NAME);
 }
 
 // Called ONCE at bridge startup, immediately after writeBridgeMetadata (port known).
@@ -80,11 +113,26 @@ export function generateBaseSystemPrompt(
   port: number,
   cliPathOverride?: string,
 ): string {
-  const skeleton = readFileSync(resolveSkeletonPath(cliPathOverride), 'utf8');
-  const generated = skeleton
-    .replace(/\{\{BRIDGE_ENDPOINT\}\}/g, endpoint)
-    .replace(/\{\{BRIDGE_PORT\}\}/g, String(port));
+  const generated = renderBaseSystemPrompt(endpoint, port, cliPathOverride);
   const outPath = resolveGeneratedBasePromptPath();
   writeFileSync(outPath, generated, 'utf8');
   return outPath;
+}
+
+// RESUME INDUCTION · THE FIRE-TIME LAW (the user, C1088): "the Resume Always Calls for
+// the Most Recent of All the Files we are Joining for the Dock." composeAppendedSystemPrompt
+// REGENERATES this layer at every compose, so the substitution must be reachable WITHOUT
+// the write — same skeleton, same tokens, one law (generateBaseSystemPrompt above now
+// renders through it, so startup and fire time can never drift). Pure read + substitute:
+// throws only when the skeleton itself is unreadable (the caller degrades to the on-disk
+// base — the spawn never breaks).
+export function renderBaseSystemPrompt(
+  endpoint: string,
+  port: number,
+  cliPathOverride?: string,
+): string {
+  const skeleton = readFileSync(resolveSkeletonPath(cliPathOverride), 'utf8');
+  return skeleton
+    .replace(/\{\{BRIDGE_ENDPOINT\}\}/g, endpoint)
+    .replace(/\{\{BRIDGE_PORT\}\}/g, String(port));
 }

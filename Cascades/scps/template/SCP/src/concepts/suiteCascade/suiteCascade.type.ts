@@ -37,7 +37,9 @@ export const suiteCascadeName = 'suiteCascade';
 //
 // Citation: scsBridge.type.ts ScsBridgeSubPage union (local UI selector pattern).
 // Citation: MASTER-DIAMOND-SUITECASCADE-CONCEPT-ASPIRANT.md §3 (HCD SubPage triad).
-export type SuiteCascadeSubPage = 'home' | 'component' | 'documentation';
+// C1053 · 'update' joins the union — THE COMPUTER's update surface (the SCS itself), distinct from
+// GitM's, which updates THE PROGRAM (the SCP). The SCS encloses the SCP; two circuits, two pages.
+export type SuiteCascadeSubPage = 'home' | 'component' | 'documentation' | 'update';
 
 // ============================================
 // CASCADE + FILE-ENTRY TYPES

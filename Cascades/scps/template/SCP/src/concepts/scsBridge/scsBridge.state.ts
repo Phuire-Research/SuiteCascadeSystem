@@ -117,9 +117,15 @@ export function createScsBridgeClientState(): ScsBridgeClientState {
     // EF-3′ · THE TARGET S8 THREAD · undefined = target-less conduction. A string names the
     // Suite 8 PAGE the Forge is commissioned to formalize (persisted on the registry entry).
     pendingSpawnSuite8TargetName: undefined,
-    // MD-9 · D-MC-3 · Per-Instance Model Control · seeded to the default model so the dropdown
-    // opens on Opus 4.8 and every spawn threads a model unless the user chooses otherwise.
-    pendingSpawnModel: SCS_DEFAULT_MODEL,
+    // RM-2 · THE ANCHOR MODEL ROW · undefined = not supplied; null = bypass the pin; string = this spawn's model.
+    pendingSpawnSuite8Model: undefined,
+    // MD-9 · D-MC-3 · Per-Instance Model Control · C1104 RULING A: seeded UNDEFINED. This
+    // seed was the UPSTREAM half of the birth stamp — the dropdown's own state opened on
+    // the default, so payload.model was an explicit id on essentially every UI-driven
+    // spawn and nothing could tell "the user picked Opus 5" from "nobody touched it".
+    // undefined ⇒ the spawn records no model; the pickers still DISPLAY the derived
+    // default, and the bridge still injects it as a flag on a genuine new spawn.
+    pendingSpawnModel: undefined,
     pendingEngageSessionId: null,
     // D3RM-E · CMIA-Focus trigger · null = no focus pending. Principle gates on string.
     pendingFocusSessionId: null,
@@ -203,6 +209,8 @@ export const SCSBRIDGE_FILTER_KEYS: string[] = [
   'pendingSpawnSuite8Onboard',
   // THE PLAIN-SPAWN LANE companion (client-local; not bidirectionally synced)
   'pendingSpawnSuite8Anchor',
+  // RM-2 · THE ANCHOR MODEL ROW companion (client-local; not bidirectionally synced)
+  'pendingSpawnSuite8Model',
   // MD-9 · D-MC-3 · Per-Instance Model Control selection (client-local; not bidirectionally synced)
   'pendingSpawnModel',
   'pendingEngageSessionId',

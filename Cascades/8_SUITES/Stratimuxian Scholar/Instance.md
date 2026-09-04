@@ -16,6 +16,33 @@ The Stratimuxian Scholar is the Suite 8 responsible for Stratimux framework know
 
 ---
 
+## The Router (the doors this Suite opens)
+
+The Instance names the door; the Skill or Strategy expands the specifics as the sequence reaches it. Each Skill is one-shot — read the door directly, no relay through the full reference.
+
+| Aspect anor domain | The door | Loads when |
+|---|---|---|
+| **Foundation anor version ground** — Four Pillars, v0.3.2 breaking changes, Higher-Order paradigm, the M58/M61/M63 recognition check | `Skills/S1-Framework-Foundation/Skill.md` | Onboarding a project · correcting a legacy (Axium-era) pattern · before any from-scratch implementation begins |
+| **Tiered composition** — Tier 0/1/2, the ECK Limitation anor Flattening, runtime muxification, external consumer deck access (Card 18) | `Skills/S2-StratiDECK-Composition/Skill.md` | Composing via `muxifyConcepts` · designing a DECK type · auditing a deck-structural cast (M65 + M67) |
+| **Planning context anor stage flow** — Outer Plan anor Principle, the Single Dispatch Rule, stage options, two-stage KeyedSelector routing, the Synchronizing Principle | `Skills/S3-Planning-Stage-Control/Skill.md` | Writing `muxium.plan()` · building a reactive monitoring loop · debugging stage progression · a migration owing runtime smoke (M66 · M68) |
+| **Strategy orchestration** — architecture, success anor failure branching, `selectStratiDECK` creator functions, the Deck type parameter | `Skills/S4-ActionStrategy-Orchestration/Skill.md` | Building a multi-step workflow · composing a reusable strategy · choosing Strategy over Plan |
+| **Strategy data anor time** — the Universal Transformer, `muxiumTimeOut` deferred continuation, async method patterns, ActionController single-use scope | `Skills/S5-Strategy-Data-Temporal/Skill.md` | Passing data between qualities in a strategy · deferring a continuation · expanding the action stream temporally |
+| **Bi-directional Ownership** — `stageO()`, stake-based FIFO priority, off-premise actions, the ownership caveats | `Skills/S6-Ownership-Coordination/Skill.md` | Coordinating concurrent strategies · gating a contested resource · ownership-aware planning |
+| **Dispatch selection** — outer muxium anor stage dispatch, overflow prevention, shortest path, principle-side `observer.next` (M59), PDRC startup rescan | `Skills/S7-Dispatch-Patterns/Skill.md` | Choosing a dispatch form · diagnosing a lockup anor action overflow · re-confirming an admission strategy at startup |
+| **2nd-tier muxified access** — muxified state anor action, TypeScript recursive limits, SCT 4 Invariants, Container Re-Muxification (M64), Card 18 grep (M65 · M67) | `Skills/S8-Muxified-Concept-Access/Skill.md` | Reaching a concept composed within another · resolving direct-vs-muxified ambiguity · re-muxifying a container |
+| **Reactive state selection** — the DECK K Constant across principle, plan, and `createMethodWithConcepts` contexts; KeyedSelector; legacy migration | `Skills/S9-DECK-K-State-Access/Skill.md` | Selecting state · coordinating state across concepts · resolving a concept name dynamically |
+| **Quality cards** — the 6 patterns, Verbose Split Naming, explicit type exports, CSRP 7-slot completeness (M71), MMUI module-map, WGHA handler guard | `Skills/S10-Quality-Creation/Skill.md` | Creating or reviewing any `*.quality.ts` · designing a method creator · completing a menu-state machine |
+| **Testing anor async state** — Jest done-callback, state timing, stage separation, muxified-concept tests, the integration smoke (M66 complement) | `Skills/S11-Testing-Patterns/Skill.md` | Writing or repairing `test/*.test.ts` · a test failing on state timing · standing Jest up against a Muxium |
+| **Reducer performance** — the Shortest Path Principle, partial anor empty returns, spread anti-patterns, profiling | `Skills/S12-Reducer-Performance/Skill.md` | Writing or reviewing a reducer · diagnosing excess re-renders anor slow state updates |
+| **State architecture** — normalization, reactivity boundaries, the optional-property anti-pattern (KeyedSelector), Canonical Registry Source (M69), dual-registry divergence, `filterKeys` discipline | `Skills/S13-State-Design-Composition/Skill.md` | Designing a new state type · planning composition across concepts · auditing state for KeyedSelector compatibility |
+| **Authoring when NO precedent stands** — pre-implementation recognition, file-structure baseline, SCT anor CRM, the Card 18 protocol, M69, CSRP, the 4-Layer Cinnabar Dialectic pre-commit gate (M72) | `Skills/S14-From-Scratch-Manifold/Skill.md` | A new Concept anor cluster from scratch · bringing a pattern over from an authoritative reference project · migrating a flat cluster into a container |
+| **Muxonomic Concept authoring (framework-general)** — MCUC pairing, FNES filename grammar, DCQF deployment split, DQWDS anor CISV Diameter junction qualities, MSDT self-documentation, ZKHP handoff, TOBM bridge model, VCIP Vue Island | `Skills/S15-Muxonomy-Concept-Authoring/Skill.md` | A Concept spanning Client anor Huirth · adding `*.muxonomy.ts` · a quality crossing the WebSocket boundary · the Vue handoff · Copy-Paste-Plus from Notification (M63) |
+| **The minimum Muxameter, concretely** — the Notification Concept: 15-file map, 5 Demometers anor 5 Diameters, the 14-hop HelloWorld walkthrough, Pewter Tessera Diameter, gaps G1-G7 | `Skills/S16-Notification-Muxameter-Exemplar/Skill.md` | Reading a live Muxameter end to end · using Notification as the Copy-Paste-Plus source · preparing scsBridgeMirror authoring (SBM Macro 2) |
+
+The Scholar holds **no `Strategy/`** — its sequences ride the Verification Concluders carried inside the Skills themselves (S2 · S3 · S7 · S8 · S10 · S14 §7.7 · S15 §13). Maintenance of the Scholar itself enters through `Maintainer.md`.
+
+---
+
 ## Critical Stratimux Patterns
 
 ### Verbose Split Naming Convention (NON-NEGOTIABLE)

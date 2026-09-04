@@ -38,7 +38,8 @@ import type { Deck, MuxiumDeck, PrincipleFunction } from 'stratimux';
 import type { Request, Response } from 'express';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import type { ServerDeck } from '../../server/server.concept';
 import type { ScsBridgeState, ScsBridgeQualities } from '../scsBridge.types';
 import {
@@ -46,7 +47,7 @@ import {
   resolveSuite8InstanceMd,
 } from '../../../instanceMdResolver.model';
 import { log } from '../../../debugLog';
-import { fenceWatchTargets } from '../../../watcherFence.model';
+import { workspaceBridgeDir } from '../../../paths';
 
 type ScsBridgeSuite8PickerDeck = Deck<MuxiumDeck & ServerDeck>;
 
@@ -157,7 +158,7 @@ export function fetchSuite8Available(scpRootOverride?: string): Suite8PickerEntr
  */
 function resolveBoundScpDir(scpName: string): string | undefined {
   try {
-    const bridgeJsonPath = join(process.cwd(), 'Cascades', 'Bridge', 'bridge.json');
+    const bridgeJsonPath = join(workspaceBridgeDir(process.cwd()), 'bridge.json');
     const raw = readFileSync(bridgeJsonPath, 'utf8');
     const bj = JSON.parse(raw) as { boundScps?: Record<string, { dir?: unknown }> };
     const dir = bj.boundScps?.[scpName]?.dir;
@@ -235,7 +236,7 @@ export const suite8PickerEndpointPrinciple: PrincipleFunction<
       void suite8Watcher.close();
     }
     try {
-      const watcher = watch(fenceWatchTargets('suite8PickerEndpoint', suitesRoot, process.cwd()), {
+      const watcher = createWatcher('suite8PickerEndpoint', suitesRoot, process.cwd(), {
         ignoreInitial: true,
         persistent: true,
         depth: 1,

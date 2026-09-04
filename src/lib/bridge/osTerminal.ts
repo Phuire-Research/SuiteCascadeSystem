@@ -11,6 +11,14 @@ export type BuildTerminalCommandInput = {
   settingsPath: string | null;
   claudeUuid?: string;
   appendSystemPromptFile?: string | null;
+  // C1104 · ruling A · MODEL CONTROL AT THE TUI/ATTACH DOOR. This door carried NO model
+  // clause at all before (Lane 7 row 11: `grep -c model osTerminal.ts` returned 0), so a
+  // `scs attach` / TUI resume ignored entry.model entirely. null ⇒ EMIT NOTHING — that
+  // omission IS ruling A at this layer (the user's own /model default applies). Threaded
+  // into ALL SEVEN platform branches: the four that share buildClaudeCommandFragment
+  // (macOS · linux-xterm · windows-cmd · wsl) AND the three that assemble args by hand
+  // (gnome-terminal · konsole · wt.exe).
+  model?: string | null;
   // Diamond B-16 (CD-46 PCSP · Positional [prompt] Cascade Seeding Pattern):
   // documented at code.claude.com/docs/en/cli-reference — `claude "query"` is
   // "Start interactive session with initial prompt." Applied only when
@@ -73,6 +81,7 @@ function buildClaudeCommandFragment(
   inAppleScript: boolean,
   escapedAppendPath?: string | null,
   shellEscapedSeedPrompt?: string | null,
+  model?: string | null,
 ): string {
   // Boundary-quote pattern: when embedded inside AppleScript `do shell script "..."`,
   // wrap path with \\"...\\" so the wrapper persists into the shell layer below.
@@ -91,17 +100,21 @@ function buildClaudeCommandFragment(
   // Caller is responsible for passing pre-bash-escaped string (escapeForBashSingleQuote);
   // this function additionally applies AppleScript escape if needed.
   const seedClause = mode === 'new' && shellEscapedSeedPrompt ? ` ${shellEscapedSeedPrompt}` : '';
+  // C1104 · ruling A · the model clause, null-guarded EXACTLY like settingsClause above:
+  // a null/absent model emits the empty string, so `claude` runs with no --model flag and
+  // the user's own /model default applies. Boundary-quoted with the same `q` discipline.
+  const modelClause = model != null && model !== '' ? ` --model ${q}${model}${q}` : '';
   if (mode === 'resume') {
     if (!claudeUuid) {
       throw new Error('claudeUuid required for resume mode');
     }
-    return `claude --resume ${claudeUuid}${settingsClause}${appendClause}`;
+    return `claude --resume ${claudeUuid}${settingsClause}${appendClause}${modelClause}`;
   }
-  return `claude${settingsClause}${appendClause}${seedClause}`;
+  return `claude${settingsClause}${appendClause}${modelClause}${seedClause}`;
 }
 
 function buildMacOSCommand(input: BuildTerminalCommandInput): BuildTerminalCommandOutput {
-  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt } = input;
+  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt, model } = input;
   const escapedCwd = escapeForOsascript(cwd);
   // Diamond O Issue 1: preserve null through escape so buildClaudeCommandFragment
   // can omit the --settings clause for synthesized resumes.
@@ -135,6 +148,7 @@ function buildMacOSCommand(input: BuildTerminalCommandInput): BuildTerminalComma
     true,
     escapedAppend,
     escapedSeed,
+    model ?? null, // BRANCH 1/7 · macOS Terminal
   );
   const inner = `cd \\"${escapedCwd}\\" && ${claudeFragment}`;
   const appleScriptExpr = `tell application "Terminal" to do script "${inner}"`;
@@ -148,7 +162,7 @@ function buildMacOSCommand(input: BuildTerminalCommandInput): BuildTerminalComma
 }
 
 function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalCommandOutput {
-  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt } = input;
+  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt, model } = input;
   const terminal = selectLinuxTerminal();
   // Diamond O Issue 1 (branch-level null guard): when settingsPath is null,
   // omit ['--settings', path] from the args array. Spawn would otherwise
@@ -160,9 +174,12 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
   // — Node passes argv directly to the spawned process; only the bash-c branch
   // composes a shell string).
   const seedArgs: string[] = mode === 'new' && seedPrompt ? [seedPrompt] : [];
+  // C1104 · ruling A · the hand-assembled branches (gnome-terminal · konsole) get the
+  // same null guard as settingsArgs: absent ⇒ NO ['--model', id] pair at all.
+  const modelArgs: string[] = model != null && model !== '' ? ['--model', model] : [];
   let args: string[];
   switch (terminal) {
-    case 'gnome-terminal':
+    case 'gnome-terminal': // BRANCH 2/7 · manual args
       args =
         mode === 'resume'
           ? [
@@ -174,6 +191,7 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
               claudeUuid ?? '',
               ...settingsArgs,
               ...appendArgs,
+              ...modelArgs,
             ]
           : [
               '--working-directory',
@@ -182,10 +200,11 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
               'claude',
               ...settingsArgs,
               ...appendArgs,
+              ...modelArgs,
               ...seedArgs,
             ];
       break;
-    case 'konsole':
+    case 'konsole': // BRANCH 3/7 · manual args
       args =
         mode === 'resume'
           ? [
@@ -197,8 +216,18 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
               claudeUuid ?? '',
               ...settingsArgs,
               ...appendArgs,
+              ...modelArgs,
             ]
-          : ['--workdir', cwd, '-e', 'claude', ...settingsArgs, ...appendArgs, ...seedArgs];
+          : [
+              '--workdir',
+              cwd,
+              '-e',
+              'claude',
+              ...settingsArgs,
+              ...appendArgs,
+              ...modelArgs,
+              ...seedArgs,
+            ];
       break;
     case 'x-terminal-emulator':
     case 'xterm':
@@ -212,6 +241,7 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
         false,
         appendSystemPromptFile,
         escapedSeed,
+        model ?? null, // BRANCH 4/7 · linux xterm / x-terminal-emulator
       );
       args = ['-e', 'bash', '-c', `cd "${cwd}" && ${claudeFragment}`];
       break;
@@ -227,7 +257,7 @@ function buildLinuxCommand(input: BuildTerminalCommandInput): BuildTerminalComma
 }
 
 function buildWindowsCommand(input: BuildTerminalCommandInput): BuildTerminalCommandOutput {
-  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt } = input;
+  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt, model } = input;
   const hasWt = probeExecutable('wt');
   // Diamond O Issue 1 (branch-level null guard): omit ['--settings', path]
   // when settingsPath is null; spawn would otherwise serialize null as "null".
@@ -236,13 +266,26 @@ function buildWindowsCommand(input: BuildTerminalCommandInput): BuildTerminalCom
     appendSystemPromptFile != null ? ['--append-system-prompt-file', appendSystemPromptFile] : [];
   // Diamond B-16 PCSP: positional arg as separate spawn arg.
   const seedArgs: string[] = mode === 'new' && seedPrompt ? [seedPrompt] : [];
+  // C1104 · ruling A · same null guard for the hand-assembled wt.exe branch.
+  const modelArgs: string[] = model != null && model !== '' ? ['--model', model] : [];
   if (hasWt) {
     // wt.exe -d <cwd> shorthand for --startingDirectory; -d requires Windows
     // Terminal 1.5+ (released 2021).
+    // BRANCH 5/7 · Windows Terminal wt.exe · manual args
     const args =
       mode === 'resume'
-        ? ['-d', cwd, '--', 'claude', '--resume', claudeUuid ?? '', ...settingsArgs, ...appendArgs]
-        : ['-d', cwd, '--', 'claude', ...settingsArgs, ...appendArgs, ...seedArgs];
+        ? [
+            '-d',
+            cwd,
+            '--',
+            'claude',
+            '--resume',
+            claudeUuid ?? '',
+            ...settingsArgs,
+            ...appendArgs,
+            ...modelArgs,
+          ]
+        : ['-d', cwd, '--', 'claude', ...settingsArgs, ...appendArgs, ...modelArgs, ...seedArgs];
     return {
       cmd: 'wt',
       args,
@@ -260,6 +303,7 @@ function buildWindowsCommand(input: BuildTerminalCommandInput): BuildTerminalCom
     false,
     appendSystemPromptFile,
     escapedSeedCmd,
+    model ?? null, // BRANCH 6/7 · Windows cmd
   );
   const innerCmd = `cd /d ${escapeForCmd(cwd)} && ${claudeFragment}`;
   const args = ['/c', 'start', '""', 'cmd', '/k', innerCmd];
@@ -273,7 +317,7 @@ function buildWindowsCommand(input: BuildTerminalCommandInput): BuildTerminalCom
 }
 
 function buildWSLCommand(input: BuildTerminalCommandInput): BuildTerminalCommandOutput {
-  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt } = input;
+  const { cwd, mode, settingsPath, claudeUuid, appendSystemPromptFile, seedPrompt, model } = input;
   // Diamond B-16 PCSP: bash single-quote escape for the inner shell command.
   const escapedSeed = mode === 'new' && seedPrompt ? escapeForBashSingleQuote(seedPrompt) : null;
   const claudeFragment = buildClaudeCommandFragment(
@@ -283,6 +327,7 @@ function buildWSLCommand(input: BuildTerminalCommandInput): BuildTerminalCommand
     false,
     appendSystemPromptFile,
     escapedSeed,
+    model ?? null, // BRANCH 7/7 · WSL
   );
   const innerCmd = `cd "${cwd}" && ${claudeFragment}`;
   const args = ['wsl.exe', '--', 'bash', '-c', innerCmd];

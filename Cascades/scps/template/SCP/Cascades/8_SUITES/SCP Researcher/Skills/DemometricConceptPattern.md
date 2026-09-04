@@ -8,6 +8,29 @@
 
 ---
 
+## Curation
+The SCP paradigm enables ONE logical Concept to live as TWO independently-created Stratimux concepts — a Huirth face and a Client face sharing a name and a set of Verbose Split type-strings — joined by the WebSocket as an active Diameter. What is enabled here is structural ground BEFORE authoring: the dual face (DCFM), the wire as through-measure (WSDM), the persistent-vs-island lifecycle (PCIP / TBAA / CIMB), and the sharpest edge — in the ClientToServer direction the Induction lives on the CLIENT file. The exemplar is `scsBridge`, shipping in every SCP; this Skill reads it rather than recalling it.
+
+## Research
+`<SCP>` = the SCP this seat sits in — the directory holding `scp.config.json`, three levels above this file. Every step is a literal command; run it, report what RETURNS, never what the body below says should return (`Instance.md` §"Operating Principle" · B). The body's `file:line` anchors are the Cycle 172 snapshot — the FILES hold, the LINES have moved (measured C1124: `scsBridgeName` :35 → :43 · `scsBridgeHuirthName` :49 → :62 · `createScsBridgeClientConcept` :98 → :130 · `createScsBridgeHuirthConcept` :68 → :88 · the Induction map :60-61 → :78-79 · `actionExchange.clientToServer` :296 → :355 · `serverToClient` :308 → :375 · `client.muxonomy.ts` now at `src/concepts/client/client.muxonomy.ts` with `BASE_CONCEPTS_CREATORS` at :83). Anchor by SYMBOL, never by frozen line:
+
+1. Identity — `cat <SCP>/scp.config.json` → `scpName`; `ls <SCP>/src/concepts/` — the Demometers THIS SCP composes (context-dependent; Stratithon adds `meteoricShipwright`).
+2. DCFM — the two faces share the name: `grep -n "scsBridgeName = \|scsBridgeHuirthName = " <SCP>/src/concepts/scsBridge/scsBridge.type.ts <SCP>/src/concepts/scsBridge/scsBridge.concept.huirth.ts`; the two factories: `grep -n "createScsBridgeClientConcept\|createScsBridgeHuirthConcept" <SCP>/src/concepts/scsBridge/scsBridge.concept.client.ts <SCP>/src/concepts/scsBridge/scsBridge.concept.huirth.ts`.
+3. THE SHARPEST EDGE (§D) — the Induction is on the CLIENT file: `grep -n "Induction" <SCP>/src/concepts/scsBridge/scsBridge.concept.client.ts` (the `…Induction` imports and their map entries) and `grep -c "Induction" <SCP>/src/concepts/scsBridge/scsBridge.concept.huirth.ts` (expect `0` — the Huirth file holds Reals only; measured `0` at C1124). The Induction itself: `grep -n "Induction = createInductionQualityCardWithPayload" <SCP>/src/concepts/scsBridge/qualities/sendBridgeMessage.quality.client.diameter.ts` (expect 1).
+4. AESR — the type-string is identical in three places: `grep -rl "Scs Bridge Send Bridge Message" <SCP>/src/concepts/scsBridge | wc -l` (expect ≥ 3: `scsBridge.muxonomy.ts` · the `.client.diameter.ts` · the `.huirth.diameter.ts`; measured 3 at C1124).
+5. WSDM — both directions declared: `grep -n "clientToServer\|serverToClient" <SCP>/src/concepts/scsBridge/scsBridge.muxonomy.ts`; SMRP alive: `test -f <SCP>/src/concepts/scsBridge/principles/scsBridgeStateMirror.principle.huirth.ts`.
+6. PCIP — the persistent set: `grep -n -A 12 "export const BASE_CONCEPTS_CREATORS" <SCP>/src/concepts/client/client.muxonomy.ts` — read WHICH concepts are persistent on THIS SCP (the set has grown since C172: `gitm` declares itself a BASE concept in its own header).
+7. §E dual state — `grep -n "ScsBridgeClientState\|ScsBridgeHuirthState" <SCP>/src/concepts/scsBridge/scsBridge.type.ts | head` (both types present = the dual-state variant holds).
+
+Inward only. No generated artifact is read here; freshness IS the symbol grep — a symbol that does not return has moved or died, and that is the finding.
+
+## Return
+- Sentence: "On `<scpName>` the `scsBridge` exemplar holds: Induction on the Client file (`<n>` Induction symbols · Huirth `0`), the type-string in `<3>` files, both `actionExchange` directions declared."
+- Section: the Sentence + the DCFM name / factory anchors + the persistent set from `BASE_CONCEPTS_CREATORS` + the concepts this SCP adds.
+- Vermillion: the §I checklist as Bands (direction · state shape · lifecycle · Diameter registration · CISV · AESR · → SCP-S13 · Concluder) — for an ask that is "design my Concept".
+- Diamond: a structural pattern the exemplar does not exhibit — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law).
+---
+
 ## §A · Pearl Summary
 
 A Concept in the SCP runtime is a **Demometer** — a distinct, measurable unit of state and behavior — that draws **Diameters** (through-measures of similarity) to the *other side* of the runtime across a WebSocket. The SCP runtime has two halves: a **Huirth** Muxium (the Node server process) and a **Client** Muxium (the browser/Vue process). A "Demometric Concept" is ONE logical Concept that lives on BOTH halves with independently-created Stratimux concepts sharing a single name. This Skill names six patterns — **DCFM** (the dual-face structure), **WSDM** (the WebSocket-as-Diameter), **PCIP** / **TBAA** / **CIMB** (the persistent-vs-island lifecycle), with **CSCM** cross-referenced — and the single sharpest edge a contributor will cut themselves on: the **ClientToServer CISV Induction-placement rule** (§D). Read this Skill BEFORE SCP-S13 (`Skills/ConceptAuthoring.md`); S13 is the eight-phase authoring procedure that generates a Concept *from the mental model this Skill installs*. The Diameter S14↔S13 is circular-structural: S14 routes to S13 for the How, S13 forward-points to S14 for the What/Why — neither is parent.

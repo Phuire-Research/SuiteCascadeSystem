@@ -1,6 +1,6 @@
 import { statSync, readFileSync, writeFileSync, renameSync, appendFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { bridgeRoot } from './paths';
+import { bridgeRoot, bridgeLogDir } from './paths';
 
 // D-LHT · Log auto-truncation. Doc-grounded (WebSearch): electron-log (the desktop peer) caps at
 // ~1MB/file; server tools (winston '20m' · pino '10m') run 10-20×. Our sinks hit 342MB — grossly
@@ -54,7 +54,7 @@ export function capLogFile(
  * alt-screen, piped here as JSONL instead. Self-capping via capLogFile.
  */
 export function terminalOutputPath(): string {
-  return join(bridgeRoot(), 'terminal-output.json');
+  return join(bridgeLogDir(), 'terminal-output.json');
 }
 
 export function appendTerminalOutput(stream: string, text: string): void {

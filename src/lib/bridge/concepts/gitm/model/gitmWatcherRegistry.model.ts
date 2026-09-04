@@ -23,12 +23,12 @@
  * Citation: MC-W2 (THE WATCHER PLURALITY · brief step 6).
  */
 
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { log } from '../../../debugLog';
-import { fenceWatchTargets } from '../../../watcherFence.model';
 
 export type GitmScpWatcherPair = {
   gitWatcher: FSWatcher | null;
@@ -83,7 +83,7 @@ export function armWatchersForScp(
     join(gitDir, 'refs', 'stash'),
   ];
   try {
-    const gitWatcher = watch(fenceWatchTargets('gitmWatcherRegistry.git', gitTargets, userCwd), {
+    const gitWatcher = createWatcher('gitmWatcherRegistry.git', gitTargets, userCwd, {
       ignoreInitial: true,
       persistent: true,
       depth: 1,
@@ -105,7 +105,7 @@ export function armWatchersForScp(
 
   // ── tree watcher (working-tree change count) — MIRROR gitmScpWatcherArm ──
   try {
-    const scpWatcher = watch(fenceWatchTargets('gitmWatcherRegistry.tree', [scpDir], userCwd), {
+    const scpWatcher = createWatcher('gitmWatcherRegistry.tree', [scpDir], userCwd, {
       ignored: [/(^|[/\\])\.git([/\\]|$)/],
       ignoreInitial: true,
       persistent: true,

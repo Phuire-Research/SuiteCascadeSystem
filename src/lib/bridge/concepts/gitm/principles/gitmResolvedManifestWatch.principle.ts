@@ -29,14 +29,15 @@
  */
 
 import type { PrincipleFunction } from 'stratimux';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../watcherSingleton.model';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { log } from '../../../debugLog';
 import { getActiveScsBridgeMuxiumHandle } from '../../../scsBridgeMuxium';
-import { fenceWatchTargets } from '../../../watcherFence.model';
 import type { GitmState } from '../gitm.types';
 import type { GitmQualities } from '../gitm.concept';
+import { workspaceBridgeDir } from '../../../paths';
 
 // Module-scope arm guard + per-file mtime dedup (a re-fired event on the same write is a no-op).
 let manifestWatcher: FSWatcher | null = null;
@@ -115,10 +116,10 @@ export const gitmResolvedManifestWatchPrinciple: PrincipleFunction<
         }
         const userCwd = k_.userCwd.select();
         if (userCwd === '') return; // not yet populated · retry on the next beat
-        const bridgeDir = join(userCwd, 'Cascades', 'Bridge');
+        const bridgeDir = workspaceBridgeDir(userCwd);
         if (!existsSync(bridgeDir)) return; // no Bridge dir yet · retry on the next beat
         try {
-          manifestWatcher = watch(fenceWatchTargets('gitmResolvedManifestWatch', [bridgeDir], userCwd), {
+          manifestWatcher = createWatcher('gitmResolvedManifestWatch', [bridgeDir], userCwd, {
             ignored: [/(^|[/\\])\.git([/\\]|$)/],
             ignoreInitial: true,
             persistent: true,

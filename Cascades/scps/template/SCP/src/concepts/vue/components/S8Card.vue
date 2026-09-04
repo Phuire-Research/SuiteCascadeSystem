@@ -502,12 +502,51 @@ async function toggleStrategy(name: string) {
 // ============================================
 // THE READER ROW (Skills + Strategies RETIRED into their grids) + the in-card reader pane.
 // ============================================
-type ReaderKind = 'instance' | 'conductor' | 'maintainer';
+// 'dock' = THE DOCK — the WHOLE fully appended system prompt the bridge CLI composes at every
+// resume (base + the dock layer + Instance.md joined), read from the bridge seat. NOTE the two
+// referents: "the dock layer" (lower case) is the composer's MIDDLE layer alone; this reader
+// shows the WHOLE file. Unlike its three siblings (SCP-local 8_SUITES docs, raw text/markdown)
+// it reads a JSON envelope from a DIFFERENT root — the bridge seat, not suite8RiBase.
+type ReaderKind = 'instance' | 'conductor' | 'maintainer' | 'dock';
 const READER_ROW: ReadonlyArray<{ kind: ReaderKind; label: string }> = [
   { kind: 'instance', label: 'Instance' },
   { kind: 'conductor', label: 'Conductor' },
   { kind: 'maintainer', label: 'Maintainer' },
+  { kind: 'dock', label: 'Dock' },
 ];
+
+/** The Dock route's JSON envelope (vue.principle.ts · GET /s8/:name/dock). */
+type DockEnvelope = {
+  designation: string;
+  /** THE NAMING AXIS · 'unnamed' (the bridge seat IS the Bridge root) or the bridge's Name. */
+  bridgeName: string;
+  path: string;
+  exists: boolean;
+  bytes: number;
+  mtime: number | null;
+  instanceMtime: number | null;
+  text: string | null;
+};
+const dockInfo = ref<DockEnvelope | null>(null);
+const dockShowAll = ref<boolean>(false);
+// A RENDER-SIDE guard, independent of the composer's own 80 KB warn (which is composer-side,
+// advisory and invisible to this page — no hard cap exists anywhere).
+const DOCK_RENDER_CHAR_GUARD = 120_000;
+
+/** Fetch the Dock envelope; null = unrouted/SPA-shell/network (the honest absent note). */
+async function fetchDockEnvelope(url: string): Promise<DockEnvelope | null> {
+  const r = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!r.ok) return null;
+  const ct = (r.headers.get('content-type') ?? '').toLowerCase();
+  const body = await r.text();
+  if (looksLikeSpaShell(ct, body)) return null;
+  try {
+    const parsed = JSON.parse(body) as DockEnvelope;
+    return parsed && typeof parsed.path === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 const activeReader = ref<ReaderKind | null>(null);
 const readerBusy = ref<boolean>(false);
@@ -523,6 +562,10 @@ function readerUrl(kind: ReaderKind): string {
       return `${base}/conductor`;
     case 'maintainer':
       return `${base}/maintainer`;
+    case 'dock':
+      // THE ONE structural divergence from the trio: this route resolves off the BRIDGE SEAT
+      // (<bridgeRoot>[/<Name>]/scs-bridge-suite8-<safeName>.generated.md), not suite8RiBase.
+      return `${base}/dock`;
   }
 }
 
@@ -532,10 +575,33 @@ async function openReader(kind: ReaderKind) {
     return;
   }
   activeReader.value = kind;
+  await loadReader(kind);
+}
+
+// The fetch body, split out of openReader so the Dock pane's Refresh action (ruling p: fetch on
+// open + a manual Refresh, NO timer — the audit is a deliberate act) re-runs the identical read.
+async function loadReader(kind: ReaderKind) {
   readerBusy.value = true;
   readerAbsent.value = false;
   readerContent.value = '';
+  if (kind === 'dock') {
+    dockInfo.value = null;
+    dockShowAll.value = false;
+  }
   try {
+    if (kind === 'dock') {
+      // THE DOCK reads a JSON ENVELOPE (provenance + text), not a raw markdown body.
+      const envelope = await fetchDockEnvelope(readerUrl(kind));
+      if (envelope === null) {
+        readerAbsent.value = true; // unrouted / SPA shell / bad body → honest absent
+        return;
+      }
+      dockInfo.value = envelope;
+      readerContent.value = envelope.text ?? '';
+      // exists:false is an HONEST 200 — the Dock is simply not composed on this seat yet.
+      readerAbsent.value = !envelope.exists || readerContent.value.trim().length === 0;
+      return;
+    }
     // W2 · guarded — SPA-HTML shell → null → the honest absent note (never the raw shell in the pre).
     const text = await fetchDocText(readerUrl(kind));
     if (text === null) {
@@ -551,8 +617,40 @@ async function openReader(kind: ReaderKind) {
   }
 }
 
+/** Ruling p · the pull partner — a deliberate re-read of the OPEN pane. No interval. */
+async function refreshReader() {
+  if (activeReader.value) await loadReader(activeReader.value);
+}
+
 const activeReaderLabel = computed<string>(
   () => READER_ROW.find((r) => r.kind === activeReader.value)?.label ?? '',
+);
+
+// THE FRESHNESS REGISTER · ONE-DIRECTIONAL. `instanceMtime > mtime` says the Dock refreshes at
+// the next resume; the converse is NEVER asserted as "verified current" — the composer skips an
+// unchanged write, so mtime is a change-stamp, not a compose-stamp.
+const dockFreshness = computed<string>(() => {
+  const d = dockInfo.value;
+  if (!d || !d.exists || d.mtime === null) return '';
+  return d.instanceMtime !== null && d.instanceMtime > d.mtime
+    ? 'the Instance.md is newer than the Dock — it refreshes at the next resume'
+    : 'current as of the last resume';
+});
+
+/** `bridge <name> · <path> · <bytes> B · composed <local time> · <freshness>` */
+const dockProvenance = computed<string>(() => {
+  const d = dockInfo.value;
+  if (!d) return '';
+  if (!d.exists) return `bridge ${d.bridgeName} · ${d.path}`;
+  const composed = d.mtime !== null ? new Date(d.mtime).toLocaleString() : '—';
+  return `bridge ${d.bridgeName} · ${d.path} · ${d.bytes} B · composed ${composed} · ${dockFreshness.value}`;
+});
+
+const dockTruncated = computed<boolean>(
+  () => !dockShowAll.value && readerContent.value.length > DOCK_RENDER_CHAR_GUARD,
+);
+const dockVisibleText = computed<string>(() =>
+  dockTruncated.value ? readerContent.value.slice(0, DOCK_RENDER_CHAR_GUARD) : readerContent.value,
 );
 
 // The protocol / identity line for the co-panel (the Definitions IDENTITY CONTENT idiom).
@@ -951,6 +1049,40 @@ onBeforeUnmount(() => {
         </div>
         <div class="reader-pane-body custom-scrollbar">
           <p v-if="readerBusy" class="reader-status">Reading…</p>
+          <!-- THE DOCK · provenance + VERBATIM bytes. Never marked/v-html: the composed file
+               carries 17 lines matching `---` of which only 2 are true layer boundaries — a
+               rendered view would collapse them into identical rules and hide the literal
+               bytes the model actually receives, defeating the audit that is the whole point. -->
+          <template v-else-if="activeReader === 'dock'">
+            <div class="dock-provenance">
+              <span class="dock-provenance-line hifi-mono">{{ dockProvenance }}</span>
+              <span class="dock-freshness-note">(freshness covers Instance.md only)</span>
+              <button
+                type="button"
+                :class="['hifi-btn', readerBtnClass, 'dock-refresh']"
+                @click.stop="refreshReader()"
+              >
+                Refresh
+              </button>
+            </div>
+            <p v-if="readerAbsent" class="reader-status reader-absent">
+              no Dock composed on bridge
+              {{ dockInfo ? dockInfo.bridgeName : '—' }} for {{ entry.name }} yet — composed at
+              the next resume.
+              <span v-if="dockInfo" class="dock-path-tried hifi-mono">{{ dockInfo.path }}</span>
+            </p>
+            <template v-else>
+              <pre class="reader-content">{{ dockVisibleText }}</pre>
+              <button
+                v-if="dockTruncated"
+                type="button"
+                :class="['hifi-btn', readerBtnClass, 'dock-refresh']"
+                @click.stop="dockShowAll = true"
+              >
+                show all ({{ readerContent.length }} chars)
+              </button>
+            </template>
+          </template>
           <p v-else-if="readerAbsent" class="reader-status reader-absent">
             No {{ activeReaderLabel }} present for this Suite 8.
           </p>
@@ -1502,6 +1634,44 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* THE DOCK pane — the reader register's own rgba whites; no new colour is introduced. */
+.dock-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dock-provenance-line {
+  flex: 1 1 100%;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+  word-break: break-all;
+}
+
+.dock-freshness-note {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.dock-refresh {
+  margin-left: auto;
+  font-size: 0.66rem;
+  padding: 0.18rem 0.5rem;
+}
+
+.dock-path-tried {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.45);
+  word-break: break-all;
 }
 
 .reader-status.reader-absent {

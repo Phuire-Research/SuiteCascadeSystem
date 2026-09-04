@@ -24,7 +24,21 @@ let cachedVersion: string | null = null;
 // MD-S8PM · PM-1 · THE THIRD COUNTER: `s8` joins the pair — the S8 Page System version the
 // DevCascade increments when the TEMPLATE SUITE 8 PAGE SURFACE changes. Optional at the seat
 // (a grandparent package.json that predates the field → the reader's `?? 0` floor).
-export type ScsMuxameter = { cli: number; scp: number; s8?: number };
+// C1039 · `instructionSet` increments when the SHIPPED INSTRUCTION SET (`.claude/CLAUDE.md`) changes.
+//
+// THE FOURTH ITERATOR — and the one naming the layer the other three run under. `cli`/`scp`/`s8` are
+// STAMP-shaped: a version LANDS on a particular unit at a particular moment. `instructionSet` is
+// FACT-shaped: ONE ground the BASE PROJECT holds, which every SCP reads and none owns.
+//
+// THE STRATIDIAN RELATION (fixes the read direction): **the SCPs are INFORMATIVES to the Base
+// Project.** The base project's `Cascades/Cascade.json` carries the stamp; an SCP is informed BY it
+// and never mirrors it into its own config — a mirrored fact is stale the moment the user edits
+// their instruction set.
+//
+// OPTIONAL AT THE SEAT exactly as `s8` is — but OPTIONAL DESCRIBES THE TYPE, NOT THE WRITE: from
+// C1039 onward every scaffolded Cascade.json CARRIES the stamp. Absence describes only a workspace
+// installed before the iterator existed.
+export type ScsMuxameter = { cli: number; scp: number; s8?: number; instructionSet?: number };
 
 let cachedMuxameter: ScsMuxameter | null | undefined;
 
@@ -50,16 +64,23 @@ export function getBridgeMuxameter(cliPathOverride?: string, fresh = false): Scs
     const pkgPath = path.resolve(path.dirname(cliPath), '..', 'package.json');
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
       version?: string;
-      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown };
+      scsMuxameter?: { cli?: unknown; scp?: unknown; s8?: unknown; instructionSet?: unknown };
     };
     const m = pkg.scsMuxameter;
     // The pair is the gate; `s8` is OPTIONAL-TOLERANT (present-as-number flows, absent on an
     // older grandparent package.json omits — the reader's `?? 0` floor supplies it · PM-1).
+    // C1039 · each optional iterator folds in ONLY when present-as-number — `s8`'s existing
+    // optional-tolerance extended rather than re-invented. An absent `instructionSet` is UNKNOWN,
+    // never zero: a 0 floor would read as "infinitely behind" and nag every workspace installed
+    // before the iterator existed.
     const parsed =
       m && typeof m.cli === 'number' && typeof m.scp === 'number'
-        ? typeof m.s8 === 'number'
-          ? { cli: m.cli, scp: m.scp, s8: m.s8 }
-          : { cli: m.cli, scp: m.scp }
+        ? {
+            cli: m.cli,
+            scp: m.scp,
+            ...(typeof m.s8 === 'number' ? { s8: m.s8 } : {}),
+            ...(typeof m.instructionSet === 'number' ? { instructionSet: m.instructionSet } : {}),
+          }
         : null;
     if (!fresh) cachedMuxameter = parsed;
     return parsed;

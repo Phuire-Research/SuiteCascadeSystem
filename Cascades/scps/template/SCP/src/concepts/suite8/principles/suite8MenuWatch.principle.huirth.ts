@@ -35,7 +35,8 @@
  * Citation: suite8Registration.model.ts KNOWN_SUITE8_ENTRIES (the boot designation seed).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import { appendFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type {
@@ -148,7 +149,7 @@ export const suite8MenuWatchPrinciple: Suite8MenuWatchPrincipleType = ({ plan, n
       lastSpecifiedByDesignation.set(trimmed, readSpecifiedKey(trimmed));
       if (!libraryWatcherMap.has(trimmed)) {
         try {
-          const libraryWatcher = chokidarWatch(resolveSyncLibraryPath(trimmed), {
+          const libraryWatcher = createWatcher('suite8MenuWatch#1', resolveSyncLibraryPath(trimmed), {
             persistent: true,
             ignoreInitial: true,
             awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
@@ -247,7 +248,7 @@ export const suite8MenuWatchPrinciple: Suite8MenuWatchPrincipleType = ({ plan, n
         // Debounced lightly; NEVER throws (arm failure = skip + telemetry). Mirrors the proven
         // extendedCascadeAutoRegistration addDir pattern (:182-201).
         try {
-          extendedDirWatcher = chokidarWatch(EXTENDED_ROOT_ABS, {
+          extendedDirWatcher = createWatcher('suite8MenuWatch#2', EXTENDED_ROOT_ABS, {
             persistent: true,
             // ignoreInitial:true — the boot sweep already armed the existing dirs; the live watch
             // only reacts to NEW dirs forged after boot (no double-arm of the initial set).

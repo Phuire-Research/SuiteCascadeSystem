@@ -50,6 +50,8 @@ import { scsBridgeFocusSession } from './qualities/scsBridgeFocusSession.quality
 import { scsBridgeChatSession } from './qualities/scsBridgeChatSession.quality.huirth';
 // RM-D4 · RENAME · scp_rename_session MCP tool · setSessionDisplayName (SNDF/DUAL)
 import { scsBridgeRenameSession } from './qualities/scsBridgeRenameSession.quality.huirth';
+// C1104 · SETMODEL · scs_set_session_model MCP tool · setSessionModel (the resume model)
+import { scsBridgeSetSessionModel } from './qualities/scsBridgeSetSessionModel.quality.huirth';
 // A-D3b · ARFSP · scs_set_anchor_session MCP tool · setSessionAnchor (Anchor Pattern)
 import { scsBridgeSetSessionAnchor } from './qualities/scsBridgeSetSessionAnchor.quality.huirth';
 // SAC.1 · ARFSP · scs_unset_anchor_session MCP tool · unsetSessionAnchor (Anchor Pattern · release)
@@ -106,6 +108,11 @@ import { scsBridgeScpToolRegistrationPrinciple } from './principles/scsBridgeScp
 import { scsBridgeSessionArchiveEndpointPrinciple } from './principles/scsBridgeSessionArchiveEndpoint.principle.huirth';
 // SEAP · BOOT-STREAM · extends the bridge Express server with the /scp-boot-log/:scpName tail endpoint
 import { scsBridgeBootLogEndpointPrinciple } from './principles/scsBridgeBootLogEndpoint.principle.huirth';
+// TOH-7 · Band 2 · the SCP-status endpoint (the crash FACT the overlay reads while it polls).
+import { scsBridgeScpStatusEndpointPrinciple } from './principles/scsBridgeScpStatusEndpoint.principle.huirth';
+import { scsBridgeInstructionSetEndpointPrinciple } from './principles/scsBridgeInstructionSetEndpoint.principle.huirth';
+import { scsBridgeInstructionSetContentEndpointPrinciple } from './principles/scsBridgeInstructionSetContentEndpoint.principle.huirth';
+import { scsBridgeScpTimingEndpointPrinciple } from './principles/scsBridgeScpTimingEndpoint.principle.huirth';
 // SEAP · SSP D-SSP.1 · extends the bridge Express server with the /suite8/available roster endpoint
 import { suite8PickerEndpointPrinciple } from './principles/suite8PickerEndpoint.principle.huirth';
 // SEAP · SAC.3 · extends the bridge Express server with the /suite8/anchor-config read endpoint
@@ -151,6 +158,7 @@ export const createScsBridgeConcept = (options: CreateScsBridgeConceptOptions) =
       scsBridgeFocusSession,
       scsBridgeChatSession,
       scsBridgeRenameSession,
+      scsBridgeSetSessionModel,
       scsBridgeSetSessionAnchor,
       scsBridgeUnsetSessionAnchor,
       scsBridgeSetAnchorConfig,
@@ -191,6 +199,10 @@ export const createScsBridgeConcept = (options: CreateScsBridgeConceptOptions) =
       scsBridgeScpToolRegistrationPrinciple,
       scsBridgeSessionArchiveEndpointPrinciple,
       scsBridgeBootLogEndpointPrinciple,
+      scsBridgeScpStatusEndpointPrinciple,
+      scsBridgeInstructionSetEndpointPrinciple,
+      scsBridgeInstructionSetContentEndpointPrinciple,
+      scsBridgeScpTimingEndpointPrinciple,
       suite8PickerEndpointPrinciple,
       anchorConfigEndpointPrinciple,
       scsBridgeRelayQueuePrinciple,

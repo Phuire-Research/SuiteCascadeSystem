@@ -51,7 +51,8 @@
  * Citation: STRATIMUX-REFERENCE.md "🎯 Critical Planning Context Patterns" (single dispatch per stage ·
  *           nextA for queued actions · Principle Context · k.property.select()).
  */
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -336,7 +337,7 @@ export const extendedCascadeAutoRegistrationPrinciple: SuiteCascadeHuirthPrincip
         };
         for (const extendedRootAbs of EXTENDED_ROOT_ABS_CANDIDATES) {
           try {
-            const watcher = chokidarWatch(extendedRootAbs, {
+            const watcher = createWatcher('extendedCascadeAutoRegistration#1', extendedRootAbs, {
               persistent: true,
               // ignoreInitial:true — BOOT already swept the existing dirs; the live watch only reacts
               // to NEW dirs forged after boot (no double-register of the initial set).

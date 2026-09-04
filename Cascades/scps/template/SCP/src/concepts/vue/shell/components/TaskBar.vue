@@ -17,10 +17,27 @@
  * Citation: TASKBAR-PEWTER-PASS-WAVE2-OCHRE-SHELL-BLUEPRINT.md §3
  * Citation: STRATIMUX-REFERENCE.md "Vue-Stratimux Integration Patterns"
  */
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import type { Component } from 'vue';
 import type { ToolbarButtonRegistration } from '../../../scsBridge/scsBridge.type';
 import { RESERVED_TOOLBAR_BUTTON_IDS } from '../../../../model/toolbarRegistration.model';
+// THE STATUS PIP (C958) · the persistent health seat. The crash FACT has always been served
+// (/scp-status/:scpName) but only ever RENDERED inside the standby overlay, which exists ONLY
+// during a turn-over — a crashed SCP that was not mid-turn-over had nowhere to say so. The pip
+// is that seat: every page, every session. All verdict logic is PURE and lives in the model;
+// this file owns only the I/O (the poll, the overlay DOM probe, the interval + its cleanup).
+import {
+  classifyScpStatus,
+  scpStatusPipReadout,
+  SCP_STATUS_PIP_POLL_MS,
+  SCP_STATUS_PIP_PRESENTATION,
+} from '../scpStatusPip.model';
+import type {
+  ScpStatusFactShape,
+  ScpStatusPipDeclineReason,
+  ScpStatusPipState,
+} from '../scpStatusPip.model';
+import type { ScpConfig } from '../../../../model/scpConfig.model';
 // SCP IDENTITY INDICATOR (C698) · the SCP's declarative identity (scp.config.json scpName ·
 // the FKIS Per-SCP-Identity-Config) rendered at the FAR LEFT of the toolbar — the SCP tells
 // the user WHO IT IS. loadScpConfig is the 3s-abort-bounded /scp-config fetch (null-tolerant:
@@ -61,8 +78,230 @@ const scpIdentityName = ref('');
 onMounted(() => {
   void loadScpConfig().then((cfg) => {
     if (cfg?.scpName) scpIdentityName.value = cfg.scpName;
+    // THE STATUS PIP rides the SAME resolved cfg — originEndpoint + scpName both arrive in this
+    // one answer, so the pip issues NO second /scp-config fetch (the token-free-reach idiom:
+    // hand forward data already in flight, never re-poll a value you are holding).
+    startScpStatusPip(cfg);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// THE STATUS PIP (C958) — the always-present health chip.
+//
+// ABSENCE IS A STATE: `unknown` is the default, the failed-fetch state, AND the no-origin state.
+// No path reaches `healthy`/`crashed` without a parsed fact from an res.ok answer — silence is
+// NEVER a crash claim (the verbatim discipline of the standby overlay's own pollCrashFact).
+const scpStatusPipState = ref<ScpStatusPipState>('unknown');
+const scpStatusPipFact = ref<ScpStatusFactShape | null>(null);
+const scpStatusPipReason = ref<ScpStatusPipDeclineReason>('not-yet-polled');
+// Non-reactive I/O handles — the timer is the FIRST repeating timer TaskBar has ever owned.
+let scpStatusPipTimer: ReturnType<typeof setInterval> | null = null;
+let scpStatusPipEndpoint = '';
+// C1046 · THE SECOND QUERY's RESULT — the PROJECT-SPECIFIC axis. Query 1 (/scs-bridge-version, the
+// SCP's own server) answers what the ARTIFACT is; this answers what the BASE PROJECT carries.
+// null = UNKNOWN (no stamp, or the CLI never answered) and unknown NEVER renders as behind.
+const instructionSetInstalled = ref<number | null>(null);
+const instructionSetUpdateAvailable = ref<boolean>(false);
+// C1057 · the published half, which layer answered it, and whether the CLI ANSWERED AT ALL — a 404
+// from an older CLI must never render as "unstamped": ignorance and absence are different states.
+const instructionSetPublished = ref<number | null>(null);
+const instructionSetPublishedSource = ref<'local' | 'npm' | null>(null);
+const instructionSetRead = ref<boolean>(false);
+// C1059 · THE INSTRUCTION-SET AXIS, DERIVED FROM THE TWO SERVED NUMBERS (Salvo B · D5). Direction
+// matters: BEHIND (iv < pv) is the computer's constitution lagging what is published — actionable;
+// AHEAD (iv > pv) is a dev machine past the publish — informational, never offered a downgrade;
+// UNSTAMPED (no iv, pv known) has never been synced — actionable, but not BEHIND. Ignorance (pv unknown)
+// renders honestly and reveals nothing. `instructionSetUpdateAvailable` (the endpoint's boolean) stays
+// read for bridge.json parity; the badge composes from the numbers so it can tell the directions apart.
+const instructionSetKnown = computed<boolean>(
+  () => typeof instructionSetInstalled.value === 'number' && typeof instructionSetPublished.value === 'number',
+);
+const instructionSetBehind = computed<boolean>(
+  () =>
+    instructionSetKnown.value &&
+    (instructionSetInstalled.value as number) < (instructionSetPublished.value as number),
+);
+const instructionSetAhead = computed<boolean>(
+  () =>
+    instructionSetKnown.value &&
+    (instructionSetInstalled.value as number) > (instructionSetPublished.value as number),
+);
+const instructionSetUnstamped = computed<boolean>(
+  () => instructionSetInstalled.value === null && instructionSetPublished.value !== null,
+);
+// THE STATE, in the counters' own `#N` grammar (`#` is the unit — never a naked number beside a system
+// noun · Pewter). It renders in its OWN ROW beneath the counters (Salvo B · D2: 50 characters cannot
+// fit a 218px line, and the instruction set is a different Demometer from the package counters).
+const instructionSetState = computed<string>(() => {
+  if (!instructionSetRead.value) return '';
+  const iv = instructionSetInstalled.value;
+  const pv = instructionSetPublished.value;
+  if (iv === null && pv === null) return '—';
+  if (iv === null) return `— → #${pv}`;
+  if (pv === null || iv === pv) return `#${iv}`;
+  return `#${iv} → #${pv}`;
+});
+// THE REGISTER (spectrum names · the house grammar Lane R4 mapped): red = behind · orange = out of
+// sync / never stamped (the S8 out-of-sync precedent) · fuchsia = ahead (the version axis's own
+// "ahead") · base = current anor unknown.
+const instructionSetRegister = computed<'red' | 'orange' | 'fuchsia' | 'base'>(() => {
+  if (instructionSetBehind.value) return 'red';
+  if (instructionSetUnstamped.value) return 'orange';
+  if (instructionSetAhead.value) return 'fuchsia';
+  return 'base';
+});
+const instructionSetNote = computed<string>(() => {
+  const src = instructionSetPublishedSource.value === 'local' ? ' · local repo' : '';
+  if (instructionSetBehind.value) return `behind the published revision${src}`;
+  if (instructionSetUnstamped.value) return `not yet stamped · published #${instructionSetPublished.value}${src}`;
+  if (instructionSetAhead.value) return `ahead of the published revision${src}`;
+  if (instructionSetKnown.value) return `current${src}`;
+  return 'published revision not read';
+});
+// THE REVEAL PREDICATE — BEHIND anor UNSTAMPED. Never AHEAD: the Update Agent would overwrite a dev
+// machine's newer constitution with the published one.
+const instructionSetActionable = computed<boolean>(
+  () => instructionSetBehind.value || instructionSetUnstamped.value,
+);
+let scpStatusPipScpName = '';
+// The unmount latch: an in-flight fetch must not land its verdict into a disposed component.
+let scpStatusPipDisposed = false;
+
+// THE OVERLAY PROBE — the standby overlay's own presence test, verbatim (it mounts this exact id
+// for ALL THREE restart triggers: hard turn-over, Shield A, Sword B).
+function standbyOverlayPresent(): boolean {
+  return typeof document !== 'undefined'
+    && document.getElementById('bridge-turn-over-standby') !== null;
+}
+
+function applyScpStatusPip(
+  state: ScpStatusPipState,
+  fact: ScpStatusFactShape | null,
+  reason: ScpStatusPipDeclineReason,
+): void {
+  if (scpStatusPipDisposed) return;
+  scpStatusPipState.value = state;
+  scpStatusPipFact.value = fact;
+  scpStatusPipReason.value = reason;
+}
+
+async function readScpStatusOnce(): Promise<void> {
+  // (a) THE OVERLAY CHECK FIRST — and it suppresses the FETCH, not merely the render. While the
+  // standby overlay is mounted it owns the crash verdict (its own 1s poll renders the signature
+  // and the boot tail); the pip must never race it and show the user two disagreeing answers on
+  // one screen. Render-authority deduplication.
+  if (standbyOverlayPresent()) {
+    applyScpStatusPip(classifyScpStatus(null, true), null, null);
+    return;
+  }
+  // (b) THE FACT READ — a failed read is a DECLINE, never a crash claim.
+  try {
+    const res = await fetch(
+      `${scpStatusPipEndpoint}/scp-status/${encodeURIComponent(scpStatusPipScpName)}`,
+      { cache: 'no-store' },
+    );
+    if (!res.ok) {
+      applyScpStatusPip('unknown', null, 'fetch-failed');
+      return;
+    }
+    const fact = (await res.json()) as ScpStatusFactShape;
+    // (c) THE CLASSIFY — pure, in the model. An unrecognized state declines with its own reason
+    // rather than collapsing silently into the same mute as a network failure.
+    const next = classifyScpStatus(fact, false);
+    if (next === 'unknown') {
+      applyScpStatusPip('unknown', null, 'unrecognized');
+      return;
+    }
+    applyScpStatusPip(next, fact, null);
+  } catch {
+    // the origin CLI may be down or mid-write — the next tick reads it; never a crash claim
+    applyScpStatusPip('unknown', null, 'fetch-failed');
+  }
+}
+
+// C1046 · THE SECOND QUERY · the project-specific aspect of the Muxameter.
+// Served by the CLI (`/instruction-set`) because THE CLI IS THE BASE and the SCPs are Informatives —
+// the base project's Cascade.json is the ground, and only the process rooted in it should read it.
+async function readInstructionSetOnce(): Promise<void> {
+  if (scpStatusPipEndpoint.length === 0) return;
+  try {
+    const res = await fetch(`${scpStatusPipEndpoint}/instruction-set`, { cache: 'no-store' });
+    if (!res.ok) return; // a decline leaves the UNKNOWN defaults standing
+    const body = (await res.json()) as {
+      installed?: unknown;
+      published?: unknown;
+      publishedSource?: unknown;
+      updateAvailable?: unknown;
+    };
+    instructionSetInstalled.value = typeof body.installed === 'number' ? body.installed : null;
+    instructionSetPublished.value = typeof body.published === 'number' ? body.published : null;
+    instructionSetPublishedSource.value =
+      body.publishedSource === 'local' || body.publishedSource === 'npm' ? body.publishedSource : null;
+    instructionSetUpdateAvailable.value = body.updateAvailable === true;
+    instructionSetRead.value = true;
+  } catch {
+    // the origin CLI may be down or mid-write — never a drift claim from an error path
+  }
+}
+
+// THE ABSENT-ORIGIN GUARD — an older citizen publishes no `originEndpoint`. There is no endpoint
+// to dial, so the pip renders `unknown` and NEVER STARTS THE INTERVAL (no poll, not merely a
+// suppressed render). The guard says WHY through the readout — a declining guard is never a
+// silent dim dot.
+function startScpStatusPip(cfg: ScpConfig | null): void {
+  if (!cfg) {
+    // /scp-config itself did not answer — distinct from a config that answered without an origin.
+    applyScpStatusPip('unknown', null, 'fetch-failed');
+    return;
+  }
+  const origin = typeof cfg.originEndpoint === 'string' ? cfg.originEndpoint.trim() : '';
+  if (origin.length === 0 || cfg.scpName.length === 0) {
+    applyScpStatusPip('unknown', null, 'no-origin');
+    return;
+  }
+  scpStatusPipEndpoint = origin.replace(/\/+$/, '');
+  scpStatusPipScpName = cfg.scpName;
+  void readScpStatusOnce();
+  // C1046 · THE SECOND QUERY fires on the SAME resolved origin the pip already dials — the CLI
+  // address is resolved ONCE (/scp-config → originEndpoint) and reused. A decline is silent-but-
+  // honest: the refs stay at their UNKNOWN defaults, so the badge never claims drift it cannot see.
+  void readInstructionSetOnce();
+  // C1062 · THE PULL PARTNER. The stamp moves when the Update Agent writes Cascade.json — a process this
+  // page cannot see. The CLI re-reads the stamp on every request; the page must ASK again. The instruction
+  // set rides the status pip's own tick (no second timer) and re-reads on every chip hover (the moment the
+  // user looks). A push (the CLI watching Cascade.json → bridge.json → the relay) is carded for Release.
+  scpStatusPipTimer = setInterval(() => {
+    void readScpStatusOnce();
+    void readInstructionSetOnce();
+  }, SCP_STATUS_PIP_POLL_MS);
+}
+
+// THE CLEANUP — TaskBar has never owned a repeating timer, so it has never carried an unmount
+// lifecycle. IslandWrapper unmounting is a REAL condition in this codebase (six sibling dock
+// components document controller globals going null/stale on exactly that event); without this
+// the interval would leak and keep firing into a detached context. The idiom is the one already
+// shipped at GitmStableAButton.vue:200-202.
+onUnmounted(() => {
+  scpStatusPipDisposed = true;
+  if (scpStatusPipTimer !== null) {
+    clearInterval(scpStatusPipTimer);
+    scpStatusPipTimer = null;
+  }
+});
+
+// The hover readout — ACTIONABLE when crashed (it names the signature AND the Hard Turn Over,
+// the recovery lever that stays available even when Turn Over A is disabled for want of a
+// registered stable A) and self-explaining when it declines.
+const scpStatusPipTitle = computed(() => scpStatusPipReadout(
+  scpIdentityName.value,
+  scpStatusPipState.value,
+  scpStatusPipFact.value,
+  scpStatusPipReason.value,
+));
+const scpStatusPipGlyph = computed(
+  () => SCP_STATUS_PIP_PRESENTATION[scpStatusPipState.value].glyph,
+);
+// ─────────────────────────────────────────────────────────────────────────────────────────────
 
 // D-UP8 · THE VERSION LABEL — the installed SCS-Bridge version beside the SCP name,
 // populated by THIS SCP's own server (/scs-bridge-version · checked at server boot via
@@ -104,15 +343,89 @@ const muxameterLine = computed<string | null>(() => {
 });
 // D-UP8c · the hover state crosses the body Teleport (CSS :hover cannot).
 const versionTipVisible = ref(false);
+// C1060 · THE GAP (the classic hover-intent wound, met on the body-Teleported tip). The tip is NOT a DOM
+// descendant of the chip — D-UP8c put it on document.body, fixed 79px above the viewport floor, so the
+// bar's clipping cannot eat it. The price: the chip's `mouseleave` fires the instant the pointer enters
+// the ~40px of dead space between the chip and the tip, and `--visible` drops `pointer-events` with it —
+// the button rendered perfectly and could not be reached. TWO CURES, COMPOSED (the user's: "spacing and
+// duration"): (1) DURATION — a grace timer holds the tip open long enough to cross the gap; any re-entry
+// (chip or tip) cancels it; (2) SPACING — `.taskbar-version-tip::after` (CSS) extends the tip's hit area
+// down across the gap while visible, so the pointer never actually leaves. Either alone has a miss (a
+// long SCP name pushes the chip past the bridge's width; a slow hand outlasts a timer); together, none.
+// Keyboard focus rides the same machine (the chip is tabindex=0).
+const VERSION_TIP_GRACE_MS = 360;
+let versionTipHideTimer: ReturnType<typeof setTimeout> | null = null;
+function clearVersionTipTimer(): void {
+  if (versionTipHideTimer !== null) {
+    clearTimeout(versionTipHideTimer);
+    versionTipHideTimer = null;
+  }
+}
+function showVersionTip(): void {
+  clearVersionTipTimer();
+  versionTipVisible.value = true;
+}
+// The chip's own enter also re-asks the CLI — the tip the user is about to read must be current.
+function showVersionTipFromChip(): void {
+  showVersionTip();
+  void readInstructionSetOnce();
+}
+function scheduleVersionTipHide(): void {
+  clearVersionTipTimer();
+  versionTipHideTimer = setTimeout(() => {
+    versionTipHideTimer = null;
+    versionTipVisible.value = false;
+  }, VERSION_TIP_GRACE_MS);
+}
+onUnmounted(clearVersionTipTimer);
 
 
 // THE MUXAMETER CLICK — the DUAL-RAIL deep link (the goScpManagement exemplar): the GitM
 // island's Update tab is the one destination for every update class.
 function goUpdatePage(): void {
+  // C1047 · THE ONE-DESTINATION LAW STANDS — the C1046 branch is RETIRED.
+  //
+  // THE COMPUTER/PROGRAM MODEL (the user's): **the SCS is the COMPUTER that loads an SCP.** A
+  // program can be updated and loaded on a computer; a computer can be updated separately from a
+  // program. GitM updates the PROGRAM (the SCP); the Update Agent updates the COMPUTER (the SCS and
+  // its instruction set). Two circuits, because the SCS ENCLOSES the SCP.
+  //
+  // I briefly made this click conditional on which axis had moved. That was wrong: it gave ONE
+  // CONTROL TWO MEANINGS, and it retired a stated law that never needed retiring. **A second need
+  // earns a SECOND CONTROL** — the pop-over's button below — never a conditional on the first.
   const params = new URLSearchParams(window.location.search);
   params.set('island', 'gitm');
   params.set('sub', 'update');
   window.location.search = params.toString();
+}
+
+// C1046 · THE FIRE · Rail A, the spawn-with-anchor path.
+//
+// `onboard: false` IS THE DECIDING FLAG and is not optional: it suppresses the Onboard seed so the
+// directive rides ALONE as the initial positional prompt — column 1 — which is the only position at
+// which a slash command executes. With the seed present the directive is appended after a separator
+// and arrives as inert body text (cli-handler.ts:1259,1370-1376).
+//
+// `manualMode: true` is ENFORCED, never a caller's choice: this session can rewrite the user's own
+// governing document, and it must never run unattended for a developer's convenience.
+//
+// `asWorker: true` mirrors the Gitm Resolver — a fresh worker, anti-flood skipped, so repeat updates
+// always spawn rather than silently reusing a stale session.
+function fireInstructionSetUpdate(): void {
+  try {
+    const ctrl = getGlobalScsBridgeController();
+    ctrl?.triggerSpawnSuite8Session(
+      'Cascade Update',
+      null, // workspace-level — the instruction set is the BASE PROJECT's, not any one SCP's
+      true, // asWorker
+      false, // fresh
+      true, // manualMode — the approval gate stays intact
+      '/cascade:update',
+      false, // onboard:false — the directive rides ALONE at column 1
+    );
+  } catch {
+    // a spawn failure must never break the toolbar; the badge stays lit and the user can retry
+  }
 }
 function versionNewer(a: string, b: string): boolean {
   const av = a.split('.').map((s) => parseInt(s, 10) || 0);
@@ -134,7 +447,21 @@ const versionState = computed<'unknown' | 'current' | 'remote-greater' | 'remote
   if (!i || !n) return 'unknown';
   if (versionNewer(i, n)) return 'remote-lesser';
   if (bridgeUpdateClass.value !== 'none') return 'remote-greater';
+  // C1046 widened this verdict over the instruction set; C1059 (Salvo B · D4/D5) moves that composition
+  // into `chipRegister` below, so this state speaks for the VERSION axis (cli/scp) alone again and the
+  // tooltip body it drives never asserts anything about the instruction set — the row beneath does.
   return 'current';
+});
+// C1059 · THE CHIP REGISTER — the ONE verdict the chip paints, composed over BOTH axes (the C1046 law:
+// measure over the axis-set the surface represents). Priority: red (cli/scp behind ∨ instruction set
+// behind) › orange (unstamped) › fuchsia (install ahead ∨ instruction set ahead) › purple. Actionable
+// outranks informational, so fuchsia can never swallow a red (R6 · I-VERDICT-SWALLOWED); ahead is
+// never red (R6 · I-RED-FOR-AHEAD). Spectrum names only.
+const chipRegister = computed<'red' | 'orange' | 'fuchsia' | 'purple'>(() => {
+  if (versionState.value === 'remote-greater' || instructionSetBehind.value) return 'red';
+  if (instructionSetUnstamped.value) return 'orange';
+  if (versionState.value === 'remote-lesser' || instructionSetAhead.value) return 'fuchsia';
+  return 'purple';
 });
 const versionTipBody = computed<string>(() => {
   const i = bridgeInstalledVersion.value ?? '—';
@@ -150,6 +477,8 @@ const versionTipBody = computed<string>(() => {
         unknown: 'A newer SCS-Bridge is published — open the Update page for both paths.',
         none: 'A newer SCS-Bridge is published — open the Update page.',
       };
+      // C1046 asked the copy to name which axis moved; C1059 gives the instruction set its own row
+      // beneath, so this body speaks for the version axis alone (Salvo B · D4 · I-BODY-MISMATCH).
       return `Installed v${i} · npm v${n} — ${routes[bridgeUpdateClass.value] ?? routes.unknown} Click to open.`;
     }
     case 'remote-lesser':
@@ -298,13 +627,16 @@ function handleTurnOverTriggered(): void {
           <span
             class="taskbar-bridge-version"
             :class="{
-              'taskbar-bridge-version--red': versionState === 'remote-greater',
-              'taskbar-bridge-version--fuchsia': versionState === 'remote-lesser',
+              'taskbar-bridge-version--red': chipRegister === 'red',
+              'taskbar-bridge-version--orange': chipRegister === 'orange',
+              'taskbar-bridge-version--fuchsia': chipRegister === 'fuchsia',
             }"
             role="button"
             tabindex="0"
-            @mouseenter="versionTipVisible = true"
-            @mouseleave="versionTipVisible = false"
+            @mouseenter="showVersionTipFromChip"
+            @mouseleave="scheduleVersionTipHide"
+            @focus="showVersionTipFromChip"
+            @blur="scheduleVersionTipHide"
             @click="goUpdatePage"
             @keydown.enter="goUpdatePage"
           >
@@ -318,15 +650,59 @@ function handleTurnOverTriggered(): void {
             <span
               class="taskbar-version-tip"
               :class="{ 'taskbar-version-tip--visible': versionTipVisible }"
-              role="tooltip"
+              :role="instructionSetActionable ? 'dialog' : 'tooltip'"
+              @mouseenter="showVersionTip"
+              @mouseleave="scheduleVersionTipHide"
             >
               <span class="taskbar-version-tip-title">SCS-Bridge</span>
               <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
               <!-- THE FULL MUXAMETER LINE — the two counters, installed → remote, once
                    the data serves (installed via bridge.json · remote via the npm publish). -->
               <span v-if="muxameterLine" class="taskbar-version-tip-counters">{{ muxameterLine }}</span>
+              <!-- C1059 · THE INSTRUCTION-SET ROW (Salvo B · D2) — its own row, present whenever the CLI answered,
+                   so no body branch can leave the button below without its subject (R6 · I-BODY-MISMATCH).
+                   Label · state (`#N` grammar, weighted in the register color) · one note. -->
+              <span
+                v-if="instructionSetRead"
+                class="taskbar-version-tip-isrow"
+                :class="'taskbar-version-tip-isrow--' + instructionSetRegister"
+              >
+                <span class="taskbar-version-tip-isrow-label">Instruction Set</span>
+                <span class="taskbar-version-tip-isrow-state">{{ instructionSetState }}</span>
+                <span class="taskbar-version-tip-isrow-note">{{ instructionSetNote }}</span>
+              </span>
+              <!-- C1047 · THE SECOND CONTROL · update the COMPUTER, not the program.
+                   The badge CLICK remains the shortcut to GitM's Update page (the PROGRAM · the
+                   SCP). This button updates the SCS ITSELF (the COMPUTER that loads it) by
+                   dispatching the Update Agent with the Cascade Command. Two circuits, two
+                   controls — never one control with two meanings.
+                   Revealed when the instruction set is BEHIND anor UNSTAMPED (C1059) — never when AHEAD: the
+                   agent would overwrite a newer constitution. Ignorance still reveals nothing. -->
+              <button
+                v-if="instructionSetActionable"
+                type="button"
+                class="taskbar-version-tip-action hifi-btn hifi-btn-blue"
+                @click.stop="fireInstructionSetUpdate"
+              >
+                Update the SCS
+              </button>
             </span>
           </Teleport>
+        </span>
+        <!-- THE STATUS PIP (C958) · the third local-ref chip — the SCP's own server health,
+             persistent on every page (the standby overlay only ever showed this DURING a
+             turn-over). Read-only: no click, no dispatch, no toolbar registration — the same
+             class as the identity + version chips beside it. It renders ALWAYS, dim `unknown`
+             included: a missing reading is a STATE the user gets to see, never a false green. -->
+        <span
+          class="taskbar-status-pip"
+          :class="'taskbar-status-pip--' + scpStatusPipState"
+          :title="scpStatusPipTitle"
+          :data-readout="scpStatusPipTitle"
+          :aria-label="scpStatusPipTitle"
+          role="status"
+        >
+          <i :class="['taskbar-status-pip-glyph', scpStatusPipGlyph]" aria-hidden="true"></i>
         </span>
         <template v-for="btn in leftButtons" :key="btn.id">
           <component
@@ -501,6 +877,103 @@ function handleTurnOverTriggered(): void {
   overflow: hidden;
   text-overflow: ellipsis;
   user-select: none;
+}
+
+/* THE STATUS PIP (C958) · the health chip beside the identity + version labels.
+   THE COLOR LAW — the pip invents NO new color; every value is an exact reuse of a register
+   this dock already ships (the model file carries the same table + its citations):
+     healthy    rgb(19, 213, 148)        the Shield/A viridian (GitmStableAButton.vue:323)
+     crashed    rgba(248,113,113,.95)    TOH-7's crash title + rgba(251,146,60,.9) its amber
+                                         subtitle (bridgeStandbyOverlay.model.ts:376,382)
+     restarting rgb(68, 150, 255)        the standby timer's blue (…overlay.model.ts:140)
+     unknown    rgba(148,163,184,…)      the overlay's own recede tone (…:354) — dim, NOT green.
+   The chamfer + neon-edge feel matches .taskbar-btn at a smaller, non-interactive weight so the
+   pip reads as an INDICATOR, never as a button the user should press. */
+.taskbar-status-pip {
+  --pip-color: rgba(148, 163, 184, 0.72);
+  --pip-accent: rgba(148, 163, 184, 0.3);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+  background: rgba(12, 14, 20, 0.85);
+  border: 1px solid color-mix(in srgb, var(--pip-color) 45%, transparent);
+  /* the smaller sibling of the taskbar-btn chamfer (4px cut for a 24px body) */
+  clip-path: polygon(
+    4px 0, calc(100% - 4px) 0, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 0 calc(100% - 4px), 0 4px
+  );
+  box-shadow: 0 0 6px 0 var(--pip-accent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.taskbar-status-pip-glyph {
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--pip-color);
+  text-shadow: 0 0 6px var(--pip-accent);
+}
+
+/* unknown — the default AND the honest decline (no reading · no origin · unreachable).
+   Deliberately the quietest state on the bar: it claims nothing. */
+.taskbar-status-pip--unknown {
+  --pip-color: rgba(148, 163, 184, 0.72);
+  --pip-accent: rgba(148, 163, 184, 0.3);
+  opacity: 0.75;
+}
+
+/* healthy — the Shield's own viridian, so "things are fine" reads in the SAME register the dock
+   already assigns to "stable". A slow breath, not a blink. */
+.taskbar-status-pip--healthy {
+  --pip-color: rgb(19, 213, 148);
+  --pip-accent: rgba(19, 213, 148, 0.45);
+}
+.taskbar-status-pip--healthy .taskbar-status-pip-glyph {
+  animation: taskbar-pip-breathe 3.2s ease-in-out infinite;
+}
+
+/* crashed — the TOH-7 crash palette verbatim, so a user who has seen a crashed standby overlay
+   recognizes this pip instantly. The one state that raises its voice (amber halo + pulse); its
+   hover line names the signature and the Hard Turn Over that recovers. */
+.taskbar-status-pip--crashed {
+  --pip-color: rgba(248, 113, 113, 0.95);
+  --pip-accent: rgba(251, 146, 60, 0.9);
+  border-color: color-mix(in srgb, var(--pip-color) 80%, transparent);
+  animation: taskbar-pip-alarm 1.6s ease-in-out infinite;
+}
+
+/* restarting — the standby timer's blue. Overlay-keyed: while the overlay is up it owns the
+   verdict and the pip simply agrees with it rather than polling against it. */
+.taskbar-status-pip--restarting {
+  --pip-color: rgb(68, 150, 255);
+  --pip-accent: rgba(68, 150, 255, 0.45);
+}
+.taskbar-status-pip--restarting .taskbar-status-pip-glyph {
+  animation: taskbar-pip-breathe 1.1s ease-in-out infinite;
+}
+
+@keyframes taskbar-pip-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes taskbar-pip-alarm {
+  0%, 100% { box-shadow: 0 0 6px 0 var(--pip-accent); }
+  50% { box-shadow: 0 0 13px 2px var(--pip-accent); }
+}
+
+/* The state still reads through color + the hover line when motion is unwelcome. */
+@media (prefers-reduced-motion: reduce) {
+  .taskbar-status-pip,
+  .taskbar-status-pip .taskbar-status-pip-glyph {
+    animation: none;
+  }
 }
 
 .taskbar-zone--center {
@@ -693,6 +1166,11 @@ function handleTurnOverTriggered(): void {
 .taskbar-bridge-version--fuchsia {
   --ver-neon: var(--color-fuchsia, #e879f9);
 }
+/* C1059 · the fourth register — the instruction set UNSTAMPED: out of sync, not behind (the S8
+   out-of-sync precedent · Salvo B D1). Never red; red is behind. */
+.taskbar-bridge-version--orange {
+  --ver-neon: var(--color-orange, #f97316);
+}
 .taskbar-version-tip {
   /* D-UP8c · BODY-MOUNTED + FIXED (the bridgeStandbyOverlay law · the working Tactical
      Bridge means): the pane lives on document.body, positioned above the bar at the
@@ -716,6 +1194,19 @@ function handleTurnOverTriggered(): void {
   pointer-events: none;
   transition: opacity 0.16s ease, transform 0.16s ease;
   z-index: 220;
+}
+/* C1060 · THE SPACING BRIDGE — an invisible extension of the tip's hit area, from its bottom edge down
+   across the gap to the bar (79px floor − 68px bar = 11px, plus the chip's own offset inside the bar ≈
+   40px). Pseudo-elements hit-test as part of their element, so the pointer crossing the gap never
+   triggers the tip's mouseleave. Inert at rest (pointer-events inherits `none`), live with `--visible`.
+   Paired with the grace timer in the script — the two cures cover each other's miss. */
+.taskbar-version-tip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 48px;
 }
 .taskbar-version-tip-title {
   font-family: var(--font-heading, 'Orbitron', system-ui, sans-serif);
@@ -744,5 +1235,62 @@ function handleTurnOverTriggered(): void {
 .taskbar-version-tip--visible {
   opacity: 1;
   transform: translateY(0);
+  /* C1047 · THE REACHABILITY CURE. The tip carries `pointer-events: none` at rest — correct for a
+     pure tooltip, and FATAL once it holds a button: the pointer would pass straight through, the
+     tip's own mouseenter would never fire, and the button would render perfectly while doing
+     nothing. Nothing would error. Restored ONLY in the visible state, so the resting tip still
+     never intercepts a pointer crossing the bar. */
+  pointer-events: auto;
+}
+
+/* C1047 · THE SECOND CONTROL's own affordance — the COMPUTER update, distinct from the badge click
+   (the PROGRAM update via GitM). Blue is the Suite 5 · Implementation register, matching every
+   other fire-button in this codebase. */
+/* C1059 · the compact D7 variant of `hifi-btn hifi-btn-blue` for a 240px tip (R4 + R7: the base class
+   was MISSING — the "washed ghost" was a class omission, not contrast; text measures 16:1). */
+.taskbar-version-tip-action {
+  margin-top: 6px;
+  align-self: stretch;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.68rem;
+  padding: 0.5rem 0.75rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.taskbar-version-tip-isrow {
+  --is-neon: rgba(228, 232, 240, 0.82);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+.taskbar-version-tip-isrow--red {
+  --is-neon: var(--color-red, #f87171);
+}
+.taskbar-version-tip-isrow--orange {
+  --is-neon: var(--color-orange, #f97316);
+}
+.taskbar-version-tip-isrow--fuchsia {
+  --is-neon: var(--color-fuchsia, #e879f9);
+}
+.taskbar-version-tip-isrow-label {
+  color: color-mix(in srgb, var(--color-purple, #a78bfa) 85%, #fff);
+}
+.taskbar-version-tip-isrow-state {
+  color: var(--is-neon);
+  font-weight: 700;
+}
+.taskbar-version-tip-isrow-note {
+  flex-basis: 100%;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+  color: rgba(228, 232, 240, 0.7);
 }
 </style>

@@ -29,7 +29,8 @@
  * Citation: BREAKOUT-POC4-PHASE6-PHUIRE-SCP-HOSTING-READINESS.md
  * Citation: strativerseSyncWatcher.principle.huirth.ts (pattern reference)
  */
-import { watch, FSWatcher } from 'chokidar';
+import { FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
 import type { StrativersePrinciple } from '../strativerse.concept';
 import type { ConceptEntry, ProjectEntry } from '../strativerse.type';
 import { buildClient } from '../model/buildWrapper.model';
@@ -167,7 +168,7 @@ function createProjectVueWatcher(
 
   console.log(LOG, 'Creating watcher for', projectName, 'watching', conceptNames.length, 'concepts:', conceptNames.join(', '));
 
-  var watcher = watch(vuePaths, {
+  var watcher = createWatcher('strativerseVueBuildWatcher#1', vuePaths, {
     ignoreInitial: true,
     persistent: true,
     depth: 2,

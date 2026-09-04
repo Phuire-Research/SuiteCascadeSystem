@@ -57,6 +57,7 @@ import { lookupScpWindowId } from '../../../scpSessionRegistry';
 import { log } from '../../../debugLog';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { scpsJsonPath } from '../../../paths';
 
 // The NDEP dir name → the compiled island key: strip spaces, lower the first char.
 // 'Frontier Hello World' → 'frontierHelloWorld'.
@@ -256,7 +257,7 @@ export const scsBridgeFocusSuite8Page = createQualityCardWithPayload<
 type ScpRegistryEntry = { name?: string; port?: number; dir?: string };
 const readScpsRegistry = (userCwd: string): ScpRegistryEntry[] => {
   try {
-    const raw = readFileSync(join(userCwd, 'Cascades', 'SCPs.json'), 'utf8');
+    const raw = readFileSync(scpsJsonPath(userCwd), 'utf8');
     const parsed = JSON.parse(raw) as {
       scps?: Array<{
         name?: string;

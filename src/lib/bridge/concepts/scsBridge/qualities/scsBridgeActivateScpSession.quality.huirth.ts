@@ -64,7 +64,7 @@ export const scsBridgeActivateScpSession = createQualityCardWithPayload<
     // keypress-driven activate path semantic (Cycle 148 ALHOC M130).
     // Stratimuxian Scholar S12 shortest-path partial return.
     const payload = selectPayload<ScsBridgeActivateScpSessionPayload>(action);
-    return { activeScpFromMcp: payload.scpName };
+    return { activeScpFromMcp: payload.scpName, activeScpFromMcpAt: Date.now() };
   },
   methodCreator: () =>
     createMethodWithConcepts(({ action }) => {

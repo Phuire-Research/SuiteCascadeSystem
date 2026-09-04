@@ -51,7 +51,20 @@ export function findFreeBridgePort(start = 7111, tries = 20): Promise<number> {
         probe(port + 1, remaining - 1);
       });
       server.once('listening', () => {
-        server.close(() => resolve(port));
+        // C1075 · THE BRIDGE'S OWN PORT-PAIR LAW (MD-B applied to the bridge · Salvo M R7 v): the reflected
+        // server binds `port + 1` ~1000ms later (server.principle.ts) and was never probed, so two racing
+        // boots could hand bridge B the reflected socket bridge A had not yet bound. Probe BOTH; stride 2.
+        server.close(() => {
+          const twin = net.createServer();
+          twin.once('error', () => {
+            try { twin.close(); } catch { /* ignore */ }
+            probe(port + 2, remaining - 1);
+          });
+          twin.once('listening', () => {
+            twin.close(() => resolve(port));
+          });
+          twin.listen(port + 1, '127.0.0.1');
+        });
       });
       // C423 · THE PROBE-PARITY LAW: probe EXACTLY what the server will bind. Post C665-S0
       // the server binds 127.0.0.1 (the loopback flip — the MCP tool surface must not reach

@@ -35,7 +35,8 @@
  * Citation: graphiteScribeRegistration.model.ts KNOWN_GRAPHITESCRIBE_ENTRIES (the boot designation seed).
  */
 import type { PrincipleFunction, MuxiumDeck, Concept } from 'stratimux';
-import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
+import { createWatcher } from '../../../model/watcherSingleton.model';
+import { type FSWatcher } from 'chokidar';
 import { appendFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type {
@@ -182,7 +183,7 @@ export const graphiteScribeMenuWatchPrinciple: GraphiteScribeMenuWatchPrincipleT
         // Debounced lightly; NEVER throws (arm failure = skip + telemetry). Mirrors the proven
         // extendedCascadeAutoRegistration addDir pattern (:182-201).
         try {
-          extendedDirWatcher = chokidarWatch(EXTENDED_ROOT_ABS, {
+          extendedDirWatcher = createWatcher('graphiteScribeMenuWatch#1', EXTENDED_ROOT_ABS, {
             persistent: true,
             // ignoreInitial:true — the boot sweep already armed the existing dirs; the live watch
             // only reacts to NEW dirs forged after boot (no double-arm of the initial set).

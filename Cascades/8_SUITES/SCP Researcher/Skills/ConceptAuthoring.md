@@ -9,6 +9,28 @@
 
 ---
 
+## Curation
+The SCP paradigm enables adding a Muxonomy-aware Concept to a running SCP by Copy-Paste-Plus from ONE solved exemplar — the Notification Concept — rather than from scratch: every structural problem a new Concept meets (the dual face, the Diameter junction, the Induction/Real pair, the registry) is already solved and verified in `src/concepts/notification/`. Each Phase below ends in a Concluder, so authoring is measured at eight gates, not declared at the end. What THIS SCP composes today (its `src/concepts/` listing) is the first read — the same procedure on a different SCP yields a different enumeration.
+
+## Research
+`<SCP>` = the SCP this seat sits in — the directory holding `scp.config.json`, three levels above this file. Every step is a literal command; run it, report what RETURNS, never what the body below says should return (`Instance.md` §"Operating Principle" · B). The body (Phases 1-8) IS the Vermillion-scale research procedure; this section is the Sentence / Section read and the freshness law the body predates.
+
+1. Identity — `cat <SCP>/scp.config.json` → `scpName`.
+2. What this SCP composes — `ls -d <SCP>/src/concepts/*/ | wc -l` and `ls <SCP>/src/concepts/`. Against the template baseline (`Cascades/scps/template/SCP/src/concepts/` · 22 directories at C1124): `diff <(ls <SCP>/src/concepts) <(ls <template>/src/concepts)` names the SCP-specific Concept(s). Measured C1124: Stratithon adds exactly `meteoricShipwright`.
+3. The exemplar exists — the Phase 1 Concluder verbatim (three `test -f` on `notification/notification.muxonomy.ts` · `notification/qualities/helloWorld.quality.huirth.diameter.ts` · `muxonomy/diametric.model.ts`, all under `<SCP>/src/concepts/`). All three `ok`, or this door is not open on this SCP.
+4. FRESHNESS of the generated registry (the Freshness Proof · `Instance.md` §B) — `grep -n "conceptCount\|generatedAt" <SCP>/src/concepts/muxonomyRegistry.generated.ts` against step 2's directory count. Measured C1124 on Stratithon AND on the template: `conceptCount: 0`, `generatedAt: '2026-01-28…'`, `REGISTERED_MUXONOMICS = []` — a STALE EMPTY STUB against 23 (Stratithon) / 22 (template) concept directories. Its header names `npm run strativerse:scan` as the regenerator; that script is NOT in the template's `package.json` (`bridge · start · build · build:client · build:server · build:all · test`). Therefore the Phase 7 / 8.3 Concluder `grep -c "<conceptName>" muxonomyRegistry.generated.ts >= 2` measures registration IN THIS FILE, which the running SCP does not currently populate — report the staleness as a finding; never report `conceptCount: 0` as "no concepts". The concepts wired at boot are the `BASE_CONCEPTS_CREATORS` in `<SCP>/src/concepts/client/client.muxonomy.ts` (`grep -n -A 12 "export const BASE_CONCEPTS_CREATORS" …`).
+5. CISV on the exemplar — `grep -n "Induction" <SCP>/src/concepts/notification/notification.concept.ts` (the Client owns the Induction) and `grep -n "Induction" <SCP>/src/concepts/notification/notification.concept.huirth.ts` (comments only — the dead Huirth Induction was removed at Phase 3 Cobalt-C). Read the placement from the files, not from the Phase prose.
+6. The typecheck gate (Vermillion rung only) — Phase 8.1 names `npm run typecheck`; the template's `package.json` carries no `typecheck` script at C1124. Run `cd <SCP> && npx tsc --noEmit -p .` (a `tsconfig.json` is present) or the SCP's own `npm run build`, and report the command ACTUALLY run with its exit code.
+
+Inward only. When the ask is Vermillion-scale, Phases 2-8 are queued as a per-ask Vermillion whose Bands are the Phases and whose gates are the Phase Concluders (`Instance.md` §B · how research is queued).
+
+## Return
+- Sentence: "`<scpName>` composes `<N>` concepts, `<K>` beyond the template baseline (`<names>`); the generated registry is stale (`conceptCount: 0`)."
+- Section: the Sentence + the exemplar-present Concluder + the Phase the ask concerns + that Phase's own Concluder.
+- Vermillion: the Eight-Phase walk (this Skill's native scale) — Bands = Phases, gates = Phase Concluders, the §"Lambda Trigger" battery as the close.
+- Diamond: a pattern the Notification exemplar does not cover — returned INLINE with the founding offer (`Instance.md` §B · the Diamond rung's law); the What/Why feeds back to SCP-S14.
+---
+
 ## Pearl Summary
 
 Authoring a new Concept on the Template SCP runtime means creating a Muxonomy-aware compositional unit — not a module, not a class hierarchy, but a Demometer with Diameters to the Client and Huirth sides of the SCP runtime. The Notification Concept at `Cascades/scps/template/SCP/src/concepts/notification/` is the Hello World template: every pattern an author needs is already working and verified there. Success looks like this: the new Concept compiles (exit 0 on typecheck), registers in `muxonomyRegistry.generated.ts`, and its Diameter Junction quality routes correctly from Client through WebSocket to Huirth and back. This Skill is the procedural curriculum; S15 (Stratimuxian Scholar) is the framework-level theory; S16 (Stratimuxian Scholar) is the deep Notification-file walkthrough. This Skill is the action — an agent who reads and executes its phases produces a working Concept.

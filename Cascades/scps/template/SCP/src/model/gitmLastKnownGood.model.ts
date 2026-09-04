@@ -17,6 +17,10 @@
  * Citation: DIAMOND-TURNOVER-DISCONNECT-GUARD.md §W3 · D-TDG-W1-BLANKING-TRACE.md §4 W3d.
  */
 import type { GitmJsonShape } from '../concepts/gitm/gitm.type';
+// TOH-12 · THE SOVEREIGN-IDENTITY SCOPE (the gitmTurnover.model precedent): the snapshot
+// key is scoped by this SCP's own name so a recycled port never seeds a prior tenant's
+// branch state; reads honor the bare legacy key written pre-scope.
+import { readScopedWithLegacyFallback, scpScopedStorageKey } from './scpIdentityStorage.model';
 
 // The localStorage key the display principle persists to (on every live gitmJson) and seeds from
 // (on a fresh muxium boot, before the async MOCH fetch). Distinct from the turn-over key.
@@ -27,7 +31,7 @@ export const GITM_LAST_KNOWN_GOOD_KEY = 'gitm_last_known_good';
 // rejected — only a bridge-authored snapshot ever seeds.
 export const readGitmLastKnownGood = (): GitmJsonShape | null => {
   if (typeof localStorage === 'undefined') return null;
-  const raw = localStorage.getItem(GITM_LAST_KNOWN_GOOD_KEY);
+  const raw = readScopedWithLegacyFallback(GITM_LAST_KNOWN_GOOD_KEY);
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as GitmJsonShape;
@@ -45,7 +49,7 @@ export const writeGitmLastKnownGood = (gitmJson: GitmJsonShape | null): void => 
   if (typeof localStorage === 'undefined') return;
   if (gitmJson === null) return;
   try {
-    localStorage.setItem(GITM_LAST_KNOWN_GOOD_KEY, JSON.stringify(gitmJson));
+    localStorage.setItem(scpScopedStorageKey(GITM_LAST_KNOWN_GOOD_KEY), JSON.stringify(gitmJson));
   } catch {
     /* localStorage unavailable/full — the relay still delivers live status; only the seed is lost */
   }

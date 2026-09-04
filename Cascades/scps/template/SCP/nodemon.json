@@ -9,7 +9,7 @@
   "delay": "100",
   "verbose": true,
   "events": {
-    "restart": "pkill -9 -f \"scp-tag=$PWD\" 2>/dev/null || true; sleep 0.3; echo '[Bridge Restart] Process tree killed (scoped to this SCP)'",
+    "restart": "sh ./scripts/lane-teardown.sh 2>/dev/null || true",
     "start": "echo '[Bridge Restart] Fresh process spawned'"
   }
 }

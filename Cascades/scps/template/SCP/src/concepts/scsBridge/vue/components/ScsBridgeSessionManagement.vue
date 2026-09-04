@@ -109,10 +109,11 @@ const activeScpFilter = ref<string | null>(null);
 // Parallel to activeScpFilter — independent filter lane; both can be active simultaneously.
 const activeSuite8Filter = ref<string | null>(null);
 
-// MD-9 · D-MC-3 · Per-Instance Model Control · the model DROPDOWN selection. Seeded to the
-// default (Opus 4.8); on change we push it to the controller (→ pendingSpawnModel state) so the
-// NEXT spawn (general anor Suite 8) pins it. The dropdown OWNS this selection — persistent, not
-// a per-click trigger. On mount we sync the initial default into state so the first spawn threads it.
+// MD-9 · D-MC-3 · Per-Instance Model Control · the model DROPDOWN selection. The picker
+// DISPLAYS the derived spawn default (the highest Opus) but C1104 ruling A forbids seeding
+// it into state on mount: a recorded entry.model MEANS A CHOICE now, and an unseeded spawn
+// carries no model → no birth stamp → the resume omits `--model` and the user's own /model
+// default applies. Only an actual user pick reaches the controller (handleModelChange).
 const modelOptions = SCS_AVAILABLE_MODELS;
 const selectedModel = ref<string>(SCS_DEFAULT_MODEL);
 const selectedModelLabel = computed<string>(
@@ -143,10 +144,14 @@ function logModelTriggerProbe(kind: string, e: Event): void {
       ` · options=${modelOptions.length}`,
   );
 }
-onMounted(() => {
-  // Seed pendingSpawnModel with the picker's initial default so the first spawn threads it.
-  controller?.setSpawnModel(selectedModel.value);
-});
+// C1104 · ruling A · THE BIRTH STAMP, AT ITS ORIGIN. The on-mount
+// `controller?.setSpawnModel(selectedModel.value)` seeding lived here and was the reason
+// 76 of 85 live registry entries carried a model nobody chose — the picker's own default
+// was pushed into pendingSpawnModel before the user touched anything, the spawn quality
+// recorded it, and every later resume re-forced it over the user's /model. DELETED, not
+// moved: the spawn now carries a model only when the user actually picks one, and a NEW
+// spawn with no pick still runs the derived highest Opus as a CLI flag (cli-handler), just
+// without leaving a stamp behind.
 
 // D3D Wave-2 · SREX expand state (only one row expanded at a time).
 const expandedSessionId = ref<string | null>(null);
@@ -179,7 +184,7 @@ const canSpawn = computed<boolean>(
 // Undefined scpName: controller normalizes to null; principle gates on !pendingScpName.
 // With a live bridge, boundScps will have at least one key — fallback produces a real scpName.
 // Cite: D3D-HOTFIX-1-R7-FUCHSIA-CLINICAL.md §C C1.
-function handleSpawn(): void {
+async function handleSpawn(): Promise<void> {
   if (!canSpawn.value || isSpawning.value) return;
   // R-D1 SCSE · CFSAS: Specific mode routes to triggerSpawnSuite8Session.
   // Uses existing controller?. optional-chain form — inject is NOT migrated.
@@ -188,9 +193,14 @@ function handleSpawn(): void {
     controller?.triggerSpawnSuite8Session(s8Designation.value);
     return;
   }
-  // General mode: existing NSESF fallback chain (unchanged).
+  // General mode · C1084 · THE OWN-SCP DEFAULT: a General spawn lands INTO THIS SCP (the D-SLE
+  // locality stamp is this page's SCP), so the default is /scp-config's scpName through the
+  // controller's cache. The shared bridge.json's FIRST boundScps key is the LAST rung — with two
+  // bridges in one directory it names the OTHER bridge's SCP (the C1083 field).
+  const ownScpName = (await controller?.getScpName()) ?? undefined;
   const fallbackScpName =
     activeScpFilter.value ??
+    ownScpName ??
     Object.keys(props.bridgeJson?.boundScps ?? {})[0] ??
     undefined;
   console.log(
@@ -199,7 +209,7 @@ function handleSpawn(): void {
     '· (filter=',
     activeScpFilter.value,
     '· fallback-source=',
-    activeScpFilter.value ? 'filter' : (fallbackScpName ? 'first-boundScp' : 'undefined'),
+    activeScpFilter.value ? 'filter' : ownScpName ? 'own-scp-config' : (fallbackScpName ? 'first-boundScp' : 'undefined'),
     ') · canSpawn=',
     canSpawn.value,
     '· isSpawning=',
@@ -1124,6 +1134,38 @@ async function handleSetAnchor(sessionId: string): Promise<void> {
   }
 }
 
+// C1104 · ruling A · THE PER-ROW RESUME MODEL. Writes entry.model on an EXISTING
+// session (a different lane from the header picker, which pins the NEXT spawn). Follows
+// the handleEngage/handleSetAnchor row idiom: per-row in-flight guard, log on failure,
+// controller call, NO optimistic local mutation — the sessions.json json-watcher relay
+// repaints the row (the DUAL law the rename leg proved).
+const settingModelId = ref<string | null>(null);
+async function handleSetSessionModel(sessionId: string, model: string): Promise<void> {
+  if (settingModelId.value === sessionId) return;
+  settingModelId.value = sessionId;
+  try {
+    const res = await controller?.triggerSetSessionModel(sessionId, model);
+    if (res && !res.ok) {
+      console.error('[ScsBridgeSessionManagement] set-session-model failed:', res.error);
+    }
+  } finally {
+    settingModelId.value = null;
+  }
+}
+// The ALIVE register · a model set on a running session cannot swap its live PTY; it
+// applies at the NEXT resume. Rendered as the control's title on launched rows only.
+function modelSetHint(status: string | undefined): string {
+  return status === 'launched'
+    ? 'Set the model this session RESUMES with — takes effect at the next resume.'
+    : 'Set the model this session RESUMES with.';
+}
+// SHOW (law 5) · undefined renders `default (<highest Opus label>)`, NEVER blank.
+function sessionModelLabel(model: string | undefined): string {
+  return model
+    ? (scsModelLabel(model) ?? model)
+    : `default (${scsModelLabel(SCS_DEFAULT_MODEL) ?? SCS_DEFAULT_MODEL})`;
+}
+
 // SAC.2 · Un-anchor affordance (Pewter SAC-PEWTER-DESIGN.md §2). Releases the page
 // anchor on an anchored session. Two-step inline confirm (no modal · §2.3) gated by
 // a single component-local arming ref (mirrors the renameEditingId single-select
@@ -1702,13 +1744,39 @@ function handleChatBlur(event: KeyboardEvent): void {
                     title="Rename session"
                     @click.stop="beginRename(session.id, session.scsLabel ?? session.displayName)"
                   >✎</button>
-                  <!-- MD-9 · D-MC-3 · recorded per-instance model tag (small · muted · only when
-                       the entry pinned a model · scsModelLabel resolves the friendly label). -->
+                  <!-- MD-9 · D-MC-3 · C1104 SHOW (law 5) · the per-session model tag. The
+                       `v-if="session.model"` gate is GONE: an entry with no recorded model
+                       used to render NOTHING, which lied by omission. It now renders
+                       `default (<highest Opus>)` in a muted variant, so the row always says
+                       what the session will resume with. -->
                   <span
-                    v-if="session.model"
                     class="session-model-tag"
-                    :title="`Model · ${scsModelLabel(session.model)}`"
-                  >{{ scsModelLabel(session.model) }}</span>
+                    :class="{ 'session-model-tag-default': !session.model }"
+                    :title="session.model
+                      ? `Model · ${sessionModelLabel(session.model)}`
+                      : 'No model pinned — resumes on your own /model default'"
+                  >{{ sessionModelLabel(session.model) }}</span>
+                  <!-- C1104 · the per-row RESUME model picker. ScsDropdown, never a native
+                       <select>: this page renders OFFSCREEN, so an OS-drawn popup can never
+                       open (the same law the header picker follows). Disabled while its own
+                       write is in flight.
+                       C1120 · `floating`: this cell is `overflow:hidden` (the 9rem ID clip), so the
+                       in-flow drawer opened INSIDE the clip and never showed — to the user, a native
+                       select that would not open. The floating drawer is viewport-anchored and
+                       escapes it; the other two pickers on this page keep the in-flow drawer. -->
+                  <ScsDropdown
+                    :options="modelDropdownOptions"
+                    :model-value="session.model ?? SCS_DEFAULT_MODEL"
+                    class="session-model-dropdown"
+                    floating
+                    :title="modelSetHint(session.status)"
+                    @click.stop
+                    @update:model-value="(v) => { if (v) void handleSetSessionModel(session.id, v); }"
+                  />
+                  <span
+                    v-if="session.status === 'launched'"
+                    class="session-model-alive-note"
+                  >takes effect at the next resume</span>
                 </template>
                 <ScsInput
                   v-else
@@ -3218,6 +3286,33 @@ function handleChatBlur(event: KeyboardEvent): void {
   border-radius: 3px;
   vertical-align: middle;
   opacity: 0.75;
+}
+
+/* C1104 · the undefined-model variant — muted further; it names the DEFAULT, not a pin. */
+.session-model-tag-default {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* C1104 · the per-row resume-model picker (compact · reveals beside the tag). */
+.session-model-dropdown {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  min-width: 96px;
+  font-size: 0.58rem;
+}
+.session-model-dropdown :deep(.scs-dropdown-drawer) {
+  max-height: 260px;
+}
+
+/* C1104 · the ALIVE register — a set model applies at the NEXT resume, never live. */
+.session-model-alive-note {
+  margin-left: 6px;
+  font-size: 0.54rem;
+  letter-spacing: 0.02em;
+  opacity: 0.5;
+  vertical-align: middle;
 }
 
 .spawn-session-row {

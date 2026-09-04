@@ -48,7 +48,7 @@ export function resolveSuite8OnboardMd(
   return path.join(root, SUITE8_SUITES_DIR, suite8Name, ONBOARD_MD_FILENAME);
 }
 
-// C378 · THE ONBOARD SOVEREIGNTY THREAD (mirror of resolveComposedAppendPath's
+// C378 · THE ONBOARD SOVEREIGNTY THREAD (mirror of composeAppendedSystemPrompt's
 // MD-1 scpRoot re-root, applied to the Onboard.md READ). An SCP-resident Suite 8
 // (e.g. Entourage Forge — the MD-2 sovereignty mirror) keeps its Onboard.md in the
 // SCP's OWN Cascades/8_SUITES/<name>/ — 0 copies at the workspace root. The single-
