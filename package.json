@@ -1,9 +1,9 @@
 {
   "name": "scs-bridge",
-  "version": "1.157.1",
+  "version": "1.157.2",
   "scsMuxameter": {
     "cli": 14,
-    "scp": 16,
+    "scp": 17,
     "s8": 3,
     "instructionSet": 1
   },

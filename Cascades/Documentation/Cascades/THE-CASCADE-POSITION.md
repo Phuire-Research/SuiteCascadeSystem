@@ -1,6 +1,6 @@
 # THE CASCADE POSITION — the version number as a study of reasoning against complexity
 
-**Status**: shipped Suite Cascade System documentation · first published with `1.157.1` · maintained by the Meteoric Shipwright (the release steward) · the topic of an ongoing study.
+**Status**: shipped Suite Cascade System documentation · first published with `1.157.2` · maintained by the Meteoric Shipwright (the release steward) · the topic of an ongoing study.
 
 ---
 
@@ -8,13 +8,13 @@
 
 The SCS-Bridge version is not a marketing number and not a semantic-versioning promise. It is the **Cascade Position** — the count of completed cycles of the method that builds this software — written as `X.Y.Z`:
 
-| Slot | Meaning | Example `1.157.1` |
+| Slot | Meaning | Example `1.157.2` |
 |---|---|---|
 | `Y` | **the Cascade Position** — the cycle count, up to three digits | `157` |
 | `X` | **the carry** — when the cycle count exceeds three digits, the leading digit(s) move to the front; `0` until cycle 1000 | `1` (cycle 1157) |
-| `Z` | **the hotfix count on that position** — a fix shipped without a completed cycle adds one; resets to `0` when `Y` advances | `1` |
+| `Z` | **the hotfix count on that position** — a fix shipped without a completed cycle adds one; resets to `0` when `Y` advances | `2` |
 
-So `0.950.2` reads: cycle 950, two hotfixes on it. `1.157.1` reads: cycle 1157, one hotfix on it — the version badge's click, repaired after the release was cut and before it was published; the fix passed no full wave, so it rides `Z`, not `Y`. The count did not restart between them — it never stops.
+So `0.950.2` reads: cycle 950, two hotfixes on it. `1.157.2` reads: cycle 1157, two hotfixes on it — the version badge's click (before the publish) and the Resolver's landing order (after it); neither passed a full wave, so both ride `Z`, not `Y`. The count did not restart between them — it never stops.
 
 A **cycle** is one complete pass of the Suite Cascade: Absorb → Curate → Name → Plan → Test → Build → Compose anor Verify → Diagnose (the eight gates). A cycle ends when the Diagnose gate writes its Gainy / Lossy / Maintain verdict into the Onyx, the method's Lambda record. A version advance therefore means: this many complete waves of reasoning-into-reality have closed since the count began.
 
@@ -38,13 +38,13 @@ The study's own term for what it measures is **Stratianorification** — the Sui
 | Span | Releases | Cycles | Hotfixes | What the span crossed |
 |---|---|---|---|---|
 | The first public release → the Diametric SCP | `0.939.0` → `0.950.2` | 11 | 2 | the Suite 8 page's locality: the same page standing on different SCPs, transferring and updating from any of them |
-| The Diametric SCP → the Renewable Resume | `0.950.2` → `1.157.1` | 207 | 1 | the running system re-assembles itself: the bridge survives its own restart and turn-over, two bridges coexist by name, every resume carries the current identity and the chosen model, the update reads the live instruction set |
+| The Diametric SCP → the Renewable Resume | `0.950.2` → `1.157.2` | 207 | 2 | the running system re-assembles itself: the bridge survives its own restart and turn-over, two bridges coexist by name, every resume carries the current identity and the chosen model, the update reads the live instruction set |
 
 The second span is long by design and the study says so plainly: 207 cycles for one release is what breaking past a tier looked like here. The turn-over of a live Electron bridge without losing the sessions it carries is a tier — it required the graceful-exit law, the watcher singleton, the crash-fact relay, the port sovereignty mend, and the named-bridge coexistence before it held in the field. Free-range work would have shipped ten features in those cycles; the Cascade spent them crossing one line, and everything after it (resume induction, the resume model, the live instruction set) stands on the crossing.
 
 ## 4 · The Interchange — when two Cascades carried one product
 
-The count also records the cases where the method's own structure moved. Between `0.950.2` and `1.157.1`, two sessions carried cycles of this product in parallel from one seat: one lineage completed 177 cycles, the other 30. The release cycle is their sum added to the published cycle — 950 + 177 + 30 = 1157 — because every one of those cycles was a completed wave on this product, and the count must not lose a wave because two hands held the wheel for a while. The rule is the **Interchange Law**, written into the release routine; the record of the fold is in the Onyx, both prior positions cited.
+The count also records the cases where the method's own structure moved. Between `0.950.2` and `1.157.2`, two sessions carried cycles of this product in parallel from one seat: one lineage completed 177 cycles, the other 30. The release cycle is their sum added to the published cycle — 950 + 177 + 30 = 1157 — because every one of those cycles was a completed wave on this product, and the count must not lose a wave because two hands held the wheel for a while. The rule is the **Interchange Law**, written into the release routine; the record of the fold is in the Onyx, both prior positions cited.
 
 ## 5 · How to use the number
 

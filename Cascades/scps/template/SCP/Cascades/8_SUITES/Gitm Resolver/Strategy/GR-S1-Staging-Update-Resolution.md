@@ -31,7 +31,9 @@ ORIENTATION (the Three Grounds — read BEFORE any git command):
      diff script already proved it; do not re-derive hashes.
 
 Step 1 (Simple Prompt) — Read the diff:
-  Informative: Read the diff JSON at <diffJsonPath>. It carries three per-path buckets —
+  Informative: If <diffJsonPath> does not exist on disk, HALT at once — respond
+    SCS:Vermillion:HALT:diff absent — Run Update first. Never process on nothing (1.157.2 · R-D19).
+    Otherwise read the diff JSON at <diffJsonPath>. It carries three per-path buckets —
     "apply" (changes that auto-apply · no decision needed), "preserve" (the user's own
     expansions · left untouched · no decision needed), and "conference" (the entries that
     need a decision). Each conference entry has a "path", a "status", a "collisionZone"
@@ -161,25 +163,34 @@ THE LANDING RACE (doctrine — do NOT probe after writing): the bridge WATCHES f
   tree as a double-apply failure. The landed state is SUCCESS. Verify only by reading
   Cascades/Bridge/gitm.json updateStatus afterward if you must observe.
 
-CONCLUDING SEQUENCE: The resolution file (pending 0) + the contract line below IS the complete
-  deliverable. The BRIDGE owns the terminal voice — it watches for the resolution file and lands
-  everything itself the moment a pending-0 file arrives: the apply (writes/patches/commits the tree)
-  → the applied stamp (the Apply Success panel) → the window refocus. You do NOT invoke the landing,
-  and you do NOT stamp a concluding progress note — a final 'resolving' stamp would OVERWRITE the
-  bridge's terminal applied stamp and strand the rail. After writing the file:
-  (1) Do NOT fire any further gitm_update_progress stamp. The last stamp you may fire is a
-      per-step 'resolving' note BEFORE the write — never after. The write IS the hand-off.
-  (2) THE TURN-OVER PROMPT (MANDATORY · the ONE permitted post-write call): once the write
-      lands, call the bridge tool scp_alert_turn_over with
-      { "scpName": "<scpName>", "purpose": "SCS update applied — Turn Over boots the updated code" }.
-      This is an ALERT, never a progress stamp — it writes the turnOverAlert banner + focuses
-      the SCP window; it does NOT touch the stage rail (rule 1 stands). The USER performs the
-      Turn Over; you STAND BY. A failed anor timed-out alert follows the FAILURE RULE (never
-      blocks — the Apply Success panel still carries the control; report it in the contract line).
-  (3) On ANY hang or timeout during the earlier steps: STOP calling. Report the contract line
-      with the HALT note appended:
-      SCS:Vermillion:OK:<summary> · invocation-channel HALT: <which call hung>
-  The user watches the bridge carry the boot-proof through.
+CONCLUDING SEQUENCE — LAND BEFORE YOU ASK (1.157.2 · RD-GR-LAND-BEFORE-ASK): the resolution file
+  (pending 0) is your deliverable; the BRIDGE lands it (it watches for the file and runs the apply:
+  writes/patches/commits the tree → the applied stamp → the Apply Success panel). Your LAST action is
+  the Turn Over request, and it fires ONLY after the landing is observed. After writing the file:
+  (1) Do NOT fire any further gitm_update_progress stamp (a post-write 'resolving' stamp would
+      overwrite the bridge's terminal applied stamp and strand the rail). Do NOT run git apply --check
+      or any tree probe — you would race the landing.
+  (2) OBSERVE THE LANDING: poll <provenance.scpRepoRoot>/SCP/Cascades/Bridge/gitm.json every 3 s for
+      up to 90 s and read updateStatus:
+        - stage === "idle" AND note names the applied update ("update applied · Turn Over B to finalize")
+                                                                              → LANDED. Go to (3).
+        - stage === "applying"                                                → in flight; keep polling.
+        - stage === "reviewing" for the full window (stageError empty)       → NOT LANDED: the bridge
+          HALTed the apply — most often "B carries uncommitted changes". Do NOT request a Turn Over.
+          Report: SCS:Vermillion:HALT:apply did not land — <scpName>'s tree likely carries uncommitted
+          changes; Turn Over B first (it commits them), then Run Update again and re-spawn.
+        - stage === "error"                                                  → report the stageError as
+          SCS:Vermillion:HALT:<stageError>. Do NOT request a Turn Over.
+  (3) THE TURN-OVER REQUEST (the ONE post-landing call · your LAST action): call the bridge tool
+      scp_alert_turn_over with { "scpName": "<scpName>", "purpose": "SCS update applied — Turn Over
+      boots the updated code" }. This is an ALERT, never a progress stamp — it writes the turnOverAlert
+      banner + focuses the SCP window; it does NOT touch the stage rail. The USER performs the Turn Over;
+      you STAND BY. A failed anor timed-out alert follows the FAILURE RULE (never blocks — the Apply
+      Success panel still carries the control; report it in the contract line).
+  (4) On ANY hang or timeout during the earlier steps: STOP calling. Report the contract line with the
+      HALT note appended: SCS:Vermillion:OK:<summary> · invocation-channel HALT: <which call hung>
+  WHY (1.157.1's wound): the alert used to fire on the WRITE. A silently HALTed apply was followed by a
+  Turn Over whose boot cleared the cycle's diff and manifest — nothing landed, the stamp never moved.
 
 </VermillionPlan>
 

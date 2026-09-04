@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "current": "1.157.1",
+  "current": "1.157.2",
   "muxameter": {
     "cli": 14,
-    "scp": 16,
+    "scp": 17,
     "s8": 3,
     "instructionSet": 1
   },
   "releases": [
     {
-      "id": "v11571",
-      "version": "1.157.1",
-      "label": "New in 1.157.1",
+      "id": "v11572",
+      "version": "1.157.2",
+      "label": "New in 1.157.2",
       "muxameter": {
         "cli": 14,
-        "scp": 16,
+        "scp": 17,
         "s8": 3,
         "instructionSet": 1
       },
@@ -31,12 +31,22 @@
           ]
         },
         {
-          "title": "Why 1.157.1: the Cascade Position",
-          "color": "yellow",
-          "summary": "Why 1.157.1: the version is the Cascade Position \u2014 207 completed cycles of the method closed since 0.950.2.",
+          "title": "Hotfix 1.157.2 \u2014 the Resolver waits for \u201cUpdate Applied\u201d before it asks you to Turn Over",
+          "color": "red",
+          "summary": "Updating through the Resolver now lands first: it asks for the Turn Over only after the bridge has applied the update. If you turned over early on 1.157.2, run the update again.",
           "detail": [
-            "The version is the <span class=\"hifi-hl-yellow\">Cascade Position</span>, written X.Y.Z: Y is the count of completed cycles of the method that builds this software, X is the carry when that count passes three digits, and Z counts hotfixes shipped on the same position. 0.950.2 was cycle 950 with two hotfixes; 1.157.1 is cycle 1157 with none yet \u2014 the count never restarted.",
-            "The count is kept this way as a <span class=\"hifi-hl-yellow\">study</span>: it tracks the literal cycles of the method against the project's compounding complexity \u2014 what reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost. Between 0.950.2 and 1.157.1, <span class=\"hifi-hl-green\">207 cycles</span> closed, and the length is by design: they crossed one tier, the live turn-over, and everything else in this release stands on it.",
+            "In 1.157.2 the Resolver asked for the Turn Over as soon as it wrote its resolution file \u2014 <span class=\"hifi-hl-red\">before the bridge had landed the update</span>. Turning over at that moment rebooted the app, and the reboot cleared the update's working files, so nothing landed and the app's template counter never moved.",
+            "From 1.157.2 the Resolver <span class=\"hifi-hl-green\">observes the landing</span> and makes the Turn Over request its last action, only after the update is applied. It also halts at once if the update was never run, instead of working on nothing.",
+            "If that happened to you: open the Update tab, press <span class=\"hifi-hl-blue\">Run Update</span> again, let the Resolver finish, wait for the Update Applied panel, then Turn Over. Make sure the app has no uncommitted changes first \u2014 a Turn Over B seals them."
+          ]
+        },
+        {
+          "title": "Why 1.157.2: the Cascade Position",
+          "color": "yellow",
+          "summary": "Why 1.157.2: the version is the Cascade Position \u2014 207 completed cycles of the method closed since 0.950.2.",
+          "detail": [
+            "The version is the <span class=\"hifi-hl-yellow\">Cascade Position</span>, written X.Y.Z: Y is the count of completed cycles of the method that builds this software, X is the carry when that count passes three digits, and Z counts hotfixes shipped on the same position. 0.950.2 was cycle 950 with two hotfixes; 1.157.2 is cycle 1157 with none yet \u2014 the count never restarted.",
+            "The count is kept this way as a <span class=\"hifi-hl-yellow\">study</span>: it tracks the literal cycles of the method against the project's compounding complexity \u2014 what reasoning was spent to reach a tier, where the breakpoints fell, how much each span cost. Between 0.950.2 and 1.157.2, <span class=\"hifi-hl-green\">207 cycles</span> closed, and the length is by design: they crossed one tier, the live turn-over, and everything else in this release stands on it.",
             "Two sessions carried cycles of this one product in parallel, and the release cycle is their sum. The shipped document <span class=\"hifi-hl-blue\">Cascades/Documentation/Cascades/THE-CASCADE-POSITION.md</span> explains the number, the study, and the record so far; every release adds a row to it."
           ]
         },
