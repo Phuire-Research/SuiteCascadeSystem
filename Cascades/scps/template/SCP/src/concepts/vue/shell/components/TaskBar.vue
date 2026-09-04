@@ -653,7 +653,15 @@ function handleTurnOverTriggered(): void {
               :role="instructionSetActionable ? 'dialog' : 'tooltip'"
               @mouseenter="showVersionTip"
               @mouseleave="scheduleVersionTipHide"
+              @click.self="goUpdatePage"
             >
+              <!-- C1169 · THE SWALLOWED CLICK (hotfix in 1.157.0). The C1060 spacing bridge (`::after`,
+                   48px down from a tip whose gap to the chip is ~40px, on a body-mounted z-220 pane) is
+                   LIVE the moment the chip is hovered — and every click is preceded by that hover — so the
+                   click landed on the bridge, never on the chip, and the badge stopped navigating.
+                   `.self` fires only when the tip's own box is the target (the bridge is part of it); the
+                   text rows and the Update-the-SCS button (`@click.stop`) keep their meanings. The badge
+                   click is the one destination, ANY time — the user's law. -->
               <span class="taskbar-version-tip-title">SCS-Bridge</span>
               <span class="taskbar-version-tip-body">{{ versionTipBody }}</span>
               <!-- THE FULL MUXAMETER LINE — the two counters, installed → remote, once
