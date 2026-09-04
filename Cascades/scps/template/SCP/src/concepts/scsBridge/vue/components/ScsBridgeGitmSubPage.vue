@@ -1225,31 +1225,6 @@ function spawnResolver(): void {
           </p>
         </section>
 
-        <!-- ═ MD-UM · LEG 4 · WHAT THIS UPDATE CARRIES ═ — the collapsible differential panel ABOVE
-             the Run Update legend. Mounts the portable release holder in DIFFERENTIAL mode, fed the
-             applied increment (THE SHARPENED LAW · scp.config.json scsMuxameterScp) + the incoming
-             releases (LEG 3's relay). Collapsed by default (a fold, not the focus). ALWAYS present
-             on the Update tab — the user decides worth from the notes. Mode: incoming wings anor a
-             due update ⇒ 'differential' (the discriminator); current ⇒ 'current' (the plain release
-             notes, minus the discriminator). Citation: DIAMOND-UPDATE-MANIFEST.md §4 (the differential). -->
-        <section class="gitm-carries hifi-pane-base">
-          <button
-            type="button"
-            class="gitm-carries-toggle hifi-mono"
-            :aria-expanded="carriesOpen"
-            @click="toggleCarries"
-          >
-            <span class="gitm-carries-caret">{{ carriesOpen ? '▾' : '▸' }}</span>
-            {{ carriesMode === 'differential' ? 'What this update carries' : 'Release Notes · you are current' }}
-          </button>
-          <div v-if="carriesOpen" class="gitm-carries-body">
-            <ReleaseMiniSite
-              :mode="carriesMode"
-              :applied-scp="appliedScp"
-              :releases="differentialReleases"
-            />
-          </div>
-        </section>
 
         <!-- APPLY SUCCESS SCREEN — the update has landed (bridge C293 · stage idle + applied note).
              Renders INSTEAD of the stage rail + buckets + collision diff: the applied state is
@@ -1516,6 +1491,32 @@ function spawnResolver(): void {
             {{ resolverStatusText }}
           </p>
         </template>
+        </section>
+
+        <!-- ═ MD-UM · LEG 4 · WHAT THIS UPDATE CARRIES ═ — the collapsible differential panel BELOW the Update widget (C1179 · the user's law: the update is FRAMED first; what it carries follows) — was ABOVE
+             the Run Update legend. Mounts the portable release holder in DIFFERENTIAL mode, fed the
+             applied increment (THE SHARPENED LAW · scp.config.json scsMuxameterScp) + the incoming
+             releases (LEG 3's relay). Collapsed by default (a fold, not the focus). ALWAYS present
+             on the Update tab — the user decides worth from the notes. Mode: incoming wings anor a
+             due update ⇒ 'differential' (the discriminator); current ⇒ 'current' (the plain release
+             notes, minus the discriminator). Citation: DIAMOND-UPDATE-MANIFEST.md §4 (the differential). -->
+        <section class="gitm-carries hifi-pane-base">
+          <button
+            type="button"
+            class="gitm-carries-toggle hifi-mono"
+            :aria-expanded="carriesOpen"
+            @click="toggleCarries"
+          >
+            <span class="gitm-carries-caret">{{ carriesOpen ? '▾' : '▸' }}</span>
+            {{ carriesMode === 'differential' ? 'What this update carries' : 'Release Notes · you are current' }}
+          </button>
+          <div v-if="carriesOpen" class="gitm-carries-body">
+            <ReleaseMiniSite
+              :mode="carriesMode"
+              :applied-scp="appliedScp"
+              :releases="differentialReleases"
+            />
+          </div>
         </section>
       </template>
 
